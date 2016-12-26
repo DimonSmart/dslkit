@@ -1,0 +1,21 @@
+using DSLKIT.Terminals;
+using DSLKIT.Tokens;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace DSLKIT.Test
+{
+    [TestClass]
+    public class IdentifierTerminalTests
+    {
+        [TestMethod]
+        public void IdentifierTerminalTryMatchTest()
+        {
+            var s = new StringSourceStream("Variable");
+            var terminal = new IdentifierTerminal();
+            Token token;
+            Assert.AreEqual(true, terminal.TryMatch(s, out token));
+            Assert.AreEqual(0, token.Position);
+            Assert.AreEqual("Variable", token.Value);
+        }
+    }
+}

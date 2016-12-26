@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="DSLKIT.Parser.Term" Collapsed="true">
+    <Position X="4" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAQAAAAAQAAAAAAIAAAAAAAAAAAAA=</HashCode>
+      <FileName>Parser\Term.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DSLKIT.Parser.NonTerminal" Collapsed="true">
+    <Position X="5.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAEAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Parser\NonTerminal.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DSLKIT.Terminals.IdentifierTerminal" Collapsed="true">
+    <Position X="0.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAABAAAAAAAAAAAAAAAAAQBAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Terminals\IdentifierTerminal.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DSLKIT.Terminals.RegExpTerminal" Collapsed="true">
+    <Position X="3" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAABAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Terminals\RegExpTerminal.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DSLKIT.Terminals.RegExpTerminalBase" Collapsed="true">
+    <Position X="1.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgABAAAAAAAAAAEIAAAAAAAAAAAAAAAAAIAAAQAAAA=</HashCode>
+      <FileName>Terminals\RegExpTerminalBase.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DSLKIT.Terminals.SingleLineCommentTerminal" Collapsed="true">
+    <Position X="10" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Terminals\SingleLineCommentTerminal.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DSLKIT.Terminals.SpaceTerminal" Collapsed="true">
+    <Position X="0.5" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Terminals\SpaceTerminal.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DSLKIT.Terminals.SpaceTerminalBase" Collapsed="true">
+    <Position X="5.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgABAAAAAAAAAAEABAAAAQAAAAAAAAAAAAAAAQAAAA=</HashCode>
+      <FileName>Terminals\SpaceTerminalBase.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DSLKIT.Terminals.StringTerminal" Collapsed="true">
+    <Position X="7.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgABAAAAAAAgAAEAAAAAAQAAAAAAAAAAAIAAAQAAAA=</HashCode>
+      <FileName>Terminals\StringTerminal.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Interface Name="DSLKIT.Terminals.ITerminal" Collapsed="true">
+    <Position X="10" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgABAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAQAAAA=</HashCode>
+      <FileName>Terminals\ITerminal.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

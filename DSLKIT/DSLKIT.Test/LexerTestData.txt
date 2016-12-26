@@ -1,0 +1,25 @@
+﻿/*
+This
+is
+a
+multiline
+comment
+*/
+// Term look like function call
+SIN("TEST") /*COMMENT*/ 
+// Term looks like function call with integer
+COS(10)
+// Lots of brackets
+(10)((20)((0002)))(999999)()()(()(()()()()()
+// Just a comment
+
+  
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using DSLKIT.Terminals;
+using DSLKIT.Tokens;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+int a = 10

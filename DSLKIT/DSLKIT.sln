@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLKIT", "DSLKIT\DSLKIT.csproj", "{CCD455F5-3B57-4FA1-B8AD-1B0B59B20FE2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLKIT.Test", "DSLKIT.Test\DSLKIT.Test.csproj", "{C259EB4A-459A-4532-B14F-DD8522154908}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CCD455F5-3B57-4FA1-B8AD-1B0B59B20FE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCD455F5-3B57-4FA1-B8AD-1B0B59B20FE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCD455F5-3B57-4FA1-B8AD-1B0B59B20FE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCD455F5-3B57-4FA1-B8AD-1B0B59B20FE2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C259EB4A-459A-4532-B14F-DD8522154908}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C259EB4A-459A-4532-B14F-DD8522154908}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C259EB4A-459A-4532-B14F-DD8522154908}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C259EB4A-459A-4532-B14F-DD8522154908}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
