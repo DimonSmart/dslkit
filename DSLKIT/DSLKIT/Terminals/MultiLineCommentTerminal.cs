@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace DSLKIT.Terminals
 {
-    public class MultiLineCommentTerminal : CommentTerminalBase
+    public class MultiLineCommentTerminal : CommentTerminalRegexpBased
     {
         public MultiLineCommentTerminal(string start, string end) :
             base(new Regex(@"\G" + "(?<Start>" + start.Escape() + ")" +

@@ -4,15 +4,16 @@ namespace DSLKIT.Terminals
 {
     public abstract class SpaceTerminalBase : ITerminal
     {
-        public TermFlags Flags => TermFlags.Space;
         public string Name => "Space";
+        public TermFlags Flags => TermFlags.Space;
         public TerminalPriority Priority => TerminalPriority.High;
+
         public bool CanStartWith(char c)
         {
             return IsSpace(c);
         }
 
-        public bool TryMatch(ISourceStream source, out Token token)
+        public bool TryMatch(ISourceStream source, out IToken token)
         {
             var previewChar = source.Peek();
             if (!IsSpace(previewChar))
@@ -21,16 +22,17 @@ namespace DSLKIT.Terminals
                 return false;
             }
 
-            token = new Token
+            token = new SpaceToken
             {
                 Length = 1,
                 Position = source.Position,
                 Terminal = this,
-                StringValue = previewChar.ToString(),
+                OriginalString = previewChar.ToString(),
                 Value = previewChar
             };
             return true;
         }
+
         protected abstract bool IsSpace(char c);
     }
 }

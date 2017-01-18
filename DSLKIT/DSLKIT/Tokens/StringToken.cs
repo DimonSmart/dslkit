@@ -1,10 +1,6 @@
 ﻿namespace DSLKIT.Tokens
 {
-    public class StringToken : Token
+    public class StringToken : StringTokenBase
     {
-        public override string ToString()
-        {
-            return ((string) Value).DoubleQuoteIt();
-        }
     }
 }

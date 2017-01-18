@@ -11,5 +11,13 @@
         {
             return @"'" + s + @"'";
         }
+
+        public static string MakeWhiteSpaceVisible(this string s)
+        {
+            return s
+                .Replace("\n", @"↵")
+                .Replace("\r", @"↵")
+                .Replace(" ", "␣");
+        }
     }
 }

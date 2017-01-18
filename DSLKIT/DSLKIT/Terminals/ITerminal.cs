@@ -7,7 +7,6 @@ namespace DSLKIT.Terminals
         TermFlags Flags { get; }
         TerminalPriority Priority { get; }
         bool CanStartWith(char c);
-
-        bool TryMatch(ISourceStream source, out Token token);
+        bool TryMatch(ISourceStream source, out IToken token);
     }
 }

@@ -28,23 +28,37 @@ namespace DSLKIT.Terminals
             return _previewChar == c;
         }
 
-        public bool TryMatch(ISourceStream source, out Token token)
+        public bool TryMatch(ISourceStream source, out IToken token)
         {
             token = null;
             var result = _regex.Match(source);
             if (!result.Success)
-                return false;
-
-            token = new Token
             {
-                Position = source.Position,
-                Length = result.Length,
-                Terminal = this,
-                StringValue = result.Value,
-                Value = result.Value
-            };
+                return false;
+            }
 
+            token = CreateToken(source.Position, result.Length, result.Value, result.Value, this);
             return true;
+        }
+
+
+        protected virtual IToken CreateToken(
+            int position,
+            int length,
+            string originalString,
+            object value,
+            ITerminal terminal
+            )
+        {
+            // var instance = (IToken)Activator.CreateInstance(typeof(KeywordToken));
+            return new KeywordToken
+            {
+                Position = position,
+                Length = length,
+                Terminal = this,
+                OriginalString = originalString,
+                Value = value
+            };
         }
     }
 }

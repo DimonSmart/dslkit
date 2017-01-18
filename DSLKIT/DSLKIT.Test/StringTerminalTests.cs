@@ -12,13 +12,13 @@ namespace DSLKIT.Test
         {
             var s = new StringSourceStream("Test".DoubleQuoteIt());
             var rt = new StringTerminal();
-            Token token;
+            IToken token;
             Assert.AreEqual(true, rt.TryMatch(s, out token));
             Assert.AreEqual(0, token.Position);
             Assert.AreEqual(6, token.Length);
             Assert.AreEqual(typeof (string), token.Value.GetType());
             Assert.AreEqual("Test", token.Value);
-            Assert.AreEqual("Test".DoubleQuoteIt(), token.StringValue);
+            Assert.AreEqual("Test".DoubleQuoteIt(), token.OriginalString);
         }
 
         [TestMethod]
@@ -64,13 +64,13 @@ namespace DSLKIT.Test
             stream.Seek(startPosition);
 
             var rt = new StringTerminal(start, end);
-            Token token;
+            IToken token;
             Assert.AreEqual(true, rt.TryMatch(stream, out token));
             Assert.AreEqual(startPosition, token.Position);
             Assert.AreEqual(expectedString.Length + start.Length + end.Length, token.Length);
             Assert.AreEqual(typeof (string), token.Value.GetType());
             Assert.AreEqual(expectedString, token.Value);
-            Assert.AreEqual(start + expectedString + end, token.StringValue);
+            Assert.AreEqual(start + expectedString + end, token.OriginalString);
         }
     }
 }

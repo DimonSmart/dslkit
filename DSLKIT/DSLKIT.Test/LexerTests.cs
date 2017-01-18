@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -59,7 +60,7 @@ namespace DSLKIT.Test
             var stream =
                 new BracketMatcherStream(new Lexer(GetSampleLexerData()).GetTokens(new StringSourceStream(src))).ToList();
             PrintTokens(stream);
-            Assert.IsTrue(stream.Any(token => token.GetType() == typeof (ErrorToken)));
+            Assert.IsTrue(stream.Any(token => token.GetType() == typeof(ErrorToken)));
         }
 
 
@@ -132,7 +133,7 @@ namespace DSLKIT.Test
         }
 
 
-        private static void PrintTokens(IEnumerable<Token> tokens)
+        private static void PrintTokens(IEnumerable<IToken> tokens)
         {
             foreach (var token in tokens)
             {
@@ -141,9 +142,28 @@ namespace DSLKIT.Test
                     Debug.WriteLine("Error");
                     break;
                 }
-                Debug.WriteLine("Token: {0}\tsValue: {1}\tvalue: {2}\ttoString:{3}\tpos:{4},len:{5}",
-                    token.Terminal.GetType().Name, token.StringValue, token.Value, token, token.Position, token.Length);
+
+                var tokenDescription = token.Terminal.GetType().Name + Environment.NewLine +
+                                       GetNonEmptyString("OriginalString: ", token.OriginalString) +
+                                       GetNonEmptyString("Value: ", token.Value) +
+                                       GetNonEmptyString("Token: ", token.ToString()) +
+                                       "Pos: " + token.Position + Environment.NewLine +
+                                       "Len: " + token.Length + Environment.NewLine;
+
+                Debug.WriteLine(tokenDescription);
             }
+        }
+
+        private static string GetNonEmptyString(string key, object value)
+        {
+            var s = value?.ToString();
+
+            if (string.IsNullOrWhiteSpace(s))
+            {
+                return string.Empty;
+            }
+
+            return key + s + Environment.NewLine;
         }
     }
 }

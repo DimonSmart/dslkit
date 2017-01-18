@@ -57,9 +57,11 @@ namespace DSLKIT.Terminals
             _regex = new Regex(pattern, RegexOptions.Compiled);
         }
 
-        public TermFlags Flags => TermFlags.Const;
         public override string Name => "String";
+
+        public TermFlags Flags => TermFlags.Const;
         public TerminalPriority Priority => TerminalPriority.Normal;
+
         public bool CanStartWith(char c)
         {
             if (_start.Length == 0)
@@ -70,12 +72,7 @@ namespace DSLKIT.Terminals
             return _start[0] == c;
         }
 
-        public override string ToString()
-        {
-            return _start + "string" + _end;
-        }
-
-        public bool TryMatch(ISourceStream source, out Token token)
+        public bool TryMatch(ISourceStream source, out IToken token)
         {
             token = null;
             var result = _regex.Match(source);
@@ -91,11 +88,16 @@ namespace DSLKIT.Terminals
                 Position = source.Position,
                 Length = result.Length,
                 Terminal = this,
-                StringValue = result.Value,
+                OriginalString = result.Value,
                 Value = stringBody
             };
 
             return true;
+        }
+
+        public override string ToString()
+        {
+            return _start + "string" + _end;
         }
     }
 }

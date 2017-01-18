@@ -17,7 +17,7 @@ namespace DSLKIT.Test
         public void NormalUseTest()
         {
             var s = new StringSourceStream("123");
-            Token token;
+            IToken token;
             Assert.AreEqual(true, GetIntegerRegexpTerminal().TryMatch(s, out token));
             Assert.AreEqual(0, token.Position);
             Assert.AreEqual(3, token.Length);
@@ -27,7 +27,7 @@ namespace DSLKIT.Test
         public void NotMatchedUseTest()
         {
             var s = new StringSourceStream("ABC");
-            Token token;
+            IToken token;
             Assert.AreEqual(false, GetIntegerRegexpTerminal().TryMatch(s, out token));
             Assert.AreEqual(null, token);
         }
@@ -37,7 +37,7 @@ namespace DSLKIT.Test
         {
             var s = new StringSourceStream("ABCD");
             var rt = new KeywordTerminal("ABC");
-            Token token;
+            IToken token;
             Assert.AreEqual(true, rt.TryMatch(s, out token));
             Assert.AreEqual(0, token.Position);
             Assert.AreEqual(3, token.Length);

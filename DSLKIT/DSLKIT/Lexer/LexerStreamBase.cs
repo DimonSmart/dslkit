@@ -4,16 +4,16 @@ using DSLKIT.Tokens;
 
 namespace DSLKIT
 {
-    public abstract class LexerStreamBase : IEnumerable<Token>
+    public abstract class LexerStreamBase : IEnumerable<IToken>
     {
-        private readonly IEnumerable<Token> _sourceStream;
+        private readonly IEnumerable<IToken> _sourceStream;
 
-        protected LexerStreamBase(IEnumerable<Token> sourceStream)
+        protected LexerStreamBase(IEnumerable<IToken> sourceStream)
         {
             _sourceStream = sourceStream;
         }
 
-        public IEnumerator<Token> GetEnumerator()
+        public IEnumerator<IToken> GetEnumerator()
         {
             return Filter(_sourceStream).GetEnumerator();
         }
@@ -23,6 +23,6 @@ namespace DSLKIT
             return GetEnumerator();
         }
 
-        protected abstract IEnumerable<Token> Filter(IEnumerable<Token> sourceStream);
+        protected abstract IEnumerable<IToken> Filter(IEnumerable<IToken> sourceStream);
     }
 }

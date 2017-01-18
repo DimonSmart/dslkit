@@ -5,8 +5,8 @@ namespace DSLKIT.Tokens
     public interface IToken : IPosition
     {
         int Length { get; }
-        string StringValue { get; }
-        ITerminal Terminal { get; }
+        string OriginalString { get; }
         object Value { get; }
+        ITerminal Terminal { get; }
     }
 }

@@ -63,6 +63,7 @@
     <Compile Include="Parser\NonTerminal.cs" />
     <Compile Include="Parser\Rule.cs" />
     <Compile Include="Terminals\CommentTerminalBase.cs" />
+    <Compile Include="Terminals\CommentTerminalRegexpBased.cs" />
     <Compile Include="Terminals\EmptyTerminal.cs" />
     <Compile Include="Terminals\EofTerminal.cs" />
     <Compile Include="Helpers\StringHelper.cs" />
@@ -75,6 +76,8 @@
     <Compile Include="Terminals\RegExpTerminal.cs" />
     <Compile Include="Terminals\SingleLineCommentTerminal.cs" />
     <Compile Include="Terminals\TermFlags.cs" />
+    <Compile Include="Tokens\CommentToken.cs" />
+    <Compile Include="Tokens\EofToken.cs" />
     <Compile Include="Tokens\ErrorToken.cs" />
     <Compile Include="Tokens\IntegerToken.cs" />
     <Compile Include="Tokens\IPosition.cs" />
@@ -85,6 +88,8 @@
     <Compile Include="Helpers\RegexHelper.cs" />
     <Compile Include="Terminals\RegExpTerminalBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tokens\KeywordToken.cs" />
+    <Compile Include="Tokens\SpaceToken.cs" />
     <Compile Include="Tokens\StringToken.cs" />
     <Compile Include="Terminals\CustomSpaceTerminal.cs" />
     <Compile Include="Terminals\SpaceTerminal.cs" />
@@ -92,6 +97,7 @@
     <Compile Include="Terminals\StringTerminal.cs" />
     <Compile Include="Terminals\TerminalPriority.cs" />
     <Compile Include="Terminals\SpaceTerminalBase.cs" />
+    <Compile Include="Tokens\StringTokenBase.cs" />
     <Compile Include="Tokens\Token.cs" />
   </ItemGroup>
   <ItemGroup>

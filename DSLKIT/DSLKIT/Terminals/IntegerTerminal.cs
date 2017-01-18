@@ -12,16 +12,18 @@ namespace DSLKIT.Terminals
             _regex = new Regex(@"\G\d+");
         }
 
-        public TermFlags Flags => TermFlags.Const;
         public string Name => "Integer";
 
+        public TermFlags Flags => TermFlags.Const;
+
         public TerminalPriority Priority => TerminalPriority.Normal;
+
         public bool CanStartWith(char c)
         {
             return char.IsDigit(c);
         }
 
-        public bool TryMatch(ISourceStream source, out Token token)
+        public bool TryMatch(ISourceStream source, out IToken token)
         {
             token = null;
             var result = _regex.Match(source);
@@ -40,7 +42,7 @@ namespace DSLKIT.Terminals
                 Position = source.Position,
                 Length = result.Length,
                 Terminal = this,
-                StringValue = stringBody,
+                OriginalString = stringBody,
                 Value = intValue
             };
 

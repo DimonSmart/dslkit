@@ -20,6 +20,7 @@ namespace DSLKIT.Terminals
         public override TermFlags Flags { get; }
         public override string Name { get; }
         private string Keyword { get; }
+
         public override string ToString()
         {
             return string.IsNullOrEmpty(Keyword) ? "[Empty]" : Keyword;

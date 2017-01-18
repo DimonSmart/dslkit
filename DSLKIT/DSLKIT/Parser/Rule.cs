@@ -42,13 +42,13 @@ namespace DSLKIT.Parser
             return "(" + Data + ")";
         }
 
+        //        try
+        //    {
+        //    public override string ToString()
+        //{
+
 
         //public class TermListList : List<TermList>
-        //{
-        //    public override string ToString()
-        //    {
-
-        //        try
         //        {
         //            return string.Join("|", from term in this select string.Join("+", term));
         //        }

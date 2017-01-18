@@ -21,11 +21,11 @@ namespace DSLKIT
             }
         }
 
-        public IEnumerable<Token> GetTokens(ISourceStream source)
+        public IEnumerable<IToken> GetTokens(ISourceStream source)
         {
             while (true)
             {
-                Token eofToken;
+                IToken eofToken;
                 if (_eofTerminal.TryMatch(source, out eofToken))
                 {
                     yield return eofToken;
@@ -62,11 +62,11 @@ namespace DSLKIT
             }
         }
 
-        private static IEnumerable<Token> GetAllMatches(IEnumerable<ITerminal> lexerData, ISourceStream source)
+        private static IEnumerable<IToken> GetAllMatches(IEnumerable<ITerminal> lexerData, ISourceStream source)
         {
             foreach (var terminal in lexerData)
             {
-                Token token;
+                IToken token;
                 if (terminal.TryMatch(source, out token))
                 {
                     yield return token;

@@ -6,13 +6,13 @@ namespace DSLKIT
 {
     public class BracketMatcherStream : LexerStreamBase
     {
-        public BracketMatcherStream(IEnumerable<Token> sourceStream) : base(sourceStream)
+        public BracketMatcherStream(IEnumerable<IToken> sourceStream) : base(sourceStream)
         {
         }
 
-        protected override IEnumerable<Token> Filter(IEnumerable<Token> sourceStream)
+        protected override IEnumerable<IToken> Filter(IEnumerable<IToken> sourceStream)
         {
-            var bracesStack = new Stack<Token>();
+            var bracesStack = new Stack<IToken>();
 
             foreach (var token in sourceStream)
             {
