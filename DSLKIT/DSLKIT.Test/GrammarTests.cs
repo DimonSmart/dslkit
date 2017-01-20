@@ -34,11 +34,11 @@ namespace DSLKIT.Test
         {
             public TestGrammar()
             {
-                var stringTerminal1 = new StringTerminal(@"""");
-                var stringTerminal2 = new StringTerminal(@"'");
+                var intTerm = new IntegerTerminal();
+                var stringTerm = new StringTerminal(@"'");
 
                 Root = ToKeywordTerminal("=") + ToKeywordTerminal("TEST") +
-                       ToKeywordTerminal("(") + (stringTerminal1 | stringTerminal2) +
+                       ToKeywordTerminal("(") + (intTerm | stringTerm) +
                        ToKeywordTerminal(")");
             }
         }

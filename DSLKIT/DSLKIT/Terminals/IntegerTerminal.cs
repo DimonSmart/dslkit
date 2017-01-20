@@ -1,9 +1,10 @@
 ﻿using System.Text.RegularExpressions;
+using DSLKIT.Parser;
 using DSLKIT.Tokens;
 
 namespace DSLKIT.Terminals
 {
-    public class IntegerTerminal : ITerminal
+    public class IntegerTerminal : Term, ITerminal
     {
         private readonly Regex _regex;
 
@@ -12,7 +13,7 @@ namespace DSLKIT.Terminals
             _regex = new Regex(@"\G\d+");
         }
 
-        public string Name => "Integer";
+        public override string Name => "Integer";
 
         public TermFlags Flags => TermFlags.Const;
 

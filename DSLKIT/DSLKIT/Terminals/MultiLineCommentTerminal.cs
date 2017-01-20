@@ -11,6 +11,6 @@ namespace DSLKIT.Terminals
         {
         }
 
-        public string Name => "Multi line comment";
+        public override string Name => "Multi line comment";
     }
 }

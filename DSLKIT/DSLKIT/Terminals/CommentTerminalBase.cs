@@ -4,6 +4,7 @@ namespace DSLKIT.Terminals
 {
     public abstract class CommentTerminalBase : ITerminal
     {
+        public abstract string Name { get; }
         public TermFlags Flags => TermFlags.Comment;
         public TerminalPriority Priority => TerminalPriority.Normal;
         public abstract bool CanStartWith(char c);

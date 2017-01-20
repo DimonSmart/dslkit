@@ -10,6 +10,6 @@ namespace DSLKIT.Terminals
         {
         }
 
-        public string Name => "Single line comment";
+        public override string Name => "Single line comment";
     }
 }
