@@ -56,6 +56,7 @@
   <ItemGroup>
     <Compile Include="GrammarTests.cs" />
     <Compile Include="IdentifierTerminalTests.cs" />
+    <Compile Include="LexerTestData.cs" />
     <Compile Include="MultiLineCommentTerminalTests.cs" />
     <Compile Include="OneLineCommentTerminalTests.cs" />
     <Compile Include="IntegerTerminalTests.cs" />

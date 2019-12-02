@@ -17,6 +17,8 @@ namespace DSLKIT.Terminals
             Flags = flags;
         }
 
+        public override TerminalPriority Priority => TerminalPriority.Normal;
+
         public override TermFlags Flags { get; }
         public override string Name { get; }
         private string Keyword { get; }

@@ -8,47 +8,38 @@ namespace DSLKIT
     public class Lexer
     {
         private readonly ITerminal _eofTerminal;
-        private readonly LexerSettings _lexerData;
+        private readonly LexerSettings _lexerSettings;
 
-        public Lexer(LexerSettings lexerData)
+        public Lexer(LexerSettings lexerSettings)
         {
-            _lexerData = lexerData;
-            _eofTerminal = _lexerData.EofTerminal;
-
-            if (_eofTerminal == null)
-            {
-                _eofTerminal = new EofTerminal();
-            }
+            _lexerSettings = lexerSettings;
+            _eofTerminal = _lexerSettings.EofTerminal ?? new EofTerminal();
         }
 
         public IEnumerable<IToken> GetTokens(ISourceStream source)
         {
             while (true)
             {
-                IToken eofToken;
-                if (_eofTerminal.TryMatch(source, out eofToken))
+                // Check for EOF terminal. For some grammars it could be a keyword 'end.' instead of real end of file
+                if (_eofTerminal.TryMatch(source, out var eofToken))
                 {
                     yield return eofToken;
                     yield break;
                 }
 
-                IEnumerable<ITerminal> possibleTerminals;
-                if (_lexerData.UsePreviewChar)
-                {
-                    possibleTerminals = _lexerData.Where(terminal => terminal.CanStartWith(source.Peek())).ToList();
-                }
-                else
-                {
-                    possibleTerminals = _lexerData;
-                }
+                // Check for all possible terminals with could be started from current char
+                var previewChar = source.Peek();
+                var possibleTerminals = _lexerSettings
+                    .Where(i => i.CanStartWith(previewChar))
+                    .ToList()
+                    .AsReadOnly();
 
-                var matches = GetAllMatches(possibleTerminals, source).ToList();
-                var bestMatches =
-                    matches.Where(m => m.Length == matches.Max(a => a.Length))
-                        .OrderByDescending(b => b.Terminal.Priority);
-                if (!bestMatches.Any())
+                var matches = GetAllMatches(possibleTerminals, source)
+                    .ToList()
+                    .AsReadOnly();
+                if (!matches.Any())
                 {
-                    yield return new ErrorToken
+                    yield return new ErrorToken("No terminal found")
                     {
                         Length = 0,
                         Position = source.Position
@@ -56,7 +47,31 @@ namespace DSLKIT
                     yield break;
                 }
 
-                var bestMatch = bestMatches.First();
+                var maxMatchLength = matches.Select(i => i.Length).Max();
+                matches = matches
+                    .Where(i => i.Length == maxMatchLength)
+                    .OrderByDescending(b => b.Terminal.Priority)
+                    .ToList()
+                    .AsReadOnly();
+
+                var maxMatchedTerminalPriority = matches.Select(i => i.Terminal.Priority).Max();
+                matches = matches
+                    .Where(i => i.Terminal.Priority == maxMatchedTerminalPriority)
+                    .ToList()
+                    .AsReadOnly();
+
+                if (matches.Count > 1)
+                {
+                    var msg = string.Join(",", matches);
+                    yield return new ErrorToken(
+                        $"Many terminals found at same position. Possible duplicates or priority error : {msg}")
+                    {
+                        Length = 0,
+                        Position = source.Position
+                    };
+                }
+
+                var bestMatch = matches.Single();
                 yield return bestMatch;
                 source.Seek(source.Position + bestMatch.Length);
             }
@@ -66,8 +81,7 @@ namespace DSLKIT
         {
             foreach (var terminal in lexerData)
             {
-                IToken token;
-                if (terminal.TryMatch(source, out token))
+                if (terminal.TryMatch(source, out var token))
                 {
                     yield return token;
                 }

@@ -25,7 +25,7 @@ namespace DSLKIT
                 {
                     if (bracesStack.Count == 0)
                     {
-                        yield return new ErrorToken();
+                        yield return new ErrorToken("Close brace without open");
                         yield break;
                     }
                     bracesStack.Pop();
@@ -35,7 +35,7 @@ namespace DSLKIT
 
             if (bracesStack.Count != 0)
             {
-                yield return new ErrorToken();
+                yield return new ErrorToken("Open and close braces count not the same");
             }
         }
     }

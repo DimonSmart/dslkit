@@ -16,8 +16,8 @@ namespace DSLKIT.Terminals
         }
 
         public abstract TermFlags Flags { get; }
-        public TerminalPriority Priority => TerminalPriority.Low;
 
+        public virtual TerminalPriority Priority => TerminalPriority.Low;
 
         public bool CanStartWith(char c)
         {

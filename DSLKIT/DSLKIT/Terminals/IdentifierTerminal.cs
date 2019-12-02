@@ -13,6 +13,7 @@
         }
 
         public override TermFlags Flags => TermFlags.Identifier;
+        
         public override string Name => "Identifier";
     }
 }

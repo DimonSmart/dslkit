@@ -1,22 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using DSLKIT.Terminals;
 using DSLKIT.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using static DSLKIT.Test.LexerTestData;
 
 namespace DSLKIT.Test
 {
-    public static class TestHelper
-    {
-        public static string GetLexerSample()
-        {
-            return File.ReadAllText("LexerTestData.txt");
-        }
-    }
-
     [TestClass]
     public class LexerTests
     {
@@ -37,7 +29,7 @@ namespace DSLKIT.Test
         [TestMethod]
         public void LexerComplexTest()
         {
-            var source = new StringSourceStream(TestHelper.GetLexerSample());
+            var source = new StringSourceStream(SampleText);
             var tokens = new Lexer(GetSampleLexerData()).GetTokens(source);
             PrintTokens(tokens);
         }
@@ -58,7 +50,8 @@ namespace DSLKIT.Test
         private static void BraceCheckerAssertOnError(string src)
         {
             var stream =
-                new BracketMatcherStream(new Lexer(GetSampleLexerData()).GetTokens(new StringSourceStream(src))).ToList();
+                new BracketMatcherStream(new Lexer(GetSampleLexerData()).GetTokens(new StringSourceStream(src)))
+                    .ToList();
             PrintTokens(stream);
             Assert.IsTrue(stream.Any(token => token.GetType() == typeof(ErrorToken)));
         }
@@ -67,15 +60,10 @@ namespace DSLKIT.Test
         [TestMethod]
         public void LexerSpeedTest()
         {
-            var source = new StringSourceStream(TestHelper.GetLexerSample());
+            var source = new StringSourceStream(SampleText);
             var lexerData = GetSampleLexerData();
 
-            Debug.WriteLine("Speed with usePreviewChar option turned ON");
-            lexerData.UsePreviewChar = true;
-            LexerTestRun(source, new Lexer(lexerData));
-
-            Debug.WriteLine("Speed with usePreviewChar option turned off");
-            lexerData.UsePreviewChar = false;
+            Debug.WriteLine("Lexer speed test");
             LexerTestRun(source, new Lexer(lexerData));
         }
 
@@ -89,9 +77,10 @@ namespace DSLKIT.Test
                 // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
                 lexer.GetTokens(source).ToList();
             }
+
             stopWatch.Stop();
             var ts = stopWatch.Elapsed;
-            string elapsedTime = $"Elapsed time: {ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds/10:00}";
+            var elapsedTime = $"Elapsed time: {ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds / 10:00}";
             Debug.WriteLine(elapsedTime);
         }
 
