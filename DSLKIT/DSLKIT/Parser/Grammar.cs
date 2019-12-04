@@ -1,26 +1,27 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using DSLKIT.Terminals;
 
 namespace DSLKIT.Parser
 {
     public class Grammar : IGrammar
     {
-        private readonly Dictionary<string, KeywordTerminal> _keywords = new Dictionary<string, KeywordTerminal>();
-        public readonly ITerminal Empty = new EmptyTerminal();
+        private readonly ConcurrentDictionary<string, KeywordTerminal> _keywords =
+            new ConcurrentDictionary<string, KeywordTerminal>();
+
+        private readonly ITerminal Empty = new EmptyTerminal();
+
         public ITerminal Eof { get; } = new EofTerminal();
         public NonTerminal Root { get; set; }
 
-        public KeywordTerminal ToKeywordTerminal(string text)
+        /// <summary>
+        ///     Add terminal to collection or get existing to avoid duplicates
+        ///     Used to easily write ToTerm("x") + "x" + "x" and get the same x terminal
+        /// </summary>
+        /// <param name="keyword"></param>
+        /// <returns></returns>
+        public KeywordTerminal ToTerm(string keyword)
         {
-            KeywordTerminal keywordTerminal;
-            if (_keywords.TryGetValue(text, out keywordTerminal))
-            {
-                return keywordTerminal;
-            }
-
-            keywordTerminal = new KeywordTerminal(text);
-            _keywords.Add(text, keywordTerminal);
-            return keywordTerminal;
+            return _keywords.GetOrAdd(keyword, s => new KeywordTerminal(s));
         }
     }
 }
