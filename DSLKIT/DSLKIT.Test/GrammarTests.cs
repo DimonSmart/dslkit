@@ -3,6 +3,7 @@ using System.Linq;
 using DSLKIT.Parser;
 using DSLKIT.Terminals;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using static DSLKIT.Terminals.KeywordTerminal;
 
 namespace DSLKIT.Test
 {
@@ -37,9 +38,9 @@ namespace DSLKIT.Test
                 var intTerm = new IntegerTerminal();
                 var stringTerm = new StringTerminal(@"'");
 
-                Root = ToTerm("=") + ToTerm("TEST") +
-                       ToTerm("(") + (intTerm | stringTerm) +
-                       ToTerm(")");
+                Root = CreateTerminal("=") + CreateTerminal("TEST") +
+                       CreateTerminal("(") + (intTerm | stringTerm) +
+                       CreateTerminal(")");
             }
         }
     }

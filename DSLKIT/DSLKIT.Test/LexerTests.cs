@@ -5,6 +5,7 @@ using System.Linq;
 using DSLKIT.Terminals;
 using DSLKIT.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using static DSLKIT.Terminals.KeywordTerminal;
 using static DSLKIT.Test.LexerTestData;
 
 namespace DSLKIT.Test
@@ -18,7 +19,7 @@ namespace DSLKIT.Test
             var source = new StringSourceStream("A");
             var lexerData = new LexerSettings
             {
-                new KeywordTerminal("A")
+                CreateTerminal("A")
             };
 
             var tokens = new Lexer(lexerData).GetTokens(source);
@@ -53,7 +54,8 @@ namespace DSLKIT.Test
                 new BracketMatcherStream(new Lexer(GetSampleLexerData()).GetTokens(new StringSourceStream(src)))
                     .ToList();
             PrintTokens(stream);
-            Assert.IsTrue(stream.Any(token => token.GetType() == typeof(ErrorToken)));
+            Assert.IsTrue(stream.Any(token => token.GetType() == typeof(ErrorToken)), 
+                $"Erroneous input handled as valid for:{src}");
         }
 
 
@@ -90,32 +92,32 @@ namespace DSLKIT.Test
             var lexerData = new LexerSettings
             {
                 new SpaceTerminal(),
-                new KeywordTerminal("SIN"),
-                new KeywordTerminal("COS"),
-                new KeywordTerminal("(", TermFlags.OpenBrace),
-                new KeywordTerminal(")", TermFlags.CloseBrace),
-                new KeywordTerminal("{", TermFlags.OpenBrace),
-                new KeywordTerminal("}", TermFlags.CloseBrace),
-                new KeywordTerminal(","),
-                new KeywordTerminal("."),
-                new KeywordTerminal(";"),
+                CreateTerminal("SIN"),
+                CreateTerminal("COS"),
+                CreateTerminal("(", TermFlags.OpenBrace),
+                CreateTerminal(")", TermFlags.CloseBrace),
+                CreateTerminal("{", TermFlags.OpenBrace),
+                CreateTerminal("}", TermFlags.CloseBrace),
+                CreateTerminal(","),
+                CreateTerminal("."),
+                CreateTerminal(";"),
                 new StringTerminal(),
                 new StringTerminal("[", "]"),
                 new StringTerminal("$", @""""),
                 new IntegerTerminal(),
                 new SingleLineCommentTerminal("//"),
                 new MultiLineCommentTerminal(@"/*", @"*/"),
-                new KeywordTerminal("int"),
-                new KeywordTerminal("="),
-                new KeywordTerminal("+"),
-                new KeywordTerminal("-"),
-                new KeywordTerminal("/"),
-                new KeywordTerminal("*"),
-                new KeywordTerminal("<"),
-                new KeywordTerminal(">"),
-                new KeywordTerminal("<="),
-                new KeywordTerminal(">="),
-                new KeywordTerminal("=="),
+                CreateTerminal("int"),
+                CreateTerminal("="),
+                CreateTerminal("+"),
+                CreateTerminal("-"),
+                CreateTerminal("/"),
+                CreateTerminal("*"),
+                CreateTerminal("<"),
+                CreateTerminal(">"),
+                CreateTerminal("<="),
+                CreateTerminal(">="),
+                CreateTerminal("=="),
                 new IdentifierTerminal()
             };
             return lexerData;

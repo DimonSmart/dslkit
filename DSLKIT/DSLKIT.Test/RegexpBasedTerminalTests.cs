@@ -1,6 +1,7 @@
 ﻿using DSLKIT.Terminals;
 using DSLKIT.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using static DSLKIT.Terminals.KeywordTerminal;
 
 namespace DSLKIT.Test
 {
@@ -36,7 +37,7 @@ namespace DSLKIT.Test
         public void StringToTerminalTest()
         {
             var s = new StringSourceStream("ABCD");
-            var rt = new KeywordTerminal("ABC");
+            var rt = CreateTerminal("ABC");
             IToken token;
             Assert.AreEqual(true, rt.TryMatch(s, out token));
             Assert.AreEqual(0, token.Position);

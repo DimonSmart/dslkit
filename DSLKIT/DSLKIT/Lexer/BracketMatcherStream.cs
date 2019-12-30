@@ -16,12 +16,12 @@ namespace DSLKIT
 
             foreach (var token in sourceStream)
             {
-                if ((token.Terminal.Flags & TermFlags.OpenBrace) != TermFlags.None)
+                if (token.Terminal.Flags == TermFlags.OpenBrace)
                 {
                     bracesStack.Push(token);
                 }
 
-                if ((token.Terminal.Flags & TermFlags.CloseBrace) != TermFlags.None)
+                if (token.Terminal.Flags == TermFlags.CloseBrace)
                 {
                     if (bracesStack.Count == 0)
                     {
