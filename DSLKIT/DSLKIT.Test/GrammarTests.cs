@@ -38,9 +38,9 @@ namespace DSLKIT.Test
                 var intTerm = new IntegerTerminal();
                 var stringTerm = new StringTerminal(@"'");
 
-                Root = CreateTerminal("=") + CreateTerminal("TEST") +
-                       CreateTerminal("(") + (intTerm | stringTerm) +
-                       CreateTerminal(")");
+                Root = CreateKeywordTerminal("=") + CreateKeywordTerminal("TEST") +
+                       CreateKeywordTerminal("(") + (intTerm | stringTerm) +
+                       CreateKeywordTerminal(")");
             }
         }
     }

@@ -4,15 +4,6 @@ namespace DSLKIT.Tokens
 {
     public class Token : IToken
     {
-        //public Token(int position, int length, string originalString, object value, ITerminal terminal)
-        //{
-        //    Position = position;
-        //    Length = length;
-        //    OriginalString = originalString;
-        //    Value = value;
-        //    Terminal = terminal;
-        //}
-
         /// <summary>
         ///     First character position in stream
         /// </summary>
