@@ -51,7 +51,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Lexer\LexerStreamBase.cs" />
-    <Compile Include="Lexer\BracketMatcherStream.cs" />
+    <Compile Include="Lexer\ParenthesesCheckedStream.cs" />
+    <Compile Include="Lexer\ParenthesesCheckedStreamCreator.cs" />
     <Compile Include="Parser\GrammarData.cs" />
     <Compile Include="Parser\GrammarDataBuilder.cs" />
     <Compile Include="Parser\IGrammar.cs" />
@@ -73,6 +74,7 @@
     <Compile Include="Terminals\IntegerTerminal.cs" />
     <Compile Include="Terminals\ITerminal.cs" />
     <Compile Include="Terminals\MultiLineCommentTerminal.cs" />
+    <Compile Include="Terminals\ParenthesesKeywordConstants.cs" />
     <Compile Include="Terminals\RegExpTerminal.cs" />
     <Compile Include="Terminals\SingleLineCommentTerminal.cs" />
     <Compile Include="Terminals\TermFlags.cs" />

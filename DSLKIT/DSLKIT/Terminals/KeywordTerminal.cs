@@ -13,7 +13,13 @@ namespace DSLKIT.Terminals
         public static Dictionary<string, TermFlags> PredefinedFlags = new Dictionary<string, TermFlags>
         {
             {"(", TermFlags.OpenBrace},
-            {")", TermFlags.CloseBrace}
+            {")", TermFlags.CloseBrace},
+            {"[", TermFlags.OpenBrace},
+            {"]", TermFlags.CloseBrace},
+            {"{", TermFlags.OpenBrace},
+            {"}", TermFlags.CloseBrace},
+            {"<", TermFlags.OpenBrace},
+            {">", TermFlags.CloseBrace},
         };
 
         private KeywordTerminal(string keyword) : base(@"\G" + Regex.Escape(keyword), keyword[0])
@@ -35,7 +41,7 @@ namespace DSLKIT.Terminals
         public override string Name { get; }
         private string Keyword { get; }
 
-        public static KeywordTerminal CreateTerminal(string keyword, TermFlags flags = TermFlags.None)
+        public static KeywordTerminal CreateKeywordTerminal(string keyword, TermFlags flags = TermFlags.None)
         {
             if (flags == TermFlags.None)
             {
@@ -54,7 +60,7 @@ namespace DSLKIT.Terminals
 
         public static implicit operator KeywordTerminal(string keyword)
         {
-            return CreateTerminal(keyword);
+            return CreateKeywordTerminal(keyword);
         }
 
         public override string ToString()
