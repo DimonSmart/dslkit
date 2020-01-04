@@ -25,6 +25,7 @@ namespace DSLKIT.Terminals
             {
                 return true;
             }
+
             return _previewChar == c;
         }
 
@@ -48,7 +49,7 @@ namespace DSLKIT.Terminals
             string originalString,
             object value,
             ITerminal terminal
-            )
+        )
         {
             // var instance = (IToken)Activator.CreateInstance(typeof(KeywordToken));
             return new KeywordToken

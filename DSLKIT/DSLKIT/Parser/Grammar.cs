@@ -7,6 +7,7 @@ namespace DSLKIT.Parser
     {
         private readonly ConcurrentDictionary<string, KeywordTerminal> _terminals =
             new ConcurrentDictionary<string, KeywordTerminal>();
+
         private readonly ITerminal Empty = new EmptyTerminal();
 
         public ITerminal Eof { get; } = new EofTerminal();

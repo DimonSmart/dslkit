@@ -16,7 +16,7 @@ namespace DSLKIT.Test
             Assert.AreEqual(true, rt.TryMatch(s, out token));
             Assert.AreEqual(0, token.Position);
             Assert.AreEqual(6, token.Length);
-            Assert.AreEqual(typeof (string), token.Value.GetType());
+            Assert.AreEqual(typeof(string), token.Value.GetType());
             Assert.AreEqual("Test", token.Value);
             Assert.AreEqual("Test".DoubleQuoteIt(), token.OriginalString);
         }
@@ -68,7 +68,7 @@ namespace DSLKIT.Test
             Assert.AreEqual(true, rt.TryMatch(stream, out token));
             Assert.AreEqual(startPosition, token.Position);
             Assert.AreEqual(expectedString.Length + start.Length + end.Length, token.Length);
-            Assert.AreEqual(typeof (string), token.Value.GetType());
+            Assert.AreEqual(typeof(string), token.Value.GetType());
             Assert.AreEqual(expectedString, token.Value);
             Assert.AreEqual(start + expectedString + end, token.OriginalString);
         }

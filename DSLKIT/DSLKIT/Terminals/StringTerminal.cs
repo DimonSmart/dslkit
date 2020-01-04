@@ -42,6 +42,7 @@ namespace DSLKIT.Terminals
             {
                 innerPattern.Append(escapedEnd);
             }
+
             innerPattern.Append(@"]|");
 
             innerPattern.AppendFormat(@"{0}{0}", escapedStart);
@@ -49,6 +50,7 @@ namespace DSLKIT.Terminals
             {
                 innerPattern.AppendFormat(@"|{0}{0}", escapedEnd);
             }
+
             innerPattern.Append(@")*");
             var stringBodyPattern = @"(?<StringBody>" + innerPattern + ")";
 
@@ -77,7 +79,9 @@ namespace DSLKIT.Terminals
             token = null;
             var result = _regex.Match(source);
             if (!result.Success)
+            {
                 return false;
+            }
 
             var openQuote = result.Groups["OpenQuote"].Value;
             var stringBody = result.Groups["StringBody"].Value;

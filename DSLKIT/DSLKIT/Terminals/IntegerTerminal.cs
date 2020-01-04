@@ -29,7 +29,9 @@ namespace DSLKIT.Terminals
             token = null;
             var result = _regex.Match(source);
             if (!result.Success)
+            {
                 return false;
+            }
 
             var stringBody = result.Value;
             int intValue;

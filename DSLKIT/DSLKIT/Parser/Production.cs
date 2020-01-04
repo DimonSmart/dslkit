@@ -24,11 +24,16 @@ namespace DSLKIT.Parser
                 {
                     sb.Append(dot);
                 }
+
                 sb.Append(production.RightValues[i].Name);
                 sb.Append(" ");
             }
+
             if (dotPosition == production.RightValues.Count)
+            {
                 sb.Append(dot);
+            }
+
             return sb.ToString();
         }
 

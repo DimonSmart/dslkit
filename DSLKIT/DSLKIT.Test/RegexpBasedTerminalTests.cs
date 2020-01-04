@@ -12,7 +12,6 @@ namespace DSLKIT.Test
             return new RegExpTerminal("Integer", @"\G\d+", null, TermFlags.None);
         }
 
-
         [TestMethod]
         public void NormalUseTest()
         {
