@@ -25,6 +25,7 @@ namespace DSLKIT
             {
                 return _buffer[Position];
             }
+
             throw new EndOfStreamException();
         }
 
@@ -34,6 +35,7 @@ namespace DSLKIT
             {
                 return _buffer[Position++];
             }
+
             throw new EndOfStreamException();
         }
 

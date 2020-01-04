@@ -19,7 +19,7 @@ namespace DSLKIT.Terminals
             {"{", TermFlags.OpenBrace},
             {"}", TermFlags.CloseBrace},
             {"<", TermFlags.OpenBrace},
-            {">", TermFlags.CloseBrace},
+            {">", TermFlags.CloseBrace}
         };
 
         private KeywordTerminal(string keyword) : base(@"\G" + Regex.Escape(keyword), keyword[0])

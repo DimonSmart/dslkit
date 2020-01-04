@@ -13,6 +13,7 @@ namespace DSLKIT.Parser
             {
                 nonterminals.AddRange(GetAllNonTerminals(nonTerminal));
             }
+
             return nonterminals;
         }
 
