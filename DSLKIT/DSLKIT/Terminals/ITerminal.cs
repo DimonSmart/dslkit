@@ -2,9 +2,8 @@
 
 namespace DSLKIT.Terminals
 {
-    public interface ITerminal
+    public interface ITerminal : ITerm
     {
-        string Name { get; }
         TermFlags Flags { get; }
         TerminalPriority Priority { get; }
         bool CanStartWith(char c);

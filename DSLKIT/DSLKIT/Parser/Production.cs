@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text;
+using DSLKIT.NonTerminals;
 using DSLKIT.Terminals;
 
 namespace DSLKIT.Parser
@@ -7,11 +8,12 @@ namespace DSLKIT.Parser
     public class Production
     {
         public readonly NonTerminal LeftNonTerminal;
-        public readonly IList<ITerm> RightValues = new List<ITerm>();
+        public readonly IList<ITerm> ProductionDefinition;
 
-        public Production(NonTerminal leftNonTerminal)
+        public Production(NonTerminal leftNonTerminal, IList<ITerm> productionDefinition)
         {
             LeftNonTerminal = leftNonTerminal;
+            ProductionDefinition = productionDefinition;
         }
 
         public static string ProductionToString(Production production, int dotPosition = -1)
@@ -20,18 +22,18 @@ namespace DSLKIT.Parser
             var sb = new StringBuilder();
             sb.Append(production.LeftNonTerminal.Name);
             sb.Append(" → ");
-            for (var i = 0; i < production.RightValues.Count; i++)
+            for (var i = 0; i < production.ProductionDefinition.Count; i++)
             {
                 if (i == dotPosition)
                 {
                     sb.Append(dot);
                 }
 
-                sb.Append(production.RightValues[i].Name);
+                sb.Append(production.ProductionDefinition[i].Name);
                 sb.Append(" ");
             }
 
-            if (dotPosition == production.RightValues.Count)
+            if (dotPosition == production.ProductionDefinition.Count)
             {
                 sb.Append(dot);
             }

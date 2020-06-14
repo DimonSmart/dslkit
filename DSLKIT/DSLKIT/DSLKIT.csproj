@@ -56,7 +56,7 @@
     <Compile Include="Parser\IGrammar.cs" />
     <Compile Include="Parser\Production.cs" />
     <Compile Include="Parser\Grammar.cs" />
-    <Compile Include="Parser\NonTerminal.cs" />
+    <Compile Include="NonTerminals\NonTerminal.cs" />
     <Compile Include="Terminals\CommentTerminalBase.cs" />
     <Compile Include="Terminals\CommentTerminalRegexpBased.cs" />
     <Compile Include="Terminals\EmptyTerminal.cs" />
@@ -64,12 +64,14 @@
     <Compile Include="Helpers\StringHelper.cs" />
     <Compile Include="Lexer\ISourceStream.cs" />
     <Compile Include="Terminals\GrammarBuilder.cs" />
+    <Compile Include="NonTerminals\INonTerminal.cs" />
     <Compile Include="Terminals\ITerm.cs" />
     <Compile Include="Terminals\IdentifierTerminal.cs" />
     <Compile Include="Terminals\IntegerTerminal.cs" />
     <Compile Include="Terminals\ITerminal.cs" />
     <Compile Include="Terminals\MultiLineCommentTerminal.cs" />
     <Compile Include="Terminals\ParenthesesKeywordConstants.cs" />
+    <Compile Include="Terminals\ProductionBuilder.cs" />
     <Compile Include="Terminals\RegExpTerminal.cs" />
     <Compile Include="Terminals\SingleLineCommentTerminal.cs" />
     <Compile Include="Terminals\TermFlags.cs" />
@@ -101,6 +103,7 @@
     <None Include="App.config" />
     <None Include="DSLKITClassDiagram.cd" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using DSLKIT.NonTerminals;
 using DSLKIT.Parser;
 
 namespace DSLKIT.Terminals
@@ -9,10 +11,24 @@ namespace DSLKIT.Terminals
     {
         private readonly ConcurrentDictionary<string, ITerminal> _allTerminals =
             new ConcurrentDictionary<string, ITerminal>();
-        private readonly IList<Production> Productions;
+
+        private readonly ConcurrentDictionary<string, NonTerminal> NonTerminals =
+            new ConcurrentDictionary<string, NonTerminal>();
+
+        private readonly IList<Production> Productions = new List<Production>();
         private string _name;
 
-        public GrammarBuilder AddKeywordTerminal(string keyword, TermFlags flags = TermFlags.None)
+        public NonTerminal AddNonTerminal(string nonTerminalName)
+        {
+            return NonTerminals.GetOrAdd(nonTerminalName, i => new NonTerminal(nonTerminalName));
+        }
+
+        public NonTerminal AddNonTerminal(NonTerminal nonTerminal)
+        {
+            return NonTerminals.GetOrAdd(nonTerminal.Name, i => nonTerminal);
+        }
+
+        public GrammarBuilder AddKeyword(string keyword, TermFlags flags = TermFlags.None)
         {
             AddTerminal(new KeywordTerminal(keyword, flags));
             return this;
@@ -20,47 +36,42 @@ namespace DSLKIT.Terminals
 
         public GrammarBuilder AddTerminal(ITerminal terminal)
         {
-            var existTerminal = _allTerminals.GetOrAdd(terminal.DictionaryKey, i => terminal);
-            if (terminal != existTerminal)
-            {
-                return this;
-            }
+            AddTerminalBody(terminal);
+            return this;
+        }
 
-            Console.WriteLine($"Terminal with key:{terminal.DictionaryKey} already exists in a grammar");
-            if (terminal.Flags != existTerminal.Flags)
+        public ITerminal AddTerminalBody(ITerminal terminal)
+        {
+            var newTerminal = _allTerminals.GetOrAdd(terminal.DictionaryKey, i => terminal);
+           
+            if (terminal.Flags != newTerminal.Flags)
             {
                 throw new InvalidOperationException(
-                    $"Different flags for same terminal:[{terminal}] Expected flag:[{terminal.Flags}], Got:[{existTerminal.Flags}]");
+                    $"Different flags for same terminal:[{terminal}] Expected flag:[{terminal.Flags}], Got:[{newTerminal.Flags}]");
             }
 
-            return this;
+            return newTerminal;
         }
 
-        public GrammarBuilder AddTerminals(IEnumerable<ITerminal> terminals)
-        {
-            foreach (var terminal in terminals)
-            {
-                AddTerminal(terminal);
-            }
-
-            return this;
-        }
-
-        public GrammarBuilder WithName(string name)
+        public GrammarBuilder WithGrammarName(string name)
         {
             _name = name;
             return this;
         }
 
-        public Grammar Build()
+        public Grammar BuildGrammar()
         {
-            return new Grammar(_name, _allTerminals.Values);
+            return new Grammar(_name, _allTerminals.Values, NonTerminals.Values.AsEnumerable());
         }
 
-        public GrammarBuilder AddProduction(Production production)
+        public void AddProduction(Production production)
         {
             Productions.Add(production);
-            return this;
+        }
+
+        public ProductionBuilder AddProduction(string ruleName)
+        {
+            return new ProductionBuilder(this, ruleName);
         }
     }
 }
