@@ -33,7 +33,7 @@ namespace DSLKIT.Test
         public void StringToTerminalTest()
         {
             var s = new StringSourceStream("ABCD");
-            var rt = CreateKeywordTerminal("ABC");
+            var rt = new KeywordTerminal("ABC");
             Assert.AreEqual(true, rt.TryMatch(s, out var token));
             Assert.AreEqual(0, token.Position);
             Assert.AreEqual(3, token.Length);

@@ -1,33 +1,24 @@
 ﻿using System;
+using DSLKIT.Terminals;
 
 namespace DSLKIT.Parser
 {
-    public class NonTerminal : Term
+    public class NonTerminal : ITerm
     {
-        public Rule Rule;
-
-        public NonTerminal(string name, Rule expression)
+        public NonTerminal(string name)
         {
             Name = name;
-            Rule = expression;
         }
 
-        public NonTerminal(string name, TermList expression)
+        public NonTerminal() : this(Guid.NewGuid().ToString())
         {
-            Name = name;
-            Rule = new Rule(expression);
         }
 
-        public override string Name { get; }
-
-        public static implicit operator NonTerminal(Rule rule)
-        {
-            return new NonTerminal("AutoName " + Guid.NewGuid(), rule);
-        }
+        public string Name { get; }
 
         public override string ToString()
         {
-            return Name;
+            return $"NT:{Name}";
         }
     }
 }

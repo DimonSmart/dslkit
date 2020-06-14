@@ -13,35 +13,21 @@ namespace DSLKIT.Test
         [TestMethod]
         public void GrammarExpressionConstruction()
         {
-            var grammar = new TestGrammar();
-            Debug.WriteLine(grammar.Root.Rule.Data.ToString());
+            var grammar = GetTestGrammar();
+            Debug.WriteLine(grammar.ToString());
         }
 
-
-        [TestMethod]
-        public void GrammarNonTerminalCollecting()
+        private Grammar GetTestGrammar()
         {
-            var grammar = new TestGrammar();
-            Debug.WriteLine(grammar.Root.Rule.Data.ToString());
-            var nonTerminals = GrammarDataBuilder.GetAllNonTerminals(grammar.Root).ToList();
-            for (var i = 0; i < nonTerminals.Count; i++)
-            {
-                var nonTerminal = nonTerminals[i];
-                Debug.WriteLine("{0:d3}: {1}", i, nonTerminal.Name);
-            }
-        }
-
-        public class TestGrammar : Grammar
-        {
-            public TestGrammar()
-            {
-                var intTerm = new IntegerTerminal();
-                var stringTerm = new StringTerminal(@"'");
-
-                Root = CreateKeywordTerminal("=") + "TEST" +
-                       CreateKeywordTerminal("(") + (intTerm | stringTerm) +
-                       CreateKeywordTerminal(")");
-            }
+            return new GrammarBuilder()
+                .WithName("Test grammar")
+                .AddTerminal(new KeywordTerminal("="))
+                .AddTerminal(new KeywordTerminal("TEST"))
+                .AddTerminal(new KeywordTerminal("("))
+                .AddTerminal(new IntegerTerminal())
+                .AddTerminal(new StringTerminal())
+                .AddTerminal(new KeywordTerminal(")"))
+                .Build();
         }
     }
 }

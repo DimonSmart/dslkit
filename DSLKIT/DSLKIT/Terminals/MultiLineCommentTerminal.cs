@@ -12,5 +12,6 @@ namespace DSLKIT.Terminals
         }
 
         public override string Name => "Multi line comment";
+        public override string DictionaryKey => Name;
     }
 }

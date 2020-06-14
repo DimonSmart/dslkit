@@ -1,11 +1,13 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Text;
+using DSLKIT.Terminals;
 
 namespace DSLKIT.Parser
 {
     public class Production
     {
         public readonly NonTerminal LeftNonTerminal;
-        public readonly TermList RightValues = new TermList();
+        public readonly IList<ITerm> RightValues = new List<ITerm>();
 
         public Production(NonTerminal leftNonTerminal)
         {
@@ -14,7 +16,7 @@ namespace DSLKIT.Parser
 
         public static string ProductionToString(Production production, int dotPosition = -1)
         {
-            var dot = " ● ";
+            const string dot = " ● ";
             var sb = new StringBuilder();
             sb.Append(production.LeftNonTerminal.Name);
             sb.Append(" → ");

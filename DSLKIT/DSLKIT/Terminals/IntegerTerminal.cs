@@ -1,10 +1,9 @@
 ﻿using System.Text.RegularExpressions;
-using DSLKIT.Parser;
 using DSLKIT.Tokens;
 
 namespace DSLKIT.Terminals
 {
-    public class IntegerTerminal : Term, ITerminal
+    public class IntegerTerminal : ITerminal
     {
         private readonly Regex _regex;
 
@@ -13,8 +12,7 @@ namespace DSLKIT.Terminals
             _regex = new Regex(@"\G\d+");
         }
 
-        public override string Name => "Integer";
-
+        public string Name => "Integer";
         public TermFlags Flags => TermFlags.Const;
 
         public TerminalPriority Priority => TerminalPriority.Normal;
@@ -34,8 +32,7 @@ namespace DSLKIT.Terminals
             }
 
             var stringBody = result.Value;
-            int intValue;
-            if (!int.TryParse(stringBody, out intValue))
+            if (!int.TryParse(stringBody, out var intValue))
             {
                 return false;
             }
@@ -51,5 +48,7 @@ namespace DSLKIT.Terminals
 
             return true;
         }
+
+        public string DictionaryKey => Name;
     }
 }

@@ -33,6 +33,8 @@ namespace DSLKIT.Terminals
             return true;
         }
 
+        public string DictionaryKey => "Terminal[space]";
+
         protected abstract bool IsSpace(char c);
     }
 }

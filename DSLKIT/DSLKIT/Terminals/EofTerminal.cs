@@ -21,8 +21,6 @@ namespace DSLKIT.Terminals
                 return false;
             }
 
-            // token = new Token(position: source.Position, length: 0, originalString: "EOF", value: null, terminal: this);
-
             token = new EofToken
             {
                 Position = source.Position,
@@ -34,5 +32,7 @@ namespace DSLKIT.Terminals
 
             return true;
         }
+
+        public string DictionaryKey => Name;
     }
 }

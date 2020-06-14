@@ -9,38 +9,37 @@ namespace DSLKIT.Test
 
         public static LexerSettings GetSampleLexerSettings()
         {
-            var lexerData = new LexerSettings
+            return new LexerSettings
             {
                 new SpaceTerminal(),
-                KeywordTerminal.CreateKeywordTerminal("SIN"),
-                KeywordTerminal.CreateKeywordTerminal("COS"),
-                KeywordTerminal.CreateKeywordTerminal("(", TermFlags.OpenBrace),
-                KeywordTerminal.CreateKeywordTerminal(")", TermFlags.CloseBrace),
-                KeywordTerminal.CreateKeywordTerminal("{", TermFlags.OpenBrace),
-                KeywordTerminal.CreateKeywordTerminal("}", TermFlags.CloseBrace),
-                KeywordTerminal.CreateKeywordTerminal(","),
-                KeywordTerminal.CreateKeywordTerminal("."),
-                KeywordTerminal.CreateKeywordTerminal(";"),
+                new KeywordTerminal("SIN"),
+                new KeywordTerminal("COS"),
+                new KeywordTerminal("(", TermFlags.OpenBrace),
+                new KeywordTerminal(")", TermFlags.CloseBrace),
+                new KeywordTerminal("{", TermFlags.OpenBrace),
+                new KeywordTerminal("}", TermFlags.CloseBrace),
+                new KeywordTerminal(","),
+                new KeywordTerminal("."),
+                new KeywordTerminal(";"),
                 new StringTerminal(),
                 new StringTerminal("[", "]"),
                 new StringTerminal("$", @""""),
                 new IntegerTerminal(),
                 new SingleLineCommentTerminal("//"),
                 new MultiLineCommentTerminal(@"/*", @"*/"),
-                KeywordTerminal.CreateKeywordTerminal("int"),
-                KeywordTerminal.CreateKeywordTerminal("="),
-                KeywordTerminal.CreateKeywordTerminal("+"),
-                KeywordTerminal.CreateKeywordTerminal("-"),
-                KeywordTerminal.CreateKeywordTerminal("/"),
-                KeywordTerminal.CreateKeywordTerminal("*"),
-                KeywordTerminal.CreateKeywordTerminal("<"),
-                KeywordTerminal.CreateKeywordTerminal(">"),
-                KeywordTerminal.CreateKeywordTerminal("<="),
-                KeywordTerminal.CreateKeywordTerminal(">="),
-                KeywordTerminal.CreateKeywordTerminal("=="),
+                new KeywordTerminal("int"),
+                new KeywordTerminal("="),
+                new KeywordTerminal("+"),
+                new KeywordTerminal("-"),
+                new KeywordTerminal("/"),
+                new KeywordTerminal("*"),
+                new KeywordTerminal("<"),
+                new KeywordTerminal(">"),
+                new KeywordTerminal("<="),
+                new KeywordTerminal(">="),
+                new KeywordTerminal("=="),
                 new IdentifierTerminal()
             };
-            return lexerData;
         }
     }
 }

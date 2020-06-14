@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace DSLKIT.Terminals
 {
     public class KeywordTerminal : RegExpTerminalBase
     {
-        private static readonly ConcurrentDictionary<string, KeywordTerminal> AllTerminals =
-            new ConcurrentDictionary<string, KeywordTerminal>();
-
         public static Dictionary<string, TermFlags> PredefinedFlags = new Dictionary<string, TermFlags>
         {
             {"(", TermFlags.OpenBrace},
@@ -29,38 +24,32 @@ namespace DSLKIT.Terminals
             Name = Keyword;
         }
 
-        private KeywordTerminal(string keyword, TermFlags flags) : this(keyword)
+        public  KeywordTerminal(string keyword, TermFlags flags = TermFlags.None) : this(keyword)
         {
             Keyword = keyword;
-            Flags = flags;
+            Flags = GetFlag(keyword, flags);
         }
 
-        public override TerminalPriority Priority => TerminalPriority.Normal;
-
-        public override TermFlags Flags { get; }
-        public override string Name { get; }
-        private string Keyword { get; }
-
-        public static KeywordTerminal CreateKeywordTerminal(string keyword, TermFlags flags = TermFlags.None)
+        public static TermFlags GetFlag(string keyword, TermFlags flags = TermFlags.None)
         {
             if (flags == TermFlags.None)
             {
                 PredefinedFlags.TryGetValue(keyword, out flags);
             }
-
-            var terminal = AllTerminals.GetOrAdd(keyword, s => new KeywordTerminal(keyword, flags));
-            if (terminal.Flags != flags)
-            {
-                throw new InvalidOperationException(
-                    $"Different flags for same keyword:[{keyword}] {terminal.Flags}, {flags}");
-            }
-
-            return terminal;
+            return flags;
         }
+
+
+        public override TerminalPriority Priority => TerminalPriority.Normal;
+        public override string DictionaryKey => $"Keyword[{Keyword}]";
+
+        public override string Name { get; }
+        public override TermFlags Flags { get; }
+        private string Keyword { get; }
 
         public static implicit operator KeywordTerminal(string keyword)
         {
-            return CreateKeywordTerminal(keyword);
+            return new KeywordTerminal(keyword);
         }
 
         public override string ToString()

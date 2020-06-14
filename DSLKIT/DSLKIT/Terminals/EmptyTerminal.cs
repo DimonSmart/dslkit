@@ -18,5 +18,7 @@ namespace DSLKIT.Terminals
         {
             throw new NotImplementedException();
         }
+
+        public string DictionaryKey => Name;
     }
 }

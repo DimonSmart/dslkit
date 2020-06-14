@@ -1,11 +1,10 @@
 ﻿using System.Text;
 using System.Text.RegularExpressions;
-using DSLKIT.Parser;
 using DSLKIT.Tokens;
 
 namespace DSLKIT.Terminals
 {
-    public class StringTerminal : Term, ITerminal
+    public class StringTerminal : ITerminal
     {
         private readonly string _end;
         private readonly Regex _regex;
@@ -59,8 +58,7 @@ namespace DSLKIT.Terminals
             _regex = new Regex(pattern, RegexOptions.Compiled);
         }
 
-        public override string Name => "String";
-
+        public string Name => "String";
         public TermFlags Flags => TermFlags.Const;
         public TerminalPriority Priority => TerminalPriority.Normal;
 
@@ -98,6 +96,8 @@ namespace DSLKIT.Terminals
 
             return true;
         }
+
+        public string DictionaryKey => Name;
 
         public override string ToString()
         {

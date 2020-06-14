@@ -10,6 +10,7 @@
         }
 
         public override TermFlags Flags { get; }
+        public override string DictionaryKey => Name;
         public override string Name { get; }
     }
 }

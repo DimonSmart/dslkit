@@ -1,10 +1,9 @@
 ﻿using System.Text.RegularExpressions;
-using DSLKIT.Parser;
 using DSLKIT.Tokens;
 
 namespace DSLKIT.Terminals
 {
-    public abstract class RegExpTerminalBase : Term, ITerminal
+    public abstract class RegExpTerminalBase : ITerminal
     {
         private readonly char? _previewChar;
         private readonly Regex _regex;
@@ -15,6 +14,7 @@ namespace DSLKIT.Terminals
             _regex = new Regex(pattern, RegexOptions.Compiled);
         }
 
+        public abstract string Name { get; }
         public abstract TermFlags Flags { get; }
 
         public virtual TerminalPriority Priority => TerminalPriority.Low;
@@ -42,6 +42,7 @@ namespace DSLKIT.Terminals
             return true;
         }
 
+        public abstract string DictionaryKey { get; }
 
         protected virtual IToken CreateToken(
             int position,
