@@ -4,11 +4,7 @@
     {
         private const string TerminalPattern = @"\G(?i)\b[a-z_][\.\p{L}\p{Nl}0-9]*";
 
-        public IdentifierTerminal(string name) : base(TerminalPattern, null)
-        {
-        }
-
-        public IdentifierTerminal() : this("Variable")
+        public IdentifierTerminal() : base(TerminalPattern, null)
         {
         }
 

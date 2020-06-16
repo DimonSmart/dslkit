@@ -10,7 +10,7 @@ namespace DSLKIT.Terminals
         private readonly GrammarBuilder _grammarBuilder;
         private readonly string _nonTerminalName;
         private readonly List<ITerm> _ruleDefinition = new List<ITerm>();
-        
+
         public ProductionBuilder(GrammarBuilder grammarBuilder, string nonTerminalName)
         {
             _grammarBuilder = grammarBuilder;
@@ -21,15 +21,9 @@ namespace DSLKIT.Terminals
         {
         }
 
-        public void AddKeyword(string keyword)
-        {
-            var terminal = _grammarBuilder.AddTerminalBody(new KeywordTerminal(keyword));
-            _ruleDefinition.Add(terminal);
-        }
-
         public GrammarBuilder Build()
         {
-            var nonTerminal = _grammarBuilder.AddNonTerminal(_nonTerminalName);
+            var nonTerminal = _grammarBuilder.GetOrAddNonTerminal(_nonTerminalName);
             _grammarBuilder.AddProduction(new Production(nonTerminal, _ruleDefinition));
             return _grammarBuilder;
         }
@@ -41,14 +35,13 @@ namespace DSLKIT.Terminals
                 switch (term)
                 {
                     case string keyword:
-                        AddKeyword(keyword);
+                        _ruleDefinition.Add(_grammarBuilder.AddTerminalBody(new KeywordTerminal(keyword)));
                         break;
                     case ITerminal terminal:
-                        AddTerminal(terminal);
+                        _ruleDefinition.Add(_grammarBuilder.AddTerminalBody(terminal));
                         break;
-
                     case NonTerminal nonTerminal:
-                        _grammarBuilder.AddNonTerminal(nonTerminal);
+                        _ruleDefinition.Add(_grammarBuilder.GetOrAddNonTerminal(nonTerminal));
                         break;
                     default:
                         throw new InvalidOperationException(
@@ -57,11 +50,6 @@ namespace DSLKIT.Terminals
             }
 
             return Build();
-        }
-
-        private void AddTerminal(ITerminal terminal)
-        {
-            _grammarBuilder.AddTerminal(terminal);
         }
     }
 }

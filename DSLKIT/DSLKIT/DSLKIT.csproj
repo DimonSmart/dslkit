@@ -50,9 +50,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\Utils\GrammarVisualizer.cs" />
     <Compile Include="Lexer\LexerStreamBase.cs" />
     <Compile Include="Lexer\ParenthesesCheckedStream.cs" />
     <Compile Include="Lexer\ParenthesesCheckedStreamCreator.cs" />
+    <Compile Include="NonTerminals\NonTerminalExt.cs" />
     <Compile Include="Parser\IGrammar.cs" />
     <Compile Include="Parser\Production.cs" />
     <Compile Include="Parser\Grammar.cs" />
@@ -65,6 +67,7 @@
     <Compile Include="Lexer\ISourceStream.cs" />
     <Compile Include="Terminals\GrammarBuilder.cs" />
     <Compile Include="NonTerminals\INonTerminal.cs" />
+    <Compile Include="Parser\Constants.cs" />
     <Compile Include="Terminals\ITerm.cs" />
     <Compile Include="Terminals\IdentifierTerminal.cs" />
     <Compile Include="Terminals\IntegerTerminal.cs" />

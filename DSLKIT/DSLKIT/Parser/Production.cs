@@ -7,10 +7,10 @@ namespace DSLKIT.Parser
 {
     public class Production
     {
-        public readonly NonTerminal LeftNonTerminal;
+        public readonly INonTerminal LeftNonTerminal;
         public readonly IList<ITerm> ProductionDefinition;
 
-        public Production(NonTerminal leftNonTerminal, IList<ITerm> productionDefinition)
+        public Production(INonTerminal leftNonTerminal, IList<ITerm> productionDefinition)
         {
             LeftNonTerminal = leftNonTerminal;
             ProductionDefinition = productionDefinition;
@@ -21,7 +21,7 @@ namespace DSLKIT.Parser
             const string dot = " ● ";
             var sb = new StringBuilder();
             sb.Append(production.LeftNonTerminal.Name);
-            sb.Append(" → ");
+            sb.Append("\t→\t");
             for (var i = 0; i < production.ProductionDefinition.Count; i++)
             {
                 if (i == dotPosition)

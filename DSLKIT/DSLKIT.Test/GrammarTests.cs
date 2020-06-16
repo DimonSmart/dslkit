@@ -1,27 +1,32 @@
-﻿using System.Diagnostics;
+﻿using System;
+using DSLKIT.NonTerminals;
 using DSLKIT.Parser;
 using DSLKIT.Terminals;
+using DSLKIT.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using static DSLKIT.Parser.Constants;
 
 namespace DSLKIT.Test
 {
     [TestClass]
     public class GrammarTests
     {
-        private static readonly IntegerTerminal _integer = new IntegerTerminal();
-
         [TestMethod]
         public void GrammarA_Create_Test()
         {
-            var grammar = GetGrammarA();
-            Debug.WriteLine(grammar.ToString());
+            ShowGrammar(GetGrammarA());
         }
 
         [TestMethod]
         public void GrammarB_Create_Test()
         {
-            var grammar = GetGrammarB();
-            Debug.WriteLine(grammar.ToString());
+            ShowGrammar(GetGrammarB());
+        }
+
+        [TestMethod]
+        public void GrammarFirstsAndFollow_Create_Test()
+        {
+            ShowGrammar(GetGrammarFirstsAndFollow());
         }
 
         private static Grammar GetGrammarA()
@@ -42,10 +47,39 @@ namespace DSLKIT.Test
             return new GrammarBuilder()
                 .WithGrammarName("Test grammar")
                 .AddProduction("Multiplication")
-                    .AddProductionDefinition("MUL", "(", _integer, ",", _integer, ")")
+                .AddProductionDefinition("MUL", "(", Integer, ",", Integer, ")")
                 .AddProduction("Division")
-                    .AddProductionDefinition("DIV", "(", _integer, ",", _integer, ")")
+                .AddProductionDefinition("DIV", "(", Integer, ",", Integer, ")")
                 .BuildGrammar();
+        }
+
+        private static Grammar GetGrammarFirstsAndFollow()
+        {
+            return new GrammarBuilder()
+                .WithGrammarName("Firsts & Follow grammar")
+                .AddProduction("E")
+                .AddProductionDefinition("T".AsNonTerminal(), "E'".AsNonTerminal())
+                .AddProduction("E'")
+                .AddProductionDefinition("+", "T".AsNonTerminal(), "E'".AsNonTerminal())
+                .AddProduction("E'")
+                .AddProductionDefinition(Empty)
+                .AddProduction("T")
+                .AddProductionDefinition("F".AsNonTerminal(), "T'".AsNonTerminal())
+                .AddProduction("T'")
+                .AddProductionDefinition("*", "F".AsNonTerminal(), "T'".AsNonTerminal())
+                .AddProduction("T'")
+                .AddProductionDefinition(Empty)
+                .AddProduction("F")
+                .AddProductionDefinition("(", "E".AsNonTerminal(), ")")
+                .AddProduction("F")
+                .AddProductionDefinition(Identifier)
+                .BuildGrammar();
+        }
+
+
+        private static void ShowGrammar(IGrammar grammar)
+        {
+            Console.WriteLine(GrammarVisualizer.DumpGrammar(grammar));
         }
     }
 }

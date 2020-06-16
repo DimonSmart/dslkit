@@ -9,6 +9,7 @@ namespace DSLKIT.Parser
         string Name { get; }
         IReadOnlyCollection<ITerminal> Terminals { get; }
         IReadOnlyCollection<INonTerminal> NonTerminals { get; }
+        IReadOnlyCollection<Production> Productions { get; }
         NonTerminal Root { get; }
         ITerminal Eof { get; }
     }

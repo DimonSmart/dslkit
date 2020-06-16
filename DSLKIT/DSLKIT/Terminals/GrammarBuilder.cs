@@ -9,29 +9,37 @@ namespace DSLKIT.Terminals
 {
     public class GrammarBuilder
     {
-        private readonly ConcurrentDictionary<string, ITerminal> _allTerminals =
+        private readonly ConcurrentDictionary<string, INonTerminal> _nonTerminals =
+            new ConcurrentDictionary<string, INonTerminal>();
+
+        private readonly IList<Production> _productions = new List<Production>();
+
+        private readonly ConcurrentDictionary<string, ITerminal> _terminals =
             new ConcurrentDictionary<string, ITerminal>();
 
-        private readonly ConcurrentDictionary<string, NonTerminal> NonTerminals =
-            new ConcurrentDictionary<string, NonTerminal>();
-
-        private readonly IList<Production> Productions = new List<Production>();
         private string _name;
 
-        public NonTerminal AddNonTerminal(string nonTerminalName)
+        public INonTerminal GetOrAddNonTerminal(string nonTerminalName)
         {
-            return NonTerminals.GetOrAdd(nonTerminalName, i => new NonTerminal(nonTerminalName));
+            return _nonTerminals.GetOrAdd(nonTerminalName, i => new NonTerminal(nonTerminalName));
         }
 
-        public NonTerminal AddNonTerminal(NonTerminal nonTerminal)
+        public INonTerminal GetOrAddNonTerminal(INonTerminal nonTerminal)
         {
-            return NonTerminals.GetOrAdd(nonTerminal.Name, i => nonTerminal);
+            return _nonTerminals.GetOrAdd(nonTerminal.Name, i => nonTerminal);
         }
 
-        public GrammarBuilder AddKeyword(string keyword, TermFlags flags = TermFlags.None)
+        public ITerm GetOrAddTerm(ITerm term)
         {
-            AddTerminal(new KeywordTerminal(keyword, flags));
-            return this;
+            switch (term)
+            {
+                case ITerminal terminal:
+                    return AddTerminalBody(terminal);
+                case INonTerminal nonTerminal:
+                    return GetOrAddNonTerminal(nonTerminal);
+            }
+
+            throw new InvalidOperationException($"term {term?.GetType()} must be an ITerminal or INonTerminal");
         }
 
         public GrammarBuilder AddTerminal(ITerminal terminal)
@@ -42,8 +50,8 @@ namespace DSLKIT.Terminals
 
         public ITerminal AddTerminalBody(ITerminal terminal)
         {
-            var newTerminal = _allTerminals.GetOrAdd(terminal.DictionaryKey, i => terminal);
-           
+            var newTerminal = _terminals.GetOrAdd(terminal.DictionaryKey, i => terminal);
+
             if (terminal.Flags != newTerminal.Flags)
             {
                 throw new InvalidOperationException(
@@ -61,12 +69,12 @@ namespace DSLKIT.Terminals
 
         public Grammar BuildGrammar()
         {
-            return new Grammar(_name, _allTerminals.Values, NonTerminals.Values.AsEnumerable());
+            return new Grammar(_name, _terminals.Values, _nonTerminals.Values.AsEnumerable(), _productions);
         }
 
         public void AddProduction(Production production)
         {
-            Productions.Add(production);
+            _productions.Add(production);
         }
 
         public ProductionBuilder AddProduction(string ruleName)
