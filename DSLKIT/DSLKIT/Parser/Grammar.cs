@@ -30,51 +30,66 @@ namespace DSLKIT.Parser
 
         public NonTerminal Root { get; set; }
 
-        public static IDictionary<INonTerminal, IList<ITerminal>> CalculateFirsts(
+        public IDictionary<INonTerminal, IList<ITerminal>> CalculateFirsts(
             IReadOnlyCollection<Production> productions)
         {
             var res = new Dictionary<INonTerminal, IList<ITerminal>>();
-
             foreach (var production in productions)
             {
-                FirstRecursive(res, production, productions);
+                AddFirsts(res, production.LeftNonTerminal, First(new List<ITerm>() { production.LeftNonTerminal }));
             }
-
             return res;
         }
 
 
-        public static IList<ITerminal> First(List<ITerm> tokens, IReadOnlyCollection<Production> productions)
+        public IList<ITerminal> First(IList<ITerm> terms)
         {
-            if (tokens.FirstOrDefault() is ITerminal terminal)
+            if (terms.FirstOrDefault() == Constants.Empty)
+            {
+                return new List<ITerminal> { Constants.Empty };
+            }
+
+            if (terms.FirstOrDefault() is ITerminal terminal)
             {
                 return new List<ITerminal> {terminal};
             }
 
-            if (tokens.FirstOrDefault() is NonTerminal nonterminal)
+            var res = new List<ITerminal>();
+            foreach (var term in terms)
             {
-                var firsts = First(new List<ITerm> {nonterminal}, productions);
-                return firsts;
+                foreach (var production in Productions.Where(p => p.LeftNonTerminal == term))
+                {
+                    res.AddRange(First(production.ProductionDefinition));
+                }
             }
 
-            return new List<ITerminal>();
+            return res.Distinct().ToList();                
         }
 
 
-        public static void FirstRecursive(IDictionary<INonTerminal, IList<ITerminal>> firsts, Production production,
-            IReadOnlyCollection<Production> productions)
+        //public void FirstRecursive(IDictionary<INonTerminal, IList<ITerminal>> firsts, Production production,
+        //    IReadOnlyCollection<Production> productions)
+        //{
+        //    if (production.ProductionDefinition.First() == Constants.Empty)
+        //    {
+        //        AddFirst(firsts, production.LeftNonTerminal, Constants.Empty);
+        //    }
+
+        //    if (production.ProductionDefinition.First() is ITerminal terminal)
+        //    {
+        //        AddFirst(firsts, production.LeftNonTerminal, terminal);
+        //    }
+        //}
+
+
+        private static void AddFirsts(IDictionary<INonTerminal, IList<ITerminal>> allFirsts, INonTerminal nonTerminal,
+            IEnumerable<ITerminal> terminals)
         {
-            if (production.ProductionDefinition.First() == Constants.Empty)
+            foreach (var terminal in terminals)
             {
-                AddFirst(firsts, production.LeftNonTerminal, Constants.Empty);
-            }
-
-            if (production.ProductionDefinition.First() is ITerminal terminal)
-            {
-                AddFirst(firsts, production.LeftNonTerminal, terminal);
+                AddFirst(allFirsts, nonTerminal, terminal);
             }
         }
-
 
         private static void AddFirst(IDictionary<INonTerminal, IList<ITerminal>> allFirsts, INonTerminal nonTerminal,
             ITerminal terminal)
