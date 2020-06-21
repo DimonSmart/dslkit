@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Linq;
+using System.Text;
 using DSLKIT.Parser;
 
 namespace DSLKIT.Utils
@@ -13,6 +14,7 @@ namespace DSLKIT.Utils
             DumpNonTerminals(grammar, sb);
             DumpTerminals(grammar, sb);
             DumpProductions(grammar, sb);
+            DumpFirsts(grammar, sb);
 
             return sb.ToString();
         }
@@ -42,6 +44,16 @@ namespace DSLKIT.Utils
             foreach (var nonTerminal in grammar.NonTerminals)
             {
                 sb.AppendLine($"{nonTerminal.Name}\t{nonTerminal.GetType().Name}");
+            }
+        }
+
+        private static void DumpFirsts(IGrammar grammar, StringBuilder sb)
+        {
+            sb.AppendLine($"Firsts: {grammar.Firsts.Count}");
+            foreach (var first in grammar.Firsts)
+            {
+                var firstsSet = string.Join(",", first.Value.Select(i => i.Name));
+                sb.AppendLine($"{first.Key.Name} : \t{firstsSet}");
             }
         }
     }

@@ -24,22 +24,9 @@ namespace DSLKIT.Terminals
             return _nonTerminals.GetOrAdd(nonTerminalName, i => new NonTerminal(nonTerminalName));
         }
 
-        public INonTerminal GetOrAddNonTerminal(INonTerminal nonTerminal)
+        public INonTerminal AddNonTerminal(INonTerminal nonTerminal)
         {
             return _nonTerminals.GetOrAdd(nonTerminal.Name, i => nonTerminal);
-        }
-
-        public ITerm GetOrAddTerm(ITerm term)
-        {
-            switch (term)
-            {
-                case ITerminal terminal:
-                    return AddTerminalBody(terminal);
-                case INonTerminal nonTerminal:
-                    return GetOrAddNonTerminal(nonTerminal);
-            }
-
-            throw new InvalidOperationException($"term {term?.GetType()} must be an ITerminal or INonTerminal");
         }
 
         public GrammarBuilder AddTerminal(ITerminal terminal)
@@ -69,7 +56,8 @@ namespace DSLKIT.Terminals
 
         public Grammar BuildGrammar()
         {
-            return new Grammar(_name, _terminals.Values, _nonTerminals.Values.AsEnumerable(), _productions);
+            var root = _productions.First().LeftNonTerminal;
+            return new Grammar(_name, _terminals.Values, _nonTerminals.Values.AsEnumerable(), _productions, root);
         }
 
         public void AddProduction(Production production)

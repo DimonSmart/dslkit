@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using DSLKIT.NonTerminals;
 using DSLKIT.Parser;
 using DSLKIT.Terminals;
@@ -26,19 +28,33 @@ namespace DSLKIT.Test
         [TestMethod]
         public void GrammarFirstsAndFollow_Create_Test()
         {
-            ShowGrammar(GetGrammarFirstsAndFollow());
+            var grammar = GetGrammarFirstsAndFollowSetSample();
+            ShowGrammar(grammar);
+
+            var nt = grammar.NonTerminals.ToDictionary(i => i.Name, i => i);
+            var firsts = grammar.Firsts.ToDictionary(i => i.Key.Name, i => i.Value.ToList());
+            var t = grammar.Terminals.ToDictionary(i => i.Name, i => i);
+
+            CollectionAssert.AreEquivalent(grammar.Firsts.Keys.ToList(), grammar.NonTerminals.ToList());
+            CollectionAssert.AreEqual(firsts["E"], new List<ITerminal> {t["("], Identifier});
+            CollectionAssert.AreEqual(firsts["E'"], new List<ITerminal> {t["+"], Empty});
+            CollectionAssert.AreEqual(firsts["T"], new List<ITerminal> {t["("], Identifier});
+            CollectionAssert.AreEqual(firsts["T'"], new List<ITerminal> {t["*"], Empty});
+            CollectionAssert.AreEqual(firsts["F"], new List<ITerminal> {t["("], Identifier});
         }
 
         private static Grammar GetGrammarA()
         {
             return new GrammarBuilder()
                 .WithGrammarName("Test grammar")
-                .AddTerminal(new KeywordTerminal("="))
-                .AddTerminal(new KeywordTerminal("TEST"))
-                .AddTerminal(new KeywordTerminal("("))
                 .AddTerminal(new IntegerTerminal())
                 .AddTerminal(new StringTerminal())
-                .AddTerminal(new KeywordTerminal(")"))
+                .AddProduction("Root")
+                .AddProductionDefinition("=", "TEST", "(", "Value".AsNonTerminal(), ")")
+                .AddProduction("Value")
+                .AddProductionDefinition(Integer)
+                .AddProduction("Value")
+                .AddProductionDefinition(Constants.String)
                 .BuildGrammar();
         }
 
@@ -53,7 +69,11 @@ namespace DSLKIT.Test
                 .BuildGrammar();
         }
 
-        private static Grammar GetGrammarFirstsAndFollow()
+        /// <summary>
+        /// Grammar sample source: https://www.jambe.co.nz/UNI/FirstAndFollowSets.html
+        /// </summary>
+        /// <returns></returns>
+        private static Grammar GetGrammarFirstsAndFollowSetSample()
         {
             return new GrammarBuilder()
                 .WithGrammarName("Firsts & Follow grammar")
@@ -75,7 +95,6 @@ namespace DSLKIT.Test
                 .AddProductionDefinition(Identifier)
                 .BuildGrammar();
         }
-
 
         private static void ShowGrammar(IGrammar grammar)
         {

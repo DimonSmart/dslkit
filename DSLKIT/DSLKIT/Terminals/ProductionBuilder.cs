@@ -8,24 +8,17 @@ namespace DSLKIT.Terminals
     public class ProductionBuilder
     {
         private readonly GrammarBuilder _grammarBuilder;
-        private readonly string _nonTerminalName;
+        private readonly string _leftNonTerminalName;
         private readonly List<ITerm> _ruleDefinition = new List<ITerm>();
 
-        public ProductionBuilder(GrammarBuilder grammarBuilder, string nonTerminalName)
+        public ProductionBuilder(GrammarBuilder grammarBuilder, string leftNonTerminalName)
         {
             _grammarBuilder = grammarBuilder;
-            _nonTerminalName = nonTerminalName;
+            _leftNonTerminalName = leftNonTerminalName;
         }
 
         public ProductionBuilder(GrammarBuilder grammarBuilder) : this(grammarBuilder, $"NT_{Guid.NewGuid()}")
         {
-        }
-
-        public GrammarBuilder Build()
-        {
-            var nonTerminal = _grammarBuilder.GetOrAddNonTerminal(_nonTerminalName);
-            _grammarBuilder.AddProduction(new Production(nonTerminal, _ruleDefinition));
-            return _grammarBuilder;
         }
 
         public GrammarBuilder AddProductionDefinition(params object[] terms)
@@ -41,7 +34,7 @@ namespace DSLKIT.Terminals
                         _ruleDefinition.Add(_grammarBuilder.AddTerminalBody(terminal));
                         break;
                     case NonTerminal nonTerminal:
-                        _ruleDefinition.Add(_grammarBuilder.GetOrAddNonTerminal(nonTerminal));
+                        _ruleDefinition.Add(_grammarBuilder.AddNonTerminal(nonTerminal));
                         break;
                     default:
                         throw new InvalidOperationException(
@@ -49,7 +42,9 @@ namespace DSLKIT.Terminals
                 }
             }
 
-            return Build();
+            var leftNonTerminal = _grammarBuilder.GetOrAddNonTerminal(_leftNonTerminalName);
+            _grammarBuilder.AddProduction(new Production(leftNonTerminal, _ruleDefinition));
+            return _grammarBuilder;
         }
     }
 }

@@ -10,6 +10,6 @@
 
         public override TermFlags Flags => TermFlags.Identifier;
         public override string DictionaryKey => Name;
-        public override string Name => "Identifier";
+        public override string Name => "Id";
     }
 }

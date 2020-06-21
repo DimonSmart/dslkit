@@ -10,7 +10,8 @@ namespace DSLKIT.Parser
         IReadOnlyCollection<ITerminal> Terminals { get; }
         IReadOnlyCollection<INonTerminal> NonTerminals { get; }
         IReadOnlyCollection<Production> Productions { get; }
-        NonTerminal Root { get; }
+        IReadOnlyDictionary<INonTerminal, IList<ITerminal>> Firsts { get; }
+        INonTerminal Root { get; }
         ITerminal Eof { get; }
     }
 }
