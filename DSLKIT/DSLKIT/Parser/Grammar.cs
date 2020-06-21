@@ -11,13 +11,15 @@ namespace DSLKIT.Parser
         public Grammar(string name,
             IEnumerable<ITerminal> terminals,
             IEnumerable<INonTerminal> nonTerminals,
-            IEnumerable<Production> productions)
+            IEnumerable<Production> productions,
+            INonTerminal root)
         {
             Name = name;
             Terminals = terminals.ToList();
             NonTerminals = nonTerminals.ToList();
             Productions = productions.ToList();
-            Firsts = new ReadOnlyDictionary<INonTerminal, IList<ITerminal>>(CalculateFirsts(Productions));
+            Root = root;
+            Firsts = CalculateFirsts();
         }
 
         public IReadOnlyCollection<Production> Productions { get; }
@@ -28,90 +30,82 @@ namespace DSLKIT.Parser
         public ITerminal Eof { get; } = new EofTerminal();
         public string Name { get; }
 
-        public NonTerminal Root { get; set; }
+        public INonTerminal Root { get; set; }
 
-        public IDictionary<INonTerminal, IList<ITerminal>> CalculateFirsts(
-            IReadOnlyCollection<Production> productions)
+        public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> CalculateFirsts()
         {
-            var res = new Dictionary<INonTerminal, IList<ITerminal>>();
-            foreach (var production in productions)
-            {
-                AddFirsts(res, production.LeftNonTerminal, First(new List<ITerm>() { production.LeftNonTerminal }));
-            }
-            return res;
+            var firsts = new Dictionary<INonTerminal, IList<ITerminal>>();
+            AddFirstSets(firsts, null, new HashSet<Production>());
+            return new ReadOnlyDictionary<INonTerminal, IList<ITerminal>>(firsts);
         }
 
-
-        public IList<ITerminal> First(IList<ITerm> terms)
+        private void AddFirstSets(IDictionary<INonTerminal, IList<ITerminal>> firsts, INonTerminal nonTerminal,
+            HashSet<Production> searchStack)
         {
-            if (terms.FirstOrDefault() == Constants.Empty)
+            foreach (var production in Productions
+                .Where(p => (p.LeftNonTerminal == nonTerminal || nonTerminal == null) && !searchStack.Contains(p)))
             {
-                return new List<ITerminal> { Constants.Empty };
-            }
-
-            if (terms.FirstOrDefault() is ITerminal terminal)
-            {
-                return new List<ITerminal> {terminal};
-            }
-
-            var res = new List<ITerminal>();
-            foreach (var term in terms)
-            {
-                foreach (var production in Productions.Where(p => p.LeftNonTerminal == term))
+                foreach (var term in production.ProductionDefinition)
                 {
-                    res.AddRange(First(production.ProductionDefinition));
+                    if (term is ITerminal terminal)
+                    {
+                        AddFirst(firsts, production.LeftNonTerminal, terminal);
+                        break;
+                    }
+
+                    var rNonTerminal = term as INonTerminal;
+                    searchStack.Add(production);
+                    AddFirstSets(firsts, rNonTerminal, searchStack);
+                    searchStack.Remove(production);
+
+                    AddFirsts(firsts, production.LeftNonTerminal, firsts[rNonTerminal]);
+
+                    // If it doesn't contain the empty terminal, then stop
+                    if (!firsts[rNonTerminal].Contains(Constants.Empty))
+                    {
+                        break;
+                    }
                 }
             }
-
-            return res.Distinct().ToList();                
         }
 
-
-        //public void FirstRecursive(IDictionary<INonTerminal, IList<ITerminal>> firsts, Production production,
-        //    IReadOnlyCollection<Production> productions)
-        //{
-        //    if (production.ProductionDefinition.First() == Constants.Empty)
-        //    {
-        //        AddFirst(firsts, production.LeftNonTerminal, Constants.Empty);
-        //    }
-
-        //    if (production.ProductionDefinition.First() is ITerminal terminal)
-        //    {
-        //        AddFirst(firsts, production.LeftNonTerminal, terminal);
-        //    }
-        //}
-
-
-        private static void AddFirsts(IDictionary<INonTerminal, IList<ITerminal>> allFirsts, INonTerminal nonTerminal,
+        private static bool AddFirsts(IDictionary<INonTerminal, IList<ITerminal>> allFirsts, INonTerminal nonTerminal,
             IEnumerable<ITerminal> terminals)
         {
+            var added = false;
             foreach (var terminal in terminals)
             {
-                AddFirst(allFirsts, nonTerminal, terminal);
+                added |= AddFirst(allFirsts, nonTerminal, terminal);
             }
+
+            return added;
         }
 
-        private static void AddFirst(IDictionary<INonTerminal, IList<ITerminal>> allFirsts, INonTerminal nonTerminal,
+        private static bool AddFirst(
+            IDictionary<INonTerminal,
+                IList<ITerminal>> allFirsts,
+            INonTerminal nonTerminal,
             ITerminal terminal)
         {
             if (allFirsts.TryGetValue(nonTerminal, out var firsts))
             {
                 if (firsts.Contains(terminal))
                 {
-                    return;
+                    return false;
                 }
 
                 firsts.Add(terminal);
-                return;
+                return true;
             }
 
             allFirsts[nonTerminal] = new List<ITerminal> {terminal};
+            return true;
         }
 
 
         public override string ToString()
         {
-            return $"Name: {Name}, Terminals:{Terminals.Count()}, Eof:{Eof.Name}";
+            return $"Name: {Name}, Terminals:{Terminals.Count}, Eof:{Eof.Name}";
         }
     }
 }
