@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using DSLKIT.NonTerminals;
+﻿using DSLKIT.NonTerminals;
 using DSLKIT.Terminals;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DSLKIT.Parser
 {
@@ -34,74 +33,8 @@ namespace DSLKIT.Parser
 
         public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> CalculateFirsts()
         {
-            var firsts = new Dictionary<INonTerminal, IList<ITerminal>>();
-            AddFirstSets(firsts, null, new HashSet<Production>());
-            return new ReadOnlyDictionary<INonTerminal, IList<ITerminal>>(firsts);
+            return new FirstsCalculator(Productions).Calculate();
         }
-
-        private void AddFirstSets(IDictionary<INonTerminal, IList<ITerminal>> firsts, INonTerminal nonTerminal,
-            HashSet<Production> searchStack)
-        {
-            foreach (var production in Productions
-                .Where(p => (p.LeftNonTerminal == nonTerminal || nonTerminal == null) && !searchStack.Contains(p)))
-            {
-                foreach (var term in production.ProductionDefinition)
-                {
-                    if (term is ITerminal terminal)
-                    {
-                        AddFirst(firsts, production.LeftNonTerminal, terminal);
-                        break;
-                    }
-
-                    var rNonTerminal = term as INonTerminal;
-                    searchStack.Add(production);
-                    AddFirstSets(firsts, rNonTerminal, searchStack);
-                    searchStack.Remove(production);
-
-                    AddFirsts(firsts, production.LeftNonTerminal, firsts[rNonTerminal]);
-
-                    // If it doesn't contain the empty terminal, then stop
-                    if (!firsts[rNonTerminal].Contains(Constants.Empty))
-                    {
-                        break;
-                    }
-                }
-            }
-        }
-
-        private static bool AddFirsts(IDictionary<INonTerminal, IList<ITerminal>> allFirsts, INonTerminal nonTerminal,
-            IEnumerable<ITerminal> terminals)
-        {
-            var added = false;
-            foreach (var terminal in terminals)
-            {
-                added |= AddFirst(allFirsts, nonTerminal, terminal);
-            }
-
-            return added;
-        }
-
-        private static bool AddFirst(
-            IDictionary<INonTerminal,
-                IList<ITerminal>> allFirsts,
-            INonTerminal nonTerminal,
-            ITerminal terminal)
-        {
-            if (allFirsts.TryGetValue(nonTerminal, out var firsts))
-            {
-                if (firsts.Contains(terminal))
-                {
-                    return false;
-                }
-
-                firsts.Add(terminal);
-                return true;
-            }
-
-            allFirsts[nonTerminal] = new List<ITerminal> {terminal};
-            return true;
-        }
-
 
         public override string ToString()
         {

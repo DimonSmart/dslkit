@@ -24,7 +24,7 @@ namespace DSLKIT.Terminals
             Name = Keyword;
         }
 
-        public  KeywordTerminal(string keyword, TermFlags flags = TermFlags.None) : this(keyword)
+        public KeywordTerminal(string keyword, TermFlags flags = TermFlags.None) : this(keyword)
         {
             Keyword = keyword;
             Flags = GetFlag(keyword, flags);

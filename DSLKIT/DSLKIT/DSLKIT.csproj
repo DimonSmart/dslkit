@@ -55,6 +55,7 @@
     <Compile Include="Lexer\ParenthesesCheckedStream.cs" />
     <Compile Include="Lexer\ParenthesesCheckedStreamCreator.cs" />
     <Compile Include="NonTerminals\NonTerminalExt.cs" />
+    <Compile Include="Parser\FirstsCalculator.cs" />
     <Compile Include="Parser\IGrammar.cs" />
     <Compile Include="Parser\Production.cs" />
     <Compile Include="Parser\Grammar.cs" />

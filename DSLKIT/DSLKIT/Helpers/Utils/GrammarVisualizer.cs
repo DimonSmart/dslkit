@@ -10,7 +10,7 @@ namespace DSLKIT.Utils
         {
             var sb = new StringBuilder();
             sb.AppendLine($"Grammar name:{grammar.Name}");
-            
+
             DumpNonTerminals(grammar, sb);
             DumpTerminals(grammar, sb);
             DumpProductions(grammar, sb);

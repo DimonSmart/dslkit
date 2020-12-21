@@ -36,11 +36,11 @@ namespace DSLKIT.Test
             var t = grammar.Terminals.ToDictionary(i => i.Name, i => i);
 
             CollectionAssert.AreEquivalent(grammar.Firsts.Keys.ToList(), grammar.NonTerminals.ToList());
-            CollectionAssert.AreEqual(firsts["E"], new List<ITerminal> {t["("], Identifier});
-            CollectionAssert.AreEqual(firsts["E'"], new List<ITerminal> {t["+"], Empty});
-            CollectionAssert.AreEqual(firsts["T"], new List<ITerminal> {t["("], Identifier});
-            CollectionAssert.AreEqual(firsts["T'"], new List<ITerminal> {t["*"], Empty});
-            CollectionAssert.AreEqual(firsts["F"], new List<ITerminal> {t["("], Identifier});
+            CollectionAssert.AreEqual(firsts["E"], new List<ITerminal> { t["("], Identifier });
+            CollectionAssert.AreEqual(firsts["E'"], new List<ITerminal> { t["+"], Empty });
+            CollectionAssert.AreEqual(firsts["T"], new List<ITerminal> { t["("], Identifier });
+            CollectionAssert.AreEqual(firsts["T'"], new List<ITerminal> { t["*"], Empty });
+            CollectionAssert.AreEqual(firsts["F"], new List<ITerminal> { t["("], Identifier });
         }
 
         private static Grammar GetGrammarA()

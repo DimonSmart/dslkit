@@ -13,7 +13,7 @@ namespace DSLKIT.Terminals
 
         public CustomSpaceTerminal()
         {
-            _spaces = new[] {'\n', '\r', '\v', '\t', ' '};
+            _spaces = new[] { '\n', '\r', '\v', '\t', ' ' };
         }
 
         protected override bool IsSpace(char c)

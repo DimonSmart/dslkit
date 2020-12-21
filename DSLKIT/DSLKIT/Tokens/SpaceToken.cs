@@ -4,7 +4,7 @@
     {
         public override string ToString()
         {
-            var s = ((char) Value).ToString();
+            var s = ((char)Value).ToString();
             return s.MakeWhiteSpaceVisible();
         }
     }

@@ -4,7 +4,7 @@
     {
         public override string ToString()
         {
-            return ((string) Value).MakeWhiteSpaceVisible().DoubleQuoteIt();
+            return ((string)Value).MakeWhiteSpaceVisible().DoubleQuoteIt();
         }
     }
 }
