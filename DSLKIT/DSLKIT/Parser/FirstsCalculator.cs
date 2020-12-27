@@ -19,6 +19,12 @@ namespace DSLKIT.Parser
             _searchStack = new HashSet<Production>();
         }
 
+        public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> Calculate()
+        {
+            AddFirstSets(null);
+            return new ReadOnlyDictionary<INonTerminal, IList<ITerminal>>(_firsts);
+        }
+
         private void AddFirstSets(INonTerminal nonTerminal)
         {
             foreach (var production in _productions
@@ -59,9 +65,7 @@ namespace DSLKIT.Parser
             return added;
         }
 
-        private bool AddFirst(
-            INonTerminal nonTerminal,
-            ITerminal terminal)
+        private bool AddFirst(INonTerminal nonTerminal, ITerminal terminal)
         {
             if (_firsts.TryGetValue(nonTerminal, out var firsts))
             {
@@ -76,12 +80,6 @@ namespace DSLKIT.Parser
 
             _firsts[nonTerminal] = new List<ITerminal> { terminal };
             return true;
-        }
-
-        public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> Calculate()
-        {
-            AddFirstSets(null);
-            return new ReadOnlyDictionary<INonTerminal, IList<ITerminal>>(_firsts);
         }
     }
 }

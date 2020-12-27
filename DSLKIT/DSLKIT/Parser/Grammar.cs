@@ -18,23 +18,20 @@ namespace DSLKIT.Parser
             NonTerminals = nonTerminals.ToList();
             Productions = productions.ToList();
             Root = root;
-            Firsts = CalculateFirsts();
+            Firsts = new FirstsCalculator(Productions).Calculate();
+            Follow = new FollowCalculator(Productions).Calculate();
         }
 
         public IReadOnlyCollection<Production> Productions { get; }
         public IReadOnlyCollection<ITerminal> Terminals { get; }
         public IReadOnlyCollection<INonTerminal> NonTerminals { get; }
         public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> Firsts { get; }
+        public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> Follow { get; }
 
         public ITerminal Eof { get; } = new EofTerminal();
         public string Name { get; }
 
         public INonTerminal Root { get; set; }
-
-        public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> CalculateFirsts()
-        {
-            return new FirstsCalculator(Productions).Calculate();
-        }
 
         public override string ToString()
         {
