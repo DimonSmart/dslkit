@@ -19,7 +19,7 @@ namespace DSLKIT.Parser
             Productions = productions.ToList();
             Root = root;
             Firsts = new FirstsCalculator(Productions).Calculate();
-            Follow = new FollowCalculator(Productions).Calculate();
+            // Follow = new FollowCalculator(Productions).Calculate();
         }
 
         public IReadOnlyCollection<Production> Productions { get; }

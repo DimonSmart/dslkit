@@ -26,21 +26,24 @@ namespace DSLKIT.Test
         }
 
         [TestMethod]
-        public void GrammarFirstsAndFollow_Create_Test()
+        public void FirstsSetCreation_Test()
         {
             var grammar = GetGrammarFirstsAndFollowSetSample();
             ShowGrammar(grammar);
-
-            var nt = grammar.NonTerminals.ToDictionary(i => i.Name, i => i);
             var firsts = grammar.Firsts.ToDictionary(i => i.Key.Name, i => i.Value.ToList());
-            var t = grammar.Terminals.ToDictionary(i => i.Name, i => i);
+            var terminals = grammar.Terminals.ToDictionary(i => i.Name, i => i);
 
             CollectionAssert.AreEquivalent(grammar.Firsts.Keys.ToList(), grammar.NonTerminals.ToList());
-            CollectionAssert.AreEqual(firsts["E"], new List<ITerminal> { t["("], Identifier });
-            CollectionAssert.AreEqual(firsts["E'"], new List<ITerminal> { t["+"], Empty });
-            CollectionAssert.AreEqual(firsts["T"], new List<ITerminal> { t["("], Identifier });
-            CollectionAssert.AreEqual(firsts["T'"], new List<ITerminal> { t["*"], Empty });
-            CollectionAssert.AreEqual(firsts["F"], new List<ITerminal> { t["("], Identifier });
+            CollectiosAreEqualAssert(firsts["E"], terminals["("], Identifier);
+            CollectiosAreEqualAssert(firsts["E'"], terminals["+"], Empty);
+            CollectiosAreEqualAssert(firsts["T"], terminals["("], Identifier);
+            CollectiosAreEqualAssert(firsts["T'"], terminals["*"], Empty);
+            CollectiosAreEqualAssert(firsts["F"], terminals["("], Identifier);
+        }
+
+        private static void CollectiosAreEqualAssert(List<ITerminal> expected, params ITerminal[] actual)
+        {
+            CollectionAssert.AreEqual(expected, actual);
         }
 
         private static Grammar GetGrammarA()
