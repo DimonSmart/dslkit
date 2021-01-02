@@ -54,9 +54,17 @@ namespace DSLKIT.Terminals
             return this;
         }
 
-        public Grammar BuildGrammar()
+        public Grammar BuildGrammar(string rootProductionName = null)
         {
-            var root = _productions.First().LeftNonTerminal;
+            INonTerminal root;
+            if (!string.IsNullOrEmpty(rootProductionName))
+            {
+                root = _productions.Where(i => i.LeftNonTerminal.Name == rootProductionName).SingleOrDefault()?.LeftNonTerminal;
+            }
+            else
+            {
+                root = _productions.First().LeftNonTerminal;
+            }
             return new Grammar(_name, _terminals.Values, _nonTerminals.Values.AsEnumerable(), _productions, root);
         }
 

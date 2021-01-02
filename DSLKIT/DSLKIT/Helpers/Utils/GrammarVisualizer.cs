@@ -15,6 +15,7 @@ namespace DSLKIT.Utils
             DumpTerminals(grammar, sb);
             DumpProductions(grammar, sb);
             DumpFirsts(grammar, sb);
+            DumpFollow(grammar, sb);
 
             return sb.ToString();
         }
@@ -54,6 +55,15 @@ namespace DSLKIT.Utils
             {
                 var firstsSet = string.Join(",", first.Value.Select(i => i.Name));
                 sb.AppendLine($"{first.Key.Name} : \t{firstsSet}");
+            }
+        }
+        private static void DumpFollow(IGrammar grammar, StringBuilder sb)
+        {
+            sb.AppendLine($"Follow: {grammar.Follow.Count}");
+            foreach (var follow in grammar.Follow)
+            {
+                var followSet = string.Join(",", follow.Value.Select(i => i.Name));
+                sb.AppendLine($"{follow.Key.Name} : \t{followSet}");
             }
         }
     }

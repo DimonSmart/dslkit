@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using DSLKIT.NonTerminals;
 using DSLKIT.Parser;
 using DSLKIT.Terminals;
 using DSLKIT.Utils;
+using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static DSLKIT.Parser.Constants;
 
@@ -30,20 +30,34 @@ namespace DSLKIT.Test
         {
             var grammar = GetGrammarFirstsAndFollowSetSample();
             ShowGrammar(grammar);
-            var firsts = grammar.Firsts.ToDictionary(i => i.Key.Name, i => i.Value.ToList());
+
+            var firsts = new FirstsCalculator(grammar.Productions).Calculate().ToDictionary(i => i.Key.Name, i => i.Value.ToList());
             var terminals = grammar.Terminals.ToDictionary(i => i.Name, i => i);
 
             CollectionAssert.AreEquivalent(grammar.Firsts.Keys.ToList(), grammar.NonTerminals.ToList());
-            CollectiosAreEqualAssert(firsts["E"], terminals["("], Identifier);
-            CollectiosAreEqualAssert(firsts["E'"], terminals["+"], Empty);
-            CollectiosAreEqualAssert(firsts["T"], terminals["("], Identifier);
-            CollectiosAreEqualAssert(firsts["T'"], terminals["*"], Empty);
-            CollectiosAreEqualAssert(firsts["F"], terminals["("], Identifier);
+
+            firsts["E"].Should().BeEquivalentTo(terminals["("], Identifier);
+            firsts["E'"].Should().BeEquivalentTo(terminals["+"], Empty);
+            firsts["T"].Should().BeEquivalentTo(terminals["("], Identifier);
+            firsts["T'"].Should().BeEquivalentTo(terminals["*"], Empty);
+            firsts["F"].Should().BeEquivalentTo(terminals["("], Identifier);
         }
 
-        private static void CollectiosAreEqualAssert(List<ITerminal> expected, params ITerminal[] actual)
+        [TestMethod]
+        public void FollowSetCreation_Test()
         {
-            CollectionAssert.AreEqual(expected, actual);
+            var grammar = GetGrammarFirstsAndFollowSetSample();
+            ShowGrammar(grammar);
+            var follow = new FollowCalculator(grammar).Calculate()
+                .ToDictionary(i => i.Key.Name, i => i.Value.ToList());
+            var terminals = grammar.Terminals.ToDictionary(i => i.Name, i => i);
+
+            CollectionAssert.AreEquivalent(grammar.Firsts.Keys.ToList(), grammar.NonTerminals.ToList());
+            follow["E"].Should().BeEquivalentTo(EOF, terminals[")"]);
+            follow["E'"].Should().BeEquivalentTo(EOF, terminals[")"]);
+            follow["T"].Should().BeEquivalentTo(terminals["+"], EOF, terminals[")"]);
+            follow["T'"].Should().BeEquivalentTo(terminals["+"], EOF, terminals[")"]);
+            follow["F"].Should().BeEquivalentTo(terminals["*"], terminals["+"], EOF, terminals[")"]);
         }
 
         private static Grammar GetGrammarA()
@@ -96,7 +110,7 @@ namespace DSLKIT.Test
                 .AddProductionDefinition("(", "E".AsNonTerminal(), ")")
                 .AddProduction("F")
                 .AddProductionDefinition(Identifier)
-                .BuildGrammar();
+                .BuildGrammar("E");
         }
 
         private static void ShowGrammar(IGrammar grammar)

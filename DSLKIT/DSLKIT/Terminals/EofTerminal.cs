@@ -34,5 +34,10 @@ namespace DSLKIT.Terminals
         }
 
         public string DictionaryKey => Name;
+
+        public override string ToString()
+        {
+            return "$(EOF)";
+        }
     }
 }

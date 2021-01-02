@@ -21,11 +21,11 @@ namespace DSLKIT.Parser
 
         public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> Calculate()
         {
-            AddFirstSets(null);
+            AddFirstSets();
             return new ReadOnlyDictionary<INonTerminal, IList<ITerminal>>(_firsts);
         }
 
-        private void AddFirstSets(INonTerminal nonTerminal)
+        private void AddFirstSets(INonTerminal nonTerminal = null)
         {
             foreach (var production in _productions
                 .Where(p => (p.LeftNonTerminal == nonTerminal || nonTerminal == null) && !_searchStack.Contains(p)))

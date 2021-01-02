@@ -18,15 +18,37 @@ namespace DSLKIT.Parser
             NonTerminals = nonTerminals.ToList();
             Productions = productions.ToList();
             Root = root;
-            Firsts = new FirstsCalculator(Productions).Calculate();
-            // Follow = new FollowCalculator(Productions).Calculate();
         }
+
+        private IReadOnlyDictionary<INonTerminal, IList<ITerminal>> _firsts;
+        private IReadOnlyDictionary<INonTerminal, IList<ITerminal>> _follow;
 
         public IReadOnlyCollection<Production> Productions { get; }
         public IReadOnlyCollection<ITerminal> Terminals { get; }
         public IReadOnlyCollection<INonTerminal> NonTerminals { get; }
-        public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> Firsts { get; }
-        public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> Follow { get; }
+        public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> Firsts
+        {
+            get
+            {
+                if (_firsts != null)
+                {
+                    return _firsts;
+                }
+                return _firsts = new FirstsCalculator(Productions).Calculate();
+            }
+        }
+
+        public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> Follow
+        {
+            get
+            {
+                if (_follow != null)
+                {
+                    return _follow;
+                }
+                return _follow = new FollowCalculator(this).Calculate();
+            }
+        }
 
         public ITerminal Eof { get; } = new EofTerminal();
         public string Name { get; }
