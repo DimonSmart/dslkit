@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using DSLKIT.Tokens;
+using System.Collections.Generic;
 
 namespace DSLKIT
 {

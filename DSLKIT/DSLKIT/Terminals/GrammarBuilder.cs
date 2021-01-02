@@ -1,9 +1,9 @@
-﻿using System;
+﻿using DSLKIT.NonTerminals;
+using DSLKIT.Parser;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using DSLKIT.NonTerminals;
-using DSLKIT.Parser;
 
 namespace DSLKIT.Terminals
 {

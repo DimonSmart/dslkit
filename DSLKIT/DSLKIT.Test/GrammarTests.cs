@@ -1,11 +1,11 @@
-﻿using System;
-using System.Linq;
-using DSLKIT.NonTerminals;
+﻿using DSLKIT.NonTerminals;
 using DSLKIT.Parser;
 using DSLKIT.Terminals;
 using DSLKIT.Utils;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Linq;
 using static DSLKIT.Parser.Constants;
 
 namespace DSLKIT.Test

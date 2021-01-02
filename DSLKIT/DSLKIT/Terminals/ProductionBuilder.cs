@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using DSLKIT.NonTerminals;
+﻿using DSLKIT.NonTerminals;
 using DSLKIT.Parser;
+using System;
+using System.Collections.Generic;
 
 namespace DSLKIT.Terminals
 {

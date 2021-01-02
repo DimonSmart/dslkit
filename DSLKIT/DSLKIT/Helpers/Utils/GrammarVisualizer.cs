@@ -1,6 +1,6 @@
-﻿using System.Linq;
+﻿using DSLKIT.Parser;
+using System.Linq;
 using System.Text;
-using DSLKIT.Parser;
 
 namespace DSLKIT.Utils
 {

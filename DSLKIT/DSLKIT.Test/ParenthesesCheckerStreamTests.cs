@@ -1,6 +1,6 @@
-using System.Linq;
 using DSLKIT.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Linq;
 
 namespace DSLKIT.Test
 {

@@ -1,6 +1,5 @@
 ﻿using DSLKIT.Terminals;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static DSLKIT.Terminals.KeywordTerminal;
 
 namespace DSLKIT.Test
 {
