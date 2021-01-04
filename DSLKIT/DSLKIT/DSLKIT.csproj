@@ -55,6 +55,7 @@
     <Compile Include="Lexer\ParenthesesCheckedStream.cs" />
     <Compile Include="Lexer\ParenthesesCheckedStreamCreator.cs" />
     <Compile Include="NonTerminals\NonTerminalExt.cs" />
+    <Compile Include="Terminals\TerminalExt.cs" />
     <Compile Include="Parser\FirstsCalculator.cs" />
     <Compile Include="Parser\FollowCalculator.cs" />
     <Compile Include="Parser\IGrammar.cs" />
@@ -69,7 +70,6 @@
     <Compile Include="Lexer\ISourceStream.cs" />
     <Compile Include="Terminals\GrammarBuilder.cs" />
     <Compile Include="NonTerminals\INonTerminal.cs" />
-    <Compile Include="Parser\Constants.cs" />
     <Compile Include="Terminals\ITerm.cs" />
     <Compile Include="Terminals\IdentifierTerminal.cs" />
     <Compile Include="Terminals\IntegerTerminal.cs" />

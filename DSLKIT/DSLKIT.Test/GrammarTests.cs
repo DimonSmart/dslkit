@@ -3,61 +3,68 @@ using DSLKIT.Parser;
 using DSLKIT.Terminals;
 using DSLKIT.Utils;
 using FluentAssertions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using static DSLKIT.Parser.Constants;
+using Xunit;
+using static DSLKIT.Test.Constants;
 
 namespace DSLKIT.Test
 {
-    [TestClass]
     public class GrammarTests
     {
-        [TestMethod]
+        [Fact]
         public void GrammarA_Create_Test()
         {
             ShowGrammar(GetGrammarA());
         }
 
-        [TestMethod]
+        [Fact]
         public void GrammarB_Create_Test()
         {
             ShowGrammar(GetGrammarB());
         }
 
-        [TestMethod]
-        public void FirstsSetCreation_Test()
+        // Grammar sample source: https://www.jambe.co.nz/UNI/FirstAndFollowSets.html
+        [Theory]
+        [InlineData(
+            "E → T E'; E'→ + T E'; E'→ ε; T → F T';T'→ * F T'; T'→ ε; F → ( E ); F → id",
+            "E → ( id; E' → + ε; T → ( id; T' → * ε; F → ( id")]
+        public void FirstsSetCreation(string grammarDefinition, string expectedFirsts)
         {
-            var grammar = GetGrammarFirstsAndFollowSetSample();
+            var grammar = new GrammarBuilder()
+                .WithGrammarName("Firsts & Follow test grammar")
+                .AddProductionsFromString(grammarDefinition)
+                .BuildGrammar("E");
             ShowGrammar(grammar);
 
-            var firsts = new FirstsCalculator(grammar.Productions).Calculate().ToDictionary(i => i.Key.Name, i => i.Value.ToList());
+            var firsts = new FirstsCalculator(grammar.Productions).Calculate()
+                .ToDictionary(i => i.Key.Name, i => i.Value.ToList());
             var terminals = grammar.Terminals.ToDictionary(i => i.Name, i => i);
 
-            CollectionAssert.AreEquivalent(grammar.Firsts.Keys.ToList(), grammar.NonTerminals.ToList());
-
-            firsts["E"].Should().BeEquivalentTo(terminals["("], Identifier);
-            firsts["E'"].Should().BeEquivalentTo(terminals["+"], Empty);
-            firsts["T"].Should().BeEquivalentTo(terminals["("], Identifier);
-            firsts["T'"].Should().BeEquivalentTo(terminals["*"], Empty);
-            firsts["F"].Should().BeEquivalentTo(terminals["("], Identifier);
+            grammar.Firsts.Keys.Should().BeEquivalentTo(grammar.NonTerminals);
+            firsts.Should().BeEquivalentTo(GetSet(terminals, expectedFirsts));
         }
 
-        [TestMethod]
-        public void FollowSetCreation_Test()
+        [Theory]
+        [InlineData(
+            "E → T E'; E'→ + T E'; E'→ ε; T → F T';T'→ * F T'; T'→ ε; F → ( E ); F → id",
+            "E → $ ); E' → $ ); T → + $ ); T' → + $ ); F → * + $ )")]
+        public void FollowSetCreation_Test(string grammarDefinition, string expectedFollows)
         {
-            var grammar = GetGrammarFirstsAndFollowSetSample();
+            var grammar = new GrammarBuilder()
+                .WithGrammarName("Firsts & Follow test grammar")
+                .AddProductionsFromString(grammarDefinition)
+                .BuildGrammar("E");
             ShowGrammar(grammar);
+
             var follow = new FollowCalculator(grammar).Calculate()
                 .ToDictionary(i => i.Key.Name, i => i.Value.ToList());
             var terminals = grammar.Terminals.ToDictionary(i => i.Name, i => i);
 
-            CollectionAssert.AreEquivalent(grammar.Firsts.Keys.ToList(), grammar.NonTerminals.ToList());
-            follow["E"].Should().BeEquivalentTo(EOF, terminals[")"]);
-            follow["E'"].Should().BeEquivalentTo(EOF, terminals[")"]);
-            follow["T"].Should().BeEquivalentTo(terminals["+"], EOF, terminals[")"]);
-            follow["T'"].Should().BeEquivalentTo(terminals["+"], EOF, terminals[")"]);
-            follow["F"].Should().BeEquivalentTo(terminals["*"], terminals["+"], EOF, terminals[")"]);
+            grammar.Firsts.Keys.Should().BeEquivalentTo(grammar.NonTerminals);
+            var exfollow = GetSet(terminals, expectedFollows);
+            follow.Should().BeEquivalentTo(exfollow);
         }
 
         private static Grammar GetGrammarA()
@@ -86,36 +93,53 @@ namespace DSLKIT.Test
                 .BuildGrammar();
         }
 
-        /// <summary>
-        /// Grammar sample source: https://www.jambe.co.nz/UNI/FirstAndFollowSets.html
-        /// </summary>
-        /// <returns></returns>
-        private static Grammar GetGrammarFirstsAndFollowSetSample()
-        {
-            return new GrammarBuilder()
-                .WithGrammarName("Firsts & Follow grammar")
-                .AddProduction("E")
-                .AddProductionDefinition("T".AsNonTerminal(), "E'".AsNonTerminal())
-                .AddProduction("E'")
-                .AddProductionDefinition("+", "T".AsNonTerminal(), "E'".AsNonTerminal())
-                .AddProduction("E'")
-                .AddProductionDefinition(Empty)
-                .AddProduction("T")
-                .AddProductionDefinition("F".AsNonTerminal(), "T'".AsNonTerminal())
-                .AddProduction("T'")
-                .AddProductionDefinition("*", "F".AsNonTerminal(), "T'".AsNonTerminal())
-                .AddProduction("T'")
-                .AddProductionDefinition(Empty)
-                .AddProduction("F")
-                .AddProductionDefinition("(", "E".AsNonTerminal(), ")")
-                .AddProduction("F")
-                .AddProductionDefinition(Identifier)
-                .BuildGrammar("E");
-        }
-
         private static void ShowGrammar(IGrammar grammar)
         {
             Console.WriteLine(GrammarVisualizer.DumpGrammar(grammar));
+        }
+
+        private Dictionary<string, List<ITerminal>> GetSet(Dictionary<string, ITerminal> terminals, string setLines, string[] delimiter = null)
+        {
+            if (delimiter == null)
+            {
+                delimiter = new[] { Environment.NewLine, ";" };
+            }
+            var result = new Dictionary<string, List<ITerminal>>();
+            var lines = setLines.Split(delimiter, StringSplitOptions.None);
+            foreach (var line in lines)
+            {
+                var record = GetSetRecord(terminals, line);
+                result.Add(record.Key, record.Value);
+            }
+            return result;
+        }
+
+        private static KeyValuePair<string, List<ITerminal>> GetSetRecord(Dictionary<string, ITerminal> terminals, string setDefinition)
+        {
+            var pair = setDefinition.Split('→');
+            if (pair.Length != 2)
+            {
+                throw new ArgumentException($"{setDefinition} should be in form A→zxcA with → as delimiter");
+            }
+            var left = pair[0].Trim();
+            var right = new List<ITerminal>();
+            foreach (var item in pair[1].Trim().Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (item == "ε")
+                {
+                    right.Add(EmptyTerminal.Empty);
+                    continue;
+                }
+
+                if (item == "$")
+                {
+                    right.Add(EOF);
+                    continue;
+                }
+
+                right.Add(terminals[item]);
+            }
+            return new KeyValuePair<string, List<ITerminal>>(left, right);
         }
     }
 }

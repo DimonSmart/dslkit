@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using static DSLKIT.Terminals.EmptyTerminal;
 
 namespace DSLKIT.Terminals
 {
@@ -76,6 +77,50 @@ namespace DSLKIT.Terminals
         public ProductionBuilder AddProduction(string ruleName)
         {
             return new ProductionBuilder(this, ruleName);
+        }
+
+        public GrammarBuilder AddProductionFromString(string productionDefinition)
+        {
+            var production = productionDefinition.Split('→');
+            if (production.Length != 2)
+            {
+                throw new ArgumentException($"{productionDefinition} shuold be in form A→zxcA with → as delimiter");
+            }
+            var left = production[0].Trim();
+            var productionBuilder = AddProduction(left);
+            var definition = new List<ITerm>();
+            foreach (var item in production[1].Trim().Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (item == "ε")
+                {
+                    definition.Add(Empty);
+                    continue;
+                }
+
+                if (char.IsUpper(item[0]))
+                {
+                    definition.Add(item.AsNonTerminal());
+                    continue;
+                }
+
+                definition.Add(item.AsKeywordTerminal());
+            }
+            productionBuilder.AddProductionDefinition(definition.ToArray());
+            return this;
+        }
+
+        public GrammarBuilder AddProductionsFromString(string productions, string[] delimiters = null)
+        {
+            if (delimiters == null)
+            {
+                delimiters = new[] { Environment.NewLine, ";" };
+            }
+            var lines = productions.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var line in lines)
+            {
+                AddProductionFromString(line);
+            }
+            return this;
         }
     }
 }

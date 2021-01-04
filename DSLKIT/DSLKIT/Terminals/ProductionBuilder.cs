@@ -33,7 +33,7 @@ namespace DSLKIT.Terminals
                     case ITerminal terminal:
                         _ruleDefinition.Add(_grammarBuilder.AddTerminalBody(terminal));
                         break;
-                    case NonTerminal nonTerminal:
+                    case INonTerminal nonTerminal:
                         _ruleDefinition.Add(_grammarBuilder.AddNonTerminal(nonTerminal));
                         break;
                     default:

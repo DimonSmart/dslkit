@@ -3,8 +3,18 @@ using System;
 
 namespace DSLKIT.Terminals
 {
-    public class EmptyTerminal : ITerminal
+    public sealed class EmptyTerminal : ITerminal
     {
+        private static readonly Lazy<EmptyTerminal>
+           lazy =
+           new Lazy<EmptyTerminal>
+               (() => new EmptyTerminal());
+        public static EmptyTerminal Empty { get { return lazy.Value; } }
+
+        private EmptyTerminal()
+        {
+        }
+
         public string Name => "Empty";
         public TermFlags Flags => TermFlags.None;
         public TerminalPriority Priority => TerminalPriority.Low;
