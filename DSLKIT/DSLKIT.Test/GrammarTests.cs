@@ -31,7 +31,7 @@ namespace DSLKIT.Test
             "E → T X; T → ( E ); T → int Y; X → + E; X → ε; Y → * T; Y → ε",
             "T → int (; E → int (; X → + ε; Y → * ε")]
 
-        // Grammar sample source: https://www.jambe.co.nz/UNI/FirstAndFollowSets.html
+        // https://www.jambe.co.nz/UNI/FirstAndFollowSets.html
         [InlineData(
             "E → T E'; E'→ + T E'; E'→ ε; T → F T';T'→ * F T'; T'→ ε; F → ( E ); F → id",
             "E → ( id; E' → + ε; T → ( id; T' → * ε; F → ( id")]
@@ -52,6 +52,12 @@ namespace DSLKIT.Test
         }
 
         [Theory]
+        // http://user.it.uu.se/~kostis/Teaching/KT1-12/Slides/lecture06.pdf
+        [InlineData(
+            "E → T X; T → ( E ); T → int Y; X → + E; X → ε; Y → * T; Y → ε",
+            "X → $ ); E → ) $; T → + ) $; Y → + ) $;")]
+
+        // https://www.jambe.co.nz/UNI/FirstAndFollowSets.html
         [InlineData(
             "E → T E'; E'→ + T E'; E'→ ε; T → F T';T'→ * F T'; T'→ ε; F → ( E ); F → id",
             "E → $ ); E' → $ ); T → + $ ); T' → + $ ); F → * + $ )")]
@@ -110,7 +116,7 @@ namespace DSLKIT.Test
                 delimiter = new[] { Environment.NewLine, ";" };
             }
             var result = new Dictionary<string, List<ITerminal>>();
-            var lines = setLines.Split(delimiter, StringSplitOptions.None);
+            var lines = setLines.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
             foreach (var line in lines)
             {
                 var record = GetSetRecord(terminals, line);
@@ -121,7 +127,7 @@ namespace DSLKIT.Test
 
         private static KeyValuePair<string, List<ITerminal>> GetSetRecord(Dictionary<string, ITerminal> terminals, string setDefinition)
         {
-            var pair = setDefinition.Split('→');
+            var pair = setDefinition.Split(new[] { "→", "->" }, StringSplitOptions.RemoveEmptyEntries);
             if (pair.Length != 2)
             {
                 throw new ArgumentException($"{setDefinition} should be in form A→zxcA with → as delimiter");
