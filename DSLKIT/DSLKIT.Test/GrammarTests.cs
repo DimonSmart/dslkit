@@ -25,8 +25,13 @@ namespace DSLKIT.Test
             ShowGrammar(GetGrammarB());
         }
 
-        // Grammar sample source: https://www.jambe.co.nz/UNI/FirstAndFollowSets.html
         [Theory]
+        // http://user.it.uu.se/~kostis/Teaching/KT1-12/Slides/lecture06.pdf
+        [InlineData(
+            "E → T X; T → ( E ); T → int Y; X → + E; X → ε; Y → * T; Y → ε",
+            "T → int (; E → int (; X → + ε; Y → * ε")]
+
+        // Grammar sample source: https://www.jambe.co.nz/UNI/FirstAndFollowSets.html
         [InlineData(
             "E → T E'; E'→ + T E'; E'→ ε; T → F T';T'→ * F T'; T'→ ε; F → ( E ); F → id",
             "E → ( id; E' → + ε; T → ( id; T' → * ε; F → ( id")]
