@@ -80,7 +80,9 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Constants.cs" />
-    <Compile Include="GrammarTests.cs" />
+    <Compile Include="FirstsFollowSetsCalculationTests.cs" />
+    <Compile Include="GrammarBuilderTests.cs" />
+    <Compile Include="GrammarTestsBase.cs" />
     <Compile Include="IdentifierTerminalTests.cs" />
     <Compile Include="LexerTestData.cs" />
     <Compile Include="MultiLineCommentTerminalTests.cs" />

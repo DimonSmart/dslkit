@@ -1,7 +1,5 @@
-﻿using DSLKIT.NonTerminals;
-using DSLKIT.Parser;
+﻿using DSLKIT.Parser;
 using DSLKIT.Terminals;
-using DSLKIT.Utils;
 using FluentAssertions;
 using System;
 using System.Collections.Generic;
@@ -11,30 +9,18 @@ using static DSLKIT.Test.Constants;
 
 namespace DSLKIT.Test
 {
-    public class GrammarTests
+    public class FirstsFollowSetsCalculationTests : GrammarTestsBase
     {
-        [Fact]
-        public void GrammarA_Create_Test()
-        {
-            ShowGrammar(GetGrammarA());
-        }
-
-        [Fact]
-        public void GrammarB_Create_Test()
-        {
-            ShowGrammar(GetGrammarB());
-        }
-
         [Theory]
         // http://user.it.uu.se/~kostis/Teaching/KT1-12/Slides/lecture06.pdf
         [InlineData(
-            "E → T X; T → ( E ); T → int Y; X → + E; X → ε; Y → * T; Y → ε",
-            "T → int (; E → int (; X → + ε; Y → * ε")]
+         "E → T X; T → ( E ); T → int Y; X → + E; X → ε; Y → * T; Y → ε",
+         "T → int (; E → int (; X → + ε; Y → * ε")]
 
         // https://www.jambe.co.nz/UNI/FirstAndFollowSets.html
         [InlineData(
-            "E → T E'; E'→ + T E'; E'→ ε; T → F T';T'→ * F T'; T'→ ε; F → ( E ); F → id",
-            "E → ( id; E' → + ε; T → ( id; T' → * ε; F → ( id")]
+         "E → T E'; E'→ + T E'; E'→ ε; T → F T';T'→ * F T'; T'→ ε; F → ( E ); F → id",
+         "E → ( id; E' → + ε; T → ( id; T' → * ε; F → ( id")]
         public void FirstsSetCreation(string grammarDefinition, string expectedFirsts)
         {
             var grammar = new GrammarBuilder()
@@ -76,37 +62,6 @@ namespace DSLKIT.Test
             grammar.Firsts.Keys.Should().BeEquivalentTo(grammar.NonTerminals);
             var exfollow = GetSet(terminals, expectedFollows);
             follow.Should().BeEquivalentTo(exfollow);
-        }
-
-        private static Grammar GetGrammarA()
-        {
-            return new GrammarBuilder()
-                .WithGrammarName("Test grammar")
-                .AddTerminal(new IntegerTerminal())
-                .AddTerminal(new StringTerminal())
-                .AddProduction("Root")
-                .AddProductionDefinition("=", "TEST", "(", "Value".AsNonTerminal(), ")")
-                .AddProduction("Value")
-                .AddProductionDefinition(Integer)
-                .AddProduction("Value")
-                .AddProductionDefinition(Constants.String)
-                .BuildGrammar();
-        }
-
-        private static Grammar GetGrammarB()
-        {
-            return new GrammarBuilder()
-                .WithGrammarName("Test grammar")
-                .AddProduction("Multiplication")
-                .AddProductionDefinition("MUL", "(", Integer, ",", Integer, ")")
-                .AddProduction("Division")
-                .AddProductionDefinition("DIV", "(", Integer, ",", Integer, ")")
-                .BuildGrammar();
-        }
-
-        private static void ShowGrammar(IGrammar grammar)
-        {
-            Console.WriteLine(GrammarVisualizer.DumpGrammar(grammar));
         }
 
         private Dictionary<string, List<ITerminal>> GetSet(Dictionary<string, ITerminal> terminals, string setLines, string[] delimiter = null)
