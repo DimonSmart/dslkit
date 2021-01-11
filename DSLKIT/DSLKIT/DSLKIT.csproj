@@ -49,6 +49,9 @@
     <Compile Include="Lexer\ParenthesesCheckedStream.cs" />
     <Compile Include="Lexer\ParenthesesCheckedStreamCreator.cs" />
     <Compile Include="NonTerminals\NonTerminalExt.cs" />
+    <Compile Include="Parser\Rule.cs" />
+    <Compile Include="Parser\RuleSet.cs" />
+    <Compile Include="Parser\SetBuilder.cs" />
     <Compile Include="Terminals\TerminalExt.cs" />
     <Compile Include="Parser\FirstsCalculator.cs" />
     <Compile Include="Parser\FollowCalculator.cs" />

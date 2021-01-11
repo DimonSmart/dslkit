@@ -16,24 +16,24 @@ namespace DSLKIT.Parser
             ProductionDefinition = productionDefinition;
         }
 
-        public static string ProductionToString(Production production, int dotPosition = -1)
+        public string ProductionToString(int dotPosition = -1)
         {
             const string dot = " ● ";
             var sb = new StringBuilder();
-            sb.Append(production.LeftNonTerminal.Name);
+            sb.Append(LeftNonTerminal.Name);
             sb.Append("\t→\t");
-            for (var i = 0; i < production.ProductionDefinition.Count; i++)
+            for (var i = 0; i < ProductionDefinition.Count; i++)
             {
                 if (i == dotPosition)
                 {
                     sb.Append(dot);
                 }
 
-                sb.Append(production.ProductionDefinition[i].Name);
+                sb.Append(ProductionDefinition[i].Name);
                 sb.Append(" ");
             }
 
-            if (dotPosition == production.ProductionDefinition.Count)
+            if (dotPosition == ProductionDefinition.Count)
             {
                 sb.Append(dot);
             }
@@ -43,7 +43,7 @@ namespace DSLKIT.Parser
 
         public override string ToString()
         {
-            return ProductionToString(this);
+            return ProductionToString();
         }
     }
 }
