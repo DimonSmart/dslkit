@@ -1,4 +1,4 @@
-﻿using DSLKIT.Terminals;
+﻿using DSLKIT.Base;
 
 namespace DSLKIT.NonTerminals
 {

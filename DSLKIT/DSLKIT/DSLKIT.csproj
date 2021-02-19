@@ -67,7 +67,7 @@
     <Compile Include="Lexer\ISourceStream.cs" />
     <Compile Include="Terminals\GrammarBuilder.cs" />
     <Compile Include="NonTerminals\INonTerminal.cs" />
-    <Compile Include="Terminals\ITerm.cs" />
+    <Compile Include="Base\ITerm.cs" />
     <Compile Include="Terminals\IdentifierTerminal.cs" />
     <Compile Include="Terminals\IntegerTerminal.cs" />
     <Compile Include="Terminals\ITerminal.cs" />

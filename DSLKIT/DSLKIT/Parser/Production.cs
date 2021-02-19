@@ -1,5 +1,5 @@
-﻿using DSLKIT.NonTerminals;
-using DSLKIT.Terminals;
+﻿using DSLKIT.Base;
+using DSLKIT.NonTerminals;
 using System.Collections.Generic;
 using System.Text;
 
@@ -18,10 +18,10 @@ namespace DSLKIT.Parser
 
         public string ProductionToString(int dotPosition = -1)
         {
-            const string dot = " ● ";
+            const string dot = "● ";
             var sb = new StringBuilder();
             sb.Append(LeftNonTerminal.Name);
-            sb.Append("\t→\t");
+            sb.Append(" → ");
             for (var i = 0; i < ProductionDefinition.Count; i++)
             {
                 if (i == dotPosition)

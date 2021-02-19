@@ -10,3 +10,4 @@
 /DSLKIT/.vs
 *.binlog
 /DSLKIT/packages
+/DSLKIT/CodeGraphData

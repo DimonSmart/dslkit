@@ -1,4 +1,4 @@
-﻿namespace DSLKIT.Terminals
+﻿namespace DSLKIT.Base
 {
     /// <summary>
     ///     Base interface for both Terminal's and NonTerminals
