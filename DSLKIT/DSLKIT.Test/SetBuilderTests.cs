@@ -11,13 +11,16 @@ namespace DSLKIT.Test
     public class SetBuilderTests : GrammarTestsBase
     {
         [Theory]
-        [InlineData("S → N;N → V = E;N → E;E → V;V → x;V → * E")]
-        public void SetBuilderTest(string grammarDefinition)
+        // https://web.cs.dal.ca/~sjackson/lalr1.html
+        [InlineData("S → N;N → V = E;N → E;E → V;V → x;V → * E", "S", "sjackson")]
+        // https://www.cs.colostate.edu/~mstrout/CS453Spring11/Slides/19-LR-table-build.ppt.pdf
+        [InlineData("S' → S e;S → ( S );S → i", "S'", "mstrout")]
+        public void SetBuilderTest(string grammarDefinition, string rootName, string graphFileName)
         {
             var grammar = new GrammarBuilder()
                     .WithGrammarName("Firsts & Follow test grammar")
                     .AddProductionsFromString(grammarDefinition)
-                    .BuildGrammar("S");
+                    .BuildGrammar(rootName);
             ShowGrammar(grammar);
 
             var setBuiilder = new SetBuilder(grammar);
@@ -31,13 +34,13 @@ namespace DSLKIT.Test
             }
 
             Console.WriteLine(sb.ToString());
-            File.WriteAllText(@"c:\temp\sets.txt", sb.ToString());
-            File.WriteAllText(@"c:\temp\sets.dot", Set2Dot.Transform(sets));
+            File.WriteAllText($@"{graphFileName}.txt", sb.ToString());
+            File.WriteAllText($@"{graphFileName}.dot", Set2Dot.Transform(sets));
         }
 
-        private void SetBuiilder_StepEvent(object sender, IEnumerable<RuleSet> sets)
+        private void SetBuiilder_StepEvent(object sender, IEnumerable<RuleSet> sets, string grammarName)
         {
-            File.WriteAllText(@"c:\temp\sets.dot", Set2Dot.Transform(sets));
+            File.WriteAllText($@"{grammarName}_step.dot", Set2Dot.Transform(sets));
         }
     }
 }
