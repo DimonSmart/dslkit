@@ -15,6 +15,8 @@ namespace DSLKIT.Test
         [InlineData("S → N;N → V = E;N → E;E → V;V → x;V → * E", "S", "sjackson")]
         // https://www.cs.colostate.edu/~mstrout/CS453Spring11/Slides/19-LR-table-build.ppt.pdf
         [InlineData("S' → S e;S → ( S );S → i", "S'", "mstrout")]
+        // https://www.javatpoint.com/lalr-1-parsing
+        [InlineData("S' → S; S → A A;A → a A;A → b", "S'", "javatpoint")]
         public void SetBuilderTest(string grammarDefinition, string rootName, string graphFileName)
         {
             var grammar = new GrammarBuilder()
