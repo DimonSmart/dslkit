@@ -42,6 +42,9 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helpers\Utils\GrammarVisualizer.cs" />
@@ -51,7 +54,8 @@
     <Compile Include="NonTerminals\NonTerminalExt.cs" />
     <Compile Include="Parser\Rule.cs" />
     <Compile Include="Parser\RuleSet.cs" />
-    <Compile Include="Parser\SetBuilder.cs" />
+    <Compile Include="Parser\ItemSetsBuilder.cs" />
+    <Compile Include="Parser\TranslationTableBuilder.cs" />
     <Compile Include="Terminals\TerminalExt.cs" />
     <Compile Include="Parser\FirstsCalculator.cs" />
     <Compile Include="Parser\FollowCalculator.cs" />
@@ -104,6 +108,7 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="DSLKITClassDiagram.cd" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
