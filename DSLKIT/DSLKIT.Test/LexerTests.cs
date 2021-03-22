@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using static DSLKIT.Test.LexerTestData;
 
-
 namespace DSLKIT.Test
 {
     [TestClass]

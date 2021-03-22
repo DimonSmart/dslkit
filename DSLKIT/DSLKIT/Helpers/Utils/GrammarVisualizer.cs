@@ -9,7 +9,7 @@ namespace DSLKIT.Utils
         public static string DumpGrammar(IGrammar grammar)
         {
             var sb = new StringBuilder();
-            sb.AppendLine($"Grammar name:{grammar.Name}");
+            sb.Append("Grammar name:").AppendLine(grammar.Name);
 
             DumpNonTerminals(grammar, sb);
             DumpTerminals(grammar, sb);
@@ -22,7 +22,7 @@ namespace DSLKIT.Utils
 
         private static void DumpProductions(IGrammar grammar, StringBuilder sb)
         {
-            sb.AppendLine($"Productions: {grammar.Productions.Count}");
+            sb.Append("Productions: ").Append(grammar.Productions.Count).AppendLine();
             var line = 1;
             foreach (var production in grammar.Productions)
             {
@@ -32,7 +32,7 @@ namespace DSLKIT.Utils
 
         private static void DumpTerminals(IGrammar grammar, StringBuilder sb)
         {
-            sb.AppendLine($"Terminals: {grammar.Terminals.Count}");
+            sb.Append("Terminals: ").Append(grammar.Terminals.Count).AppendLine();
             foreach (var terminal in grammar.Terminals)
             {
                 sb.AppendLine($"{terminal.Name}\t{terminal.GetType().Name}");

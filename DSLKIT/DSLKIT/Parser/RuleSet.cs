@@ -9,7 +9,7 @@ namespace DSLKIT.Parser
         public int SetNumber { get; set; }
         public readonly IList<Rule> Rules = new List<Rule>();
         public IDictionary<ITerm, RuleSet> Arrows = new Dictionary<ITerm, RuleSet>();
-        public int SetFormRules = 0;
+        public int SetFormRules;
 
         public RuleSet(int setNumber, IEnumerable<Rule> rules)
         {

@@ -23,16 +23,15 @@ namespace DSLKIT.Test
                 }
             }
 
-            columns.AddRange(tempColumns);   
+            columns.AddRange(tempColumns);
 
             var data = new List<List<object>>();
-            foreach (var set in sets)
+            foreach (var set in sets.Keys.Select(i => i.Value).Union(sets.Values))
             {
-                var row = new List<object>();
-                row.Add(set.Value.SetNumber);
+                var row = new List<object> { set.SetNumber };
                 foreach (var column in columns)
                 {
-                    if (sets.TryGetValue(new KeyValuePair<ITerm, RuleSet>(column, set.Value), out var destinationSet))
+                    if (sets.TryGetValue(new KeyValuePair<ITerm, RuleSet>(column, set), out var destinationSet))
                     {
                         row.Add(destinationSet.SetNumber.ToString());
                     }

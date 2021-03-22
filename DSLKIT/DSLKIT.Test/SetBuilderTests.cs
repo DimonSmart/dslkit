@@ -44,17 +44,16 @@ namespace DSLKIT.Test
             }
 
             _testOutputHelper.WriteLine(sb.ToString());
-            File.WriteAllText($@"{graphFileName}.txt", sb.ToString());
-            File.WriteAllText($@"{graphFileName}.dot", Sets2Dot.Transform(sets));
-
+            File.WriteAllText($"{graphFileName}.txt", sb.ToString());
+            File.WriteAllText($"{graphFileName}.dot", Sets2Dot.Transform(sets));
 
             var translationTable = TranslationTableBuilder.Build(sets);
-            File.WriteAllText($@"{graphFileName}_Table.txt", TranslationTable2Text.Transform(translationTable, order));
+            File.WriteAllText($"{graphFileName}_Table.txt", TranslationTable2Text.Transform(translationTable, order));
         }
 
         private void SetBuilder_StepEvent(object sender, IEnumerable<RuleSet> sets, string grammarName)
         {
-            File.WriteAllText($@"{grammarName}_step.dot", Sets2Dot.Transform(sets));
+            File.WriteAllText($"{grammarName}_step.dot", Sets2Dot.Transform(sets));
         }
     }
 }

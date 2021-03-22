@@ -19,7 +19,6 @@ namespace DSLKIT.Parser
 
         public event SetBuilderStep StepEvent;
 
-
         private void Step()
         {
             StepEvent?.Invoke(this, _sets, _grammar.Name);
@@ -29,7 +28,7 @@ namespace DSLKIT.Parser
         {
             // TODO: Move to grammar
             var startProduction = _grammar.Productions.FirstOrDefault(i => i.LeftNonTerminal == _grammar.Root);
-            _sets.Add(new RuleSet(_sets.Count - 1, new Rule(startProduction)));
+            _sets.Add(new RuleSet(_sets.Count, new Rule(startProduction)));
             FillRuleSet(_sets[0]);
             Step();
             bool changes;
@@ -62,11 +61,11 @@ namespace DSLKIT.Parser
                         continue;
                     }
 
-                    var newRules = set.Rules.Where(r => !r.IsFinished)
-                        .Where(r => r.NextTerm == rule.NextTerm)
+                    var newRules = set.Rules
+                        .Where(r => !r.IsFinished && r.NextTerm == rule.NextTerm)
                         .Select(r => r.MoveDot());
 
-                    var newRuleSet = new RuleSet(_sets.Count - 1, newRules);
+                    var newRuleSet = new RuleSet(_sets.Count, newRules);
                     _sets.Add(newRuleSet);
                     set.Arrows[rule.NextTerm] = newRuleSet;
 
@@ -109,8 +108,7 @@ namespace DSLKIT.Parser
                     }
 
                     var nextTerm = rule.NextTerm;
-                    var nextNonTerminal = nextTerm as INonTerminal;
-                    if (nextNonTerminal == null)
+                    if (!(nextTerm is INonTerminal nextNonTerminal))
                     {
                         continue;
                     }
@@ -118,7 +116,7 @@ namespace DSLKIT.Parser
                     var toAdd = _grammar.Productions.Where(p => p.LeftNonTerminal == nextNonTerminal);
                     if (!toAdd.Any())
                     {
-                        throw new Exception($"No productions for nonterminal:{nextNonTerminal}");
+                        throw new Exception($"No productions for non terminal:{nextNonTerminal}");
                     }
 
                     toAdd = toAdd.Where(i => !set.Rules.Skip(set.SetFormRules).Select(s => s.Production).Contains(i));

@@ -12,8 +12,7 @@ namespace DSLKIT.Test
         {
             var s = new StringSourceStream("Test".DoubleQuoteIt());
             var rt = new StringTerminal();
-            IToken token;
-            Assert.AreEqual(true, rt.TryMatch(s, out token));
+            Assert.AreEqual(true, rt.TryMatch(s, out var token));
             Assert.AreEqual(0, token.Position);
             Assert.AreEqual(6, token.Length);
             Assert.AreEqual(typeof(string), token.Value.GetType());
@@ -31,8 +30,8 @@ namespace DSLKIT.Test
         [TestMethod]
         public void ParenthesisQuoteStringTest()
         {
-            DoStringTest(@"(Hello World)_rest of string", 0, @"Hello World", @"(", @")");
-            DoStringTest(@"1(Hello World)_rest of string", 1, @"Hello World", @"(", @")");
+            DoStringTest(@"(Hello World)_rest of string", 0, "Hello World", "(", @")");
+            DoStringTest(@"1(Hello World)_rest of string", 1, "Hello World", "(", ")");
         }
 
         [TestMethod]
@@ -56,16 +55,13 @@ namespace DSLKIT.Test
             DoStringTest(@"$""Hello World""'_rest of string", 0, @"Hello World", @"$""", @"""");
         }
 
-
-        private void DoStringTest(string stringToTest, int startPosition, string expectedString, string start,
-            string end)
+        private void DoStringTest(string stringToTest, int startPosition, string expectedString, string start, string end)
         {
             var stream = new StringSourceStream(stringToTest);
             stream.Seek(startPosition);
 
             var rt = new StringTerminal(start, end);
-            IToken token;
-            Assert.AreEqual(true, rt.TryMatch(stream, out token));
+            Assert.AreEqual(true, rt.TryMatch(stream, out var token));
             Assert.AreEqual(startPosition, token.Position);
             Assert.AreEqual(expectedString.Length + start.Length + end.Length, token.Length);
             Assert.AreEqual(typeof(string), token.Value.GetType());

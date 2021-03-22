@@ -47,14 +47,14 @@ namespace DSLKIT
                     yield break;
                 }
 
-                var maxMatchLength = matches.Select(i => i.Length).Max();
+                var maxMatchLength = matches.Max(i => i.Length);
                 matches = matches
                     .Where(i => i.Length == maxMatchLength)
                     .OrderByDescending(b => b.Terminal.Priority)
                     .ToList()
                     .AsReadOnly();
 
-                var maxMatchedTerminalPriority = matches.Select(i => i.Terminal.Priority).Max();
+                var maxMatchedTerminalPriority = matches.Max(i => i.Terminal.Priority);
                 matches = matches
                     .Where(i => i.Terminal.Priority == maxMatchedTerminalPriority)
                     .ToList()

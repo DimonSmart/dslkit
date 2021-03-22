@@ -12,8 +12,7 @@ namespace DSLKIT.Test
         {
             var s = new StringSourceStream("123");
             var it = new IntegerTerminal();
-            IToken token;
-            Assert.AreEqual(true, it.TryMatch(s, out token));
+            Assert.AreEqual(true, it.TryMatch(s, out var token));
             Assert.AreEqual(0, token.Position);
             Assert.AreEqual(3, token.Length);
         }

@@ -23,7 +23,7 @@ namespace DSLKIT.Test
                     sb.AppendLine($@"<tr><td align=""left"" port=""r0"">{ruleText}</td></tr>");
                     form++;
                 }
-                sb.AppendLine(@"</table>> ];");
+                sb.AppendLine("</table>> ];");
             }
 
             sb.AppendLine();

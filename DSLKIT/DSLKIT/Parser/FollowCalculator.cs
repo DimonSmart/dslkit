@@ -10,8 +10,8 @@ namespace DSLKIT.Parser
 {
     public class FollowCalculator
     {
-        Dictionary<INonTerminal, IList<ITerminal>> _follow = new Dictionary<INonTerminal, IList<ITerminal>>();
-        private IGrammar _grammar;
+        readonly Dictionary<INonTerminal, IList<ITerminal>> _follow = new Dictionary<INonTerminal, IList<ITerminal>>();
+        private readonly IGrammar _grammar;
 
         public FollowCalculator(IGrammar grammar)
         {
@@ -71,7 +71,6 @@ namespace DSLKIT.Parser
                     {
                         updated |= AddFollow(D1, GetFollow(R));
                     }
-
                 }
             } while (updated);
 
@@ -104,7 +103,6 @@ namespace DSLKIT.Parser
             }
             return added;
         }
-
 
         private IList<ITerminal> GetFollow(INonTerminal nonTerminal)
         {

@@ -18,7 +18,6 @@ namespace DSLKIT.Parser
         public bool IsFinished => DotPosition == Production.ProductionDefinition.Count;
         public ITerm NextTerm => Production.ProductionDefinition[DotPosition];
 
-
         public override string ToString()
         {
             return Production.ProductionToString(DotPosition);
@@ -44,8 +43,8 @@ namespace DSLKIT.Parser
         public override int GetHashCode()
         {
             int hashCode = -1803403243;
-            hashCode = hashCode * -1521134295 + DotPosition.GetHashCode();
-            hashCode = hashCode * -1521134295 + EqualityComparer<Production>.Default.GetHashCode(Production);
+            hashCode = (hashCode * -1521134295) + DotPosition.GetHashCode();
+            hashCode = (hashCode * -1521134295) + EqualityComparer<Production>.Default.GetHashCode(Production);
             return hashCode;
         }
 

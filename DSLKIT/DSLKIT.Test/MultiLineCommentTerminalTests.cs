@@ -10,11 +10,10 @@ namespace DSLKIT.Test
         [TestMethod]
         public void MultiLineCommentTerminalTest()
         {
-            var commentText = " XXX commented ";
+            const string commentText = " XXX commented ";
             var s = new StringSourceStream($"/*{commentText}*/ other text");
             var terminal = new MultiLineCommentTerminal(@"/*", @"*/");
-            IToken token;
-            Assert.AreEqual(true, terminal.TryMatch(s, out token));
+            Assert.AreEqual(true, terminal.TryMatch(s, out IToken token));
             Assert.AreEqual(0, token.Position);
             Assert.AreEqual(commentText, token.Value);
         }

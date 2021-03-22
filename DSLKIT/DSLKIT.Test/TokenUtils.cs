@@ -30,7 +30,6 @@ namespace DSLKIT.Test
             return sb.ToString();
         }
 
-
         private static string GetNonEmptyString(string key, object value)
         {
             var s = value?.ToString();

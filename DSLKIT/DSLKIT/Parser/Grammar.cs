@@ -26,17 +26,7 @@ namespace DSLKIT.Parser
         public IReadOnlyCollection<Production> Productions { get; }
         public IReadOnlyCollection<ITerminal> Terminals { get; }
         public IReadOnlyCollection<INonTerminal> NonTerminals { get; }
-        public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> Firsts
-        {
-            get
-            {
-                if (_firsts != null)
-                {
-                    return _firsts;
-                }
-                return _firsts = new FirstsCalculator(Productions).Calculate();
-            }
-        }
+        public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> Firsts => _firsts ?? (_firsts = new FirstsCalculator(Productions).Calculate());
 
         public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> Follow
         {
