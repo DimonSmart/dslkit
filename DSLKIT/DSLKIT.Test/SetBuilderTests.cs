@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using DSLKIT.Parser;
+using DSLKIT.Terminals;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using DSLKIT.Parser;
-using DSLKIT.Terminals;
 using Xunit;
 using Xunit.Abstractions;
 
