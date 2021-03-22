@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using ConsoleTableExt;
+﻿using ConsoleTableExt;
 using DSLKIT.Base;
 using DSLKIT.Parser;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DSLKIT.Test
 {
@@ -10,20 +10,28 @@ namespace DSLKIT.Test
     {
         public static string Transform(Dictionary<KeyValuePair<ITerm, RuleSet>, RuleSet> sets, string order)
         {
-            var tempColumns = sets.Keys.Select(i => i.Key).Distinct().ToList();
-            var examples = order.Split(' ');
             var columns = new List<ITerm>();
-            foreach (var example in examples)
+            if (string.IsNullOrEmpty(order))
             {
-                ITerm term = tempColumns.SingleOrDefault(i => i.Name == example);
-                if (term != null)
-                {
-                    columns.Add(term);
-                    tempColumns.Remove(term);
-                }
+                columns = sets.Keys.Select(i => i.Key).Distinct().ToList();
             }
+            else
+            {
 
-            columns.AddRange(tempColumns);   
+                var tempColumns = sets.Keys.Select(i => i.Key).Distinct().ToList();
+                var examples = order.Split(' ');
+
+                foreach (var example in examples)
+                {
+                    ITerm term = tempColumns.SingleOrDefault(i => i.Name == example);
+                    if (term != null)
+                    {
+                        columns.Add(term);
+                        tempColumns.Remove(term);
+                    }
+                }
+                columns.AddRange(tempColumns);
+            }
 
             var data = new List<List<object>>();
             foreach (var set in sets)
