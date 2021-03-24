@@ -20,15 +20,15 @@ namespace DSLKIT.Test
 
         [Theory]
         // https://web.cs.dal.ca/~sjackson/lalr1.html
-        [InlineData("S → N;N → V = E;N → E;E → V;V → x;V → * E", "S", "sjackson", "x = * S N E V")]
+        [InlineData("S → N;N → V = E;N → E;E → V;V → x;V → * E", "S", "sjackson", "x = * S N E V", "0=0 1=4 2=3 3=5 4=1 5=2 6=8 7=6 8=7 9=9")]
         // https://www.cs.colostate.edu/~mstrout/CS453Spring11/Slides/19-LR-table-build.ppt.pdf
         [InlineData("S' → S e;S → ( S );S → i", "S'", "mstrout")]
         // https://www.javatpoint.com/lalr-1-parsing
         [InlineData("S' → S; S → A A;A → a A;A → b", "S'", "javatpoint")]
-        public void SetBuilderTest(string grammarDefinition, string rootName, string graphFileName, string order = null)
+        public void SetBuilderTest(string grammarDefinition, string rootName, string graphFileName, string order = null, string subst = null)
         {
             var grammar = new GrammarBuilder()
-                .WithGrammarName("Firsts & Follow test grammar")
+                .WithGrammarName(graphFileName)
                 .AddProductionsFromString(grammarDefinition)
                 .BuildGrammar(rootName);
             ShowGrammar(grammar);
@@ -45,15 +45,14 @@ namespace DSLKIT.Test
 
             _testOutputHelper.WriteLine(sb.ToString());
             File.WriteAllText($"{graphFileName}.txt", sb.ToString());
-            File.WriteAllText($"{graphFileName}.dot", Sets2Dot.Transform(sets));
+            File.WriteAllText($"{graphFileName}.dot", Sets2Dot.Transform(sets, subst));
 
             var translationTable = TranslationTableBuilder.Build(sets);
-            File.WriteAllText($"{graphFileName}_Table.txt", TranslationTable2Text.Transform(translationTable, order));
+            File.WriteAllText($"{graphFileName}_Table.txt", TranslationTable2Text.Transform(translationTable, order, subst));
         }
 
         private void SetBuilder_StepEvent(object sender, IEnumerable<RuleSet> sets, string grammarName)
         {
-            File.WriteAllText($"{grammarName}_step.dot", Sets2Dot.Transform(sets));
         }
     }
 }

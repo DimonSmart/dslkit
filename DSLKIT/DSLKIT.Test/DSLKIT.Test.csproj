@@ -95,6 +95,7 @@
     <Compile Include="LexerTests.cs" />
     <Compile Include="ParenthesesCheckerStreamTests.cs" />
     <Compile Include="RegexpBasedTerminalTests.cs" />
+    <Compile Include="NuberingUtils.cs" />
     <Compile Include="Sets2Dot.cs" />
     <Compile Include="SetBuilderTests.cs" />
     <Compile Include="StringSourceStreamTests.cs" />

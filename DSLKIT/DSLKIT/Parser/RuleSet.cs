@@ -1,6 +1,7 @@
 ﻿using DSLKIT.Base;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DSLKIT.Parser
 {
@@ -24,6 +25,23 @@ namespace DSLKIT.Parser
         public override string ToString()
         {
             return $"Set({SetNumber}){Environment.NewLine}{string.Join(Environment.NewLine, Rules)}";
+        }
+
+        internal bool StartsFrom(IEnumerable<Rule> newRules)
+        {
+            var otherRules = newRules.ToArray();
+            if (Rules.Count < otherRules.Length)
+            {
+                return false;
+            }
+            for (int i = 0; i < otherRules.Length; i++)
+            {
+                if (Rules[i] != otherRules[i])
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

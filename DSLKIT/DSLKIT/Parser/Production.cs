@@ -21,21 +21,19 @@ namespace DSLKIT.Parser
             const string dot = "● ";
             var sb = new StringBuilder();
             sb.Append(LeftNonTerminal.Name);
-            sb.Append(" → ");
-            for (var i = 0; i < ProductionDefinition.Count; i++)
+            sb.Append(" →");
+            for (var i = 0; i <= ProductionDefinition.Count; i++)
             {
+                sb.Append(" ");
                 if (i == dotPosition)
                 {
                     sb.Append(dot);
                 }
 
-                sb.Append(ProductionDefinition[i].Name);
-                sb.Append(" ");
-            }
-
-            if (dotPosition == ProductionDefinition.Count)
-            {
-                sb.Append(dot);
+                if (i < ProductionDefinition.Count)
+                {
+                    sb.Append(ProductionDefinition[i].Name);
+                }
             }
 
             return sb.ToString();

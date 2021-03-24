@@ -53,44 +53,32 @@ namespace DSLKIT.Parser
             {
                 foreach (var rule in set.Rules.Where(rule => !rule.IsFinished))
                 {
-                    var newRule = rule.MoveDot();
-                    var setWithRule = GetSetContainingRule(newRule);
-                    if (setWithRule != null)
-                    {
-                        set.Arrows[rule.NextTerm] = setWithRule;
-                        continue;
-                    }
-
                     var newRules = set.Rules
                         .Where(r => !r.IsFinished && r.NextTerm == rule.NextTerm)
                         .Select(r => r.MoveDot());
+
+                    var existsSet = GetSetBySetDefinitionRules(newRules);
+                    if (existsSet != null)
+                    {
+                        set.Arrows[rule.NextTerm] = existsSet;
+                        continue;
+                    }
 
                     var newRuleSet = new RuleSet(_sets.Count, newRules);
                     _sets.Add(newRuleSet);
                     set.Arrows[rule.NextTerm] = newRuleSet;
 
                     anyChanges = true;
+                    Step();
                 }
             }
 
-            Step();
             return anyChanges;
         }
 
-        private RuleSet GetSetContainingRule(Rule r)
+        private RuleSet GetSetBySetDefinitionRules(IEnumerable<Rule> newRules)
         {
-            foreach (var set in _sets)
-            {
-                foreach (var rule in set.Rules.Take(set.SetFormRules))
-                {
-                    if (rule == r)
-                    {
-                        return set;
-                    }
-                }
-            }
-
-            return null;
+            return _sets.SingleOrDefault(s => s.StartsFrom(newRules));
         }
 
         public bool FillRuleSet(RuleSet set)
@@ -100,31 +88,28 @@ namespace DSLKIT.Parser
             do
             {
                 changed = false;
-                foreach (var rule in set.Rules.ToList())
+                foreach (var rule in set.Rules.Where(r => !r.IsFinished).ToList())
                 {
-                    if (rule.IsFinished)
-                    {
-                        continue;
-                    }
-
                     var nextTerm = rule.NextTerm;
                     if (!(nextTerm is INonTerminal nextNonTerminal))
                     {
                         continue;
                     }
 
-                    var toAdd = _grammar.Productions.Where(p => p.LeftNonTerminal == nextNonTerminal);
+                    var toAdd = _grammar.Productions
+                        .Where(p => p.LeftNonTerminal == nextNonTerminal)
+                        .Select(i => new Rule(i));
                     if (!toAdd.Any())
                     {
                         throw new Exception($"No productions for non terminal:{nextNonTerminal}");
                     }
 
-                    toAdd = toAdd.Where(i => !set.Rules.Skip(set.SetFormRules).Select(s => s.Production).Contains(i));
+                    toAdd = toAdd.Except(set.Rules);
                     if (toAdd.Any())
                     {
                         foreach (var item in toAdd)
                         {
-                            set.Rules.Add(new Rule(item));
+                            set.Rules.Add(item);
                         }
 
                         changed = true;
