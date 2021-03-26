@@ -1,5 +1,4 @@
 ﻿using DSLKIT.Parser;
-using DSLKIT.Utils;
 using System;
 
 namespace DSLKIT.Test

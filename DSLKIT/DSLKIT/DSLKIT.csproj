@@ -47,7 +47,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Helpers\Utils\GrammarVisualizer.cs" />
+    <Compile Include="Helpers\GrammarVisualizer.cs" />
     <Compile Include="Lexer\LexerStreamBase.cs" />
     <Compile Include="Lexer\ParenthesesCheckedStream.cs" />
     <Compile Include="Lexer\ParenthesesCheckedStreamCreator.cs" />
