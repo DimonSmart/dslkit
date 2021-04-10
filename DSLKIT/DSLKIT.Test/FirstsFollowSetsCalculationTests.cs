@@ -4,6 +4,7 @@ using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DSLKIT.Base;
 using Xunit;
 using static DSLKIT.Test.Constants;
 
@@ -64,13 +65,13 @@ namespace DSLKIT.Test
             follow.Should().BeEquivalentTo(exfollow);
         }
 
-        private Dictionary<string, List<ITerminal>> GetSet(Dictionary<string, ITerminal> terminals, string setLines, string[] delimiter = null)
+        private Dictionary<string, List<ITerm>> GetSet(Dictionary<string, ITerminal> terminals, string setLines, string[] delimiter = null)
         {
             if (delimiter == null)
             {
                 delimiter = new[] { Environment.NewLine, ";" };
             }
-            var result = new Dictionary<string, List<ITerminal>>();
+            var result = new Dictionary<string, List<ITerm>>();
             var lines = setLines.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
             foreach (var line in lines)
             {
@@ -80,7 +81,7 @@ namespace DSLKIT.Test
             return result;
         }
 
-        private static KeyValuePair<string, List<ITerminal>> GetSetRecord(Dictionary<string, ITerminal> terminals, string setDefinition)
+        private static KeyValuePair<string, List<ITerm>> GetSetRecord(Dictionary<string, ITerminal> terminals, string setDefinition)
         {
             var pair = setDefinition.Split(new[] { "→", "->" }, StringSplitOptions.RemoveEmptyEntries);
             if (pair.Length != 2)
@@ -88,12 +89,12 @@ namespace DSLKIT.Test
                 throw new ArgumentException($"{setDefinition} should be in form A→zxcA with → as delimiter");
             }
             var left = pair[0].Trim();
-            var right = new List<ITerminal>();
+            var right = new List<ITerm>();
             foreach (var item in pair[1].Trim().Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 if (item == "ε")
                 {
-                    right.Add(EmptyTerminal.Empty);
+                    right.Add(EmptyTerm.Empty);
                     continue;
                 }
 
@@ -105,7 +106,7 @@ namespace DSLKIT.Test
 
                 right.Add(terminals[item]);
             }
-            return new KeyValuePair<string, List<ITerminal>>(left, right);
+            return new KeyValuePair<string, List<ITerm>>(left, right);
         }
     }
 }

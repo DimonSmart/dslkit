@@ -53,16 +53,16 @@ namespace DSLKIT.Parser
                         if (D != null)
                         {
                             // (except for ε)
-                            if (b != EmptyTerminal.Empty)
+                            if (b != EmptyTerm.Empty)
                             {
                                 updated |= AddFollow(D, GetFirsts(b));
                             }
 
                             var first_of_b = GetFirsts(b);
-                            if (first_of_b.Contains(EmptyTerminal.Empty))
-                            {
-                                updated |= AddFollow(D, GetFollow(R));
-                            }
+                            //if (first_of_b.Contains(EmptyTerm.Empty))
+                            //{
+                            //    updated |= AddFollow(D, GetFollow(R));
+                            //}
                         }
                     }
 
@@ -97,7 +97,7 @@ namespace DSLKIT.Parser
         private bool AddFollow(INonTerminal d, IList<ITerminal> follows)
         {
             var added = false;
-            foreach (var follow in follows.Where(i => i != EmptyTerminal.Empty))
+            foreach (var follow in follows) //.Where(i => i != EmptyTerm.Empty))
             {
                 added |= AddFollow(d, follow);
             }

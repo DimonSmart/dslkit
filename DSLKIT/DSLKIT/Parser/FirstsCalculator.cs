@@ -46,10 +46,10 @@ namespace DSLKIT.Parser
                     AddFirsts(production.LeftNonTerminal, _firsts[rNonTerminal]);
 
                     // If it doesn't contain the empty terminal, then stop
-                    if (!_firsts[rNonTerminal].Contains(EmptyTerminal.Empty))
-                    {
-                        break;
-                    }
+                    //if (!_firsts[rNonTerminal].Contains(EmptyTerm.Empty))
+                    //{
+                    //    break;
+                    //}
                 }
             }
         }

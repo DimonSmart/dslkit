@@ -25,6 +25,9 @@ namespace DSLKIT.Test
         [InlineData("S' → S e;S → ( S );S → i", "S'", "mstrout")]
         // https://www.javatpoint.com/lalr-1-parsing
         [InlineData("S' → S; S → A A;A → a A;A → b", "S'", "javatpoint")]
+        // https://web.cs.dal.ca/~sjackson/lalr1.html with epsilon
+        [InlineData("S → N;N → V = E;N → E;E → V;V → x;V → * E;V → ε", "S", "sjackson_with_ε")]
+
         public void SetBuilderTest(string grammarDefinition, string rootName, string graphFileName, string order = null, string subst = null)
         {
             var grammar = new GrammarBuilder()

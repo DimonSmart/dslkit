@@ -65,7 +65,7 @@
     <Compile Include="NonTerminals\NonTerminal.cs" />
     <Compile Include="Terminals\CommentTerminalBase.cs" />
     <Compile Include="Terminals\CommentTerminalRegexpBased.cs" />
-    <Compile Include="Terminals\EmptyTerminal.cs" />
+    <Compile Include="Terminals\EmptyTerm.cs" />
     <Compile Include="Terminals\EofTerminal.cs" />
     <Compile Include="Helpers\StringHelper.cs" />
     <Compile Include="Lexer\ISourceStream.cs" />

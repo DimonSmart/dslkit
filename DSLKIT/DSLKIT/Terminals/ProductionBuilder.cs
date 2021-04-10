@@ -37,6 +37,9 @@ namespace DSLKIT.Terminals
                     case INonTerminal nonTerminal:
                         _ruleDefinition.Add(_grammarBuilder.AddNonTerminal(nonTerminal));
                         break;
+                    case EmptyTerm emptyTerm:
+                        // Just do nothing
+                        break;
                     default:
                         throw new InvalidOperationException(
                             "Rule definition contains no [Terminal, NonTerminal, string] object");
