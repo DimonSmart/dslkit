@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DSLKIT.Base;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xunit;
 using static DSLKIT.Test.Constants;
 
@@ -12,7 +13,7 @@ namespace DSLKIT.Test
 {
     public class FirstsFollowSetsCalculationTests : GrammarTestsBase
     {
-        [Theory]
+        [Theory(Skip = "Not finished")]
         // http://user.it.uu.se/~kostis/Teaching/KT1-12/Slides/lecture06.pdf
         [InlineData(
          "E → T X; T → ( E ); T → int Y; X → + E; X → ε; Y → * T; Y → ε",
@@ -38,7 +39,7 @@ namespace DSLKIT.Test
             firsts.Should().BeEquivalentTo(GetSet(terminals, expectedFirsts));
         }
 
-        [Theory]
+        [Theory(Skip="Not finished")]
         // http://user.it.uu.se/~kostis/Teaching/KT1-12/Slides/lecture06.pdf
         [InlineData(
             "E → T X; T → ( E ); T → int Y; X → + E; X → ε; Y → * T; Y → ε",

@@ -22,17 +22,25 @@ namespace DSLKIT.Parser
             var sb = new StringBuilder();
             sb.Append(LeftNonTerminal.Name);
             sb.Append(" →");
-            for (var i = 0; i <= ProductionDefinition.Count; i++)
-            {
-                sb.Append(" ");
-                if (i == dotPosition)
-                {
-                    sb.Append(dot);
-                }
 
-                if (i < ProductionDefinition.Count)
+            if (ProductionDefinition.Count == 0)
+            {
+                sb.Append(" ε");
+            }
+            else
+            {
+                for (var i = 0; i <= ProductionDefinition.Count; i++)
                 {
-                    sb.Append(ProductionDefinition[i].Name);
+                    sb.Append(" ");
+                    if (i == dotPosition)
+                    {
+                        sb.Append(dot);
+                    }
+
+                    if (i < ProductionDefinition.Count)
+                    {
+                        sb.Append(ProductionDefinition[i].Name);
+                    }
                 }
             }
 

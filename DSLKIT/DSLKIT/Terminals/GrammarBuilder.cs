@@ -61,7 +61,7 @@ namespace DSLKIT.Terminals
             INonTerminal root;
             if (!string.IsNullOrEmpty(rootProductionName))
             {
-                root = _productions.Where(i => i.LeftNonTerminal.Name == rootProductionName).SingleOrDefault()?.LeftNonTerminal;
+                root = _productions.SingleOrDefault(i => i.LeftNonTerminal.Name == rootProductionName)?.LeftNonTerminal;
             }
             else
             {
@@ -85,7 +85,7 @@ namespace DSLKIT.Terminals
             var production = productionDefinition.Split('→');
             if (production.Length != 2)
             {
-                throw new ArgumentException($"{productionDefinition} shuold be in form A→zxcA with → as delimiter");
+                throw new ArgumentException($"{productionDefinition} should be in form A→zxcA with → as delimiter");
             }
             var left = production[0].Trim();
             var productionBuilder = AddProduction(left);

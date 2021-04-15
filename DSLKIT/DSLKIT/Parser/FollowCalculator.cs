@@ -4,7 +4,6 @@ using DSLKIT.Terminals;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 
 namespace DSLKIT.Parser
 {
@@ -17,7 +16,6 @@ namespace DSLKIT.Parser
         {
             _grammar = grammar;
         }
-
 
         public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> Calculate()
         {

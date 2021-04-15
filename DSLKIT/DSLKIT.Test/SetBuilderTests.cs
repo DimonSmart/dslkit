@@ -54,7 +54,7 @@ namespace DSLKIT.Test
             File.WriteAllText($"{graphFileName}_Table.txt", TranslationTable2Text.Transform(translationTable, order, subst));
         }
 
-        private void SetBuilder_StepEvent(object sender, IEnumerable<RuleSet> sets, string grammarName)
+        private static void SetBuilder_StepEvent(object sender, IEnumerable<RuleSet> sets, string grammarName)
         {
         }
     }

@@ -24,7 +24,7 @@ namespace DSLKIT.Parser
             StepEvent?.Invoke(this, _sets, _grammar.Name);
         }
 
-        public IEnumerable<RuleSet> Build()
+        public ICollection<RuleSet> Build()
         {
             // TODO: Move to grammar
             var startProduction = _grammar.Productions.FirstOrDefault(i => i.LeftNonTerminal == _grammar.Root);
@@ -45,7 +45,7 @@ namespace DSLKIT.Parser
             return _sets;
         }
 
-        public bool TryFormNewSets()
+        private bool TryFormNewSets()
         {
             var anyChanges = false;
 
@@ -55,7 +55,8 @@ namespace DSLKIT.Parser
                 {
                     var newRules = set.Rules
                         .Where(r => !r.IsFinished && r.NextTerm == rule.NextTerm)
-                        .Select(r => r.MoveDot());
+                        .Select(r => r.MoveDot())
+                        .ToList();
 
                     var existsSet = GetSetBySetDefinitionRules(newRules);
                     if (existsSet != null)
@@ -81,7 +82,7 @@ namespace DSLKIT.Parser
             return _sets.SingleOrDefault(s => s.StartsFrom(newRules));
         }
 
-        public bool FillRuleSet(RuleSet set)
+        private bool FillRuleSet(RuleSet set)
         {
             bool changed;
             var anyChanges = false;
@@ -98,13 +99,14 @@ namespace DSLKIT.Parser
 
                     var toAdd = _grammar.Productions
                         .Where(p => p.LeftNonTerminal == nextNonTerminal)
-                        .Select(i => new Rule(i));
+                        .Select(i => new Rule(i))
+                        .ToList();
                     if (!toAdd.Any())
                     {
                         throw new Exception($"No productions for non terminal:{nextNonTerminal}");
                     }
 
-                    toAdd = toAdd.Except(set.Rules);
+                    toAdd = toAdd.Except(set.Rules).ToList();
                     if (toAdd.Any())
                     {
                         foreach (var item in toAdd)

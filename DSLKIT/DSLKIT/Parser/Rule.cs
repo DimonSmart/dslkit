@@ -1,7 +1,7 @@
-﻿using DSLKIT.Base;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using DSLKIT.Base;
 
 namespace DSLKIT.Parser
 {
@@ -13,10 +13,20 @@ namespace DSLKIT.Parser
             DotPosition = dotPosition;
         }
 
-        public int DotPosition { get; set; }
-        public Production Production { get; set; }
+        public int DotPosition { get; }
+        public Production Production { get; }
         public bool IsFinished => DotPosition == Production.ProductionDefinition.Count;
         public ITerm NextTerm => Production.ProductionDefinition[DotPosition];
+
+        public IEnumerator<Rule> GetEnumerator()
+        {
+            return new List<Rule> {this}.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
 
         public override string ToString()
         {
@@ -42,20 +52,10 @@ namespace DSLKIT.Parser
 
         public override int GetHashCode()
         {
-            int hashCode = -1803403243;
-            hashCode = (hashCode * -1521134295) + DotPosition.GetHashCode();
-            hashCode = (hashCode * -1521134295) + EqualityComparer<Production>.Default.GetHashCode(Production);
+            var hashCode = -1803403243;
+            hashCode = hashCode * -1521134295 + DotPosition.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<Production>.Default.GetHashCode(Production);
             return hashCode;
-        }
-
-        public IEnumerator<Rule> GetEnumerator()
-        {
-            return new List<Rule>() { this }.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
         }
 
         public static bool operator ==(Rule left, Rule right)
