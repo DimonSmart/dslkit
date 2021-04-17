@@ -39,7 +39,7 @@ namespace DSLKIT.Test
             firsts.Should().BeEquivalentTo(GetSet(terminals, expectedFirsts));
         }
 
-        [Theory(Skip="Not finished")]
+        [Theory(Skip = "Not finished")]
         // http://user.it.uu.se/~kostis/Teaching/KT1-12/Slides/lecture06.pdf
         [InlineData(
             "E → T X; T → ( E ); T → int Y; X → + E; X → ε; Y → * T; Y → ε",

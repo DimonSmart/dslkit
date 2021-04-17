@@ -9,7 +9,7 @@ namespace DSLKIT.Test
     public static class TranslationTable2Text
     {
         public static string
-            Transform(TranslationTable translationTable, string order, string subst) 
+            Transform(TranslationTable translationTable, string order, string subst)
         {
             var substDictionary = NumberingUtils.CreateSubstFromString(subst);
             var columns = new List<ITerm>();
@@ -40,7 +40,7 @@ namespace DSLKIT.Test
             foreach (var set in translationTable.GetAllSets()
                 .OrderBy(i => NumberingUtils.GetSubst(substDictionary, i.SetNumber)))
             {
-                var row = new List<object> {NumberingUtils.GetSubst(substDictionary, set.SetNumber)};
+                var row = new List<object> { NumberingUtils.GetSubst(substDictionary, set.SetNumber) };
                 foreach (var column in columns)
                 {
                     if (translationTable.TryGetValue(column, set, out var destinationSet))
@@ -57,7 +57,7 @@ namespace DSLKIT.Test
             }
 
             return ConsoleTableBuilder.From(data)
-                .WithColumn(new List<string> {"Item Set"}.Union(columns.Select(i => i.Name)).ToList())
+                .WithColumn(new List<string> { "Item Set" }.Union(columns.Select(i => i.Name)).ToList())
                 .Export().ToString();
         }
     }

@@ -20,7 +20,7 @@ namespace DSLKIT.Parser
 
         public IEnumerator<Rule> GetEnumerator()
         {
-            return new List<Rule> {this}.GetEnumerator();
+            return new List<Rule> { this }.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

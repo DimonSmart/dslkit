@@ -39,6 +39,7 @@ namespace DSLKIT.Test
             var setBuilder = new ItemSetsBuilder(grammar);
             setBuilder.StepEvent += SetBuilder_StepEvent;
             var sets = setBuilder.Build().ToList();
+            var translationTable = TranslationTableBuilder.Build(sets);
 
             var sb = new StringBuilder();
             foreach (var set in sets)
@@ -49,8 +50,6 @@ namespace DSLKIT.Test
             _testOutputHelper.WriteLine(sb.ToString());
             File.WriteAllText($"{graphFileName}.txt", sb.ToString());
             File.WriteAllText($"{graphFileName}.dot", Sets2Dot.Transform(sets, subst));
-
-            var translationTable = TranslationTableBuilder.Build(sets);
             File.WriteAllText($"{graphFileName}_Table.txt", TranslationTable2Text.Transform(translationTable, order, subst));
         }
 
