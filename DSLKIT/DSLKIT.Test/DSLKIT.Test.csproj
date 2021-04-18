@@ -84,6 +84,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Constants.cs" />
+    <Compile Include="ExtendedGrammarToText.cs" />
     <Compile Include="FirstsFollowSetsCalculationTests.cs" />
     <Compile Include="GrammarBuilderTests.cs" />
     <Compile Include="GrammarTestsBase.cs" />

@@ -28,10 +28,10 @@ namespace DSLKIT.Test
         // https://web.cs.dal.ca/~sjackson/lalr1.html with epsilon
         [InlineData("S → N;N → V = E;N → E;E → V;V → x;V → * E;V → ε", "S", "sjackson_with_ε")]
 
-        public void SetBuilderTest(string grammarDefinition, string rootName, string graphFileName, string order = null, string subst = null)
+        public void SetBuilderTest(string grammarDefinition, string rootName, string grammarFileName, string order = null, string subst = null)
         {
             var grammar = new GrammarBuilder()
-                .WithGrammarName(graphFileName)
+                .WithGrammarName(grammarFileName)
                 .AddProductionsFromString(grammarDefinition)
                 .BuildGrammar(rootName);
             ShowGrammar(grammar);
@@ -39,7 +39,14 @@ namespace DSLKIT.Test
             var setBuilder = new ItemSetsBuilder(grammar);
             setBuilder.StepEvent += SetBuilder_StepEvent;
             var sets = setBuilder.Build().ToList();
+            var substDictionary = NumberingUtils.CreateSubstFromString(subst);
+            foreach (var set in sets)
+            {
+                set.SetNumber = NumberingUtils.GetSubst(substDictionary, set.SetNumber);
+            }
+
             var translationTable = TranslationTableBuilder.Build(sets);
+            var extendedGrammar = ExtendedGrammarBuilder.Build(translationTable).ToList();
 
             var sb = new StringBuilder();
             foreach (var set in sets)
@@ -48,9 +55,10 @@ namespace DSLKIT.Test
             }
 
             _testOutputHelper.WriteLine(sb.ToString());
-            File.WriteAllText($"{graphFileName}.txt", sb.ToString());
-            File.WriteAllText($"{graphFileName}.dot", Sets2Dot.Transform(sets, subst));
-            File.WriteAllText($"{graphFileName}_Table.txt", TranslationTable2Text.Transform(translationTable, order, subst));
+            File.WriteAllText($"{grammarFileName}.txt", sb.ToString());
+            File.WriteAllText($"{grammarFileName}.dot", Sets2Dot.Transform(sets));
+            File.WriteAllText($"{grammarFileName}_Table.txt", TranslationTable2Text.Transform(translationTable, order));
+            File.WriteAllText($"{grammarFileName}_extGrammar.txt", ExtendedGrammarToText.Transfort(extendedGrammar));
         }
 
         private static void SetBuilder_StepEvent(object sender, IEnumerable<RuleSet> sets, string grammarName)

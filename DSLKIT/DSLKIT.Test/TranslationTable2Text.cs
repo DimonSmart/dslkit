@@ -9,9 +9,8 @@ namespace DSLKIT.Test
     public static class TranslationTable2Text
     {
         public static string
-            Transform(TranslationTable translationTable, string order, string subst)
+            Transform(TranslationTable translationTable, string order)
         {
-            var substDictionary = NumberingUtils.CreateSubstFromString(subst);
             var columns = new List<ITerm>();
             var tempColumns = translationTable.GetAllTerms()
                 .Union(translationTable.GetDestinationSets()
@@ -38,14 +37,14 @@ namespace DSLKIT.Test
 
             var data = new List<List<object>>();
             foreach (var set in translationTable.GetAllSets()
-                .OrderBy(i => NumberingUtils.GetSubst(substDictionary, i.SetNumber)))
+                .OrderBy(i => i.SetNumber))
             {
-                var row = new List<object> { NumberingUtils.GetSubst(substDictionary, set.SetNumber) };
+                var row = new List<object> { set.SetNumber };
                 foreach (var column in columns)
                 {
                     if (translationTable.TryGetValue(column, set, out var destinationSet))
                     {
-                        row.Add(NumberingUtils.GetSubst(substDictionary, destinationSet.SetNumber).ToString());
+                        row.Add(destinationSet.SetNumber.ToString());
                     }
                     else
                     {

@@ -53,9 +53,10 @@
     <Compile Include="Lexer\ParenthesesCheckedStreamCreator.cs" />
     <Compile Include="NonTerminals\NonTerminalExt.cs" />
     <Compile Include="Parser\ExtendedGrammarBuilder.cs" />
-    <Compile Include="Parser\ExtendedGrammarRule.cs" />
+    <Compile Include="Parser\ExtendedGrammarProduction.cs" />
     <Compile Include="Parser\ExtendedGrammarTerm.cs" />
-    <Compile Include="Parser\ProductionBase.cs" />
+    <Compile Include="Parser\FromTo.cs" />
+    <Compile Include="Parser\Production.cs" />
     <Compile Include="Parser\Rule.cs" />
     <Compile Include="Parser\RuleSet.cs" />
     <Compile Include="Parser\ItemSetsBuilder.cs" />
@@ -65,7 +66,6 @@
     <Compile Include="Parser\FirstsCalculator.cs" />
     <Compile Include="Parser\FollowCalculator.cs" />
     <Compile Include="Parser\IGrammar.cs" />
-    <Compile Include="Parser\Production.cs" />
     <Compile Include="Parser\Grammar.cs" />
     <Compile Include="NonTerminals\NonTerminal.cs" />
     <Compile Include="Terminals\CommentTerminalBase.cs" />
