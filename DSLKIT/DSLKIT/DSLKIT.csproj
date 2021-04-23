@@ -54,7 +54,6 @@
     <Compile Include="NonTerminals\NonTerminalExt.cs" />
     <Compile Include="Parser\ExtendedGrammarBuilder.cs" />
     <Compile Include="Parser\ExtendedGrammarProduction.cs" />
-    <Compile Include="Parser\ExtendedGrammarTerm.cs" />
     <Compile Include="Parser\FromTo.cs" />
     <Compile Include="Parser\Production.cs" />
     <Compile Include="Parser\Rule.cs" />

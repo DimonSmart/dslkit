@@ -1,7 +1,7 @@
-﻿using System;
+﻿using DSLKIT.Base;
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using DSLKIT.Base;
 
 namespace DSLKIT.Parser
 {

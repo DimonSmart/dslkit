@@ -1,4 +1,5 @@
-﻿using DSLKIT.NonTerminals;
+﻿using DSLKIT.Base;
+using DSLKIT.NonTerminals;
 using DSLKIT.Terminals;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -6,58 +7,68 @@ using System.Linq;
 
 namespace DSLKIT.Parser
 {
-    public class FirstsCalculator
+    public class FirstsCalculatorEx
     {
-        private readonly IEnumerable<Production> _productions;
-        private readonly Dictionary<INonTerminal, IList<ITerminal>> _firsts;
-        private readonly HashSet<Production> _searchStack;
+        private readonly IEnumerable<ExtendedGrammarProduction> _extendedGrammarProductions;
+        private readonly Dictionary<INonTerminal, IList<ITerm>> _firsts;
+        private readonly HashSet<ExtendedGrammarProduction> _searchStack;
 
-        public FirstsCalculator(IEnumerable<Production> productions)
+        public FirstsCalculatorEx(IEnumerable<ExtendedGrammarProduction> productions)
         {
-            _productions = productions;
-            _firsts = new Dictionary<INonTerminal, IList<ITerminal>>();
-            _searchStack = new HashSet<Production>();
+            _extendedGrammarProductions = productions;
+            _firsts = new Dictionary<INonTerminal, IList<ITerm>>();
+            _searchStack = new HashSet<ExtendedGrammarProduction>();
         }
 
-        public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> Calculate()
+        public IReadOnlyDictionary<INonTerminal, IList<ITerm>> Calculate()
         {
             AddFirstSets();
-            return new ReadOnlyDictionary<INonTerminal, IList<ITerminal>>(_firsts);
+            return new ReadOnlyDictionary<INonTerminal, IList<ITerm>>(_firsts);
         }
 
         private void AddFirstSets(INonTerminal nonTerminal = null)
         {
-            foreach (var production in _productions
-                .Where(p => (p.LeftNonTerminal == nonTerminal || nonTerminal == null) && !_searchStack.Contains(p)))
+            foreach (var extendedGrammarProduction in _extendedGrammarProductions
+                .Where(p => (p.Production.LeftNonTerminal == nonTerminal || nonTerminal == null) && !_searchStack.Contains(p)))
             {
-                foreach (var term in production.ProductionDefinition)
+                var allRulesContainsEpsilon = true;
+                foreach (var term in extendedGrammarProduction.Production.ProductionDefinition)
                 {
                     if (term is ITerminal terminal)
                     {
-                        AddFirst(production.LeftNonTerminal, terminal);
+                        AddFirst(extendedGrammarProduction.Production.LeftNonTerminal, terminal);
+                        allRulesContainsEpsilon = false;
                         break;
                     }
 
-                    var rNonTerminal = term as INonTerminal;
-                    _searchStack.Add(production);
-                    AddFirstSets(rNonTerminal);
-                    _searchStack.Remove(production);
+                    if (term is INonTerminal rNonTerminal)
+                    {
+                        _searchStack.Add(extendedGrammarProduction);
+                        AddFirstSets(rNonTerminal);
+                        _searchStack.Remove(extendedGrammarProduction);
 
-                    AddFirsts(production.LeftNonTerminal, _firsts[rNonTerminal]);
+                        AddFirsts(extendedGrammarProduction.Production.LeftNonTerminal, _firsts[rNonTerminal]);
 
-                    // If it doesn't contain the empty terminal, then stop
-                    //if (!_firsts[rNonTerminal].Contains(EmptyTerm.Empty))
-                    //{
-                    //    break;
-                    //}
+                        // If it doesn't contain the empty terminal, then stop
+                        if (!_firsts[rNonTerminal].Contains(EmptyTerm.Empty))
+                        {
+                            allRulesContainsEpsilon = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (allRulesContainsEpsilon)
+                {
+                    AddFirst(extendedGrammarProduction.Production.LeftNonTerminal, EmptyTerm.Empty);
                 }
             }
         }
 
-        private bool AddFirsts(INonTerminal nonTerminal, IEnumerable<ITerminal> terminals)
+        private bool AddFirsts(INonTerminal nonTerminal, IEnumerable<ITerm> terms)
         {
             var added = false;
-            foreach (var terminal in terminals)
+            foreach (var terminal in terms)
             {
                 added |= AddFirst(nonTerminal, terminal);
             }
@@ -65,20 +76,20 @@ namespace DSLKIT.Parser
             return added;
         }
 
-        private bool AddFirst(INonTerminal nonTerminal, ITerminal terminal)
+        private bool AddFirst(INonTerminal nonTerminal, ITerm term)
         {
             if (_firsts.TryGetValue(nonTerminal, out var firsts))
             {
-                if (firsts.Contains(terminal))
+                if (firsts.Contains(term))
                 {
                     return false;
                 }
 
-                firsts.Add(terminal);
+                firsts.Add(term);
                 return true;
             }
 
-            _firsts[nonTerminal] = new List<ITerminal> { terminal };
+            _firsts[nonTerminal] = new List<ITerm> { term };
             return true;
         }
     }

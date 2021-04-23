@@ -53,7 +53,7 @@ namespace DSLKIT.Parser
                             // (except for ε)
                             if (b != EmptyTerm.Empty)
                             {
-                                updated |= AddFollow(D, GetFirsts(b));
+                                // updated |= AddFollow(D, GetFirsts(b));
                             }
 
                             var first_of_b = GetFirsts(b);
@@ -112,12 +112,12 @@ namespace DSLKIT.Parser
             return new List<ITerminal>();
         }
 
-        private IList<ITerminal> GetFirsts(ITerm term)
+        private IList<ITerm> GetFirsts(ITerm term)
         {
             switch (term)
             {
                 case ITerminal terminal:
-                    return new List<ITerminal> { terminal };
+                    return new List<ITerm> { terminal };
                 case INonTerminal nontermanal:
                     return _grammar.Firsts[nontermanal];
                 default:

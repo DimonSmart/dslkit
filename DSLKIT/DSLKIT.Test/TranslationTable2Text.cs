@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using ConsoleTableExt;
+﻿using ConsoleTableExt;
 using DSLKIT.Base;
 using DSLKIT.Parser;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DSLKIT.Test
 {

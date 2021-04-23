@@ -1,4 +1,5 @@
-﻿using DSLKIT.NonTerminals;
+﻿using DSLKIT.Base;
+using DSLKIT.NonTerminals;
 using DSLKIT.Terminals;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,13 +21,28 @@ namespace DSLKIT.Parser
             Root = root;
         }
 
-        private IReadOnlyDictionary<INonTerminal, IList<ITerminal>> _firsts;
+        private IReadOnlyDictionary<INonTerminal, IList<ITerm>> _firsts;
         private IReadOnlyDictionary<INonTerminal, IList<ITerminal>> _follow;
 
         public IReadOnlyCollection<Production> Productions { get; }
         public IReadOnlyCollection<ITerminal> Terminals { get; }
         public IReadOnlyCollection<INonTerminal> NonTerminals { get; }
-        public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> Firsts => _firsts ?? (_firsts = new FirstsCalculator(Productions).Calculate());
+        public IReadOnlyDictionary<INonTerminal, IList<ITerm>> Firsts
+        {
+            get
+            {
+                if (_firsts != null)
+                {
+                    return _firsts;
+                }
+
+                var sets = new ItemSetsBuilder(this).Build().ToList();
+                var translationTable = TranslationTableBuilder.Build(sets);
+                var extendedGrammar = ExtendedGrammarBuilder.Build(translationTable).ToList();
+                _firsts = new FirstsCalculatorEx(extendedGrammar).Calculate();
+                return _firsts;
+            }
+        }
 
         public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> Follow
         {

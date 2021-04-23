@@ -38,7 +38,7 @@ namespace DSLKIT.Terminals
                         _ruleDefinition.Add(_grammarBuilder.AddNonTerminal(nonTerminal));
                         break;
                     case EmptyTerm emptyTerm:
-                        // Just do nothing
+                        _ruleDefinition.Add(EmptyTerm.Empty);
                         break;
                     default:
                         throw new InvalidOperationException(

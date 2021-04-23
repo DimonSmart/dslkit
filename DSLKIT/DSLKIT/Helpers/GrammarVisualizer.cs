@@ -1,6 +1,6 @@
-﻿using System.Linq;
+﻿using DSLKIT.Parser;
+using System.Linq;
 using System.Text;
-using DSLKIT.Parser;
 
 namespace DSLKIT
 {
@@ -14,7 +14,7 @@ namespace DSLKIT
             DumpNonTerminals(grammar, sb);
             DumpTerminals(grammar, sb);
             DumpProductions(grammar, sb);
-            // DumpFirsts(grammar, sb);
+            DumpFirsts(grammar, sb);
             // DumpFollow(grammar, sb);
 
             return sb.ToString();

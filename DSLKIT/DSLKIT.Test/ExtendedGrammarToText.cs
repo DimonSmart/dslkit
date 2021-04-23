@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using DSLKIT.Parser;
+﻿using DSLKIT.Parser;
+using System.Collections.Generic;
 
 namespace DSLKIT.Test
 {

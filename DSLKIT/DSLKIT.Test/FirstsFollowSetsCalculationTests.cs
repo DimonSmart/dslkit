@@ -1,11 +1,10 @@
-﻿using DSLKIT.Parser;
+﻿using DSLKIT.Base;
+using DSLKIT.Parser;
 using DSLKIT.Terminals;
 using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DSLKIT.Base;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xunit;
 using static DSLKIT.Test.Constants;
 
@@ -13,7 +12,7 @@ namespace DSLKIT.Test
 {
     public class FirstsFollowSetsCalculationTests : GrammarTestsBase
     {
-        [Theory(Skip = "Not finished")]
+        [Theory]
         // http://user.it.uu.se/~kostis/Teaching/KT1-12/Slides/lecture06.pdf
         [InlineData(
          "E → T X; T → ( E ); T → int Y; X → + E; X → ε; Y → * T; Y → ε",
@@ -31,12 +30,11 @@ namespace DSLKIT.Test
                 .BuildGrammar("E");
             ShowGrammar(grammar);
 
-            var firsts = new FirstsCalculator(grammar.Productions).Calculate()
-                .ToDictionary(i => i.Key.Name, i => i.Value.ToList());
-            var terminals = grammar.Terminals.ToDictionary(i => i.Name, i => i);
+            var allGrammarTerminals = grammar.Terminals.ToDictionary(i => i.Name, i => i);
+            var firsts = grammar.Firsts.ToDictionary(i => i.Key.Name, i => i.Value.ToList());
 
             grammar.Firsts.Keys.Should().BeEquivalentTo(grammar.NonTerminals);
-            firsts.Should().BeEquivalentTo(GetSet(terminals, expectedFirsts));
+            firsts.Should().BeEquivalentTo(GetSet(allGrammarTerminals, expectedFirsts));
         }
 
         [Theory(Skip = "Not finished")]
