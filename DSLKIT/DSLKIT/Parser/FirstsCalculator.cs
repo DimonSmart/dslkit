@@ -1,5 +1,6 @@
 ﻿using DSLKIT.Base;
 using DSLKIT.NonTerminals;
+using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

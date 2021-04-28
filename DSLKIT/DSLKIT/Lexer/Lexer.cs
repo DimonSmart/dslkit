@@ -1,3 +1,4 @@
+using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
 using DSLKIT.Tokens;
 using System.Collections.Generic;
@@ -13,7 +14,7 @@ namespace DSLKIT
         public Lexer(LexerSettings lexerSettings)
         {
             _lexerSettings = lexerSettings;
-            _eofTerminal = _lexerSettings.EofTerminal ?? new EofTerminal();
+            _eofTerminal = _lexerSettings.EofTerminal ?? EofTerminal.Instance;
         }
 
         public IEnumerable<IToken> GetTokens(ISourceStream source)

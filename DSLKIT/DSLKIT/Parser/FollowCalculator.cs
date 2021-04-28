@@ -1,15 +1,17 @@
 ﻿using DSLKIT.Base;
 using DSLKIT.NonTerminals;
+using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace DSLKIT.Parser
 {
     public class FollowCalculator
     {
-        readonly Dictionary<INonTerminal, IList<ITerminal>> _follow = new Dictionary<INonTerminal, IList<ITerminal>>();
+        readonly Dictionary<INonTerminal, IList<ITerm>> _follow = new Dictionary<INonTerminal, IList<ITerm>>();
         private readonly IGrammar _grammar;
 
         public FollowCalculator(IGrammar grammar)
@@ -17,7 +19,7 @@ namespace DSLKIT.Parser
             _grammar = grammar;
         }
 
-        public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> Calculate()
+        public IReadOnlyDictionary<INonTerminal, IList<ITerm>> Calculate()
         {
             // Conventions: a, b, and c represent a terminal or non-terminal.
             //    a* represents zero or more terminals or non-terminals (possibly both).
@@ -31,7 +33,7 @@ namespace DSLKIT.Parser
             // 4/ The Follow set of a terminal is an empty set.
 
             // 1. Place an End of Input token($) into the Root rule's follow set.
-            _follow.Add(_grammar.Root, new List<ITerminal> { _grammar.Eof });
+            _follow.Add(_grammar.Root, new List<ITerm> { _grammar.Eof });
 
             bool updated;
             do
@@ -47,52 +49,51 @@ namespace DSLKIT.Parser
                     {
                         // R → a* Db
                         var b = rule[count - 1];
-                        var D = rule[count - 2] as INonTerminal;
-                        if (D != null)
+                        // ReSharper disable once InconsistentNaming
+                        if (rule[count - 2] is INonTerminal @D)
                         {
                             // (except for ε)
-                            if (b != EmptyTerm.Empty)
-                            {
-                                // updated |= AddFollow(D, GetFirsts(b));
-                            }
-
-                            var first_of_b = GetFirsts(b);
-                            //if (first_of_b.Contains(EmptyTerm.Empty))
+                            //if (b != EmptyTerm.Empty)
                             //{
-                            //    updated |= AddFollow(D, GetFollow(R));
-                            //}
+                                updated |= AddFollow(D, GetFirsts(b).Where(i => i is EmptyTerm).ToList());
+                            //
+
+                            var firstOfB = GetFirsts(b);
+                            if (firstOfB.Contains(EmptyTerm.Empty))
+                            {
+                                updated |= AddFollow(D, GetFollow(R));
+                            }
                         }
                     }
 
-                    var D1 = rule[count - 1] as INonTerminal;
-                    if (D1 != null)
+                    if (rule[count - 1] is INonTerminal D1)
                     {
                         updated |= AddFollow(D1, GetFollow(R));
                     }
                 }
             } while (updated);
 
-            return new ReadOnlyDictionary<INonTerminal, IList<ITerminal>>(_follow);
+            return new ReadOnlyDictionary<INonTerminal, IList<ITerm>>(_follow);
         }
 
-        private bool AddFollow(INonTerminal nonTerminal, ITerminal terminal)
+        private bool AddFollow(INonTerminal nonTerminal, ITerm term)
         {
             if (_follow.TryGetValue(nonTerminal, out var follow))
             {
-                if (follow.Contains(terminal))
+                if (follow.Contains(term))
                 {
                     return false;
                 }
 
-                follow.Add(terminal);
+                follow.Add(term);
                 return true;
             }
 
-            _follow[nonTerminal] = new List<ITerminal> { terminal };
+            _follow[nonTerminal] = new List<ITerm> { term };
             return true;
         }
 
-        private bool AddFollow(INonTerminal d, IList<ITerminal> follows)
+        private bool AddFollow(INonTerminal d, IList<ITerm> follows)
         {
             var added = false;
             foreach (var follow in follows) //.Where(i => i != EmptyTerm.Empty))
@@ -102,14 +103,14 @@ namespace DSLKIT.Parser
             return added;
         }
 
-        private IList<ITerminal> GetFollow(INonTerminal nonTerminal)
+        private IList<ITerm> GetFollow(INonTerminal nonTerminal)
         {
-            if (_follow.TryGetValue(nonTerminal, out IList<ITerminal> follow))
+            if (_follow.TryGetValue(nonTerminal, out IList<ITerm> follow))
             {
                 return follow;
             }
 
-            return new List<ITerminal>();
+            return new List<ITerm>();
         }
 
         private IList<ITerm> GetFirsts(ITerm term)

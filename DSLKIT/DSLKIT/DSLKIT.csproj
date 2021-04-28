@@ -61,6 +61,7 @@
     <Compile Include="Parser\ItemSetsBuilder.cs" />
     <Compile Include="Parser\TranslationTable.cs" />
     <Compile Include="Parser\TranslationTableBuilder.cs" />
+    <Compile Include="SpecialTerms\IEofTerminal.cs" />
     <Compile Include="Terminals\TerminalExt.cs" />
     <Compile Include="Parser\FirstsCalculator.cs" />
     <Compile Include="Parser\FollowCalculator.cs" />
@@ -69,8 +70,8 @@
     <Compile Include="NonTerminals\NonTerminal.cs" />
     <Compile Include="Terminals\CommentTerminalBase.cs" />
     <Compile Include="Terminals\CommentTerminalRegexpBased.cs" />
-    <Compile Include="Terminals\EmptyTerm.cs" />
-    <Compile Include="Terminals\EofTerminal.cs" />
+    <Compile Include="SpecialTerms\EmptyTerm.cs" />
+    <Compile Include="SpecialTerms\EofTerminal.cs" />
     <Compile Include="Helpers\StringHelper.cs" />
     <Compile Include="Lexer\ISourceStream.cs" />
     <Compile Include="Terminals\GrammarBuilder.cs" />

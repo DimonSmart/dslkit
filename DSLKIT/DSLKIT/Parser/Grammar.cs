@@ -1,5 +1,6 @@
 ﻿using DSLKIT.Base;
 using DSLKIT.NonTerminals;
+using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +23,7 @@ namespace DSLKIT.Parser
         }
 
         private IReadOnlyDictionary<INonTerminal, IList<ITerm>> _firsts;
-        private IReadOnlyDictionary<INonTerminal, IList<ITerminal>> _follow;
+        private IReadOnlyDictionary<INonTerminal, IList<ITerm>> _follow;
 
         public IReadOnlyCollection<Production> Productions { get; }
         public IReadOnlyCollection<ITerminal> Terminals { get; }
@@ -44,7 +45,7 @@ namespace DSLKIT.Parser
             }
         }
 
-        public IReadOnlyDictionary<INonTerminal, IList<ITerminal>> Follow
+        public IReadOnlyDictionary<INonTerminal, IList<ITerm>> Follow
         {
             get
             {
@@ -56,7 +57,7 @@ namespace DSLKIT.Parser
             }
         }
 
-        public ITerminal Eof { get; } = new EofTerminal();
+        public IEofTerminal Eof { get; } = EofTerminal.Instance;
         public string Name { get; }
 
         public INonTerminal Root { get; set; }

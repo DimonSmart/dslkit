@@ -1,12 +1,21 @@
-﻿using DSLKIT.Tokens;
+﻿using DSLKIT.Terminals;
+using DSLKIT.Tokens;
+using System;
 
-namespace DSLKIT.Terminals
+namespace DSLKIT.SpecialTerms
 {
-    public class EofTerminal : ITerminal
+    public class EofTerminal : IEofTerminal
     {
+        private static readonly Lazy<IEofTerminal>
+          _lazy = new Lazy<IEofTerminal>(() => new EofTerminal());
+        public static IEofTerminal Instance => _lazy.Value;
+
         public string Name => "Eof";
         public TermFlags Flags => TermFlags.None;
         public TerminalPriority Priority => TerminalPriority.High;
+        private EofTerminal()
+        {
+        }
 
         public bool CanStartWith(char c)
         {

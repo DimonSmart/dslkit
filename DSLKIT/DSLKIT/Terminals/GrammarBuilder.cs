@@ -5,7 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using static DSLKIT.Terminals.EmptyTerm;
+using static DSLKIT.SpecialTerms.EmptyTerm;
 
 namespace DSLKIT.Terminals
 {

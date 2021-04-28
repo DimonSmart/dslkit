@@ -1,12 +1,12 @@
 ﻿using DSLKIT.Base;
 using DSLKIT.Parser;
+using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
 using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
-using static DSLKIT.Test.Constants;
 
 namespace DSLKIT.Test
 {
@@ -37,7 +37,7 @@ namespace DSLKIT.Test
             firsts.Should().BeEquivalentTo(GetSet(allGrammarTerminals, expectedFirsts));
         }
 
-        [Theory(Skip = "Not finished")]
+        [Theory]
         // http://user.it.uu.se/~kostis/Teaching/KT1-12/Slides/lecture06.pdf
         [InlineData(
             "E → T X; T → ( E ); T → int Y; X → + E; X → ε; Y → * T; Y → ε",
@@ -54,13 +54,11 @@ namespace DSLKIT.Test
                 .AddProductionsFromString(grammarDefinition)
                 .BuildGrammar("E");
             ShowGrammar(grammar);
-
-            var follow = new FollowCalculator(grammar).Calculate()
-                .ToDictionary(i => i.Key.Name, i => i.Value.ToList());
-            var terminals = grammar.Terminals.ToDictionary(i => i.Name, i => i);
-
+            
+            var allGrammarTerminals = grammar.Terminals.ToDictionary(i => i.Name, i => i);
+            var follow = grammar.Follow.ToDictionary(i => i.Key.Name, i => i.Value.ToList());
             grammar.Firsts.Keys.Should().BeEquivalentTo(grammar.NonTerminals);
-            var exfollow = GetSet(terminals, expectedFollows);
+            var exfollow = GetSet(allGrammarTerminals, expectedFollows);
             follow.Should().BeEquivalentTo(exfollow);
         }
 
@@ -99,7 +97,7 @@ namespace DSLKIT.Test
 
                 if (item == "$")
                 {
-                    right.Add(EOF);
+                    right.Add(EofTerminal.Instance);
                     continue;
                 }
 

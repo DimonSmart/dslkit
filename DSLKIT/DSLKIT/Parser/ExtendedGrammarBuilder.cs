@@ -25,8 +25,7 @@ namespace DSLKIT.Parser
             var currentSet = set;
             foreach (var term in production.ProductionDefinition)
             {
-                RuleSet nextSet = null;
-                translationTable.TryGetValue(term, currentSet, out nextSet);
+                translationTable.TryGetValue(term, currentSet, out RuleSet nextSet);
 
                 productionDefinitionFromTo.Add(new FromTo(currentSet, nextSet));
                 currentSet = nextSet;

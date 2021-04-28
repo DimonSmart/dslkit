@@ -15,7 +15,7 @@ namespace DSLKIT
             DumpTerminals(grammar, sb);
             DumpProductions(grammar, sb);
             DumpFirsts(grammar, sb);
-            // DumpFollow(grammar, sb);
+            DumpFollow(grammar, sb);
 
             return sb.ToString();
         }
