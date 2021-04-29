@@ -1,11 +1,10 @@
-﻿using DSLKIT.Base;
-using DSLKIT.Parser;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using DSLKIT.Base;
 using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
 using FluentAssertions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Xunit;
 
 namespace DSLKIT.Test
@@ -15,13 +14,13 @@ namespace DSLKIT.Test
         [Theory]
         // http://user.it.uu.se/~kostis/Teaching/KT1-12/Slides/lecture06.pdf
         [InlineData(
-         "E → T X; T → ( E ); T → int Y; X → + E; X → ε; Y → * T; Y → ε",
-         "T → int (; E → int (; X → + ε; Y → * ε")]
+            "E → T X; T → ( E ); T → int Y; X → + E; X → ε; Y → * T; Y → ε",
+            "T → int (; E → int (; X → + ε; Y → * ε")]
 
         // https://www.jambe.co.nz/UNI/FirstAndFollowSets.html
         [InlineData(
-         "E → T E'; E'→ + T E'; E'→ ε; T → F T';T'→ * F T'; T'→ ε; F → ( E ); F → id",
-         "E → ( id; E' → + ε; T → ( id; T' → * ε; F → ( id")]
+            "E → T E'; E' → + T E'; E' → ε; T → F T';T' → * F T'; T' → ε; F → ( E ); F → id",
+            "E → ( id; E' → + ε; T → ( id; T' → * ε; F → ( id")]
         public void FirstsSetCreation(string grammarDefinition, string expectedFirsts)
         {
             var grammar = new GrammarBuilder()
@@ -45,7 +44,7 @@ namespace DSLKIT.Test
 
         // https://www.jambe.co.nz/UNI/FirstAndFollowSets.html
         [InlineData(
-            "E → T E'; E'→ + T E'; E'→ ε; T → F T';T'→ * F T'; T'→ ε; F → ( E ); F → id",
+            "E' → + T E'; E → T E';  E' → ε; T → F T';T' → * F T'; T' → ε; F → ( E ); F → id",
             "E → $ ); E' → $ ); T → + $ ); T' → + $ ); F → * + $ )")]
         public void FollowSetCreation_Test(string grammarDefinition, string expectedFollows)
         {
@@ -54,20 +53,21 @@ namespace DSLKIT.Test
                 .AddProductionsFromString(grammarDefinition)
                 .BuildGrammar("E");
             ShowGrammar(grammar);
-            
+
             var allGrammarTerminals = grammar.Terminals.ToDictionary(i => i.Name, i => i);
             var follow = grammar.Follow.ToDictionary(i => i.Key.Name, i => i.Value.ToList());
             grammar.Firsts.Keys.Should().BeEquivalentTo(grammar.NonTerminals);
-            var exfollow = GetSet(allGrammarTerminals, expectedFollows);
-            follow.Should().BeEquivalentTo(exfollow);
+            follow.Should().BeEquivalentTo(GetSet(allGrammarTerminals, expectedFollows));
         }
 
-        private Dictionary<string, List<ITerm>> GetSet(Dictionary<string, ITerminal> terminals, string setLines, string[] delimiter = null)
+        private Dictionary<string, List<ITerm>> GetSet(Dictionary<string, ITerminal> terminals, string setLines,
+            string[] delimiter = null)
         {
             if (delimiter == null)
             {
-                delimiter = new[] { Environment.NewLine, ";" };
+                delimiter = new[] {Environment.NewLine, ";"};
             }
+
             var result = new Dictionary<string, List<ITerm>>();
             var lines = setLines.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
             foreach (var line in lines)
@@ -75,19 +75,22 @@ namespace DSLKIT.Test
                 var record = GetSetRecord(terminals, line);
                 result.Add(record.Key, record.Value);
             }
+
             return result;
         }
 
-        private static KeyValuePair<string, List<ITerm>> GetSetRecord(Dictionary<string, ITerminal> terminals, string setDefinition)
+        private static KeyValuePair<string, List<ITerm>> GetSetRecord(Dictionary<string, ITerminal> terminals,
+            string setDefinition)
         {
-            var pair = setDefinition.Split(new[] { "→", "->" }, StringSplitOptions.RemoveEmptyEntries);
+            var pair = setDefinition.Split(new[] {"→", "->"}, StringSplitOptions.RemoveEmptyEntries);
             if (pair.Length != 2)
             {
                 throw new ArgumentException($"{setDefinition} should be in form A→zxcA with → as delimiter");
             }
+
             var left = pair[0].Trim();
             var right = new List<ITerm>();
-            foreach (var item in pair[1].Trim().Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var item in pair[1].Trim().Split(new[] {' ', '\t'}, StringSplitOptions.RemoveEmptyEntries))
             {
                 if (item == "ε")
                 {
@@ -103,6 +106,7 @@ namespace DSLKIT.Test
 
                 right.Add(terminals[item]);
             }
+
             return new KeyValuePair<string, List<ITerm>>(left, right);
         }
     }

@@ -27,7 +27,6 @@ namespace DSLKIT.Test
         [InlineData("S' → S; S → A A;A → a A;A → b", "S'", "javatpoint")]
         // https://web.cs.dal.ca/~sjackson/lalr1.html with epsilon
         [InlineData("S → N;N → V = E;N → E;E → V;V → x;V → * E;V → ε", "S", "sjackson_with_ε")]
-
         public void SetBuilderTest(string grammarDefinition, string rootName, string grammarFileName, string order = null, string subst = null)
         {
             var grammar = new GrammarBuilder()
@@ -58,7 +57,7 @@ namespace DSLKIT.Test
             File.WriteAllText($"{grammarFileName}.txt", sb.ToString());
             File.WriteAllText($"{grammarFileName}.dot", Sets2Dot.Transform(sets));
             File.WriteAllText($"{grammarFileName}_Table.txt", TranslationTable2Text.Transform(translationTable, order));
-            File.WriteAllText($"{grammarFileName}_extGrammar.txt", ExtendedGrammarToText.Transfort(extendedGrammar));
+            File.WriteAllText($"{grammarFileName}_extGrammar.txt", ExtendedGrammarToText.Transform(extendedGrammar));
         }
 
         private static void SetBuilder_StepEvent(object sender, IEnumerable<RuleSet> sets, string grammarName)

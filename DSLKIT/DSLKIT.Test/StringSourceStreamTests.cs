@@ -8,7 +8,7 @@ namespace DSLKIT.Test
         [TestMethod]
         public void NormalUseTest()
         {
-            var s = new StringSourceStream("AB");
+            ISourceStream s = new StringSourceStream("AB");
             Assert.AreEqual('A', s.Read());
             Assert.AreEqual('B', s.Read());
         }
@@ -16,7 +16,7 @@ namespace DSLKIT.Test
         [TestMethod]
         public void DoublePeekTest()
         {
-            var s = new StringSourceStream("AB");
+            ISourceStream s = new StringSourceStream("AB");
             Assert.AreEqual('A', s.Peek());
             Assert.AreEqual('A', s.Peek());
         }
@@ -24,7 +24,7 @@ namespace DSLKIT.Test
         [TestMethod]
         public void PositionSlidingTest()
         {
-            var s = new StringSourceStream("AB");
+            ISourceStream s = new StringSourceStream("AB");
             Assert.AreEqual(0, s.Position);
             Assert.AreEqual('A', s.Read());
             Assert.AreEqual(1, s.Position);

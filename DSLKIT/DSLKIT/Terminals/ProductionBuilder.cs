@@ -38,7 +38,7 @@ namespace DSLKIT.Terminals
                     case INonTerminal nonTerminal:
                         _ruleDefinition.Add(_grammarBuilder.AddNonTerminal(nonTerminal));
                         break;
-                    case EmptyTerm emptyTerm:
+                    case EmptyTerm _:
                         _ruleDefinition.Add(EmptyTerm.Empty);
                         break;
                     default:

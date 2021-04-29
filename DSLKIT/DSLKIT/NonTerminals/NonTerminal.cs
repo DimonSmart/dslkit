@@ -9,10 +9,6 @@ namespace DSLKIT.NonTerminals
             Name = name;
         }
 
-        public NonTerminal() : this(Guid.NewGuid().ToString())
-        {
-        }
-
         public string Name { get; }
 
         public override string ToString()

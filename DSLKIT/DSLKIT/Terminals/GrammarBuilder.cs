@@ -90,7 +90,7 @@ namespace DSLKIT.Terminals
             var left = production[0].Trim();
             var productionBuilder = AddProduction(left);
             var definition = new List<ITerm>();
-            foreach (var item in production[1].Trim().Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var item in production[1].Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 if (item == "ε")
                 {

@@ -7,8 +7,8 @@ namespace DSLKIT.SpecialTerms
     public class EofTerminal : IEofTerminal
     {
         private static readonly Lazy<IEofTerminal>
-          _lazy = new Lazy<IEofTerminal>(() => new EofTerminal());
-        public static IEofTerminal Instance => _lazy.Value;
+          LazyEofTerminal = new Lazy<IEofTerminal>(() => new EofTerminal());
+        public static IEofTerminal Instance => LazyEofTerminal.Value;
 
         public string Name => "Eof";
         public TermFlags Flags => TermFlags.None;

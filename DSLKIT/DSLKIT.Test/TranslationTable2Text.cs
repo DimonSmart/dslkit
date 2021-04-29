@@ -42,14 +42,9 @@ namespace DSLKIT.Test
                 var row = new List<object> { set.SetNumber };
                 foreach (var column in columns)
                 {
-                    if (translationTable.TryGetValue(column, set, out var destinationSet))
-                    {
-                        row.Add(destinationSet.SetNumber.ToString());
-                    }
-                    else
-                    {
-                        row.Add(string.Empty);
-                    }
+                    row.Add(translationTable.TryGetValue(column, set, out var destinationSet)
+                        ? destinationSet.SetNumber.ToString()
+                        : string.Empty);
                 }
 
                 data.Add(row);

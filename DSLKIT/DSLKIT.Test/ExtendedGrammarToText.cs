@@ -5,7 +5,7 @@ namespace DSLKIT.Test
 {
     public static class ExtendedGrammarToText
     {
-        public static string Transfort(IEnumerable<ExtendedGrammarProduction> extendedGrammar)
+        public static string Transform(IEnumerable<ExtendedGrammarProduction> extendedGrammar)
         {
             return string.Join(System.Environment.NewLine, extendedGrammar);
         }

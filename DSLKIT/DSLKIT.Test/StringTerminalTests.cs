@@ -48,7 +48,7 @@ namespace DSLKIT.Test
         }
 
         [TestMethod]
-        public void PrefexedStringTest()
+        public void PrefixedStringTest()
         {
             DoStringTest(@"$[Hello World]'_rest of string", 0, @"Hello World", @"$[", @"]");
             DoStringTest(@"$""Hello World""'_rest of string", 0, @"Hello World", @"$""", @"""");

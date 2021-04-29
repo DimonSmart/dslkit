@@ -1,17 +1,29 @@
-﻿using DSLKIT.Base;
-using DSLKIT.NonTerminals;
-using DSLKIT.SpecialTerms;
-using DSLKIT.Terminals;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using DSLKIT.Base;
+using DSLKIT.NonTerminals;
+using DSLKIT.SpecialTerms;
+using DSLKIT.Terminals;
 
 namespace DSLKIT.Parser
 {
+    /// <summary>
+    ///   Conventions: a, b, and c represent a terminal or non-terminal.
+    ///    a* represents zero or more terminals or non-terminals (possibly both).
+    ///    a+ represents one or more...
+    ///    D is a non-terminal.
+    /// 1. Place an End of Input token($) into the Root rule's follow set.
+    /// 2. Suppose we have a rule R → a* Db. 
+    ///    Everything in First(b)(except for ε) is added to Follow(D).
+    ///    If First(b) contains ε then everything in Follow(R) is put in Follow(D).
+    /// 3. Finally, if we have a rule R → a* D, then everything in Follow(R) is placed in Follow(D).
+    /// 4. The Follow set of a terminal is an empty set.
+    /// </summary>
     public class FollowCalculator
     {
-        readonly Dictionary<INonTerminal, IList<ITerm>> _follow = new Dictionary<INonTerminal, IList<ITerm>>();
+        private readonly Dictionary<INonTerminal, IList<ITerm>> _follow = new Dictionary<INonTerminal, IList<ITerm>>();
         private readonly IGrammar _grammar;
 
         public FollowCalculator(IGrammar grammar)
@@ -21,19 +33,7 @@ namespace DSLKIT.Parser
 
         public IReadOnlyDictionary<INonTerminal, IList<ITerm>> Calculate()
         {
-            // Conventions: a, b, and c represent a terminal or non-terminal.
-            //    a* represents zero or more terminals or non-terminals (possibly both).
-            //    a+ represents one or more...
-            //    D is a non-terminal.
-            // 1. Place an End of Input token($) into the Root rule's follow set.
-            // 2. Suppose we have a rule R → a* Db. 
-            //    Everything in First(b)(except for ε) is added to Follow(D).
-            //    If First(b) contains ε then everything in Follow(R) is put in Follow(D).
-            // 3. Finally, if we have a rule R → a* D, then everything in Follow(R) is placed in Follow(D).
-            // 4/ The Follow set of a terminal is an empty set.
-
-            // 1. Place an End of Input token($) into the Root rule's follow set.
-            _follow.Add(_grammar.Root, new List<ITerm> { _grammar.Eof });
+            _follow.Add(_grammar.Root, new List<ITerm> {_grammar.Eof});
 
             bool updated;
             do
@@ -42,33 +42,24 @@ namespace DSLKIT.Parser
                 foreach (var production in _grammar.Productions)
                 {
                     var rule = production.ProductionDefinition;
-                    var R = production.LeftNonTerminal;
+                    var r = production.LeftNonTerminal;
                     var count = rule.Count;
-                    // 2
                     if (rule.Count >= 2)
                     {
-                        // R → a* Db
                         var b = rule[count - 1];
-                        // ReSharper disable once InconsistentNaming
-                        if (rule[count - 2] is INonTerminal @D)
+                        if (rule[count - 2] is INonTerminal d)
                         {
-                            // (except for ε)
-                            //if (b != EmptyTerm.Empty)
-                            //{
-                                updated |= AddFollow(D, GetFirsts(b).Where(i => i is EmptyTerm).ToList());
-                            //
-
-                            var firstOfB = GetFirsts(b);
-                            if (firstOfB.Contains(EmptyTerm.Empty))
+                            updated |= AddFollow(d, GetFirsts(b).Where(i => !(i is EmptyTerm)).ToList());
+                            if (GetFirsts(b).Contains(EmptyTerm.Empty))
                             {
-                                updated |= AddFollow(D, GetFollow(R));
+                                updated |= AddFollow(d, GetFollow(r));
                             }
                         }
                     }
 
-                    if (rule[count - 1] is INonTerminal D1)
+                    if (rule[count - 1] is INonTerminal d1)
                     {
-                        updated |= AddFollow(D1, GetFollow(R));
+                        updated |= AddFollow(d1, GetFollow(r));
                     }
                 }
             } while (updated);
@@ -89,28 +80,24 @@ namespace DSLKIT.Parser
                 return true;
             }
 
-            _follow[nonTerminal] = new List<ITerm> { term };
+            _follow[nonTerminal] = new List<ITerm> {term};
             return true;
         }
 
         private bool AddFollow(INonTerminal d, IList<ITerm> follows)
         {
             var added = false;
-            foreach (var follow in follows) //.Where(i => i != EmptyTerm.Empty))
+            foreach (var follow in follows)
             {
                 added |= AddFollow(d, follow);
             }
+
             return added;
         }
 
         private IList<ITerm> GetFollow(INonTerminal nonTerminal)
         {
-            if (_follow.TryGetValue(nonTerminal, out IList<ITerm> follow))
-            {
-                return follow;
-            }
-
-            return new List<ITerm>();
+            return !_follow.TryGetValue(nonTerminal, out var follow) ? new List<ITerm>() : follow;
         }
 
         private IList<ITerm> GetFirsts(ITerm term)
@@ -118,9 +105,9 @@ namespace DSLKIT.Parser
             switch (term)
             {
                 case ITerminal terminal:
-                    return new List<ITerm> { terminal };
-                case INonTerminal nontermanal:
-                    return _grammar.Firsts[nontermanal];
+                    return new List<ITerm> {terminal};
+                case INonTerminal nonTerminal:
+                    return _grammar.Firsts[nonTerminal];
                 default:
                     throw new InvalidOperationException();
             }

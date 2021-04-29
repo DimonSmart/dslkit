@@ -7,7 +7,7 @@ namespace DSLKIT.Parser
 {
     public class ItemSetsBuilder
     {
-        public delegate void SetBuilderStep(object sender, IEnumerable<RuleSet> sets, string grammrName);
+        public delegate void SetBuilderStep(object sender, IEnumerable<RuleSet> sets, string grammarName);
 
         private readonly IGrammar _grammar;
         private readonly IList<RuleSet> _sets = new List<RuleSet>();

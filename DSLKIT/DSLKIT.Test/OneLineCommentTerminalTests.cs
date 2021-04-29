@@ -18,7 +18,7 @@ namespace DSLKIT.Test
         }
 
         [TestMethod]
-        public void TwoSequentalLinesCommentTerminalTest()
+        public void TwoSequentialLinesCommentTerminalTest()
         {
             var s = new StringSourceStream("//This is a comment text\n\r//This is a comment text");
             var it = new SingleLineCommentTerminal(@"//");

@@ -18,7 +18,7 @@ namespace DSLKIT.Test
             var sb = new StringBuilder();
             foreach (var token in tokens)
             {
-                sb.AppendLine(token.Terminal?.GetType()?.Name ?? "Error");
+                sb.AppendLine(token.Terminal?.GetType().Name ?? "Error");
 
                 sb.AppendLine(GetNonEmptyString("OriginalString: ", token.OriginalString));
                 sb.AppendLine(GetNonEmptyString("Value: ", token.Value));
