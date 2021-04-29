@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace DSLKIT.NonTerminals
+﻿namespace DSLKIT.NonTerminals
 {
     public class NonTerminal : INonTerminal
     {
