@@ -65,7 +65,7 @@ namespace DSLKIT.Test
         {
             if (delimiter == null)
             {
-                delimiter = new[] {Environment.NewLine, ";"};
+                delimiter = new[] { Environment.NewLine, ";" };
             }
 
             var result = new Dictionary<string, List<ITerm>>();
@@ -82,7 +82,7 @@ namespace DSLKIT.Test
         private static KeyValuePair<string, List<ITerm>> GetSetRecord(Dictionary<string, ITerminal> terminals,
             string setDefinition)
         {
-            var pair = setDefinition.Split(new[] {"→", "->"}, StringSplitOptions.RemoveEmptyEntries);
+            var pair = setDefinition.Split(new[] { "→", "->" }, StringSplitOptions.RemoveEmptyEntries);
             if (pair.Length != 2)
             {
                 throw new ArgumentException($"{setDefinition} should be in form A→zxcA with → as delimiter");
@@ -90,7 +90,7 @@ namespace DSLKIT.Test
 
             var left = pair[0].Trim();
             var right = new List<ITerm>();
-            foreach (var item in pair[1].Trim().Split(new[] {' ', '\t'}, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var item in pair[1].Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 if (item == "ε")
                 {

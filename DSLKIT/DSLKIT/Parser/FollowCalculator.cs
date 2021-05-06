@@ -33,7 +33,7 @@ namespace DSLKIT.Parser
 
         public IReadOnlyDictionary<INonTerminal, IList<ITerm>> Calculate()
         {
-            _follow.Add(_grammar.Root, new List<ITerm> {_grammar.Eof});
+            _follow.Add(_grammar.Root, new List<ITerm> { _grammar.Eof });
 
             bool updated;
             do
@@ -80,7 +80,7 @@ namespace DSLKIT.Parser
                 return true;
             }
 
-            _follow[nonTerminal] = new List<ITerm> {term};
+            _follow[nonTerminal] = new List<ITerm> { term };
             return true;
         }
 
@@ -105,7 +105,7 @@ namespace DSLKIT.Parser
             switch (term)
             {
                 case ITerminal terminal:
-                    return new List<ITerm> {terminal};
+                    return new List<ITerm> { terminal };
                 case INonTerminal nonTerminal:
                     return _grammar.Firsts[nonTerminal];
                 default:
