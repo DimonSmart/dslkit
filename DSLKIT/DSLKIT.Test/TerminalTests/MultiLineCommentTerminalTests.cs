@@ -2,7 +2,7 @@ using DSLKIT.Terminals;
 using DSLKIT.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace DSLKIT.Test
+namespace DSLKIT.Test.TerminalTests
 {
     [TestClass]
     public class MultiLineCommentTerminalTests

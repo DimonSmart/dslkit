@@ -2,6 +2,7 @@ using DSLKIT.Terminals;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
 using System.Linq;
+using DSLKIT.Test.Utils;
 using static DSLKIT.Test.LexerTestData;
 
 namespace DSLKIT.Test

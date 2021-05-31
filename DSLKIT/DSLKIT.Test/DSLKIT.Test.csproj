@@ -84,26 +84,28 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Constants.cs" />
-    <Compile Include="ExtendedGrammarToText.cs" />
+    <Compile Include="Transformers\ExtendedGrammar2Text.cs" />
     <Compile Include="FirstsFollowSetsCalculationTests.cs" />
     <Compile Include="GrammarBuilderTests.cs" />
     <Compile Include="GrammarTestsBase.cs" />
-    <Compile Include="IdentifierTerminalTests.cs" />
+    <Compile Include="TerminalTests\IdentifierTerminalTests.cs" />
     <Compile Include="LexerTestData.cs" />
-    <Compile Include="MultiLineCommentTerminalTests.cs" />
-    <Compile Include="OneLineCommentTerminalTests.cs" />
-    <Compile Include="IntegerTerminalTests.cs" />
+    <Compile Include="TerminalTests\MultiLineCommentTerminalTests.cs" />
+    <Compile Include="TerminalTests\OneLineCommentTerminalTests.cs" />
+    <Compile Include="TerminalTests\IntegerTerminalTests.cs" />
     <Compile Include="LexerTests.cs" />
     <Compile Include="ParenthesesCheckerStreamTests.cs" />
-    <Compile Include="RegexpBasedTerminalTests.cs" />
-    <Compile Include="NumberingUtils.cs" />
-    <Compile Include="Sets2Dot.cs" />
+    <Compile Include="TerminalTests\RegexpBasedTerminalTests.cs" />
+    <Compile Include="Transformers\RuleSets2Text.cs" />
+    <Compile Include="Utils\NumberingUtils.cs" />
+    <Compile Include="Transformers\RuleSets2GraphVizDotFormat.cs" />
     <Compile Include="SetBuilderTests.cs" />
     <Compile Include="StringSourceStreamTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StringTerminalTests.cs" />
-    <Compile Include="TokenUtils.cs" />
-    <Compile Include="TranslationTable2Text.cs" />
+    <Compile Include="TerminalTests\StringTerminalTests.cs" />
+    <Compile Include="Utils\TokenUtils.cs" />
+    <Compile Include="Transformers\ActionAndGotoTable2Text.cs" />
+    <Compile Include="Transformers\TranslationTable2Text.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DSLKIT\DSLKIT.csproj">
@@ -123,6 +125,7 @@
   <ItemGroup>
     <Analyzer Include="..\packages\xunit.analyzers.0.10.0\analyzers\dotnet\cs\xunit.analyzers.dll" />
   </ItemGroup>
+  <ItemGroup />
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

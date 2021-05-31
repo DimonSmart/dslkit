@@ -1,11 +1,12 @@
-﻿using DSLKIT.Parser;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
+using DSLKIT.Parser;
+
 // ReSharper disable StringLiteralTypo
 
-namespace DSLKIT.Test
+namespace DSLKIT.Test.Transformers
 {
-    public static class Sets2Dot
+    public static class RuleSets2GraphVizDotFormat
     {
         public static string Transform(IReadOnlyCollection<RuleSet> sets)
         {

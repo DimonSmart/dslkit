@@ -1,15 +1,14 @@
-﻿using ConsoleTableExt;
+﻿using System.Collections.Generic;
+using System.Linq;
+using ConsoleTableExt;
 using DSLKIT.Base;
 using DSLKIT.Parser;
-using System.Collections.Generic;
-using System.Linq;
 
-namespace DSLKIT.Test
+namespace DSLKIT.Test.Transformers
 {
     public static class TranslationTable2Text
     {
-        public static string
-            Transform(TranslationTable translationTable, string order)
+        public static string Transform(TranslationTable translationTable, string order)
         {
             var columns = new List<ITerm>();
             var tempColumns = translationTable.GetAllTerms()

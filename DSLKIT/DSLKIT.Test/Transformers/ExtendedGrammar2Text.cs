@@ -1,9 +1,9 @@
-﻿using DSLKIT.Parser;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using DSLKIT.Parser;
 
-namespace DSLKIT.Test
+namespace DSLKIT.Test.Transformers
 {
-    public static class ExtendedGrammarToText
+    public static class ExtendedGrammar2Text
     {
         public static string Transform(IEnumerable<ExtendedGrammarProduction> extendedGrammar)
         {

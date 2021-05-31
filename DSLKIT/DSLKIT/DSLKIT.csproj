@@ -52,9 +52,12 @@
     <Compile Include="Lexer\ParenthesesCheckedStream.cs" />
     <Compile Include="Lexer\ParenthesesCheckedStreamCreator.cs" />
     <Compile Include="NonTerminals\NonTerminalExt.cs" />
+    <Compile Include="Parser\AcceptAction.cs" />
+    <Compile Include="Parser\ActionAndGotoTableBuilder.cs" />
     <Compile Include="Parser\ExtendedGrammarBuilder.cs" />
     <Compile Include="Parser\ExtendedGrammarProduction.cs" />
     <Compile Include="Parser\FromTo.cs" />
+    <Compile Include="Parser\IActionItem.cs" />
     <Compile Include="Parser\Production.cs" />
     <Compile Include="Parser\Rule.cs" />
     <Compile Include="Parser\RuleSet.cs" />

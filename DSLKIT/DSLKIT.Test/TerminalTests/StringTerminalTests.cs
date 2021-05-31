@@ -1,7 +1,7 @@
 using DSLKIT.Terminals;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace DSLKIT.Test
+namespace DSLKIT.Test.TerminalTests
 {
     [TestClass]
     public class StringTerminalTests

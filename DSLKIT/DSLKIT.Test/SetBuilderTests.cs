@@ -3,7 +3,8 @@ using DSLKIT.Terminals;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using DSLKIT.Test.Transformers;
+using DSLKIT.Test.Utils;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -37,27 +38,23 @@ namespace DSLKIT.Test
 
             var setBuilder = new ItemSetsBuilder(grammar);
             setBuilder.StepEvent += SetBuilder_StepEvent;
-            var sets = setBuilder.Build().ToList();
+            var ruleSets = setBuilder.Build().ToList();
             var substDictionary = NumberingUtils.CreateSubstFromString(subst);
-            foreach (var set in sets)
+            foreach (var set in ruleSets)
             {
                 set.SetNumber = NumberingUtils.GetSubst(substDictionary, set.SetNumber);
             }
 
-            var translationTable = TranslationTableBuilder.Build(sets);
+            var translationTable = TranslationTableBuilder.Build(ruleSets);
             var extendedGrammar = ExtendedGrammarBuilder.Build(translationTable).ToList();
 
-            var sb = new StringBuilder();
-            foreach (var set in sets)
-            {
-                sb.AppendLine(set.ToString());
-            }
 
-            _testOutputHelper.WriteLine(sb.ToString());
-            File.WriteAllText($"{grammarFileName}.txt", sb.ToString());
-            File.WriteAllText($"{grammarFileName}.dot", Sets2Dot.Transform(sets));
-            File.WriteAllText($"{grammarFileName}_Table.txt", TranslationTable2Text.Transform(translationTable, order));
-            File.WriteAllText($"{grammarFileName}_extGrammar.txt", ExtendedGrammarToText.Transform(extendedGrammar));
+            var actionAndGotoTable = new ActionAndGotoTableBuilder(grammar, ruleSets).ActionAndGotoTable;
+            File.WriteAllText($"{grammarFileName}_RuleSets.txt", RuleSets2Text.Transform(ruleSets));
+            File.WriteAllText($"{grammarFileName}_RuleSetsInGraphvizFormat.dot", RuleSets2GraphVizDotFormat.Transform(ruleSets));
+            File.WriteAllText($"{grammarFileName}_TranslationTable.txt", TranslationTable2Text.Transform(translationTable, order));
+            File.WriteAllText($"{grammarFileName}_ExtendedGrammar.txt", ExtendedGrammar2Text.Transform(extendedGrammar));
+            File.WriteAllText($"{grammarFileName}_ActionAndGotoTable.txt", ActionAndGotoTable2Text.Transform(actionAndGotoTable));
         }
 
         private static void SetBuilder_StepEvent(object sender, IEnumerable<RuleSet> sets, string grammarName)

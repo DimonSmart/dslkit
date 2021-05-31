@@ -1,10 +1,10 @@
-using DSLKIT.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using DSLKIT.Tokens;
 
-namespace DSLKIT.Test
+namespace DSLKIT.Test.Utils
 {
     public static class TokenUtils
     {

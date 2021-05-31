@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace DSLKIT.Test
+namespace DSLKIT.Test.Utils
 {
     public static class NumberingUtils
     {
