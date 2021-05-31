@@ -10,5 +10,10 @@ namespace DSLKIT.Parser
 
         public static readonly Lazy<AcceptAction> Lazy = new Lazy<AcceptAction>(() => new AcceptAction());
         public static AcceptAction Instance => Lazy.Value;
+
+        public override string ToString()
+        {
+            return "Accept";
+        }
     }
 }

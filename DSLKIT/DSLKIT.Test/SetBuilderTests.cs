@@ -21,17 +21,17 @@ namespace DSLKIT.Test
 
         [Theory]
         // https://web.cs.dal.ca/~sjackson/lalr1.html
-        [InlineData("S → N;N → V = E;N → E;E → V;V → x;V → * E", "S", "sjackson", "x = * S N E V", "0=0 1=4 2=3 3=5 4=1 5=2 6=8 7=6 8=7 9=9")]
+        [InlineData("sjackson", "S → N;N → V = E;N → E;E → V;V → x;V → * E", "S", "x = * S N E V", "0=0 1=4 2=3 3=5 4=1 5=2 6=8 7=6 8=7 9=9")]
         // https://www.cs.colostate.edu/~mstrout/CS453Spring11/Slides/19-LR-table-build.ppt.pdf
-        [InlineData("S' → S e;S → ( S );S → i", "S'", "mstrout")]
+        [InlineData("mstrout", "S' → S e;S → ( S );S → i", "S'")]
         // https://www.javatpoint.com/lalr-1-parsing
-        [InlineData("S' → S; S → A A;A → a A;A → b", "S'", "javatpoint")]
+        [InlineData("javatpoint", "S' → S; S → A A;A → a A;A → b", "S'")]
         // https://web.cs.dal.ca/~sjackson/lalr1.html with epsilon
-        [InlineData("S → N;N → V = E;N → E;E → V;V → x;V → * E;V → ε", "S", "sjackson_with_ε")]
-        public void SetBuilderTest(string grammarDefinition, string rootName, string grammarFileName, string order = null, string subst = null)
+        [InlineData("sjackson_with_ε", "S → N;N → V = E;N → E;E → V;V → x;V → * E;V → ε", "S")]
+        public void SetBuilderTest(string grammarName, string grammarDefinition, string rootName, string order = null, string subst = null)
         {
             var grammar = new GrammarBuilder()
-                .WithGrammarName(grammarFileName)
+                .WithGrammarName(grammarName)
                 .AddProductionsFromString(grammarDefinition)
                 .BuildGrammar(rootName);
             ShowGrammar(grammar);
@@ -47,14 +47,13 @@ namespace DSLKIT.Test
 
             var translationTable = TranslationTableBuilder.Build(ruleSets);
             var extendedGrammar = ExtendedGrammarBuilder.Build(translationTable).ToList();
+            var actionAndGotoTable = new ActionAndGotoTableBuilder(grammar, ruleSets, translationTable).ActionAndGotoTable;
 
-
-            var actionAndGotoTable = new ActionAndGotoTableBuilder(grammar, ruleSets).ActionAndGotoTable;
-            File.WriteAllText($"{grammarFileName}_RuleSets.txt", RuleSets2Text.Transform(ruleSets));
-            File.WriteAllText($"{grammarFileName}_RuleSetsInGraphvizFormat.dot", RuleSets2GraphVizDotFormat.Transform(ruleSets));
-            File.WriteAllText($"{grammarFileName}_TranslationTable.txt", TranslationTable2Text.Transform(translationTable, order));
-            File.WriteAllText($"{grammarFileName}_ExtendedGrammar.txt", ExtendedGrammar2Text.Transform(extendedGrammar));
-            File.WriteAllText($"{grammarFileName}_ActionAndGotoTable.txt", ActionAndGotoTable2Text.Transform(actionAndGotoTable));
+            File.WriteAllText($"{grammarName}_RuleSets.txt", RuleSets2Text.Transform(ruleSets));
+            File.WriteAllText($"{grammarName}_RuleSetsInGraphvizFormat.dot", RuleSets2GraphVizDotFormat.Transform(ruleSets));
+            File.WriteAllText($"{grammarName}_TranslationTable.txt", TranslationTable2Text.Transform(translationTable, order));
+            File.WriteAllText($"{grammarName}_ExtendedGrammar.txt", ExtendedGrammar2Text.Transform(extendedGrammar));
+            File.WriteAllText($"{grammarName}_ActionAndGotoTable.txt", ActionAndGotoTable2Text.Transform(actionAndGotoTable));
         }
 
         private static void SetBuilder_StepEvent(object sender, IEnumerable<RuleSet> sets, string grammarName)

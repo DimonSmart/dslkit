@@ -1,32 +1,27 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using DSLKIT.Base;
+using DSLKIT.NonTerminals;
 using DSLKIT.SpecialTerms;
 
 namespace DSLKIT.Parser
 {
-    public class ActionAndGotoTable
-    {
-        public Dictionary<KeyValuePair<RuleSet, ITerm>, IActionItem> ActionTable =
-            new Dictionary<KeyValuePair<RuleSet, ITerm>, IActionItem>();
-
-        public ActionAndGotoTable()
-        {
-
-        }
-    }
-
     public class ActionAndGotoTableBuilder
     {
         protected readonly Grammar Grammar;
         protected readonly IEnumerable<RuleSet> RuleSets;
-        public readonly ActionAndGotoTable ActionAndGotoTable = new ActionAndGotoTable();
+        protected readonly TranslationTable TranslationTable;
+        public readonly ActionAndGotoTable ActionAndGotoTable;
 
-        public ActionAndGotoTableBuilder(Grammar grammar, IEnumerable<RuleSet> ruleSets)
+        public ActionAndGotoTableBuilder(Grammar grammar, IEnumerable<RuleSet> ruleSets,
+            TranslationTable translationTable)
         {
             Grammar = grammar;
             RuleSets = ruleSets;
+            TranslationTable = translationTable;
+            ActionAndGotoTable = new ActionAndGotoTable(Grammar);
             Stage1();
+            Stage2();
         }
 
         /// <summary>
@@ -40,10 +35,25 @@ namespace DSLKIT.Parser
             {
                 if (ContainStartingRuleWithPointerAtTheEnd(ruleSet))
                 {
-                    ActionAndGotoTable.ActionTable[new KeyValuePair<RuleSet, ITerm>(ruleSet, EofTerminal.Instance)] = AcceptAction.Instance;
+                    ActionAndGotoTable.ActionTable[new KeyValuePair<ITerm, RuleSet>(EofTerminal.Instance, ruleSet)] = AcceptAction.Instance;
                 }
             }
         }
+
+        /// <summary>
+        /// Directly copy the Translation Table's non-terminal columns as GOTOs
+        /// </summary>
+        public void Stage2()
+        {
+            foreach (var record in TranslationTable.GetAllRecords())
+            {
+                if (record.Key.Key is INonTerminal nonTerminal)
+                {
+                    ActionAndGotoTable.GotoTable[new KeyValuePair<INonTerminal, RuleSet>(nonTerminal, record.Key.Value)] = record.Value;
+                }
+            }
+        }
+
 
         private bool ContainStartingRuleWithPointerAtTheEnd(RuleSet ruleSet)
         {

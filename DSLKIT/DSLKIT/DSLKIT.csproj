@@ -53,7 +53,9 @@
     <Compile Include="Lexer\ParenthesesCheckedStreamCreator.cs" />
     <Compile Include="NonTerminals\NonTerminalExt.cs" />
     <Compile Include="Parser\AcceptAction.cs" />
+    <Compile Include="Parser\ActionAndGotoTable.cs" />
     <Compile Include="Parser\ActionAndGotoTableBuilder.cs" />
+    <Compile Include="Helpers\EnumerableExtensions.cs" />
     <Compile Include="Parser\ExtendedGrammarBuilder.cs" />
     <Compile Include="Parser\ExtendedGrammarProduction.cs" />
     <Compile Include="Parser\FromTo.cs" />

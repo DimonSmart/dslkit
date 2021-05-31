@@ -1,5 +1,6 @@
 ﻿using DSLKIT.Base;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace DSLKIT.Parser
@@ -11,6 +12,11 @@ namespace DSLKIT.Parser
         public TranslationTable(Dictionary<KeyValuePair<ITerm, RuleSet>, RuleSet> table)
         {
             _table = table;
+        }
+
+        public IReadOnlyDictionary<KeyValuePair<ITerm, RuleSet>, RuleSet> GetAllRecords()
+        {
+            return new ReadOnlyDictionary<KeyValuePair<ITerm, RuleSet>, RuleSet>(_table);
         }
 
         public RuleSet this[ITerm x, RuleSet y] => _table[new KeyValuePair<ITerm, RuleSet>(x, y)];
