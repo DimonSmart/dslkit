@@ -21,9 +21,9 @@ namespace DSLKIT.Parser
             RuleSets = ruleSets;
             TranslationTable = translationTable;
             ActionAndGotoTable = new ActionAndGotoTable(Grammar);
-            Stage1();
-            Stage2();
-            Stage3();
+            Initialize();
+            BuildGotos();
+            BuildShifts();
         }
 
         /// <summary>
@@ -31,7 +31,7 @@ namespace DSLKIT.Parser
         /// Place an "accept" in the $ column whenever the item set contains an item where the pointer is at the end of the starting rule
         /// (in our example "S → N •").
         /// </summary>
-        public void Stage1()
+        public void Initialize()
         {
             foreach (var ruleSet in RuleSets)
             {
@@ -45,7 +45,7 @@ namespace DSLKIT.Parser
         /// <summary>
         /// Directly copy the Translation Table's non-terminal columns as GOTOs
         /// </summary>
-        public void Stage2()
+        public void BuildGotos()
         {
             foreach (var record in TranslationTable.GetAllRecords())
             {
@@ -59,7 +59,7 @@ namespace DSLKIT.Parser
         /// <summary>
         /// Copy the terminal columns as shift actions to the number determined from the Translation Table.
         /// </summary>
-        public void Stage3()
+        public void BuildShifts()
         {
             foreach (var record in TranslationTable.GetAllRecords())
             {
