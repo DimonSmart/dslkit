@@ -3,6 +3,7 @@ using System.Linq;
 using DSLKIT.Base;
 using DSLKIT.NonTerminals;
 using DSLKIT.SpecialTerms;
+using DSLKIT.Terminals;
 
 namespace DSLKIT.Parser
 {
@@ -22,6 +23,7 @@ namespace DSLKIT.Parser
             ActionAndGotoTable = new ActionAndGotoTable(Grammar);
             Stage1();
             Stage2();
+            Stage3();
         }
 
         /// <summary>
@@ -54,6 +56,20 @@ namespace DSLKIT.Parser
             }
         }
 
+        /// <summary>
+        /// Copy the terminal columns as shift actions to the number determined from the Translation Table.
+        /// </summary>
+        public void Stage3()
+        {
+            foreach (var record in TranslationTable.GetAllRecords())
+            {
+                if (record.Key.Key is ITerminal terminal)
+                {
+                    ActionAndGotoTable.ActionTable[new KeyValuePair<ITerm, RuleSet>(terminal, record.Key.Value)] =
+                        new ShiftAction(record.Value);
+                }
+            }
+        }
 
         private bool ContainStartingRuleWithPointerAtTheEnd(RuleSet ruleSet)
         {

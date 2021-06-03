@@ -64,6 +64,7 @@
     <Compile Include="Parser\Rule.cs" />
     <Compile Include="Parser\RuleSet.cs" />
     <Compile Include="Parser\ItemSetsBuilder.cs" />
+    <Compile Include="Parser\ShiftAction.cs" />
     <Compile Include="Parser\TranslationTable.cs" />
     <Compile Include="Parser\TranslationTableBuilder.cs" />
     <Compile Include="SpecialTerms\IEofTerminal.cs" />
