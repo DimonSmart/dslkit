@@ -40,7 +40,7 @@ namespace DSLKIT.Parser
                 var sets = new ItemSetsBuilder(this).Build().ToList();
                 var translationTable = TranslationTableBuilder.Build(sets);
                 var extendedGrammar = ExtendedGrammarBuilder.Build(translationTable).ToList();
-                _firsts = new FirstsCalculatorEx(extendedGrammar).Calculate();
+                _firsts = new FirstsCalculator(extendedGrammar).Calculate();
                 return _firsts;
             }
         }

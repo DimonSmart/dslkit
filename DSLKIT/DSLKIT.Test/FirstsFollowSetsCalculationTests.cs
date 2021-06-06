@@ -46,6 +46,12 @@ namespace DSLKIT.Test
         [InlineData(
             "E' → + T E'; E → T E';  E' → ε; T → F T';T' → * F T'; T' → ε; F → ( E ); F → id",
             "E → $ ); E' → $ ); T → + $ ); T' → + $ ); F → * + $ )")]
+
+        // sjackson_with_ε
+        [InlineData( "S → N;N → V = E;N → E;E → V;V → x;V → * E;V → ε",
+            "E → $ ); N → $ ); V → + $ ); S → +")]
+
+
         public void FollowSetCreation_Test(string grammarDefinition, string expectedFollows)
         {
             var grammar = new GrammarBuilder()
@@ -60,7 +66,7 @@ namespace DSLKIT.Test
             follow.Should().BeEquivalentTo(GetSet(allGrammarTerminals, expectedFollows));
         }
 
-        private Dictionary<string, List<ITerm>> GetSet(Dictionary<string, ITerminal> terminals, string setLines,
+        private static Dictionary<string, List<ITerm>> GetSet(Dictionary<string, ITerminal> terminals, string setLines,
             string[] delimiter = null)
         {
             if (delimiter == null)

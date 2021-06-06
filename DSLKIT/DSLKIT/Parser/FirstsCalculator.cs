@@ -8,13 +8,13 @@ using System.Linq;
 
 namespace DSLKIT.Parser
 {
-    public class FirstsCalculatorEx
+    public class FirstsCalculator
     {
         private readonly IEnumerable<ExtendedGrammarProduction> _extendedGrammarProductions;
         private readonly Dictionary<INonTerminal, IList<ITerm>> _firsts;
         private readonly HashSet<ExtendedGrammarProduction> _searchStack;
 
-        public FirstsCalculatorEx(IEnumerable<ExtendedGrammarProduction> productions)
+        public FirstsCalculator(IEnumerable<ExtendedGrammarProduction> productions)
         {
             _extendedGrammarProductions = productions;
             _firsts = new Dictionary<INonTerminal, IList<ITerm>>();

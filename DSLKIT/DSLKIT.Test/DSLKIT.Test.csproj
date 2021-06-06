@@ -96,6 +96,8 @@
     <Compile Include="LexerTests.cs" />
     <Compile Include="ParenthesesCheckerStreamTests.cs" />
     <Compile Include="TerminalTests\RegexpBasedTerminalTests.cs" />
+    <Compile Include="Transformers\Firsts2Text.cs" />
+    <Compile Include="Transformers\Follow2Text.cs" />
     <Compile Include="Transformers\RuleSets2Text.cs" />
     <Compile Include="Utils\NumberingUtils.cs" />
     <Compile Include="Transformers\RuleSets2GraphVizDotFormat.cs" />

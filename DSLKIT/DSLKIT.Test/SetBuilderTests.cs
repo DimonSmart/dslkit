@@ -49,6 +49,8 @@ namespace DSLKIT.Test
             var extendedGrammar = ExtendedGrammarBuilder.Build(translationTable).ToList();
             var actionAndGotoTable = new ActionAndGotoTableBuilder(grammar, ruleSets, translationTable).ActionAndGotoTable;
 
+            File.WriteAllText($"{grammarName}_Firsts.txt", Firsts2Text.Transform(grammar.Firsts));
+            File.WriteAllText($"{grammarName}_Follow.txt", Follow2Text.Transform(grammar.Follow));
             File.WriteAllText($"{grammarName}_RuleSets.txt", RuleSets2Text.Transform(ruleSets));
             File.WriteAllText($"{grammarName}_RuleSetsInGraphvizFormat.dot", RuleSets2GraphVizDotFormat.Transform(ruleSets));
             File.WriteAllText($"{grammarName}_TranslationTable.txt", TranslationTable2Text.Transform(translationTable, order));
