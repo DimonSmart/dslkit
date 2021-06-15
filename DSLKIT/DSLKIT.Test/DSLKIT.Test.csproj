@@ -84,8 +84,9 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Constants.cs" />
+    <Compile Include="FollowCalculatorTests.cs" />
     <Compile Include="Transformers\ExtendedGrammar2Text.cs" />
-    <Compile Include="FirstsFollowSetsCalculationTests.cs" />
+    <Compile Include="FirstsCalculatorTests.cs" />
     <Compile Include="GrammarBuilderTests.cs" />
     <Compile Include="GrammarTestsBase.cs" />
     <Compile Include="TerminalTests\IdentifierTerminalTests.cs" />
