@@ -1,8 +1,8 @@
 ﻿namespace DSLKIT.Parser
 {
-    public class FromTo
+    public class ExBase
     {
-        public FromTo(RuleSet from, RuleSet to)
+        public ExBase(RuleSet from, RuleSet to)
         {
             From = from;
             To = to;

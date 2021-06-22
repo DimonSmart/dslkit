@@ -23,7 +23,7 @@ namespace DSLKIT.Parser
     /// </summary>
     public class FollowCalculator
     {
-        private readonly Dictionary<INonTerminal, IList<ITerm>> _follow = new Dictionary<INonTerminal, IList<ITerm>>();
+        private readonly Dictionary<IExNonTerminal, IList<ITerm>> _follow = new Dictionary<IExNonTerminal, IList<ITerm>>();
         private readonly IGrammar _grammar;
 
         public FollowCalculator(IGrammar grammar)
@@ -31,9 +31,10 @@ namespace DSLKIT.Parser
             _grammar = grammar;
         }
 
-        public IReadOnlyDictionary<INonTerminal, IList<ITerm>> Calculate()
+        public IReadOnlyDictionary<IExNonTerminal, IList<ITerm>> Calculate()
         {
-            _follow.Add(_grammar.Root, new List<ITerm> { _grammar.Eof });
+            // TODO: Add sets information fot the start rule
+            _follow.Add(_grammar.Root.ToExNonTerminal(null,null), new List<ITerm> { _grammar.Eof });
 
             bool updated;
             do
@@ -64,12 +65,12 @@ namespace DSLKIT.Parser
                 }
             } while (updated);
 
-            return new ReadOnlyDictionary<INonTerminal, IList<ITerm>>(_follow);
+            return new ReadOnlyDictionary<IExNonTerminal, IList<ITerm>>(_follow);
         }
 
-        private bool AddFollow(INonTerminal nonTerminal, ITerm term)
+        private bool AddFollow(IExNonTerminal exNonTerminal, ITerm term)
         {
-            if (_follow.TryGetValue(nonTerminal, out var follow))
+            if (_follow.TryGetValue(exNonTerminal, out var follow))
             {
                 if (follow.Contains(term))
                 {
@@ -80,11 +81,11 @@ namespace DSLKIT.Parser
                 return true;
             }
 
-            _follow[nonTerminal] = new List<ITerm> { term };
+            _follow[exNonTerminal] = new List<ITerm> { term };
             return true;
         }
 
-        private bool AddFollow(INonTerminal d, IList<ITerm> follows)
+        private bool AddFollow(IExNonTerminal d, IList<ITerm> follows)
         {
             var added = false;
             foreach (var follow in follows)
@@ -95,9 +96,9 @@ namespace DSLKIT.Parser
             return added;
         }
 
-        private IList<ITerm> GetFollow(INonTerminal nonTerminal)
+        private IList<ITerm> GetFollow(IExNonTerminal exNonTerminal)
         {
-            return !_follow.TryGetValue(nonTerminal, out var follow) ? new List<ITerm>() : follow;
+            return !_follow.TryGetValue(exNonTerminal, out var follow) ? new List<ITerm>() : follow;
         }
 
         private IList<ITerm> GetFirsts(ITerm term)
@@ -106,8 +107,8 @@ namespace DSLKIT.Parser
             {
                 case ITerminal terminal:
                     return new List<ITerm> { terminal };
-                case INonTerminal nonTerminal:
-                    return _grammar.Firsts[nonTerminal];
+                case IExNonTerminal exNonTerminal:
+                    return _grammar.Firsts[exNonTerminal];
                 default:
                     throw new InvalidOperationException();
             }

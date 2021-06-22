@@ -22,13 +22,13 @@ namespace DSLKIT.Parser
             Root = root;
         }
 
-        private IReadOnlyDictionary<INonTerminal, IList<ITerm>> _firsts;
+        private IReadOnlyDictionary<IExNonTerminal, IList<ITerm>> _firsts;
         private IReadOnlyDictionary<INonTerminal, IList<ITerm>> _follow;
 
         public IReadOnlyCollection<Production> Productions { get; }
         public IReadOnlyCollection<ITerminal> Terminals { get; }
         public IReadOnlyCollection<INonTerminal> NonTerminals { get; }
-        public IReadOnlyDictionary<INonTerminal, IList<ITerm>> Firsts
+        public IReadOnlyDictionary<IExNonTerminal, IList<ITerm>> Firsts
         {
             get
             {
