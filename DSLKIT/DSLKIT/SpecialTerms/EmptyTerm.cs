@@ -3,11 +3,14 @@ using System;
 
 namespace DSLKIT.SpecialTerms
 {
-    public sealed class EmptyTerm : ITerm
+    public interface IEmptyTerm : ITerm
     {
-        private static readonly Lazy<EmptyTerm>
-           Lazy = new Lazy<EmptyTerm>(() => new EmptyTerm());
-        public static EmptyTerm Empty => Lazy.Value;
+    }
+
+    public sealed class EmptyTerm : IEmptyTerm
+    {
+        private static readonly Lazy<EmptyTerm> _lazy = new Lazy<EmptyTerm>(() => new EmptyTerm());
+        public static EmptyTerm Empty => _lazy.Value;
 
         private EmptyTerm()
         {

@@ -1,6 +1,6 @@
 ﻿using DSLKIT.NonTerminals;
 
-namespace DSLKIT.Parser
+namespace DSLKIT.Parser.ExtendedGrammar
 {
     public interface IExNonTerminal : IExTerm
     {

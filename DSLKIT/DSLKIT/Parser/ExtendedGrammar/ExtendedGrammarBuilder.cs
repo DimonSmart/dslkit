@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace DSLKIT.Parser
+namespace DSLKIT.Parser.ExtendedGrammar
 {
     public static class ExtendedGrammarBuilder
     {
@@ -18,17 +18,14 @@ namespace DSLKIT.Parser
 
         public static ExProduction CreateExtendedGrammarProduction(RuleSet set, Production production, TranslationTable translationTable)
         {
-            translationTable.TryGetValue(production.LeftNonTerminal, set, out RuleSet rs);
+            translationTable.TryGetValue(production.LeftNonTerminal, set, out var startRuleSet);
 
             var exProductionDefinition = new List<IExTerm>();
 
             var currentSet = set;
             foreach (var term in production.ProductionDefinition)
             {
-                translationTable.TryGetValue(term, currentSet, out RuleSet nextSet);
-
-               
-
+                translationTable.TryGetValue(term, currentSet, out var nextSet);
                 exProductionDefinition.Add(term.ToExTerm(currentSet, nextSet));
                 currentSet = nextSet;
                 if (currentSet == null)
@@ -36,7 +33,7 @@ namespace DSLKIT.Parser
                     throw new System.Exception($"CreateExtendedGrammarProduction failed for set:{set.SetNumber}, Production:{production}");
                 }
             }
-            return new ExProduction(production, production.LeftNonTerminal.ToExNonTerminal(set, rs), exProductionDefinition);
+            return new ExProduction(production, production.LeftNonTerminal.ToExNonTerminal(set, startRuleSet), exProductionDefinition);
         }
     }
 }

@@ -7,17 +7,17 @@ namespace DSLKIT.Parser
 {
     public class ActionAndGotoTable
     {
-        private readonly Grammar _grammar;
+        private readonly INonTerminal _root;
 
-        public Dictionary<KeyValuePair<ITerm, RuleSet>, IActionItem> ActionTable =
+        public readonly Dictionary<KeyValuePair<ITerm, RuleSet>, IActionItem> ActionTable =
             new Dictionary<KeyValuePair<ITerm, RuleSet>, IActionItem>();
 
-        public Dictionary<KeyValuePair<INonTerminal, RuleSet>, RuleSet> GotoTable =
+        public readonly Dictionary<KeyValuePair<INonTerminal, RuleSet>, RuleSet> GotoTable =
             new Dictionary<KeyValuePair<INonTerminal, RuleSet>, RuleSet>();
 
         public IEnumerable<INonTerminal> GetGotoColumns()
         {
-            return _grammar.Root.Union(GotoTable.Keys.Select(i => i.Key)).Distinct();
+            return _root.Union(GotoTable.Keys.Select(i => i.Key)).Distinct();
         }
 
         public IEnumerable<ITerm> GetActionColumns()
@@ -25,9 +25,9 @@ namespace DSLKIT.Parser
             return ActionTable.Keys.Select(i => i.Key).Distinct();
         }
 
-        public ActionAndGotoTable(Grammar grammar)
+        public ActionAndGotoTable(INonTerminal root)
         {
-            _grammar = grammar;
+            _root = root;
         }
 
         public IEnumerable<RuleSet> GetAllSets()

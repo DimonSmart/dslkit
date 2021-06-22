@@ -1,9 +1,10 @@
 ﻿using DSLKIT.Base;
-using DSLKIT.NonTerminals;
 using DSLKIT.SpecialTerms;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using DSLKIT.NonTerminals;
+using DSLKIT.Parser.ExtendedGrammar;
 
 namespace DSLKIT.Parser
 {
@@ -26,10 +27,10 @@ namespace DSLKIT.Parser
             return new ReadOnlyDictionary<IExNonTerminal, IList<ITerm>>(_firsts);
         }
 
-        private void AddFirstSets(INonTerminal nonTerminal = null)
+        private void AddFirstSets(IExNonTerminal startExNonTerminal = null)
         {
             foreach (var exProduction in _exProductions
-                .Where(p => (p.ExLeftNonTerminal == nonTerminal || nonTerminal == null) && !_searchStack.Contains(p)))
+                .Where(p => (startExNonTerminal == null || p.ExLeftNonTerminal.Equals(startExNonTerminal)) && !_searchStack.Contains(p)))
             {
                 var allRulesContainsEpsilon = true;
                 foreach (var exTerm in exProduction.ExProductionDefinition)
@@ -44,16 +45,19 @@ namespace DSLKIT.Parser
                     if (exTerm is IExNonTerminal exNonTerminal)
                     {
                         _searchStack.Add(exProduction);
-                        AddFirstSets(exNonTerminal.NonTerminal);
+                        AddFirstSets(exNonTerminal);
                         _searchStack.Remove(exProduction);
 
-                        AddFirsts(exProduction.ExLeftNonTerminal, _firsts[exNonTerminal]);
-
-                        // If it doesn't contain the empty terminal, then stop
-                        if (!_firsts[exNonTerminal].Contains(EmptyTerm.Empty))
+                        if (_firsts.TryGetValue(exNonTerminal, out var exNonTerminalFirsts))
                         {
-                            allRulesContainsEpsilon = false;
-                            break;
+                            AddFirsts(exProduction.ExLeftNonTerminal, exNonTerminalFirsts);
+
+                            // If it doesn't contain the empty terminal, then stop
+                            if (!_firsts[exNonTerminal].Contains(EmptyTerm.Empty))
+                            {
+                                allRulesContainsEpsilon = false;
+                                break;
+                            }
                         }
                     }
                 }

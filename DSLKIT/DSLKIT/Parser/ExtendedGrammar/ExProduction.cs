@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace DSLKIT.Parser
+namespace DSLKIT.Parser.ExtendedGrammar
 {
     public class ExProduction
     {

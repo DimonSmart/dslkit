@@ -9,49 +9,58 @@ namespace DSLKIT.Parser
 {
     public class ActionAndGotoTableBuilder
     {
-        protected readonly Grammar Grammar;
-        protected readonly IEnumerable<RuleSet> RuleSets;
-        protected readonly TranslationTable TranslationTable;
-        public readonly ActionAndGotoTable ActionAndGotoTable;
+        private readonly INonTerminal _root;
+        private readonly IEnumerable<RuleSet> _ruleSets;
+        private readonly TranslationTable _translationTable;
 
-        public ActionAndGotoTableBuilder(Grammar grammar, IEnumerable<RuleSet> ruleSets,
+        public ActionAndGotoTableBuilder(INonTerminal root, IEnumerable<RuleSet> ruleSets,
             TranslationTable translationTable)
         {
-            Grammar = grammar;
-            RuleSets = ruleSets;
-            TranslationTable = translationTable;
-            ActionAndGotoTable = new ActionAndGotoTable(Grammar);
-            Initialize();
-            BuildGotos();
-            BuildShifts();
+            _root = root;
+            _ruleSets = ruleSets;
+            _translationTable = translationTable;
+        }
+
+        public ActionAndGotoTable Build()
+        {
+            var actionAndGotoTable = Initialize();
+            BuildGotos(actionAndGotoTable);
+            BuildShifts(actionAndGotoTable);
+            return actionAndGotoTable;
         }
 
         /// <summary>
         /// Add a column for the end of input, labeled $.
-        /// Place an "accept" in the $ column whenever the item set contains an item where the pointer is at the end of the starting rule
+        /// Place an "accept" in the $ column whenever the item set contains an item where the pointer is at the end of the
+        /// starting rule
         /// (in our example "S → N •").
         /// </summary>
-        public void Initialize()
+        private ActionAndGotoTable Initialize()
         {
-            foreach (var ruleSet in RuleSets)
+            var actionAndGotoTable = new ActionAndGotoTable(_root);
+            foreach (var ruleSet in _ruleSets)
             {
                 if (ContainStartingRuleWithPointerAtTheEnd(ruleSet))
                 {
-                    ActionAndGotoTable.ActionTable[new KeyValuePair<ITerm, RuleSet>(EofTerminal.Instance, ruleSet)] = AcceptAction.Instance;
+                    actionAndGotoTable.ActionTable[new KeyValuePair<ITerm, RuleSet>(EofTerminal.Instance, ruleSet)] =
+                        AcceptAction.Instance;
                 }
             }
+
+            return actionAndGotoTable;
         }
 
         /// <summary>
         /// Directly copy the Translation Table's non-terminal columns as GOTOs
         /// </summary>
-        public void BuildGotos()
+        private void BuildGotos(ActionAndGotoTable actionAndGotoTable)
         {
-            foreach (var record in TranslationTable.GetAllRecords())
+            foreach (var record in _translationTable.GetAllRecords())
             {
                 if (record.Key.Key is INonTerminal nonTerminal)
                 {
-                    ActionAndGotoTable.GotoTable[new KeyValuePair<INonTerminal, RuleSet>(nonTerminal, record.Key.Value)] = record.Value;
+                    actionAndGotoTable.GotoTable
+                        [new KeyValuePair<INonTerminal, RuleSet>(nonTerminal, record.Key.Value)] = record.Value;
                 }
             }
         }
@@ -59,13 +68,13 @@ namespace DSLKIT.Parser
         /// <summary>
         /// Copy the terminal columns as shift actions to the number determined from the Translation Table.
         /// </summary>
-        public void BuildShifts()
+        private void BuildShifts(ActionAndGotoTable actionAndGotoTable)
         {
-            foreach (var record in TranslationTable.GetAllRecords())
+            foreach (var record in _translationTable.GetAllRecords())
             {
                 if (record.Key.Key is ITerminal terminal)
                 {
-                    ActionAndGotoTable.ActionTable[new KeyValuePair<ITerm, RuleSet>(terminal, record.Key.Value)] =
+                    actionAndGotoTable.ActionTable[new KeyValuePair<ITerm, RuleSet>(terminal, record.Key.Value)] =
                         new ShiftAction(record.Value);
                 }
             }
@@ -73,7 +82,7 @@ namespace DSLKIT.Parser
 
         private bool ContainStartingRuleWithPointerAtTheEnd(RuleSet ruleSet)
         {
-            return ruleSet.Rules.Any(rule => rule.IsFinished && rule.Production.LeftNonTerminal == Grammar.Root);
+            return ruleSet.Rules.Any(rule => rule.IsFinished && rule.Production.LeftNonTerminal == _root);
         }
     }
 }

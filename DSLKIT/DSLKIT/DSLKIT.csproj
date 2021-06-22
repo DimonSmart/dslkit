@@ -56,11 +56,15 @@
     <Compile Include="Parser\ActionAndGotoTable.cs" />
     <Compile Include="Parser\ActionAndGotoTableBuilder.cs" />
     <Compile Include="Helpers\EnumerableExtensions.cs" />
+    <Compile Include="Parser\ExtendedGrammar\ExEmptyTerm.cs" />
     <Compile Include="Parser\ExtendedGrammar\ExProduction.cs" />
     <Compile Include="Parser\ExtendedGrammar\ExtendedGrammarBuilder.cs" />
     <Compile Include="Parser\ExtendedGrammar\ExNonTerminal.cs" />
     <Compile Include="Parser\ExtendedGrammar\ExBase.cs" />
+    <Compile Include="Parser\ExtendedGrammar\ExTermFactory.cs" />
     <Compile Include="Parser\ExtendedGrammar\ExTerminal.cs" />
+    <Compile Include="Parser\ExtendedGrammar\IExBase.cs" />
+    <Compile Include="Parser\ExtendedGrammar\IExEmptyTerm.cs" />
     <Compile Include="Parser\IActionItem.cs" />
     <Compile Include="Parser\ExtendedGrammar\IExNonTerminal.cs" />
     <Compile Include="Parser\ExtendedGrammar\IExTerm.cs" />

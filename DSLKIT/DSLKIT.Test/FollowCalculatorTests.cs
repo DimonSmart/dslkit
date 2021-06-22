@@ -2,11 +2,16 @@
 using DSLKIT.Terminals;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace DSLKIT.Test
 {
     public class FollowCalculatorTests : GrammarTestsBase
     {
+        public FollowCalculatorTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+        {
+        }
+
         [Theory]
         // http://user.it.uu.se/~kostis/Teaching/KT1-12/Slides/lecture06.pdf
         [InlineData(
@@ -31,8 +36,8 @@ namespace DSLKIT.Test
             ShowGrammar(grammar);
 
             var allGrammarTerminals = grammar.Terminals.ToDictionary(i => i.Name, i => i);
-            var follow = grammar.Follow.ToDictionary(i => i.Key.Name, i => i.Value.ToList());
-            grammar.Follow.Keys.Should().BeEquivalentTo(grammar.NonTerminals);
+            var follow = grammar.Follows.ToDictionary(i => i.Key.NonTerminal.Name, i => i.Value.ToList());
+            grammar.Follows.Keys.Should().BeEquivalentTo(grammar.NonTerminals);
             follow.Should().BeEquivalentTo(GetSet(allGrammarTerminals, expectedFollows));
         }
     }

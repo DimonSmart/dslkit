@@ -2,11 +2,16 @@
 using DSLKIT.Terminals;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace DSLKIT.Test
 {
     public class FirstsCalculatorTests : GrammarTestsBase
     {
+        public FirstsCalculatorTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+        {
+        }
+
         [Theory]
         // http://user.it.uu.se/~kostis/Teaching/KT1-12/Slides/lecture06.pdf
         [InlineData("kostis", "E",
@@ -29,7 +34,7 @@ namespace DSLKIT.Test
             ShowGrammar(grammar);
 
             var allGrammarTerminals = grammar.Terminals.ToDictionary(i => i.Name, i => i);
-            var firsts = grammar.Firsts.ToDictionary(i => i.Key.Name, i => i.Value.ToList());
+            var firsts = grammar.Firsts.ToDictionary(i => i.Key.NonTerminal.Name, i => i.Value.ToList());
 
             grammar.Firsts.Keys.Should().BeEquivalentTo(grammar.NonTerminals);
             firsts.Should().BeEquivalentTo(GetSet(allGrammarTerminals, expectedFirsts));

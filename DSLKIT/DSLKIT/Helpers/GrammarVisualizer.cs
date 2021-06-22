@@ -59,11 +59,11 @@ namespace DSLKIT
         }
         private static void DumpFollow(IGrammar grammar, StringBuilder sb)
         {
-            sb.AppendLine($"Follow: {grammar.Follow.Count}");
-            foreach (var follow in grammar.Follow)
+            sb.AppendLine($"Follow: {grammar.Follows.Count}");
+            foreach (var follow in grammar.Follows)
             {
                 var followSet = string.Join(",", follow.Value.Select(i => i.Name));
-                sb.AppendLine($"{follow.Key.Name} : \t{followSet}");
+                sb.AppendLine($"{follow.Key} : \t{followSet}");
             }
         }
     }

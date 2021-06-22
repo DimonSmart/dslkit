@@ -2,12 +2,17 @@
 using DSLKIT.Parser;
 using DSLKIT.Terminals;
 using Xunit;
+using Xunit.Abstractions;
 using static DSLKIT.Test.Constants;
 
 namespace DSLKIT.Test
 {
     public class GrammarBuilderTests : GrammarTestsBase
     {
+        public GrammarBuilderTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+        {
+        }
+
         [Fact]
         public void GrammarA_Create_Test()
         {

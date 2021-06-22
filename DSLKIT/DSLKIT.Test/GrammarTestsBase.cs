@@ -4,11 +4,18 @@ using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
 using System;
 using System.Collections.Generic;
+using Xunit.Abstractions;
 
 namespace DSLKIT.Test
 {
     public class GrammarTestsBase
     {
+        private readonly ITestOutputHelper _testOutputHelper;
+
+        public GrammarTestsBase(ITestOutputHelper testOutputHelper)
+        {
+            _testOutputHelper = testOutputHelper;
+        }
         protected static void ShowGrammar(IGrammar grammar)
         {
             Console.WriteLine(GrammarVisualizer.DumpGrammar(grammar));

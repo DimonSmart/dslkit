@@ -1,6 +1,6 @@
 ﻿using DSLKIT.Base;
 
-namespace DSLKIT.Parser
+namespace DSLKIT.Parser.ExtendedGrammar
 {
     public interface IExTerm
     {
@@ -8,10 +8,4 @@ namespace DSLKIT.Parser
         RuleSet To { get; }
         ITerm Term { get; }
     }
-
-
-
-
-
-
 }
