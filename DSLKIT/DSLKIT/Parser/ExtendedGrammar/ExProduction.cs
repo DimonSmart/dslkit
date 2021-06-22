@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text;
 
 namespace DSLKIT.Parser.ExtendedGrammar
 {
@@ -20,19 +21,11 @@ namespace DSLKIT.Parser.ExtendedGrammar
 
         public override string ToString()
         {
-            return _production.ProductionToString(-1, (pos, str) =>
-            {
-                if (pos == -1)
-                {
-                    var from = ExLeftNonTerminal.From.SetNumber;
-                    var to = ExLeftNonTerminal.To?.SetNumber == null ? "$" : ExLeftNonTerminal.To.SetNumber.ToString();
-                    return $"{from}_{ExLeftNonTerminal.NonTerminal}_{to}";
-                }
-
-                var pFrom = ExProductionDefinition[pos].From.SetNumber;
-                var pTo = ExProductionDefinition[pos].To.SetNumber;
-                return $"{pFrom}_{ExProductionDefinition[pos]}_{pTo}";
-            });
+            var sb = new StringBuilder();
+            sb.Append(ExLeftNonTerminal);
+            sb.Append(" → ");
+            sb.Append(string.Join(" ", ExProductionDefinition));
+            return sb.ToString();
         }
     }
 }

@@ -9,7 +9,7 @@ namespace DSLKIT.Test.Transformers
 {
     public static class Firsts2Text
     {
-        public static string Transform(IReadOnlyDictionary<IExNonTerminal, IList<ITerm>> firsts)
+        public static string Transform(IDictionary<IExNonTerminal, IList<ITerm>> firsts)
         {
             var sb = new StringBuilder();
             sb.AppendLine($"Firsts: {firsts.Count}");

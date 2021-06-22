@@ -29,24 +29,37 @@ namespace DSLKIT.Test
             var grammar = new GrammarBuilder()
                 .WithGrammarName(grammarName)
                 .AddProductionsFromString(grammarDefinition)
+                .WithOnRuleSetCreated(ruleSets =>
+                {
+                    var substDictionary = NumberingUtils.CreateSubstFromString(subst);
+                    foreach (var set in ruleSets)
+                    {
+                        set.SetNumber = NumberingUtils.GetSubst(substDictionary, set.SetNumber);
+                    };
+                    File.WriteAllText($"{grammarName}_RuleSets.txt",
+                        RuleSets2Text.Transform(ruleSets));
+                })
+                .WithOnTranslationTableCreated(translationTable =>
+                {
+                    File.WriteAllText($"{grammarName}_TranslationTable.txt",
+                        TranslationTable2Text.Transform(translationTable, order));
+                })
+                .WithOnExtendedGrammarCreated(exProductions =>
+                {
+                    File.WriteAllText($"{grammarName}_ExtendedGrammar.txt",
+                        ExtendedGrammar2Text.Transform(exProductions));
+                })
+                .WithOnFirstsCreated(firsts =>
+                {
+                    File.WriteAllText($"{grammarName}_Firsts.txt",
+                        Firsts2Text.Transform(firsts));
+                })
                 .BuildGrammar(rootName);
+
             ShowGrammar(grammar);
-
-            var substDictionary = NumberingUtils.CreateSubstFromString(subst);
-            foreach (var set in grammar.RuleSets)
-            {
-                set.SetNumber = NumberingUtils.GetSubst(substDictionary, set.SetNumber);
-            }
-
-            File.WriteAllText($"{grammarName}_Firsts.txt", Firsts2Text.Transform(grammar.Firsts));
             File.WriteAllText($"{grammarName}_Follow.txt", Follow2Text.Transform(grammar.Follows));
-            File.WriteAllText($"{grammarName}_RuleSets.txt", RuleSets2Text.Transform(grammar.RuleSets));
             File.WriteAllText($"{grammarName}_RuleSetsInGraphvizFormat.dot",
-                RuleSets2GraphVizDotFormat.Transform(grammar.RuleSets));
-            File.WriteAllText($"{grammarName}_TranslationTable.txt",
-                TranslationTable2Text.Transform(grammar.TranslationTable, order));
-            File.WriteAllText($"{grammarName}_ExtendedGrammar.txt",
-                ExtendedGrammar2Text.Transform(grammar.ExProductions));
+               RuleSets2GraphVizDotFormat.Transform(grammar.RuleSets));
             File.WriteAllText($"{grammarName}_ActionAndGotoTable.txt",
                 ActionAndGotoTable2Text.Transform(grammar.ActionAndGotoTable));
         }

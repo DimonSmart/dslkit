@@ -31,7 +31,7 @@ namespace DSLKIT.Parser.ExtendedGrammar
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj))
+            if (obj is null)
             {
                 return false;
             }
@@ -41,12 +41,12 @@ namespace DSLKIT.Parser.ExtendedGrammar
                 return true;
             }
 
-            if (obj.GetType() != this.GetType())
+            if (obj.GetType() != GetType())
             {
                 return false;
             }
 
-            return Equals((ExBase) obj);
+            return Equals((ExBase)obj);
         }
 
         public bool Equals(ExBase other)
@@ -72,7 +72,7 @@ namespace DSLKIT.Parser.ExtendedGrammar
 
         public override int GetHashCode()
         {
-            return base.GetHashCode();
+            return GetHashCode(this);
         }
     }
 }

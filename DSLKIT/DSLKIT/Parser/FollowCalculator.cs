@@ -26,13 +26,13 @@ namespace DSLKIT.Parser
         private readonly INonTerminal _root;
         private readonly IEofTerminal _eof;
         private readonly IEnumerable<ExProduction> _exProductions;
-        private readonly IReadOnlyDictionary<IExNonTerminal, IList<ITerm>> _firsts;
+        private readonly IDictionary<IExNonTerminal, IList<ITerm>> _firsts;
 
         private readonly Dictionary<IExNonTerminal, IList<ITerm>> _follow =
             new Dictionary<IExNonTerminal, IList<ITerm>>();
 
         public FollowCalculator(INonTerminal root, IEofTerminal eof, IEnumerable<ExProduction> exProductions,
-            IReadOnlyDictionary<IExNonTerminal, IList<ITerm>> firsts)
+            IDictionary<IExNonTerminal, IList<ITerm>> firsts)
         {
             _root = root;
             _eof = eof;
@@ -43,7 +43,7 @@ namespace DSLKIT.Parser
         public IReadOnlyDictionary<IExNonTerminal, IList<ITerm>> Calculate()
         {
             // TODO: Add sets information fot the start rule
-            _follow.Add(_root.ToExNonTerminal(null, null), new List<ITerm> {_eof});
+            _follow.Add(_root.ToExNonTerminal(null, null), new List<ITerm> { _eof });
 
             bool updated;
             do
@@ -90,7 +90,7 @@ namespace DSLKIT.Parser
                 return true;
             }
 
-            _follow[exNonTerminal] = new List<ITerm> {term};
+            _follow[exNonTerminal] = new List<ITerm> { term };
             return true;
         }
 
@@ -115,7 +115,7 @@ namespace DSLKIT.Parser
             switch (term)
             {
                 case IExTerminal exTerminal:
-                    return new List<ITerm> {exTerminal.Terminal};
+                    return new List<ITerm> { exTerminal.Terminal };
                 case IExNonTerminal exNonTerminal:
                     return _firsts[exNonTerminal];
                 default:

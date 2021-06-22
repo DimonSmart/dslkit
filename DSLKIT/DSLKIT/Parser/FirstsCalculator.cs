@@ -1,9 +1,7 @@
 ﻿using DSLKIT.Base;
 using DSLKIT.SpecialTerms;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using DSLKIT.NonTerminals;
 using DSLKIT.Parser.ExtendedGrammar;
 
 namespace DSLKIT.Parser
@@ -21,10 +19,10 @@ namespace DSLKIT.Parser
             _searchStack = new HashSet<ExProduction>();
         }
 
-        public IReadOnlyDictionary<IExNonTerminal, IList<ITerm>> Calculate()
+        public IDictionary<IExNonTerminal, IList<ITerm>> Calculate()
         {
             AddFirstSets();
-            return new ReadOnlyDictionary<IExNonTerminal, IList<ITerm>>(_firsts);
+            return _firsts;
         }
 
         private void AddFirstSets(IExNonTerminal startExNonTerminal = null)

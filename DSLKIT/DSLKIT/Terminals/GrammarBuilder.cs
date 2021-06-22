@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using DSLKIT.Base;
 using DSLKIT.NonTerminals;
@@ -63,16 +64,29 @@ namespace DSLKIT.Terminals
         public Grammar BuildGrammar(string rootProductionName = null)
         {
             var root = GetRootNonTerminal(rootProductionName);
-            var setBuilder = new ItemSetsBuilder(_productions, root);
-            var ruleSets = setBuilder.Build().ToList();
+            var ruleSets = new ItemSetsBuilder(_productions, root).Build().ToList();
+            OnRuleSetCreated?.Invoke(ruleSets);
+
             var translationTable = TranslationTableBuilder.Build(ruleSets);
+            OnTranslationTableCreated?.Invoke(translationTable);
+
             var exProductions = ExtendedGrammarBuilder.Build(translationTable).ToList();
+            OnExtendedGrammarCreated?.Invoke(exProductions);
+
             var firsts = new FirstsCalculator(exProductions).Calculate();
+            OnFirstsCreated?.Invoke(firsts);
+
             var follows = new FollowCalculator(root, _eof, exProductions, firsts).Calculate();
             var actionAndGotoTable = new ActionAndGotoTableBuilder(root, ruleSets, translationTable).Build();
 
-            return new Grammar(_name, root, _terminals.Values, _nonTerminals.Values.AsEnumerable(), _productions,
-                exProductions, firsts, follows, ruleSets, translationTable, actionAndGotoTable);
+            return new Grammar(_name,
+                root: root,
+                terminals: _terminals.Values,
+                nonTerminals: _nonTerminals.Values.AsEnumerable(),
+                productions: _productions,
+                exProductions: exProductions,
+                firsts: new ReadOnlyDictionary<IExNonTerminal, IList<ITerm>>(firsts),
+                follows: follows, ruleSets: ruleSets, translationTable: translationTable, actionAndGotoTable: actionAndGotoTable);
         }
 
         private INonTerminal GetRootNonTerminal(string rootProductionName)
@@ -106,6 +120,30 @@ namespace DSLKIT.Terminals
             return this;
         }
 
+        public GrammarBuilder WithOnRuleSetCreated(RuleSetCreated evt)
+        {
+            OnRuleSetCreated += evt;
+            return this;
+        }
+
+        public GrammarBuilder WithOnTranslationTableCreated(TranslationTableCreated evt)
+        {
+            OnTranslationTableCreated += evt;
+            return this;
+        }
+
+        public GrammarBuilder WithOnExtendedGrammarCreated(ExtendedGrammarCreated evt)
+        {
+            OnExtendedGrammarCreated += evt;
+            return this;
+        }
+
+        public GrammarBuilder WithOnFirstsCreated(FirstsCreated evt)
+        {
+            OnFirstsCreated += evt;
+            return this;
+        }
+
         public GrammarBuilder AddProductionFromString(string productionDefinition)
         {
             var production = productionDefinition.Split('→');
@@ -117,7 +155,7 @@ namespace DSLKIT.Terminals
             var left = production[0].Trim();
             var productionBuilder = AddProduction(left);
             var definition = new List<ITerm>();
-            foreach (var item in production[1].Trim().Split(new[] {' ', '\t'}, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var item in production[1].Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 if (item == "ε")
                 {
@@ -142,7 +180,7 @@ namespace DSLKIT.Terminals
         {
             if (delimiters == null)
             {
-                delimiters = new[] {Environment.NewLine, ";"};
+                delimiters = new[] { Environment.NewLine, ";" };
             }
 
             var lines = productions.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
@@ -153,5 +191,19 @@ namespace DSLKIT.Terminals
 
             return this;
         }
+
+        #region Events
+        public delegate void RuleSetCreated(List<RuleSet> ruleSets);
+        public event RuleSetCreated OnRuleSetCreated;
+
+        public delegate void TranslationTableCreated(TranslationTable translationTable);
+        public event TranslationTableCreated OnTranslationTableCreated;
+
+        public delegate void ExtendedGrammarCreated(List<ExProduction> exProductions);
+        public event ExtendedGrammarCreated OnExtendedGrammarCreated;
+
+        public delegate void FirstsCreated(IDictionary<IExNonTerminal, IList<ITerm>> firsts);
+        public event FirstsCreated OnFirstsCreated;
+        #endregion
     }
 }
