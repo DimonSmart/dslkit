@@ -1,5 +1,5 @@
-﻿using DSLKIT.Base;
-using System;
+﻿using System;
+using DSLKIT.Base;
 
 namespace DSLKIT.SpecialTerms
 {

@@ -1,9 +1,9 @@
-﻿using DSLKIT.Base;
+﻿using System;
+using System.Collections.Generic;
+using DSLKIT.Base;
 using DSLKIT.Parser;
 using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
-using System;
-using System.Collections.Generic;
 using Xunit.Abstractions;
 
 namespace DSLKIT.Test

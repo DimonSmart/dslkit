@@ -1,8 +1,8 @@
-﻿using DSLKIT.Base;
-using DSLKIT.SpecialTerms;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using DSLKIT.Base;
 using DSLKIT.Parser.ExtendedGrammar;
+using DSLKIT.SpecialTerms;
 
 namespace DSLKIT.Parser
 {

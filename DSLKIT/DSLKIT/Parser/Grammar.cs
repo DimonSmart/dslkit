@@ -46,9 +46,7 @@ namespace DSLKIT.Parser
         public IReadOnlyCollection<RuleSet> RuleSets { get; }
         public TranslationTable TranslationTable { get; }
         public ActionAndGotoTable ActionAndGotoTable { get; }
-
         public IEofTerminal Eof { get; } = EofTerminal.Instance;
-
 
         public override string ToString()
         {

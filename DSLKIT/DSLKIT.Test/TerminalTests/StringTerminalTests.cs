@@ -1,4 +1,4 @@
-using DSLKIT.Terminals;
+﻿using DSLKIT.Terminals;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DSLKIT.Test.TerminalTests

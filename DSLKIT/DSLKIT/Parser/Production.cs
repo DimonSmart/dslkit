@@ -1,8 +1,8 @@
-﻿using DSLKIT.Base;
-using DSLKIT.NonTerminals;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using DSLKIT.Base;
+using DSLKIT.NonTerminals;
 
 namespace DSLKIT.Parser
 {

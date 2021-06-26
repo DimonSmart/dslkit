@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
+﻿// ReSharper disable StringLiteralTypo
+
+using System.Collections.Generic;
 using System.Text;
 using DSLKIT.Parser;
-
-// ReSharper disable StringLiteralTypo
 
 namespace DSLKIT.Test.Transformers
 {
@@ -43,6 +43,3 @@ namespace DSLKIT.Test.Transformers
         }
     }
 }
-
-
-

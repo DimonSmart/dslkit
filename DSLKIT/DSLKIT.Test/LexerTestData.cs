@@ -1,5 +1,5 @@
+﻿using System.IO;
 using DSLKIT.Terminals;
-using System.IO;
 
 namespace DSLKIT.Test
 {

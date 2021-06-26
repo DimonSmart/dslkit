@@ -1,8 +1,8 @@
-using DSLKIT.Terminals;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Linq;
+using DSLKIT.Terminals;
 using DSLKIT.Test.Utils;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static DSLKIT.Test.LexerTestData;
 
 namespace DSLKIT.Test

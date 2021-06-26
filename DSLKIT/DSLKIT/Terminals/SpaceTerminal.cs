@@ -1,4 +1,4 @@
-namespace DSLKIT.Terminals
+﻿namespace DSLKIT.Terminals
 {
     public class SpaceTerminal : SpaceTerminalBase
     {
