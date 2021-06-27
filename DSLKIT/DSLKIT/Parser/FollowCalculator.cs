@@ -40,7 +40,7 @@ namespace DSLKIT.Parser
             _firsts = firsts;
         }
 
-        public IReadOnlyDictionary<IExNonTerminal, IList<ITerm>> Calculate()
+        public IDictionary<IExNonTerminal, IList<ITerm>> Calculate()
         {
             // TODO: Add sets information fot the start rule
             _follow.Add(_root.ToExNonTerminal(null, null), new List<ITerm> { _eof });
@@ -74,7 +74,7 @@ namespace DSLKIT.Parser
                 }
             } while (updated);
 
-            return new ReadOnlyDictionary<IExNonTerminal, IList<ITerm>>(_follow);
+            return _follow;
         }
 
         private bool AddFollow(IExNonTerminal exNonTerminal, ITerm term)

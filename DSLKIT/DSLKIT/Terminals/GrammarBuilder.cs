@@ -77,6 +77,8 @@ namespace DSLKIT.Terminals
             OnFirstsCreated?.Invoke(firsts);
 
             var follows = new FollowCalculator(root, _eof, exProductions, firsts).Calculate();
+            OnFollowsCreated?.Invoke(follows);
+
             var actionAndGotoTable = new ActionAndGotoTableBuilder(root, ruleSets, translationTable).Build();
 
             return new Grammar(_name,
@@ -86,7 +88,10 @@ namespace DSLKIT.Terminals
                 productions: _productions,
                 exProductions: exProductions,
                 firsts: new ReadOnlyDictionary<IExNonTerminal, IList<ITerm>>(firsts),
-                follows: follows, ruleSets: ruleSets, translationTable: translationTable, actionAndGotoTable: actionAndGotoTable);
+                follows: new ReadOnlyDictionary<IExNonTerminal, IList<ITerm>>(follows),
+                ruleSets: ruleSets,
+                translationTable: translationTable,
+                actionAndGotoTable: actionAndGotoTable);
         }
 
         private INonTerminal GetRootNonTerminal(string rootProductionName)
@@ -141,6 +146,12 @@ namespace DSLKIT.Terminals
         public GrammarBuilder WithOnFirstsCreated(FirstsCreated evt)
         {
             OnFirstsCreated += evt;
+            return this;
+        }
+
+        public GrammarBuilder WithOnFollowsCreated(FollowsCreated evt)
+        {
+            OnFollowsCreated += evt;
             return this;
         }
 
@@ -204,6 +215,9 @@ namespace DSLKIT.Terminals
 
         public delegate void FirstsCreated(IDictionary<IExNonTerminal, IList<ITerm>> firsts);
         public event FirstsCreated OnFirstsCreated;
+
+        public delegate void FollowsCreated(IDictionary<IExNonTerminal, IList<ITerm>> follows);
+        public event FollowsCreated OnFollowsCreated;
         #endregion
     }
 }
