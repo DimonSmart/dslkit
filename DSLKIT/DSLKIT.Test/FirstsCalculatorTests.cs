@@ -22,7 +22,7 @@ namespace DSLKIT.Test
         [InlineData("jambe", "E",
             "E → T E'; E' → + T E'; E' → ε; T → F T';T' → * F T'; T' → ε; F → ( E ); F → id",
             "E=(,id;E'=+,Empty;F=(,id;T=(,id;T'=*,Empty")]
-        [InlineData("sjackson_with", "S", "S → N;N → V = E;N → E;E → V;V → x;V → * E;",
+        [InlineData("sjackson", "S", "S → N;N → V = E;N → E;E → V;V → x;V → * E;",
             "E=*,x;N=*,x;S=*,x;V=*,x")]
         // https://www.youtube.com/watch?v=UXYqQ_CJsVE&list=LL&index=18
         [InlineData("gate", "S", "S → A B C;A → a;A → b;A →  ε;B → c;B → d;B → ε;C → e;C → f;C → ε;",

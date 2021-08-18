@@ -1,9 +1,8 @@
-﻿using System;
-using DSLKIT.Base;
+﻿using DSLKIT.Base;
 
 namespace DSLKIT.Parser.ExtendedGrammar
 {
-    public interface IExBase : IEquatable<IExBase>
+    public interface IExBase
     {
         RuleSet From { get; }
         RuleSet To { get; }

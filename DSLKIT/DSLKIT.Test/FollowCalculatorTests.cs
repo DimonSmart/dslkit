@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using DSLKIT.Terminals;
 using FluentAssertions;
 using Xunit;
@@ -24,15 +25,30 @@ namespace DSLKIT.Test
             "jambe", "E",
             "E → T E'; E' → + T E'; E' → ε; T → F T';T' → * F T'; T' → ε; F → ( E ); F → id",
             "E → $ ); E' → $ ); T → + $ ); T' → + $ ); F → * + $ )")]
-        [InlineData("sjackson_with_ε", "S", "N → V = E;S → N;N → E;E → V;V → x;V → * E;V → ε",
+
+        [InlineData("sjackson", "S", "S → N;N → V = E;N → E;E → V;V → x;V → * E;",
             "E → $ =; N → $; V → $; S → $")]
+
+        [InlineData("slystudy", "S1", "S1 → S; S → A C d; S → C b a b; S → B a; S → d; A → c; A → C B; B → S d; B → ε; C → e; C → ε;",
+            "E → $")]
         public void FollowSetCreation_Test(string grammarName, string rootProductionName, string grammarDefinition,
             string expectedFollows)
         {
             var grammar = new GrammarBuilder()
                 .WithGrammarName(grammarName)
                 .AddProductionsFromString(grammarDefinition)
-                .WithOnFollowsCreated(follows => { })
+                .WithOnFollowsCreated(follows => {
+                    var fext = follows.Select(i => new KeyValuePair<string, string>(
+                        i.Key.Term.Name,
+                        string.Join(",", i.Value.Select(j => j.Name).OrderBy(j => j))
+                        )).ToList().Distinct();
+
+                    var keys = fext.Select(i => i.Key).Distinct();
+                    foreach (var key in keys)
+                    {
+                        fext.Where(i => i.Key == key).Distinct().Should().HaveCount(1);
+                    };
+                })
                 .BuildGrammar(rootProductionName);
             ShowGrammar(grammar);
 
