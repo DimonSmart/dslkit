@@ -29,8 +29,7 @@ namespace DSLKIT.Parser
         private readonly IEnumerable<ExProduction> _exProductions;
         private readonly IDictionary<IExNonTerminal, IList<ITerm>> _firsts;
 
-        private readonly Dictionary<IExNonTerminal, IList<ITerm>> _follow =
-            new Dictionary<IExNonTerminal, IList<ITerm>>();
+        private readonly Dictionary<IExNonTerminal, IList<ITerm>> _follow = new Dictionary<IExNonTerminal, IList<ITerm>>();
 
         private readonly IEnumerable<IExNonTerminal> _exNonTerminals;
 

@@ -41,7 +41,7 @@ namespace DSLKIT.Test
                     var fext = f.Select(i => new KeyValuePair<string, string>(
                         i.Key.Term.Name,
                         string.Join(",", i.Value.Select(j => j.Name).OrderBy(j => j))
-                        )).ToList().Distinct();
+                        )).Distinct().ToList();
 
                     var keys = fext.Select(i => i.Key).Distinct();
                     foreach (var key in keys)

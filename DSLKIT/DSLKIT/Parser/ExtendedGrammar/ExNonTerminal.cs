@@ -7,10 +7,6 @@ namespace DSLKIT.Parser.ExtendedGrammar
     {
         public INonTerminal NonTerminal { get; }
         public override ITerm Term => NonTerminal;
-
-        public ExNonTerminal(INonTerminal t, RuleSet from, RuleSet to) : base(from, to)
-        {
-            NonTerminal = t;
-        }
+        public ExNonTerminal(INonTerminal t, RuleSet from, RuleSet to) : base(from, to) => NonTerminal = t;
     }
 }
