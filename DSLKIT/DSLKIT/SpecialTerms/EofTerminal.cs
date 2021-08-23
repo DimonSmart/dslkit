@@ -1,6 +1,6 @@
-﻿using DSLKIT.Terminals;
+﻿using System;
+using DSLKIT.Terminals;
 using DSLKIT.Tokens;
-using System;
 
 namespace DSLKIT.SpecialTerms
 {

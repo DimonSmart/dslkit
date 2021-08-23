@@ -1,6 +1,6 @@
-﻿using DSLKIT.Parser;
-using System.Linq;
+﻿using System.Linq;
 using System.Text;
+using DSLKIT.Parser;
 
 namespace DSLKIT
 {
@@ -54,16 +54,16 @@ namespace DSLKIT
             foreach (var first in grammar.Firsts)
             {
                 var firstsSet = string.Join(",", first.Value.Select(i => i.Name));
-                sb.AppendLine($"{first.Key.Name} : \t{firstsSet}");
+                sb.AppendLine($"{first.Key.Term.Name} : \t{firstsSet}");
             }
         }
         private static void DumpFollow(IGrammar grammar, StringBuilder sb)
         {
-            sb.AppendLine($"Follow: {grammar.Follow.Count}");
-            foreach (var follow in grammar.Follow)
+            sb.AppendLine($"Follow: {grammar.Follows.Count}");
+            foreach (var follow in grammar.Follows)
             {
                 var followSet = string.Join(",", follow.Value.Select(i => i.Name));
-                sb.AppendLine($"{follow.Key.Name} : \t{followSet}");
+                sb.AppendLine($"{follow.Key} : \t{followSet}");
             }
         }
     }

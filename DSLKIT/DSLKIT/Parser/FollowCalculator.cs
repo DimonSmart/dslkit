@@ -1,75 +1,108 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using DSLKIT.Base;
 using DSLKIT.NonTerminals;
+using DSLKIT.Parser.ExtendedGrammar;
 using DSLKIT.SpecialTerms;
-using DSLKIT.Terminals;
 
 namespace DSLKIT.Parser
 {
     /// <summary>
-    ///   Conventions: a, b, and c represent a terminal or non-terminal.
-    ///    a* represents zero or more terminals or non-terminals (possibly both).
-    ///    a+ represents one or more...
-    ///    D is a non-terminal.
+    /// Conventions: a, b, and c represent a terminal or non-terminal.
+    /// a* represents zero or more terminals or non-terminals (possibly both).
+    /// a+ represents one or more...
+    /// D is a non-terminal.
     /// 1. Place an End of Input token($) into the Root rule's follow set.
-    /// 2. Suppose we have a rule R → a* Db. 
-    ///    Everything in First(b)(except for ε) is added to Follow(D).
-    ///    If First(b) contains ε then everything in Follow(R) is put in Follow(D).
+    /// 2. Suppose we have a rule R → a* Db. Everything in First(b)(except ε) is added to Follow(D).
+    /// 2.1 If First(b) contains ε then everything in Follow(R) is put in Follow(D).
     /// 3. Finally, if we have a rule R → a* D, then everything in Follow(R) is placed in Follow(D).
     /// 4. The Follow set of a terminal is an empty set.
     /// </summary>
     public class FollowCalculator
     {
-        private readonly Dictionary<INonTerminal, IList<ITerm>> _follow = new Dictionary<INonTerminal, IList<ITerm>>();
-        private readonly IGrammar _grammar;
+        private readonly INonTerminal _root;
+        private readonly IEofTerminal _eof;
+        private readonly IEnumerable<ExProduction> _exProductions;
+        private readonly IDictionary<IExNonTerminal, IList<ITerm>> _firsts;
+        private readonly Dictionary<IExNonTerminal, IList<ITerm>> _follow = new Dictionary<IExNonTerminal, IList<ITerm>>();
 
-        public FollowCalculator(IGrammar grammar)
+
+        public FollowCalculator(INonTerminal root, IEofTerminal eof,
+            IEnumerable<ExProduction> exProductions,
+            IDictionary<IExNonTerminal, IList<ITerm>> firsts)
         {
-            _grammar = grammar;
+            _root = root;
+            _eof = eof;
+            _exProductions = exProductions;
+            _firsts = firsts;
         }
 
-        public IReadOnlyDictionary<INonTerminal, IList<ITerm>> Calculate()
+        public IDictionary<IExNonTerminal, IList<ITerm>> Calculate()
         {
-            _follow.Add(_grammar.Root, new List<ITerm> { _grammar.Eof });
+            _follow.Add(_exProductions.Select(p => p.ExLeftNonTerminal)
+                .Single(p => p.NonTerminal == _root && p.To == null), new List<ITerm> { _eof });
 
             bool updated;
             do
             {
                 updated = false;
-                foreach (var production in _grammar.Productions)
+                foreach (var exProduction in _exProductions)
                 {
-                    var rule = production.ProductionDefinition;
-                    var r = production.LeftNonTerminal;
+                    var rule = exProduction.ExProductionDefinition;
+                    var r = exProduction.ExLeftNonTerminal;
                     var count = rule.Count;
-                    if (rule.Count >= 2)
+                    if (count >= 2)
                     {
-                        var b = rule[count - 1];
-                        if (rule[count - 2] is INonTerminal d)
+                        // 2.Suppose we have a rule R → a* DB.
+                        // Everything in First(B)(except for ε) is added to Follow(D).
+                        for (var i = 0; i < rule.Count - 1; i++)
                         {
-                            updated |= AddFollow(d, GetFirsts(b).Where(i => !(i is EmptyTerm)).ToList());
-                            if (GetFirsts(b).Contains(EmptyTerm.Empty))
+
+                            var termD = rule[i];
+                            var termB = rule[i + 1];
+                            if (termD is IExNonTerminal exNonTerminalD)
                             {
-                                updated |= AddFollow(d, GetFollow(r));
+                                var firstsOfB = GetFirsts(termB).Where(f => !(f is EmptyTerm)).ToList();
+                                updated |= AddFollow(exNonTerminalD, firstsOfB);
+                            }
+                        }
+
+                        // Add back cycle with epsilon checking
+                        // 2.Suppose we have a rule R → a* DB.
+                        // 2.1 If First(B) contains ε then everything in Follow(R) is put in Follow(D)
+                        for (var i = rule.Count - 2; i > 0; i--)
+                        {
+
+                            var termD = rule[i];
+                            var termB = rule[i + 1];
+
+                            var firstsOfBHasEpsilon = GetFirsts(termB).Any(f => f is EmptyTerm);
+                            if (firstsOfBHasEpsilon && termD is IExNonTerminal exNonTerminalD)
+                            {
+                                updated |= AddFollow(exNonTerminalD, GetFollow(exNonTerminalD));
+                            }
+                            else
+                            {
+                                break;
                             }
                         }
                     }
 
-                    if (rule[count - 1] is INonTerminal d1)
+                    // if we have a rule R → a* D, then everything in Follow(R) is placed in Follow(D).
+                    if (rule[count - 1] is IExNonTerminal lastNonTerminal)
                     {
-                        updated |= AddFollow(d1, GetFollow(r));
+                        updated |= AddFollow(lastNonTerminal, GetFollow(r));
                     }
                 }
             } while (updated);
 
-            return new ReadOnlyDictionary<INonTerminal, IList<ITerm>>(_follow);
+            return _follow;
         }
 
-        private bool AddFollow(INonTerminal nonTerminal, ITerm term)
+        private bool AddFollow(IExNonTerminal exNonTerminal, ITerm term)
         {
-            if (_follow.TryGetValue(nonTerminal, out var follow))
+            if (_follow.TryGetValue(exNonTerminal, out var follow))
             {
                 if (follow.Contains(term))
                 {
@@ -80,11 +113,11 @@ namespace DSLKIT.Parser
                 return true;
             }
 
-            _follow[nonTerminal] = new List<ITerm> { term };
+            _follow[exNonTerminal] = new List<ITerm> { term };
             return true;
         }
 
-        private bool AddFollow(INonTerminal d, IList<ITerm> follows)
+        private bool AddFollow(IExNonTerminal d, IEnumerable<ITerm> follows)
         {
             var added = false;
             foreach (var follow in follows)
@@ -95,19 +128,19 @@ namespace DSLKIT.Parser
             return added;
         }
 
-        private IList<ITerm> GetFollow(INonTerminal nonTerminal)
+        private IList<ITerm> GetFollow(IExNonTerminal exNonTerminal)
         {
-            return !_follow.TryGetValue(nonTerminal, out var follow) ? new List<ITerm>() : follow;
+            return _follow.TryGetValue(exNonTerminal, out var follow) ? follow : new List<ITerm>();
         }
 
-        private IList<ITerm> GetFirsts(ITerm term)
+        private IList<ITerm> GetFirsts(IExTerm term)
         {
             switch (term)
             {
-                case ITerminal terminal:
-                    return new List<ITerm> { terminal };
-                case INonTerminal nonTerminal:
-                    return _grammar.Firsts[nonTerminal];
+                case IExTerminal exTerminal:
+                    return new List<ITerm> { exTerminal.Terminal };
+                case IExNonTerminal exNonTerminal:
+                    return _firsts[exNonTerminal];
                 default:
                     throw new InvalidOperationException();
             }

@@ -1,6 +1,6 @@
+﻿using System.Collections.Generic;
 using DSLKIT.Terminals;
 using DSLKIT.Tokens;
-using System.Collections.Generic;
 
 namespace DSLKIT
 {
@@ -25,18 +25,18 @@ namespace DSLKIT
                         yield return new ErrorToken("Close brace without open");
                         yield break;
                     case TermFlags.CloseBrace:
+                    {
+                        var openBrace = bracesStack.Pop();
+                        var expectedCloseBracket = ParenthesesKeywordConstants.ParenthesisPairs[token.Terminal];
+                        if (openBrace.Terminal != expectedCloseBracket)
                         {
-                            var openBrace = bracesStack.Pop();
-                            var expectedCloseBracket = ParenthesesKeywordConstants.ParenthesisPairs[token.Terminal];
-                            if (openBrace.Terminal != expectedCloseBracket)
-                            {
-                                yield return new ErrorToken(
-                                    $"Close brace type:{token.Terminal.Name} do not match with open one:{openBrace.Terminal.Name}");
-                                yield break;
-                            }
-
-                            break;
+                            yield return new ErrorToken(
+                                $"Close brace type:{token.Terminal.Name} do not match with open one:{openBrace.Terminal.Name}");
+                            yield break;
                         }
+
+                        break;
+                    }
                 }
 
                 yield return token;

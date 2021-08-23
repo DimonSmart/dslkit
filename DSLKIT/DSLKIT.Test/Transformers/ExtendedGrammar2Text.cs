@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
-using DSLKIT.Parser;
+using DSLKIT.Parser.ExtendedGrammar;
 
 namespace DSLKIT.Test.Transformers
 {
     public static class ExtendedGrammar2Text
     {
-        public static string Transform(IEnumerable<ExtendedGrammarProduction> extendedGrammar)
+        public static string Transform(IEnumerable<ExProduction> exProductions)
         {
-            return string.Join(System.Environment.NewLine, extendedGrammar);
+            return string.Join(System.Environment.NewLine, exProductions);
         }
     }
 }

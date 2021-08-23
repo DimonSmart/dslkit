@@ -1,133 +1,29 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{CCD455F5-3B57-4FA1-B8AD-1B0B59B20FE2}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DSLKIT</RootNamespace>
-    <AssemblyName>DSLKIT</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <TargetFramework>net452</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
+    <AssemblyTitle>DSLKIT</AssemblyTitle>
+    <Product>DSLKIT</Product>
+    <Copyright>Copyright ©  2015</Copyright>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Helpers\GrammarVisualizer.cs" />
-    <Compile Include="Lexer\LexerStreamBase.cs" />
-    <Compile Include="Lexer\ParenthesesCheckedStream.cs" />
-    <Compile Include="Lexer\ParenthesesCheckedStreamCreator.cs" />
-    <Compile Include="NonTerminals\NonTerminalExt.cs" />
-    <Compile Include="Parser\AcceptAction.cs" />
-    <Compile Include="Parser\ActionAndGotoTable.cs" />
-    <Compile Include="Parser\ActionAndGotoTableBuilder.cs" />
-    <Compile Include="Helpers\EnumerableExtensions.cs" />
-    <Compile Include="Parser\ExtendedGrammarBuilder.cs" />
-    <Compile Include="Parser\ExtendedGrammarProduction.cs" />
-    <Compile Include="Parser\FromTo.cs" />
-    <Compile Include="Parser\IActionItem.cs" />
-    <Compile Include="Parser\Production.cs" />
-    <Compile Include="Parser\Rule.cs" />
-    <Compile Include="Parser\RuleSet.cs" />
-    <Compile Include="Parser\ItemSetsBuilder.cs" />
-    <Compile Include="Parser\ShiftAction.cs" />
-    <Compile Include="Parser\TranslationTable.cs" />
-    <Compile Include="Parser\TranslationTableBuilder.cs" />
-    <Compile Include="SpecialTerms\IEofTerminal.cs" />
-    <Compile Include="Terminals\TerminalExt.cs" />
-    <Compile Include="Parser\FirstsCalculator.cs" />
-    <Compile Include="Parser\FollowCalculator.cs" />
-    <Compile Include="Parser\IGrammar.cs" />
-    <Compile Include="Parser\Grammar.cs" />
-    <Compile Include="NonTerminals\NonTerminal.cs" />
-    <Compile Include="Terminals\CommentTerminalBase.cs" />
-    <Compile Include="Terminals\CommentTerminalRegexpBased.cs" />
-    <Compile Include="SpecialTerms\EmptyTerm.cs" />
-    <Compile Include="SpecialTerms\EofTerminal.cs" />
-    <Compile Include="Helpers\StringHelper.cs" />
-    <Compile Include="Lexer\ISourceStream.cs" />
-    <Compile Include="Terminals\GrammarBuilder.cs" />
-    <Compile Include="NonTerminals\INonTerminal.cs" />
-    <Compile Include="Base\ITerm.cs" />
-    <Compile Include="Terminals\IdentifierTerminal.cs" />
-    <Compile Include="Terminals\IntegerTerminal.cs" />
-    <Compile Include="Terminals\ITerminal.cs" />
-    <Compile Include="Terminals\MultiLineCommentTerminal.cs" />
-    <Compile Include="Terminals\ParenthesesKeywordConstants.cs" />
-    <Compile Include="Terminals\ProductionBuilder.cs" />
-    <Compile Include="Terminals\RegExpTerminal.cs" />
-    <Compile Include="Terminals\SingleLineCommentTerminal.cs" />
-    <Compile Include="Terminals\TermFlags.cs" />
-    <Compile Include="Tokens\CommentToken.cs" />
-    <Compile Include="Tokens\EofToken.cs" />
-    <Compile Include="Tokens\ErrorToken.cs" />
-    <Compile Include="Tokens\IntegerToken.cs" />
-    <Compile Include="Tokens\IPosition.cs" />
-    <Compile Include="Tokens\IToken.cs" />
-    <Compile Include="Lexer\Lexer.cs" />
-    <Compile Include="Lexer\LexerSettings.cs" />
-    <Compile Include="Terminals\KeywordTerminal.cs" />
-    <Compile Include="Helpers\RegexHelper.cs" />
-    <Compile Include="Terminals\RegExpTerminalBase.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Tokens\KeywordToken.cs" />
-    <Compile Include="Tokens\SpaceToken.cs" />
-    <Compile Include="Tokens\StringToken.cs" />
-    <Compile Include="Terminals\CustomSpaceTerminal.cs" />
-    <Compile Include="Terminals\SpaceTerminal.cs" />
-    <Compile Include="Lexer\StringSourceStream.cs" />
-    <Compile Include="Terminals\StringTerminal.cs" />
-    <Compile Include="Terminals\TerminalPriority.cs" />
-    <Compile Include="Terminals\SpaceTerminalBase.cs" />
-    <Compile Include="Tokens\StringTokenBase.cs" />
-    <Compile Include="Tokens\Token.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
     <None Include="DSLKITClassDiagram.cd" />
-    <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+  <ItemGroup>
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+  </ItemGroup>
 </Project>

@@ -1,36 +1,27 @@
-﻿using DSLKIT.NonTerminals;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using DSLKIT.NonTerminals;
 
 namespace DSLKIT.Parser
 {
     public class ItemSetsBuilder
     {
-        public delegate void SetBuilderStep(object sender, IEnumerable<RuleSet> sets, string grammarName);
-
-        private readonly IGrammar _grammar;
+        private readonly IEnumerable<Production> _productions;
+        private readonly INonTerminal _root;
         private readonly IList<RuleSet> _sets = new List<RuleSet>();
 
-        public ItemSetsBuilder(IGrammar grammar)
+        public ItemSetsBuilder(IEnumerable<Production> productions, INonTerminal root)
         {
-            _grammar = grammar;
-        }
-
-        public event SetBuilderStep StepEvent;
-
-        private void Step()
-        {
-            StepEvent?.Invoke(this, _sets, _grammar.Name);
+            _productions = productions;
+            _root = root;
         }
 
         public ICollection<RuleSet> Build()
         {
-            // TODO: Move to grammar
-            var startProduction = _grammar.Productions.FirstOrDefault(i => i.LeftNonTerminal == _grammar.Root);
+            var startProduction = _productions.FirstOrDefault(i => i.LeftNonTerminal == _root);
             _sets.Add(new RuleSet(_sets.Count, new Rule(startProduction)));
             FillRuleSet(_sets[0]);
-            Step();
             bool changes;
             do
             {
@@ -70,7 +61,6 @@ namespace DSLKIT.Parser
                     set.Arrows[rule.NextTerm] = newRuleSet;
 
                     anyChanges = true;
-                    Step();
                 }
             }
 
@@ -97,7 +87,7 @@ namespace DSLKIT.Parser
                         continue;
                     }
 
-                    var toAdd = _grammar.Productions
+                    var toAdd = _productions
                         .Where(p => p.LeftNonTerminal == nextNonTerminal)
                         .Select(i => new Rule(i))
                         .ToList();
@@ -120,7 +110,6 @@ namespace DSLKIT.Parser
                 }
             } while (changed);
 
-            Step();
             return anyChanges;
         }
     }

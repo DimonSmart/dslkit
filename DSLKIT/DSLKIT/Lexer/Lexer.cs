@@ -1,8 +1,8 @@
+﻿using System.Collections.Generic;
+using System.Linq;
 using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
 using DSLKIT.Tokens;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace DSLKIT
 {

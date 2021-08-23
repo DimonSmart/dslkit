@@ -1,10 +1,13 @@
-﻿using DSLKIT.Base;
-using DSLKIT.NonTerminals;
-using DSLKIT.Parser;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
+using DSLKIT.Base;
+using DSLKIT.NonTerminals;
+using DSLKIT.Parser;
+using DSLKIT.Parser.ExtendedGrammar;
+using DSLKIT.SpecialTerms;
 using static DSLKIT.SpecialTerms.EmptyTerm;
 
 namespace DSLKIT.Terminals
@@ -20,6 +23,8 @@ namespace DSLKIT.Terminals
             new ConcurrentDictionary<string, ITerminal>();
 
         private string _name;
+
+        private IEofTerminal _eof = EofTerminal.Instance;
 
         public INonTerminal GetOrAddNonTerminal(string nonTerminalName)
         {
@@ -58,6 +63,39 @@ namespace DSLKIT.Terminals
 
         public Grammar BuildGrammar(string rootProductionName = null)
         {
+            var root = GetRootNonTerminal(rootProductionName);
+            var ruleSets = new ItemSetsBuilder(_productions, root).Build().ToList();
+            OnRuleSetCreated?.Invoke(ruleSets);
+
+            var translationTable = TranslationTableBuilder.Build(ruleSets);
+            OnTranslationTableCreated?.Invoke(translationTable);
+
+            var exProductions = ExtendedGrammarBuilder.Build(translationTable).ToList();
+            OnExtendedGrammarCreated?.Invoke(exProductions);
+
+            var firsts = new FirstsCalculator(exProductions).Calculate();
+            OnFirstsCreated?.Invoke(firsts);
+
+            var follows = new FollowCalculator(root, _eof, exProductions, firsts).Calculate();
+            OnFollowsCreated?.Invoke(follows);
+
+            var actionAndGotoTable = new ActionAndGotoTableBuilder(root, ruleSets, translationTable).Build();
+
+            return new Grammar(_name,
+                root: root,
+                terminals: _terminals.Values,
+                nonTerminals: _nonTerminals.Values.AsEnumerable(),
+                productions: _productions,
+                exProductions: exProductions,
+                firsts: new ReadOnlyDictionary<IExNonTerminal, IList<ITerm>>(firsts),
+                follows: new ReadOnlyDictionary<IExNonTerminal, IList<ITerm>>(follows),
+                ruleSets: ruleSets,
+                translationTable: translationTable,
+                actionAndGotoTable: actionAndGotoTable);
+        }
+
+        private INonTerminal GetRootNonTerminal(string rootProductionName)
+        {
             INonTerminal root;
             if (!string.IsNullOrEmpty(rootProductionName))
             {
@@ -67,7 +105,8 @@ namespace DSLKIT.Terminals
             {
                 root = _productions.First().LeftNonTerminal;
             }
-            return new Grammar(_name, _terminals.Values, _nonTerminals.Values.AsEnumerable(), _productions, root);
+
+            return root;
         }
 
         public void AddProduction(Production production)
@@ -80,6 +119,42 @@ namespace DSLKIT.Terminals
             return new ProductionBuilder(this, ruleName);
         }
 
+        public GrammarBuilder WithEof(IEofTerminal eof)
+        {
+            _eof = eof;
+            return this;
+        }
+
+        public GrammarBuilder WithOnRuleSetCreated(RuleSetCreated evt)
+        {
+            OnRuleSetCreated += evt;
+            return this;
+        }
+
+        public GrammarBuilder WithOnTranslationTableCreated(TranslationTableCreated evt)
+        {
+            OnTranslationTableCreated += evt;
+            return this;
+        }
+
+        public GrammarBuilder WithOnExtendedGrammarCreated(ExtendedGrammarCreated evt)
+        {
+            OnExtendedGrammarCreated += evt;
+            return this;
+        }
+
+        public GrammarBuilder WithOnFirstsCreated(FirstsCreated evt)
+        {
+            OnFirstsCreated += evt;
+            return this;
+        }
+
+        public GrammarBuilder WithOnFollowsCreated(FollowsCreated evt)
+        {
+            OnFollowsCreated += evt;
+            return this;
+        }
+
         public GrammarBuilder AddProductionFromString(string productionDefinition)
         {
             var production = productionDefinition.Split('→');
@@ -87,6 +162,7 @@ namespace DSLKIT.Terminals
             {
                 throw new ArgumentException($"{productionDefinition} should be in form A→zxcA with → as delimiter");
             }
+
             var left = production[0].Trim();
             var productionBuilder = AddProduction(left);
             var definition = new List<ITerm>();
@@ -106,6 +182,7 @@ namespace DSLKIT.Terminals
 
                 definition.Add(item.AsKeywordTerminal());
             }
+
             productionBuilder.AddProductionDefinition(definition.ToArray());
             return this;
         }
@@ -116,12 +193,31 @@ namespace DSLKIT.Terminals
             {
                 delimiters = new[] { Environment.NewLine, ";" };
             }
+
             var lines = productions.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
             foreach (var line in lines)
             {
                 AddProductionFromString(line);
             }
+
             return this;
         }
+
+        #region Events
+        public delegate void RuleSetCreated(List<RuleSet> ruleSets);
+        public event RuleSetCreated OnRuleSetCreated;
+
+        public delegate void TranslationTableCreated(TranslationTable translationTable);
+        public event TranslationTableCreated OnTranslationTableCreated;
+
+        public delegate void ExtendedGrammarCreated(List<ExProduction> exProductions);
+        public event ExtendedGrammarCreated OnExtendedGrammarCreated;
+
+        public delegate void FirstsCreated(IDictionary<IExNonTerminal, IList<ITerm>> firsts);
+        public event FirstsCreated OnFirstsCreated;
+
+        public delegate void FollowsCreated(IDictionary<IExNonTerminal, IList<ITerm>> follows);
+        public event FollowsCreated OnFollowsCreated;
+        #endregion
     }
 }

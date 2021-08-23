@@ -1,7 +1,7 @@
-﻿using DSLKIT.Base;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using DSLKIT.Base;
 
 namespace DSLKIT.Parser
 {
@@ -34,7 +34,7 @@ namespace DSLKIT.Parser
             {
                 return false;
             }
-            for (int i = 0; i < otherRules.Length; i++)
+            for (var i = 0; i < otherRules.Length; i++)
             {
                 if (Rules[i] != otherRules[i])
                 {
