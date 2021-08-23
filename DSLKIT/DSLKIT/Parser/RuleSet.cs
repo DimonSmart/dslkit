@@ -34,7 +34,7 @@ namespace DSLKIT.Parser
             {
                 return false;
             }
-            for (int i = 0; i < otherRules.Length; i++)
+            for (var i = 0; i < otherRules.Length; i++)
             {
                 if (Rules[i] != otherRules[i])
                 {

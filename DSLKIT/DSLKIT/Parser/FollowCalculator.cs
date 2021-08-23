@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using DSLKIT.Base;
 using DSLKIT.NonTerminals;
 using DSLKIT.Parser.ExtendedGrammar;
 using DSLKIT.SpecialTerms;
-using DSLKIT.Terminals;
 
 namespace DSLKIT.Parser
 {
@@ -16,9 +14,8 @@ namespace DSLKIT.Parser
     /// a+ represents one or more...
     /// D is a non-terminal.
     /// 1. Place an End of Input token($) into the Root rule's follow set.
-    /// 2. Suppose we have a rule R → a* Db.
-    /// Everything in First(b)(except for ε) is added to Follow(D).
-    /// If First(b) contains ε then everything in Follow(R) is put in Follow(D).
+    /// 2. Suppose we have a rule R → a* Db. Everything in First(b)(except ε) is added to Follow(D).
+    /// 2.1 If First(b) contains ε then everything in Follow(R) is put in Follow(D).
     /// 3. Finally, if we have a rule R → a* D, then everything in Follow(R) is placed in Follow(D).
     /// 4. The Follow set of a terminal is an empty set.
     /// </summary>
@@ -28,10 +25,8 @@ namespace DSLKIT.Parser
         private readonly IEofTerminal _eof;
         private readonly IEnumerable<ExProduction> _exProductions;
         private readonly IDictionary<IExNonTerminal, IList<ITerm>> _firsts;
-
         private readonly Dictionary<IExNonTerminal, IList<ITerm>> _follow = new Dictionary<IExNonTerminal, IList<ITerm>>();
 
-        private readonly IEnumerable<IExNonTerminal> _exNonTerminals;
 
         public FollowCalculator(INonTerminal root, IEofTerminal eof,
             IEnumerable<ExProduction> exProductions,
@@ -41,208 +36,69 @@ namespace DSLKIT.Parser
             _eof = eof;
             _exProductions = exProductions;
             _firsts = firsts;
-            _exNonTerminals = GetExNonTerminals().ToList();
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>")]
         public IDictionary<IExNonTerminal, IList<ITerm>> Calculate()
         {
-            // TODO: Add sets information fot the start rule
-            _follow.Add(_root.ToExNonTerminal(null, null), new List<ITerm> { _eof });
-            foreach (var nonterminal in _exNonTerminals)
+            _follow.Add(_exProductions.Select(p => p.ExLeftNonTerminal)
+                .Single(p => p.NonTerminal == _root && p.To == null), new List<ITerm> { _eof });
+
+            bool updated;
+            do
             {
-                var visited = new HashSet<IExNonTerminal>();
-                RecursiveFollow(nonterminal, nonterminal, visited);
-            }
-
-            return _follow;
-
-            //bool updated;
-            //do
-            //{
-            //    updated = false;
-            //    foreach (var exProduction in _exProductions)
-            //    {
-            //        var rule = exProduction.ExProductionDefinition;
-            //        var r = exProduction.ExLeftNonTerminal;
-            //        var count = rule.Count;
-
-            //        if (count == 3)
-            //        {
-            //            if (rule[count - 2] is IExNonTerminal B)
-            //            {
-            //                // If r -> pBq is a production, where p, B and q are any grammar symbols,
-            //                // then everything in FIRST(q)  except Є is in FOLLOW(B).
-            //                var firstsOfq = GetFirsts(rule[count - 1]);
-            //                var firstsOfqExceptEpsilon = firstsOfq.Where(i => !(i is EmptyTerm));
-            //                var firstsOfqContainEpsilon = firstsOfq.Any(i => i is EmptyTerm);
-            //                if (!firstsOfqContainEpsilon)
-            //                {
-            //                    updated |= AddFollow(B, firstsOfqExceptEpsilon);
-            //                }
-            //                // If r->pBq is a production and FIRST(q) contains Є, 
-            //                // then FOLLOW(B) contains { FIRST(q) – Є } U FOLLOW(r)
-            //                else
-            //                {
-            //                    updated |= AddFollow(B, firstsOfqExceptEpsilon);
-            //                    updated |= AddFollow(B, GetFollow(r));
-            //                }
-            //                continue;
-            //            }
-            //        }
-            //        if (count == 2)
-            //        {
-            //            // If r->pB is a production, then everything in FOLLOW(r) is in FOLLOW(B).
-            //            if (rule[count - 1] is IExNonTerminal B)
-            //            {
-            //                updated |= AddFollow(B, GetFollow(r));
-            //            }
-            //        }
-
-            //        //if (rule.Count >= 2)
-            //        //{
-            //        //    var b = rule[count - 1];
-            //        //    if (rule[count - 2] is IExNonTerminal d)
-            //        //    {
-            //        //        updated |= AddFollow(d, GetFirsts(b).Where(i => !(i is EmptyTerm)).ToList());
-            //        //        if (GetFirsts(b).Contains(EmptyTerm.Empty))
-            //        //        {
-            //        //            updated |= AddFollow(d, GetFollow(r));
-            //        //        }
-            //        //    }
-            //        //}
-
-            //        //if (rule[count - 1] is IExNonTerminal d1)
-            //        //{
-            //        //    updated |= AddFollow(d1, GetFollow(r));
-            //        //}
-            //    }
-            //} while (updated);
-
-            //return _follow;
-        }
-
-        private IEnumerable<IExNonTerminal> GetExNonTerminals()
-        {
-            var result = new HashSet<IExNonTerminal>();
-
-            foreach (var exProduction in _exProductions)
-            {
-                result.Add(exProduction.ExLeftNonTerminal);
-                foreach (var exNonTerminal in exProduction.ExProductionDefinition.OfType<IExNonTerminal>())
+                updated = false;
+                foreach (var exProduction in _exProductions)
                 {
-                    result.Add(exNonTerminal);
-                }
-            }
-
-            return result;
-        }
-
-
-        public IDictionary<IExNonTerminal, IList<ITerm>> Calc()
-        {
-            foreach (var nonterminal in _exNonTerminals)
-            {
-                var visited = new HashSet<IExNonTerminal>();
-                RecursiveFollow(nonterminal, nonterminal, visited);
-            }
-
-
-
-            return _follow;
-        }
-
-        public void RecursiveFollow(
-            IExNonTerminal startExNonTerminal,
-            IExNonTerminal currentNonTerminal,
-            HashSet<IExNonTerminal> visited)
-        {
-            if (visited.Contains(currentNonTerminal))
-            {
-                return;
-            }
-
-            visited.Add(currentNonTerminal);
-            foreach (var nonterminal  in _exNonTerminals)
-            {
-                foreach (var exProduction in _exProductions.Where(i => i.ExLeftNonTerminal.Equals(nonterminal)))
-                {
-                    var currentProductionLength = exProduction.ExProductionDefinition.Count;
-                    for (var index = 0; index < currentProductionLength; index++)
+                    var rule = exProduction.ExProductionDefinition;
+                    var r = exProduction.ExLeftNonTerminal;
+                    var count = rule.Count;
+                    if (count >= 2)
                     {
-                        var exTerm = exProduction.ExProductionDefinition[index];
-                        if (exTerm != currentNonTerminal)
+                        // 2.Suppose we have a rule R → a* DB.
+                        // Everything in First(B)(except for ε) is added to Follow(D).
+                        for (var i = 0; i < rule.Count - 1; i++)
                         {
-                            continue;
-                        }
-                        // nextTerm
-                        var k = index + 1;
 
-                        while (k < currentProductionLength)
+                            var termD = rule[i];
+                            var termB = rule[i + 1];
+                            if (termD is IExNonTerminal exNonTerminalD)
+                            {
+                                var firstsOfB = GetFirsts(termB).Where(f => !(f is EmptyTerm)).ToList();
+                                updated |= AddFollow(exNonTerminalD, firstsOfB);
+                            }
+                        }
+
+                        // Add back cycle with epsilon checking
+                        // 2.Suppose we have a rule R → a* DB.
+                        // 2.1 If First(B) contains ε then everything in Follow(R) is put in Follow(D)
+                        for (var i = rule.Count - 2; i > 0; i--)
                         {
-                            var exNonTerminal = exProduction.ExProductionDefinition[k] as IExNonTerminal;
-                            if (exNonTerminal == null)
+
+                            var termD = rule[i];
+                            var termB = rule[i + 1];
+
+                            var firstsOfBHasEpsilon = GetFirsts(termB).Any(f => f is EmptyTerm);
+                            if (firstsOfBHasEpsilon && termD is IExNonTerminal exNonTerminalD)
+                            {
+                                updated |= AddFollow(exNonTerminalD, GetFollow(exNonTerminalD));
+                            }
+                            else
                             {
                                 break;
                             }
-
-                            AddFollow(startExNonTerminal, GetFirsts(exNonTerminal));
-                            if (!HasEpsilon(exNonTerminal))
-                            {
-                                break;
-
-                            }
-                            k++;
-                        }
-
-                        if (k < currentProductionLength)
-                        {
-                            var exTerminal = exProduction.ExProductionDefinition[k] as IExTerminal;
-                            if (exTerminal != null)
-                            {
-                                AddFollow(startExNonTerminal, new ITerm[] { exTerminal.Terminal });
-                            }
-                        }
-
-                        if (k == currentProductionLength)
-                        {
-                            if (nonterminal == startExNonTerminal)
-                            {
-                                AddFollow(startExNonTerminal, _eof);
-                            }
-                            RecursiveFollow(startExNonTerminal, nonterminal, visited);
                         }
                     }
+
+                    // if we have a rule R → a* D, then everything in Follow(R) is placed in Follow(D).
+                    if (rule[count - 1] is IExNonTerminal lastNonTerminal)
+                    {
+                        updated |= AddFollow(lastNonTerminal, GetFollow(r));
+                    }
                 }
-            }
+            } while (updated);
+
+            return _follow;
         }
-
-
-        private bool HasEpsilon(IExTerm exTerm)
-        {
-            if (exTerm.Term == EmptyTerm.Empty)
-            {
-                return true;
-            }
-
-            if (exTerm is IExTerminal)
-            {
-                return false;
-            }
-
-            if (!(exTerm is IExNonTerminal exNonTerminal))
-            {
-                throw new InvalidOperationException($"{nameof(exTerm)} should be IExNonTerminal or IExTerminal");
-            }
-
-            if (!_firsts.TryGetValue(exNonTerminal, out var firsts))
-            {
-                throw new InvalidOperationException($"{nameof(exTerm)} should be presented in Firsts collection");
-            }
-
-            return firsts.Any(i => i == EmptyTerm.Empty);
-        }
-
 
         private bool AddFollow(IExNonTerminal exNonTerminal, ITerm term)
         {
@@ -274,7 +130,7 @@ namespace DSLKIT.Parser
 
         private IList<ITerm> GetFollow(IExNonTerminal exNonTerminal)
         {
-            return !_follow.TryGetValue(exNonTerminal, out var follow) ? new List<ITerm>() : follow;
+            return _follow.TryGetValue(exNonTerminal, out var follow) ? follow : new List<ITerm>();
         }
 
         private IList<ITerm> GetFirsts(IExTerm term)

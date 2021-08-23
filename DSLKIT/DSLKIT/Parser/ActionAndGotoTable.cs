@@ -25,10 +25,7 @@ namespace DSLKIT.Parser
             return ActionTable.Keys.Select(i => i.Key).Distinct();
         }
 
-        public ActionAndGotoTable(INonTerminal root)
-        {
-            _root = root;
-        }
+        public ActionAndGotoTable(INonTerminal root) => _root = root;
 
         public IEnumerable<RuleSet> GetAllSets()
         {
