@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using DSLKIT.Terminals;
 using FluentAssertions;
@@ -49,7 +50,7 @@ namespace DSLKIT.Test
                         fext.Where(i => i.Key == key).Distinct().Should().HaveCount(1);
                     };
 
-                    var firstsAsText = string.Join(";", fext.Select(d => $"{d.Key}={d.Value}").OrderBy(s => s));
+                    var firstsAsText = string.Join(";", fext.OrderBy(s => s.Key).Select(d => $"{d.Key}={d.Value}"));
                     firstsAsText
                         .Should()
                         .BeEquivalentTo(expectedFirsts);
