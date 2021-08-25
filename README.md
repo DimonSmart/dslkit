@@ -11,5 +11,5 @@ Grammar construction with C# - in progress
 Firsts set generation - Done!
 Follow set generation - Done!
 Unit tests section for Firsts, Follow calculation - Done!
-
+[![CircleCI](https://circleci.com/gh/DimonSmart/dslkit/tree/master.svg?style=svg)](https://circleci.com/gh/DimonSmart/dslkit/tree/master)
 [![Coverage Status](https://coveralls.io/repos/github/DimonSmart/dslkit/badge.svg?branch=master)](https://coveralls.io/github/DimonSmart/dslkit?branch=master)
