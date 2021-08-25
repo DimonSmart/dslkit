@@ -19,7 +19,7 @@ jobs:
           working_directory:  ~/project/DSLKIT/DSLKIT.Test
           name: Run tests
           command: |
-            dotnet test
+            dotnet test --collect:"XPlat Code Coverage"
 
        # Upload test results
       - store_test_results:
