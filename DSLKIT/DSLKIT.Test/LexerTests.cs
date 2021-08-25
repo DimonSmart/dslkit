@@ -2,15 +2,14 @@
 using System.Linq;
 using DSLKIT.Terminals;
 using DSLKIT.Test.Utils;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using static DSLKIT.Test.LexerTestData;
 
 namespace DSLKIT.Test
 {
-    [TestClass]
     public class LexerTests
     {
-        [TestMethod]
+        [Fact]
         public void LexerStreamEofTest()
         {
             var source = new StringSourceStream("A");
@@ -24,7 +23,7 @@ namespace DSLKIT.Test
                 .Dump();
         }
 
-        [TestMethod]
+        [Fact]
         public void LexerComplexTest()
         {
             new Lexer(GetSampleLexerSettings())
@@ -32,7 +31,7 @@ namespace DSLKIT.Test
                 .Dump();
         }
 
-        [TestMethod]
+        [Fact]
         public void LexerSpeedTest()
         {
             var source = new StringSourceStream(SampleCode);

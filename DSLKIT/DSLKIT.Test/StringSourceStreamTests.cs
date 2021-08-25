@@ -1,11 +1,13 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
+using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 namespace DSLKIT.Test
 {
     [TestClass]
     public class StringSourceStreamTests
     {
-        [TestMethod]
+        [Fact]
         public void NormalUseTest()
         {
             ISourceStream s = new StringSourceStream("AB");
@@ -13,7 +15,7 @@ namespace DSLKIT.Test
             Assert.AreEqual('B', s.Read());
         }
 
-        [TestMethod]
+        [Fact]
         public void DoublePeekTest()
         {
             ISourceStream s = new StringSourceStream("AB");
@@ -21,7 +23,7 @@ namespace DSLKIT.Test
             Assert.AreEqual('A', s.Peek());
         }
 
-        [TestMethod]
+        [Fact]
         public void PositionSlidingTest()
         {
             ISourceStream s = new StringSourceStream("AB");

@@ -1,12 +1,14 @@
 ﻿using DSLKIT.Terminals;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
+using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 namespace DSLKIT.Test.TerminalTests
 {
     [TestClass]
     public class IntegerTerminalTests
     {
-        [TestMethod]
+        [Fact]
         public void NormalUseTest()
         {
             var s = new StringSourceStream("123");

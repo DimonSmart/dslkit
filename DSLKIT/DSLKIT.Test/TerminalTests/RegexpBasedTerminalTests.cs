@@ -1,5 +1,7 @@
 ﻿using DSLKIT.Terminals;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
+using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 namespace DSLKIT.Test.TerminalTests
 {
@@ -11,7 +13,7 @@ namespace DSLKIT.Test.TerminalTests
             return new RegExpTerminal("Integer", @"\G\d+", null, TermFlags.None);
         }
 
-        [TestMethod]
+        [Fact]
         public void NormalUseTest()
         {
             var s = new StringSourceStream("123");
@@ -20,7 +22,7 @@ namespace DSLKIT.Test.TerminalTests
             Assert.AreEqual(3, token.Length);
         }
 
-        [TestMethod]
+        [Fact]
         public void NotMatchedUseTest()
         {
             var s = new StringSourceStream("ABC");
@@ -28,7 +30,7 @@ namespace DSLKIT.Test.TerminalTests
             Assert.AreEqual(null, token);
         }
 
-        [TestMethod]
+        [Fact]
         public void StringToTerminalTest()
         {
             var s = new StringSourceStream("ABCD");

@@ -2,37 +2,39 @@
 using DSLKIT.Test.Utils;
 using DSLKIT.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
+using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 namespace DSLKIT.Test
 {
     [TestClass]
     public class ParenthesesCheckerStreamTests
     {
-        [TestMethod]
+        [Fact]
         public void MissedCloseParenthesisTest()
         {
             ParenthesesCheckerAssertOnError(@"(");
         }
 
-        [TestMethod]
+        [Fact]
         public void NestedParenthesisMissedCloseTest()
         {
             ParenthesesCheckerAssertOnError(@"(<)");
         }
 
-        [TestMethod]
+        [Fact]
         public void MissedOpenParenthesisTest()
         {
             ParenthesesCheckerAssertOnError(@")");
         }
 
-        [TestMethod]
+        [Fact]
         public void WrongParenthesesOrderTest()
         {
             ParenthesesCheckerAssertOnError(@")(");
         }
 
-        [TestMethod]
+        [Fact]
         public void WrongParenthesesTypes()
         {
             ParenthesesCheckerAssertOnError(@"(}");

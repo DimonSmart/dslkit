@@ -1,13 +1,15 @@
 ﻿using DSLKIT.Terminals;
 using DSLKIT.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
+using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 namespace DSLKIT.Test.TerminalTests
 {
     [TestClass]
     public class MultiLineCommentTerminalTests
     {
-        [TestMethod]
+        [Fact]
         public void MultiLineCommentTerminalTest()
         {
             const string commentText = " XXX commented ";

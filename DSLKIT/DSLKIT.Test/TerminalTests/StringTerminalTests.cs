@@ -1,12 +1,14 @@
 ﻿using DSLKIT.Terminals;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
+using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 namespace DSLKIT.Test.TerminalTests
 {
     [TestClass]
     public class StringTerminalTests
     {
-        [TestMethod]
+        [Fact]
         public void NormalUseTest()
         {
             var s = new StringSourceStream("Test".DoubleQuoteIt());
@@ -19,35 +21,35 @@ namespace DSLKIT.Test.TerminalTests
             Assert.AreEqual("Test".DoubleQuoteIt(), token.OriginalString);
         }
 
-        [TestMethod]
+        [Fact]
         public void SingleQuoteStringTest()
         {
             DoStringTest(@"'Hello World'_rest of string", 0, @"Hello World", @"'", @"'");
             DoStringTest(@"1'Hello World'_rest of string", 1, @"Hello World", @"'", @"'");
         }
 
-        [TestMethod]
+        [Fact]
         public void ParenthesisQuoteStringTest()
         {
             DoStringTest(@"(Hello World)_rest of string", 0, "Hello World", "(", @")");
             DoStringTest(@"1(Hello World)_rest of string", 1, "Hello World", "(", ")");
         }
 
-        [TestMethod]
+        [Fact]
         public void CurvedBracesQuoteStringTest()
         {
             DoStringTest(@"{Hello World}'_rest of string", 0, @"Hello World", @"{", @"}");
             DoStringTest(@"1{Hello World}'_rest of string", 1, @"Hello World", @"{", @"}");
         }
 
-        [TestMethod]
+        [Fact]
         public void BracketQuoteStringTest()
         {
             DoStringTest(@"[Hello World]'_rest of string", 0, @"Hello World", @"[", @"]");
             DoStringTest(@"1[Hello World]'_rest of string", 1, @"Hello World", @"[", @"]");
         }
 
-        [TestMethod]
+        [Fact]
         public void PrefixedStringTest()
         {
             DoStringTest(@"$[Hello World]'_rest of string", 0, @"Hello World", @"$[", @"]");
