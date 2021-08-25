@@ -20,7 +20,11 @@ jobs:
           name: Run tests
           command: |
             dotnet test
-            
+
+       # Upload test results
+      - store_test_results:
+          path: /tmp/test-reports
+           
 
 workflows:
   # Below is the definition of your workflow.
