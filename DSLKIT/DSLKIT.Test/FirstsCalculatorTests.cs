@@ -49,7 +49,8 @@ namespace DSLKIT.Test
                         fext.Where(i => i.Key == key).Distinct().Should().HaveCount(1);
                     };
 
-                    string.Join(";", fext.Select(d => $"{d.Key}={d.Value}").OrderBy(s => s))
+                    var firstsAsText = string.Join(";", fext.Select(d => $"{d.Key}={d.Value}").OrderBy(s => s));
+                    firstsAsText
                         .Should()
                         .BeEquivalentTo(expectedFirsts);
                 })
