@@ -1,38 +1,18 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using ConsoleTableExt;
-using DSLKIT.Base;
 using DSLKIT.Parser;
 
 namespace DSLKIT.Test.Transformers
 {
     public static class TranslationTable2Text
     {
-        public static string Transform(TranslationTable translationTable, string order)
+        public static string Transform(TranslationTable translationTable)
         {
-            var columns = new List<ITerm>();
-            var tempColumns = translationTable.GetAllTerms()
+            var columns = translationTable.GetAllTerms()
                 .Union(translationTable.GetDestinationSets()
                     .SelectMany(i => i.Rules, (i, rules) => rules.Production.LeftNonTerminal))
                 .Distinct().ToList();
-            if (string.IsNullOrEmpty(order))
-            {
-                columns = tempColumns;
-            }
-            else
-            {
-                foreach (var example in order.Split(' '))
-                {
-                    var term = tempColumns.SingleOrDefault(i => i.Name == example);
-                    if (term != null)
-                    {
-                        columns.Add(term);
-                        tempColumns.Remove(term);
-                    }
-                }
-
-                columns.AddRange(tempColumns);
-            }
 
             var data = new List<List<object>>();
             foreach (var set in translationTable.GetAllSets()

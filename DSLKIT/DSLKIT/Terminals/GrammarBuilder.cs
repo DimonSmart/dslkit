@@ -79,7 +79,15 @@ namespace DSLKIT.Terminals
             var follows = new FollowCalculator(root, _eof, exProductions, firsts).Calculate();
             OnFollowsCreated?.Invoke(follows);
 
-            var actionAndGotoTable = new ActionAndGotoTableBuilder(root, ruleSets, translationTable).Build();
+            var actionAndGotoTable = new ActionAndGotoTableBuilder(
+                root,
+                exProductions,
+                follows,
+                ruleSets,
+                translationTable,
+                OnReductionStep0,
+                OnReductionStep1)
+                .Build();
 
             return new Grammar(_name,
                 root: root,
@@ -143,15 +151,27 @@ namespace DSLKIT.Terminals
             return this;
         }
 
-        public GrammarBuilder WithOnFirstsCreated(FirstsCreated evt)
+        public GrammarBuilder WithOnFirstsCreated(FirstsCreated firstsCreated)
         {
-            OnFirstsCreated += evt;
+            OnFirstsCreated += firstsCreated;
             return this;
         }
 
-        public GrammarBuilder WithOnFollowsCreated(FollowsCreated evt)
+        public GrammarBuilder WithOnFollowsCreated(FollowsCreated followsCreated)
         {
-            OnFollowsCreated += evt;
+            OnFollowsCreated += followsCreated;
+            return this;
+        }
+
+        public GrammarBuilder WithOnReductionStep0(ReductionStep0 reductionStep0)
+        {
+            OnReductionStep0 += reductionStep0;
+            return this;
+        }
+
+        public GrammarBuilder WithOnReductionStep1(ReductionStep1 reductionStep1)
+        {
+            OnReductionStep1 += reductionStep1;
             return this;
         }
 
@@ -218,6 +238,13 @@ namespace DSLKIT.Terminals
 
         public delegate void FollowsCreated(IDictionary<IExNonTerminal, IList<ITerm>> follows);
         public event FollowsCreated OnFollowsCreated;
+
+        public delegate void ReductionStep0(Dictionary<ExProduction, IList<ITerm>> rule2FollowSet);
+        public event ReductionStep0 OnReductionStep0;
+
+        public delegate void ReductionStep1(IEnumerable<ActionAndGotoTableBuilder.MergedRow> mergedRows);
+        public event ReductionStep1 OnReductionStep1;
+
         #endregion
     }
 }

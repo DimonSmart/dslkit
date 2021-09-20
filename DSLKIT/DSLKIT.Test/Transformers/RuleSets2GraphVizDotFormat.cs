@@ -18,7 +18,7 @@ namespace DSLKIT.Test.Transformers
                 sb.AppendLine($@"""state{set.SetNumber}"" [style = ""filled, bold"" penwidth = 5 fillcolor = ""white"" fontname = ""Courier New"" shape = ""Mrecord"" label = <<table border = ""0"" cellborder = ""0"" cellpadding = ""3"" bgcolor = ""white"" > ");
                 sb.AppendLine($@"<tr><td bgcolor=""black"" align=""center"" colspan=""2""><font color=""white"">Set #{set.SetNumber}</font></td></tr>");
 
-                int form = 0;
+                var form = 0;
                 foreach (var rule in set.Rules)
                 {
                     var ruleText = (form >= set.SetFormRules ? "+" : " ") + rule;

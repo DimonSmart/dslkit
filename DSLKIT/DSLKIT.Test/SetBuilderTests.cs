@@ -23,8 +23,8 @@ namespace DSLKIT.Test
         [InlineData("javatpoint", "S' → S; S → A A;A → a A;A → b", "S'")]
         // https://web.cs.dal.ca/~sjackson/lalr1.html with epsilon
         [InlineData("sjackson_with_ε", "S → N;N → V = E;N → E;E → V;V → x;V → * E;V → ε", "S")]
-        public void SetBuilderTest(string grammarName, string grammarDefinition, string rootName, string order = null,
-            string subst = null)
+        public void SetBuilderTest(string grammarName, string grammarDefinition, string rootName,
+            string order = null, string subst = null)
         {
             var grammar = new GrammarBuilder()
                 .WithGrammarName(grammarName)
@@ -42,7 +42,7 @@ namespace DSLKIT.Test
                 .WithOnTranslationTableCreated(translationTable =>
                 {
                     File.WriteAllText($"{grammarName}_TranslationTable.txt",
-                        TranslationTable2Text.Transform(translationTable, order));
+                        TranslationTable2Text.Transform(translationTable));
                 })
                 .WithOnExtendedGrammarCreated(exProductions =>
                 {
@@ -53,6 +53,17 @@ namespace DSLKIT.Test
                 {
                     File.WriteAllText($"{grammarName}_Firsts.txt",
                         Firsts2Text.Transform(firsts));
+                })
+                .WithOnReductionStep0(rule2FollowSet =>
+                {
+                    File.WriteAllText($"{grammarName}_ReductionStep0.txt",
+                        Rule2FollowSet2Text.Transform(rule2FollowSet));
+                }
+                )
+                .WithOnReductionStep1(mergedRows =>
+                {
+                    File.WriteAllText($"{grammarName}_ReductionStep1.txt",
+                        MergedRows2Text.Transform(mergedRows));
                 })
                 .BuildGrammar(rootName);
 

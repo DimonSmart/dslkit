@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text;
 using DSLKIT.Parser.ExtendedGrammar;
 
 namespace DSLKIT.Test.Transformers
@@ -7,7 +8,14 @@ namespace DSLKIT.Test.Transformers
     {
         public static string Transform(IEnumerable<ExProduction> exProductions)
         {
-            return string.Join(System.Environment.NewLine, exProductions);
+            var sb = new StringBuilder();
+            var i = 0;
+            foreach (var exProduction in exProductions)
+            {
+                sb.AppendLine($"{i++}. {exProduction}");
+            }
+
+            return sb.ToString();
         }
     }
 }
