@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using DSLKIT.Lexer;
 using DSLKIT.Test.Utils;
 using DSLKIT.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -42,7 +43,7 @@ namespace DSLKIT.Test
 
         private static void ParenthesesCheckerAssertOnError(string src)
         {
-            var stream = new Lexer(LexerTestData.GetSampleLexerSettings())
+            var stream = new Lexer.Lexer(LexerTestData.GetSampleLexerSettings())
                 .GetTokens(new StringSourceStream(src))
                 .WithParenthesesChecking()
                 .ToList();

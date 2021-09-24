@@ -1,4 +1,5 @@
-﻿using DSLKIT.Base;
+﻿using System;
+using DSLKIT.Base;
 using DSLKIT.NonTerminals;
 using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
@@ -18,7 +19,7 @@ namespace DSLKIT.Parser.ExtendedGrammar
                 case IEmptyTerm empty:
                     return empty.ToExEmpty(from, to);
                 default:
-                    throw new System.InvalidOperationException(nameof(ToExTerm));
+                    throw new InvalidOperationException(nameof(ToExTerm));
             }
         }
 

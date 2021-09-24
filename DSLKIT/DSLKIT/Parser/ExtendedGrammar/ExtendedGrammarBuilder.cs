@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace DSLKIT.Parser.ExtendedGrammar
@@ -16,7 +17,8 @@ namespace DSLKIT.Parser.ExtendedGrammar
             }
         }
 
-        public static ExProduction CreateExtendedGrammarProduction(RuleSet set, Production production, TranslationTable translationTable)
+        public static ExProduction CreateExtendedGrammarProduction(RuleSet set, Production production,
+            TranslationTable translationTable)
         {
             translationTable.TryGetValue(production.LeftNonTerminal, set, out var startRuleSet);
 
@@ -30,10 +32,13 @@ namespace DSLKIT.Parser.ExtendedGrammar
                 currentSet = nextSet;
                 if (currentSet == null)
                 {
-                    throw new System.Exception($"CreateExtendedGrammarProduction failed for set:{set.SetNumber}, Production:{production}");
+                    throw new Exception(
+                        $"CreateExtendedGrammarProduction failed for set:{set.SetNumber}, Production:{production}");
                 }
             }
-            return new ExProduction(production, production.LeftNonTerminal.ToExNonTerminal(set, startRuleSet), exProductionDefinition);
+
+            return new ExProduction(production, production.LeftNonTerminal.ToExNonTerminal(set, startRuleSet),
+                exProductionDefinition);
         }
     }
 }

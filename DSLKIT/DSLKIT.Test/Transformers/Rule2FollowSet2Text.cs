@@ -14,13 +14,10 @@ namespace DSLKIT.Test.Transformers
 
             foreach (var rule2Follow in rule2FollowSet)
             {
-                var row = new List<object> {
-                    i++,
-                    rule2Follow.Key,
-                    string.Join(", ", rule2Follow.Value)
-                };
+                var row = new List<object> { i++, rule2Follow.Key, string.Join(", ", rule2Follow.Value) };
                 data.Add(row);
             }
+
             return ConsoleTableBuilder.From(data)
                 .WithColumn(new List<string> { "Number", "Rule", "Follow Set" })
                 .Export().ToString();

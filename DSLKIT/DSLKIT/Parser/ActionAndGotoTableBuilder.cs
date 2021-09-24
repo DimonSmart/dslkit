@@ -17,6 +17,9 @@ namespace DSLKIT.Parser
         private readonly TranslationTable _translationTable;
         private ActionAndGotoTable _actionAndGotoTable;
 
+        public GrammarBuilder.ReductionStep0 OnReductionStep0 { get; }
+        public GrammarBuilder.ReductionStep1 OnReductionStep1 { get; }
+
         public ActionAndGotoTableBuilder(INonTerminal root,
             List<ExProduction> exProductions,
             IDictionary<IExNonTerminal, IList<ITerm>> follows,
@@ -34,9 +37,6 @@ namespace DSLKIT.Parser
             OnReductionStep0 = onReductionStep0;
             OnReductionStep1 = onReductionStep1;
         }
-
-        public GrammarBuilder.ReductionStep0 OnReductionStep0 { get; }
-        public GrammarBuilder.ReductionStep1 OnReductionStep1 { get; }
 
         public ActionAndGotoTable Build()
         {

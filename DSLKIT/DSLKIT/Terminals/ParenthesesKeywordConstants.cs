@@ -20,7 +20,6 @@ namespace DSLKIT.Terminals
                 [OpenSquareBracket] = CloseSquareBracket,
                 [OpenCurlyBracket] = CloseCurlyBracket,
                 [OpenAngleBracket] = CloseAngleBracket,
-
                 [CloseParenthesis] = OpenParenthesis,
                 [CloseSquareBracket] = OpenSquareBracket,
                 [CloseCurlyBracket] = OpenCurlyBracket,

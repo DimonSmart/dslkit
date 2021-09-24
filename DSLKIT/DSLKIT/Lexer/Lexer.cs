@@ -4,7 +4,7 @@ using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
 using DSLKIT.Tokens;
 
-namespace DSLKIT
+namespace DSLKIT.Lexer
 {
     public class Lexer
     {
@@ -40,11 +40,7 @@ namespace DSLKIT
                     .AsReadOnly();
                 if (!matches.Any())
                 {
-                    yield return new ErrorToken("No terminal found")
-                    {
-                        Length = 0,
-                        Position = source.Position
-                    };
+                    yield return new ErrorToken("No terminal found") { Length = 0, Position = source.Position };
                     yield break;
                 }
 

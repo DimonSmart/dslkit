@@ -2,7 +2,7 @@
 using DSLKIT.Terminals;
 using DSLKIT.Tokens;
 
-namespace DSLKIT
+namespace DSLKIT.Lexer
 {
     public class ParenthesesCheckedStream : LexerStreamBase
     {

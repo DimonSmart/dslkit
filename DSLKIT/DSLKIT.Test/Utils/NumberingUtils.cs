@@ -11,6 +11,7 @@ namespace DSLKIT.Test.Utils
             {
                 return null;
             }
+
             return subst
                 .Split(' ')
                 .Select(s => s.Split('=').Select(int.Parse).ToArray())

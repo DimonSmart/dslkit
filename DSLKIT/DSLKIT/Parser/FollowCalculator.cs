@@ -9,23 +9,26 @@ using DSLKIT.SpecialTerms;
 namespace DSLKIT.Parser
 {
     /// <summary>
-    /// Conventions: a, b, and c represent a terminal or non-terminal.
-    /// a* represents zero or more terminals or non-terminals (possibly both).
-    /// a+ represents one or more...
-    /// D is a non-terminal.
-    /// 1. Place an End of Input token($) into the Root rule's follow set.
-    /// 2. Suppose we have a rule R → a* Db. Everything in First(b)(except ε) is added to Follow(D).
-    /// 2.1 If First(b) contains ε then everything in Follow(R) is put in Follow(D).
-    /// 3. Finally, if we have a rule R → a* D, then everything in Follow(R) is placed in Follow(D).
-    /// 4. The Follow set of a terminal is an empty set.
+    ///     Conventions: a, b, and c represent a terminal or non-terminal.
+    ///     a* represents zero or more terminals or non-terminals (possibly both).
+    ///     a+ represents one or more...
+    ///     D is a non-terminal.
+    ///     1. Place an End of Input token($) into the Root rule's follow set.
+    ///     2. Suppose we have a rule R → a* Db. Everything in First(b)(except ε) is added to Follow(D).
+    ///     2.1 If First(b) contains ε then everything in Follow(R) is put in Follow(D).
+    ///     3. Finally, if we have a rule R → a* D, then everything in Follow(R) is placed in Follow(D).
+    ///     4. The Follow set of a terminal is an empty set.
     /// </summary>
     public class FollowCalculator
     {
-        private readonly INonTerminal _root;
         private readonly IEofTerminal _eof;
         private readonly IEnumerable<ExProduction> _exProductions;
         private readonly IDictionary<IExNonTerminal, IList<ITerm>> _firsts;
-        private readonly Dictionary<IExNonTerminal, IList<ITerm>> _follow = new Dictionary<IExNonTerminal, IList<ITerm>>();
+
+        private readonly Dictionary<IExNonTerminal, IList<ITerm>> _follow =
+            new Dictionary<IExNonTerminal, IList<ITerm>>();
+
+        private readonly INonTerminal _root;
 
 
         public FollowCalculator(INonTerminal root, IEofTerminal eof,
@@ -58,7 +61,6 @@ namespace DSLKIT.Parser
                         // Everything in First(B)(except for ε) is added to Follow(D).
                         for (var i = 0; i < rule.Count - 1; i++)
                         {
-
                             var termD = rule[i];
                             var termB = rule[i + 1];
                             if (termD is IExNonTerminal exNonTerminalD)
@@ -73,7 +75,6 @@ namespace DSLKIT.Parser
                         // 2.1 If First(B) contains ε then everything in Follow(R) is put in Follow(D)
                         for (var i = rule.Count - 2; i > 0; i--)
                         {
-
                             var termD = rule[i];
                             var termB = rule[i + 1];
 

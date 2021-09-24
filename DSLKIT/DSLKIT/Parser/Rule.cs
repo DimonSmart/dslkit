@@ -7,16 +7,16 @@ namespace DSLKIT.Parser
 {
     public class Rule : IEnumerable<Rule>
     {
+        public int DotPosition { get; }
+        public Production Production { get; }
+        public bool IsFinished => DotPosition == Production.ProductionDefinition.Count;
+        public ITerm NextTerm => Production.ProductionDefinition[DotPosition];
+
         public Rule(Production production, int dotPosition = 0)
         {
             Production = production;
             DotPosition = dotPosition;
         }
-
-        public int DotPosition { get; }
-        public Production Production { get; }
-        public bool IsFinished => DotPosition == Production.ProductionDefinition.Count;
-        public ITerm NextTerm => Production.ProductionDefinition[DotPosition];
 
         public IEnumerator<Rule> GetEnumerator()
         {
@@ -52,10 +52,7 @@ namespace DSLKIT.Parser
 
         public override int GetHashCode()
         {
-            var hashCode = -1803403243;
-            hashCode = hashCode * -1521134295 + DotPosition.GetHashCode();
-            hashCode = hashCode * -1521134295 + EqualityComparer<Production>.Default.GetHashCode(Production);
-            return hashCode;
+            return HashCode.Combine(DotPosition, Production);
         }
 
         public static bool operator ==(Rule left, Rule right)

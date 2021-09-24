@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using DSLKIT.Base;
+using DSLKIT.Helpers;
 using DSLKIT.Parser;
 using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
@@ -16,12 +17,14 @@ namespace DSLKIT.Test
         {
             _testOutputHelper = testOutputHelper;
         }
+
         protected static void ShowGrammar(IGrammar grammar)
         {
             Console.WriteLine(GrammarVisualizer.DumpGrammar(grammar));
         }
 
-        protected static Dictionary<string, List<ITerm>> GetSet(Dictionary<string, ITerminal> terminals, string setLines,
+        protected static Dictionary<string, List<ITerm>> GetSet(Dictionary<string, ITerminal> terminals,
+            string setLines,
             string[] delimiter = null)
         {
             if (delimiter == null)

@@ -13,12 +13,9 @@ namespace DSLKIT.Test
         public void LexerStreamEofTest()
         {
             var source = new StringSourceStream("A");
-            var lexerData = new LexerSettings
-            {
-                new KeywordTerminal("A")
-            };
+            var lexerData = new LexerSettings { new KeywordTerminal("A") };
 
-            new Lexer(lexerData)
+            new Lexer.Lexer(lexerData)
                 .GetTokens(source)
                 .Dump();
         }
@@ -26,7 +23,7 @@ namespace DSLKIT.Test
         [Fact]
         public void LexerComplexTest()
         {
-            new Lexer(GetSampleLexerSettings())
+            new Lexer.Lexer(GetSampleLexerSettings())
                 .GetTokens(new StringSourceStream(SampleCode))
                 .Dump();
         }
@@ -38,10 +35,10 @@ namespace DSLKIT.Test
             var lexerData = GetSampleLexerSettings();
 
             Debug.WriteLine("Lexer speed test");
-            LexerTestRun(source, new Lexer(lexerData));
+            LexerTestRun(source, new Lexer.Lexer(lexerData));
         }
 
-        private static void LexerTestRun(StringSourceStream source, Lexer lexer)
+        private static void LexerTestRun(StringSourceStream source, Lexer.Lexer lexer)
         {
             var stopWatch = new Stopwatch();
             stopWatch.Start();

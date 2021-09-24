@@ -56,7 +56,8 @@ namespace DSLKIT.Test.TerminalTests
             DoStringTest(@"$""Hello World""'_rest of string", 0, @"Hello World", @"$""", @"""");
         }
 
-        private void DoStringTest(string stringToTest, int startPosition, string expectedString, string start, string end)
+        private void DoStringTest(string stringToTest, int startPosition, string expectedString, string start,
+            string end)
         {
             var stream = new StringSourceStream(stringToTest);
             stream.Seek(startPosition);

@@ -28,7 +28,8 @@ namespace DSLKIT.Parser
         private void AddFirstSets(IExNonTerminal startExNonTerminal = null)
         {
             foreach (var exProduction in _exProductions
-                .Where(p => (startExNonTerminal == null || p.ExLeftNonTerminal.Equals(startExNonTerminal)) && !_searchStack.Contains(p)))
+                .Where(p => (startExNonTerminal == null || p.ExLeftNonTerminal.Equals(startExNonTerminal)) &&
+                            !_searchStack.Contains(p)))
             {
                 var allRulesContainsEpsilon = true;
                 foreach (var exTerm in exProduction.ExProductionDefinition)

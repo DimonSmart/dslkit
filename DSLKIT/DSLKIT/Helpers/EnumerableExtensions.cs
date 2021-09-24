@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace DSLKIT
+namespace DSLKIT.Helpers
 {
     public static class EnumerableExtensions
     {

@@ -7,10 +7,10 @@ namespace DSLKIT.Parser
 {
     public class RuleSet
     {
-        public int SetNumber { get; set; }
         public readonly IList<Rule> Rules = new List<Rule>();
         public IDictionary<ITerm, RuleSet> Arrows = new Dictionary<ITerm, RuleSet>();
         public int SetFormRules;
+        public int SetNumber { get; set; }
 
         public RuleSet(int setNumber, IEnumerable<Rule> rules)
         {
@@ -34,6 +34,7 @@ namespace DSLKIT.Parser
             {
                 return false;
             }
+
             for (var i = 0; i < otherRules.Length; i++)
             {
                 if (Rules[i] != otherRules[i])
@@ -41,6 +42,7 @@ namespace DSLKIT.Parser
                     return false;
                 }
             }
+
             return true;
         }
     }

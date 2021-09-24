@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using DSLKIT.Base;
+using DSLKIT.Helpers;
 using DSLKIT.NonTerminals;
 
 namespace DSLKIT.Parser
@@ -15,6 +16,11 @@ namespace DSLKIT.Parser
         public readonly Dictionary<KeyValuePair<INonTerminal, RuleSet>, RuleSet> GotoTable =
             new Dictionary<KeyValuePair<INonTerminal, RuleSet>, RuleSet>();
 
+        public ActionAndGotoTable(INonTerminal root)
+        {
+            _root = root;
+        }
+
         public IEnumerable<INonTerminal> GetGotoColumns()
         {
             return _root.Union(GotoTable.Keys.Select(i => i.Key)).Distinct();
@@ -24,8 +30,6 @@ namespace DSLKIT.Parser
         {
             return ActionTable.Keys.Select(i => i.Key).Distinct();
         }
-
-        public ActionAndGotoTable(INonTerminal root) => _root = root;
 
         public IEnumerable<RuleSet> GetAllSets()
         {

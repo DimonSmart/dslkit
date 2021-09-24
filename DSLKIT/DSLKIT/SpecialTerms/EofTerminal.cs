@@ -6,16 +6,18 @@ namespace DSLKIT.SpecialTerms
 {
     public class EofTerminal : IEofTerminal
     {
-        private static readonly Lazy<IEofTerminal>
-          LazyEofTerminal = new Lazy<IEofTerminal>(() => new EofTerminal());
+        private static readonly Lazy<IEofTerminal> LazyEofTerminal =
+            new Lazy<IEofTerminal>(() => new EofTerminal());
+
         public static IEofTerminal Instance => LazyEofTerminal.Value;
+
+        private EofTerminal()
+        {
+        }
 
         public string Name => "Eof";
         public TermFlags Flags => TermFlags.None;
         public TerminalPriority Priority => TerminalPriority.High;
-        private EofTerminal()
-        {
-        }
 
         public bool CanStartWith(char c)
         {

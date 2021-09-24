@@ -9,6 +9,8 @@ namespace DSLKIT.Parser
     {
         private readonly Dictionary<KeyValuePair<ITerm, RuleSet>, RuleSet> _table;
 
+        public RuleSet this[ITerm x, RuleSet y] => _table[new KeyValuePair<ITerm, RuleSet>(x, y)];
+
         public TranslationTable(Dictionary<KeyValuePair<ITerm, RuleSet>, RuleSet> table)
         {
             _table = table;
@@ -18,8 +20,6 @@ namespace DSLKIT.Parser
         {
             return new ReadOnlyDictionary<KeyValuePair<ITerm, RuleSet>, RuleSet>(_table);
         }
-
-        public RuleSet this[ITerm x, RuleSet y] => _table[new KeyValuePair<ITerm, RuleSet>(x, y)];
 
         public bool TryGetValue(ITerm x, RuleSet y, out RuleSet result)
         {

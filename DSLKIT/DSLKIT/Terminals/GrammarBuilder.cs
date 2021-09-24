@@ -22,9 +22,9 @@ namespace DSLKIT.Terminals
         private readonly ConcurrentDictionary<string, ITerminal> _terminals =
             new ConcurrentDictionary<string, ITerminal>();
 
-        private string _name;
-
         private IEofTerminal _eof = EofTerminal.Instance;
+
+        private string _name;
 
         public INonTerminal GetOrAddNonTerminal(string nonTerminalName)
         {
@@ -80,26 +80,26 @@ namespace DSLKIT.Terminals
             OnFollowsCreated?.Invoke(follows);
 
             var actionAndGotoTable = new ActionAndGotoTableBuilder(
-                root,
-                exProductions,
-                follows,
-                ruleSets,
-                translationTable,
-                OnReductionStep0,
-                OnReductionStep1)
+                    root,
+                    exProductions,
+                    follows,
+                    ruleSets,
+                    translationTable,
+                    OnReductionStep0,
+                    OnReductionStep1)
                 .Build();
 
             return new Grammar(_name,
-                root: root,
-                terminals: _terminals.Values,
-                nonTerminals: _nonTerminals.Values.AsEnumerable(),
-                productions: _productions,
-                exProductions: exProductions,
-                firsts: new ReadOnlyDictionary<IExNonTerminal, IList<ITerm>>(firsts),
-                follows: new ReadOnlyDictionary<IExNonTerminal, IList<ITerm>>(follows),
-                ruleSets: ruleSets,
-                translationTable: translationTable,
-                actionAndGotoTable: actionAndGotoTable);
+                root,
+                _terminals.Values,
+                _nonTerminals.Values.AsEnumerable(),
+                _productions,
+                exProductions,
+                new ReadOnlyDictionary<IExNonTerminal, IList<ITerm>>(firsts),
+                new ReadOnlyDictionary<IExNonTerminal, IList<ITerm>>(follows),
+                ruleSets,
+                translationTable,
+                actionAndGotoTable);
         }
 
         private INonTerminal GetRootNonTerminal(string rootProductionName)
@@ -224,25 +224,33 @@ namespace DSLKIT.Terminals
         }
 
         #region Events
+
         public delegate void RuleSetCreated(List<RuleSet> ruleSets);
+
         public event RuleSetCreated OnRuleSetCreated;
 
         public delegate void TranslationTableCreated(TranslationTable translationTable);
+
         public event TranslationTableCreated OnTranslationTableCreated;
 
         public delegate void ExtendedGrammarCreated(List<ExProduction> exProductions);
+
         public event ExtendedGrammarCreated OnExtendedGrammarCreated;
 
         public delegate void FirstsCreated(IDictionary<IExNonTerminal, IList<ITerm>> firsts);
+
         public event FirstsCreated OnFirstsCreated;
 
         public delegate void FollowsCreated(IDictionary<IExNonTerminal, IList<ITerm>> follows);
+
         public event FollowsCreated OnFollowsCreated;
 
         public delegate void ReductionStep0(Dictionary<ExProduction, IList<ITerm>> rule2FollowSet);
+
         public event ReductionStep0 OnReductionStep0;
 
         public delegate void ReductionStep1(IEnumerable<ActionAndGotoTableBuilder.MergedRow> mergedRows);
+
         public event ReductionStep1 OnReductionStep1;
 
         #endregion

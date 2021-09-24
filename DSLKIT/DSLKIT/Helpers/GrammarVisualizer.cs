@@ -2,7 +2,7 @@
 using System.Text;
 using DSLKIT.Parser;
 
-namespace DSLKIT
+namespace DSLKIT.Helpers
 {
     public static class GrammarVisualizer
     {
@@ -57,6 +57,7 @@ namespace DSLKIT
                 sb.AppendLine($"{first.Key.Term.Name} : \t{firstsSet}");
             }
         }
+
         private static void DumpFollow(IGrammar grammar, StringBuilder sb)
         {
             sb.AppendLine($"Follow: {grammar.Follows.Count}");

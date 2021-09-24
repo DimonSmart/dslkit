@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using DSLKIT.Terminals;
 using FluentAssertions;
@@ -42,13 +41,13 @@ namespace DSLKIT.Test
                     var fext = f.Select(i => new KeyValuePair<string, string>(
                         i.Key.Term.Name,
                         string.Join(",", i.Value.Select(j => j.Name).OrderBy(j => j))
-                        )).Distinct().ToList();
+                    )).Distinct().ToList();
 
                     var keys = fext.Select(i => i.Key).Distinct();
                     foreach (var key in keys)
                     {
                         fext.Where(i => i.Key == key).Distinct().Should().HaveCount(1);
-                    };
+                    }
 
                     var firstsAsText = string.Join(";", fext.OrderBy(s => s.Key).Select(d => $"{d.Key}={d.Value}"));
                     firstsAsText

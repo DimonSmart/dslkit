@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using DSLKIT.Tokens;
 
-namespace DSLKIT
+namespace DSLKIT.Lexer
 {
     public static class ParenthesesCheckedStreamCreator
     {

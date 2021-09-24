@@ -3,7 +3,6 @@ using DSLKIT.Parser;
 using DSLKIT.Terminals;
 using Xunit;
 using Xunit.Abstractions;
-using static DSLKIT.Test.Constants;
 
 namespace DSLKIT.Test
 {
@@ -34,7 +33,7 @@ namespace DSLKIT.Test
                 .AddProduction("Root")
                 .AddProductionDefinition("=", "TEST", "(", "Value".AsNonTerminal(), ")")
                 .AddProduction("Value")
-                .AddProductionDefinition(Integer)
+                .AddProductionDefinition(Constants.Integer)
                 .AddProduction("Value")
                 .AddProductionDefinition(Constants.String)
                 .BuildGrammar();
@@ -45,9 +44,9 @@ namespace DSLKIT.Test
             return new GrammarBuilder()
                 .WithGrammarName("Test grammar")
                 .AddProduction("Multiplication")
-                .AddProductionDefinition("MUL", "(", Integer, ",", Integer, ")")
+                .AddProductionDefinition("MUL", "(", Constants.Integer, ",", Constants.Integer, ")")
                 .AddProduction("Division")
-                .AddProductionDefinition("DIV", "(", Integer, ",", Integer, ")")
+                .AddProductionDefinition("DIV", "(", Constants.Integer, ",", Constants.Integer, ")")
                 .BuildGrammar();
         }
     }

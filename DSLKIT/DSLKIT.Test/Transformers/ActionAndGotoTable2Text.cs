@@ -31,6 +31,7 @@ namespace DSLKIT.Test.Transformers
                         ? ruleSet.SetNumber.ToString()
                         : string.Empty);
                 }
+
                 data.Add(row);
             }
 
@@ -38,6 +39,5 @@ namespace DSLKIT.Test.Transformers
                 .WithColumn(new List<string> { "" }.Union(actionColumns).Union(gotoColumns).ToList())
                 .Export().ToString();
         }
-
     }
 }
