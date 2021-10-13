@@ -2,6 +2,7 @@
 using System.Linq;
 using DSLKIT.Terminals;
 using DSLKIT.Test.Utils;
+using Snapshooter.Xunit;
 using Xunit;
 using static DSLKIT.Test.LexerTestData;
 
@@ -23,9 +24,13 @@ namespace DSLKIT.Test
         [Fact]
         public void LexerComplexTest()
         {
-            new Lexer.Lexer(GetSampleLexerSettings())
-                .GetTokens(new StringSourceStream(SampleCode))
-                .Dump();
+            var tokens = new Lexer.Lexer(GetSampleLexerSettings())
+                .GetTokens(new StringSourceStream(SampleCode)).ToList();
+                
+            tokens.Dump();
+
+            // assert
+            Snapshot.Match(tokens);
         }
 
         [Fact]
