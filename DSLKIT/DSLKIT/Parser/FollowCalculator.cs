@@ -73,7 +73,7 @@ namespace DSLKIT.Parser
                         // Add back cycle with epsilon checking
                         // 2.Suppose we have a rule R → a* DB.
                         // 2.1 If First(B) contains ε then everything in Follow(R) is put in Follow(D)
-                        for (var i = rule.Count - 2; i > 0; i--)
+                        for (var i = rule.Count - 2; i >= 0; i--)
                         {
                             var termD = rule[i];
                             var termB = rule[i + 1];
@@ -81,7 +81,7 @@ namespace DSLKIT.Parser
                             var firstsOfBHasEpsilon = GetFirsts(termB).Any(f => f is EmptyTerm);
                             if (firstsOfBHasEpsilon && termD is IExNonTerminal exNonTerminalD)
                             {
-                                updated |= AddFollow(exNonTerminalD, GetFollow(exNonTerminalD));
+                                updated |= AddFollow(exNonTerminalD, GetFollow(r));
                             }
                             else
                             {
