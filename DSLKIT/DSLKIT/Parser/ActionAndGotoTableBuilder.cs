@@ -48,6 +48,7 @@ namespace DSLKIT.Parser
             _actionAndGotoTable = Initialize();
             BuildGotos();
             BuildShifts();
+            BuildReductions();
             ReductionsSubStep1();
             return _actionAndGotoTable;
         }
@@ -151,11 +152,79 @@ namespace DSLKIT.Parser
             }
         }
 
+        /// <summary>
+        ///     For each RuleSet, find rules of the form A → α •. For such rules:
+        ///     Get FOLLOW(A) from computed follow sets and add reduce actions to the ActionTable.
+        /// </summary>
+        private void BuildReductions()
+        {
+            foreach (var ruleSet in _ruleSets)
+            {
+                // Find rules where the dot is at the end (A → α •)
+                var finishedRules = ruleSet.Rules.Where(rule => rule.IsFinished);
+                
+                foreach (var rule in finishedRules)
+                {
+                    // Skip the starting rule (it should have AcceptAction, not ReduceAction)
+                    if (rule.Production.LeftNonTerminal == _root)
+                    {
+                        continue;
+                    }
+
+                    // Find the corresponding ExNonTerminal for this rule's left side
+                    var exNonTerminal = _exProductions
+                        .Where(exProd => exProd.ExLeftNonTerminal.NonTerminal == rule.Production.LeftNonTerminal)
+                        .Select(exProd => exProd.ExLeftNonTerminal)
+                        .FirstOrDefault();
+
+                    if (exNonTerminal == null)
+                    {
+                        continue;
+                    }
+
+                    // Get FOLLOW set for this non-terminal
+                    if (!_follows.TryGetValue(exNonTerminal, out var followSet))
+                    {
+                        continue;
+                    }
+
+                    // Create reduce action
+                    var reduceAction = new ReduceAction(rule.Production, rule.Production.ProductionDefinition.Count);
+
+                    // Add reduce action for each terminal in FOLLOW set
+                    foreach (var followTerm in followSet)
+                    {
+                        if (followTerm is ITerminal terminal)
+                        {
+                            var key = new KeyValuePair<ITerm, RuleSet>(terminal, ruleSet);
+                            
+                            // Check for conflicts
+                            if (_actionAndGotoTable.ActionTable.ContainsKey(key))
+                            {
+                                var existingAction = _actionAndGotoTable.ActionTable[key];
+                                var conflictType = existingAction is ShiftAction ? "shift/reduce" : "reduce/reduce";
+                                
+                                // Output diagnostic about conflict
+                                System.Diagnostics.Debug.WriteLine(
+                                    $"Conflict detected: {conflictType} conflict for terminal '{terminal.Name}' " +
+                                    $"in state {ruleSet.SetNumber}. " +
+                                    $"Existing: {existingAction}, New: {reduceAction}");
+                                
+                                // For now, keep the existing action (could be configurable)
+                                continue;
+                            }
+
+                            _actionAndGotoTable.ActionTable[key] = reduceAction;
+                        }
+                    }
+                }
+            }
+        }
+
         private bool ContainStartingRuleWithPointerAtTheEnd(RuleSet ruleSet)
         {
             return ruleSet.Rules.Any(rule => rule.IsFinished && rule.Production.LeftNonTerminal == _root);
         }
-
 
         public class MergedRow
         {
