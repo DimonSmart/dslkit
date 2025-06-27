@@ -64,8 +64,16 @@ namespace DSLKIT.Terminals
         public Grammar BuildGrammar(string rootProductionName = null)
         {
             var root = GetRootNonTerminal(rootProductionName);
-            var ruleSets = new ItemSetsBuilder(_productions, root).Build().ToList();
-            OnRuleSetCreated?.Invoke(ruleSets);
+            var lr1ItemSets = new ItemSetsBuilder(_productions, root).Build().ToList();
+            OnRuleSetCreated?.Invoke(lr1ItemSets);
+
+            // LALR state merging: combine LR(1) item sets with identical cores
+            var lalrMerger = new LALRStateMerger(lr1ItemSets);
+            var mergeResult = lalrMerger.MergeStates();
+            OnLALRMergeCompleted?.Invoke(mergeResult);
+            
+            // Use merged LALR states for further processing
+            var ruleSets = mergeResult.LALRStates.ToList();
 
             var translationTable = TranslationTableBuilder.Build(ruleSets);
             OnTranslationTableCreated?.Invoke(translationTable);
@@ -174,6 +182,10 @@ namespace DSLKIT.Terminals
             OnReductionStep1 += reductionStep1;
             return this;
         }
+
+        // LALR merge callback delegates
+        public delegate void LALRMergeCallback(LALRMergeResult mergeResult);
+        public LALRMergeCallback OnLALRMergeCompleted { get; set; }
 
         public GrammarBuilder AddProductionFromString(string productionDefinition)
         {

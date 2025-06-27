@@ -13,6 +13,8 @@ namespace DSLKIT.Test
     {
         private readonly ITestOutputHelper _testOutputHelper;
 
+        protected ITestOutputHelper TestOutputHelper => _testOutputHelper;
+
         public GrammarTestsBase(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
