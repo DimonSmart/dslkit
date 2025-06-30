@@ -16,6 +16,8 @@ namespace DSLKIT.Parser
         private readonly IEnumerable<RuleSet> _ruleSets;
         private readonly TranslationTable _translationTable;
         private ActionAndGotoTable _actionAndGotoTable;
+        private Dictionary<ExProduction, IList<ITerm>> _rule2FollowSet;
+        private List<MergedRow> _mergedRows;
 
         public GrammarBuilder.ReductionStep0 OnReductionStep0 { get; }
         public GrammarBuilder.ReductionStep1 OnReductionStep1 { get; }
@@ -48,22 +50,23 @@ namespace DSLKIT.Parser
             _actionAndGotoTable = Initialize();
             BuildGotos();
             BuildShifts();
-            BuildReductions();
             ReductionsSubStep1();
+            BuildReductions();
+            
             return _actionAndGotoTable;
         }
 
         private void ReductionsSubStep1()
         {
-            var rule2FollowSet = new Dictionary<ExProduction, IList<ITerm>>();
+            _rule2FollowSet = new Dictionary<ExProduction, IList<ITerm>>();
             foreach (var exProduction in _exProductions)
             {
-                rule2FollowSet[exProduction] = _follows[exProduction.ExLeftNonTerminal];
+                _rule2FollowSet[exProduction] = _follows[exProduction.ExLeftNonTerminal];
             }
 
-            OnReductionStep0?.Invoke(rule2FollowSet);
+            OnReductionStep0?.Invoke(_rule2FollowSet);
 
-            var mergedRows = new List<MergedRow>();
+            _mergedRows = new List<MergedRow>();
             var prods = new List<ExProduction>(_exProductions);
             do
             {
@@ -83,14 +86,12 @@ namespace DSLKIT.Parser
                 var mergedRow = new MergedRow
                 {
                     FinalSet = group.First().ExProductionDefinition[^1].To,
-                    Production =
-                        new Production(group.First().ExLeftNonTerminal.NonTerminal,
-                            new List<ITerm> { group.First().ExProductionDefinition[^1].Term }),
-                    FollowSet = rule2FollowSet[group.First()],
+                    Production = new Production(group.First().ExLeftNonTerminal.NonTerminal, group.First().Production.ProductionDefinition),
+                    FollowSet = _rule2FollowSet[group.First()],
                     PreMergedRules = group
                 };
 
-                mergedRows.Add(mergedRow);
+                _mergedRows.Add(mergedRow);
 
                 foreach (var g in group)
                 {
@@ -98,7 +99,7 @@ namespace DSLKIT.Parser
                 }
             } while (true);
 
-            OnReductionStep1?.Invoke(mergedRows);
+            OnReductionStep1?.Invoke(_mergedRows);
         }
 
         /// <summary>
@@ -152,70 +153,39 @@ namespace DSLKIT.Parser
             }
         }
 
-        /// <summary>
-        ///     For each RuleSet, find rules of the form A → α •. For such rules:
-        ///     Get FOLLOW(A) from computed follow sets and add reduce actions to the ActionTable.
-        /// </summary>
         private void BuildReductions()
         {
-            foreach (var ruleSet in _ruleSets)
+            foreach (var mergedRow in _mergedRows)
             {
-                // Find rules where the dot is at the end (A → α •)
-                var finishedRules = ruleSet.Rules.Where(rule => rule.IsFinished);
-                
-                foreach (var rule in finishedRules)
+                // Skip the starting rule (AcceptAction is already set for it in Initialize)
+                if (mergedRow.Production.LeftNonTerminal == _root)
                 {
-                    // Skip the starting rule (it should have AcceptAction, not ReduceAction)
-                    if (rule.Production.LeftNonTerminal == _root)
+                    continue;
+                }
+
+                var reduceAction = new ReduceAction(mergedRow.Production, mergedRow.Production.ProductionDefinition.Count);
+
+                foreach (var followTerm in mergedRow.FollowSet)
+                {
+                    if (followTerm is ITerminal terminal)
                     {
-                        continue;
-                    }
-
-                    // Find the corresponding ExNonTerminal for this rule's left side
-                    var exNonTerminal = _exProductions
-                        .Where(exProd => exProd.ExLeftNonTerminal.NonTerminal == rule.Production.LeftNonTerminal)
-                        .Select(exProd => exProd.ExLeftNonTerminal)
-                        .FirstOrDefault();
-
-                    if (exNonTerminal == null)
-                    {
-                        continue;
-                    }
-
-                    // Get FOLLOW set for this non-terminal
-                    if (!_follows.TryGetValue(exNonTerminal, out var followSet))
-                    {
-                        continue;
-                    }
-
-                    // Create reduce action
-                    var reduceAction = new ReduceAction(rule.Production, rule.Production.ProductionDefinition.Count);
-
-                    // Add reduce action for each terminal in FOLLOW set
-                    foreach (var followTerm in followSet)
-                    {
-                        if (followTerm is ITerminal terminal)
+                        var key = new KeyValuePair<ITerm, RuleSet>(terminal, mergedRow.FinalSet);
+                        
+                        if (_actionAndGotoTable.ActionTable.ContainsKey(key))
                         {
-                            var key = new KeyValuePair<ITerm, RuleSet>(terminal, ruleSet);
+                            var existingAction = _actionAndGotoTable.ActionTable[key];
+                            var conflictType = existingAction is ShiftAction ? "shift/reduce" : "reduce/reduce";
                             
-                            // Check for conflicts
-                            if (_actionAndGotoTable.ActionTable.ContainsKey(key))
-                            {
-                                var existingAction = _actionAndGotoTable.ActionTable[key];
-                                var conflictType = existingAction is ShiftAction ? "shift/reduce" : "reduce/reduce";
-                                
-                                // Output diagnostic about conflict
-                                System.Diagnostics.Debug.WriteLine(
-                                    $"Conflict detected: {conflictType} conflict for terminal '{terminal.Name}' " +
-                                    $"in state {ruleSet.SetNumber}. " +
-                                    $"Existing: {existingAction}, New: {reduceAction}");
-                                
-                                // For now, keep the existing action (could be configurable)
-                                continue;
-                            }
-
-                            _actionAndGotoTable.ActionTable[key] = reduceAction;
+                            System.Diagnostics.Debug.WriteLine(
+                                $"Conflict detected: {conflictType} conflict for terminal '{terminal.Name}' " +
+                                $"in state {mergedRow.FinalSet.SetNumber}. " +
+                                $"Existing: {existingAction}, New: {reduceAction}. " +
+                                $"Merged from {mergedRow.PreMergedRules.Count} rules.");
+                            
+                            continue;
                         }
+
+                        _actionAndGotoTable.ActionTable[key] = reduceAction;
                     }
                 }
             }

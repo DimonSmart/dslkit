@@ -5,7 +5,7 @@ namespace DSLKIT.Parser.ExtendedGrammar
 {
     public class ExProduction
     {
-        private readonly Production _production;
+        public readonly Production Production;
         public readonly IExNonTerminal ExLeftNonTerminal;
         public readonly IList<IExTerm> ExProductionDefinition;
 
@@ -14,7 +14,7 @@ namespace DSLKIT.Parser.ExtendedGrammar
             IExNonTerminal exLeftNonTerminal,
             IList<IExTerm> exProductionDefinition)
         {
-            _production = production;
+            Production = production;
             ExLeftNonTerminal = exLeftNonTerminal;
             ExProductionDefinition = exProductionDefinition;
         }
