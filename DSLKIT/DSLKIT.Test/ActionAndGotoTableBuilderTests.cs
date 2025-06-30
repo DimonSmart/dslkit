@@ -1,9 +1,8 @@
-using System.Linq;
-using DSLKIT.Base;
 using DSLKIT.Parser;
 using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
 using FluentAssertions;
+using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
