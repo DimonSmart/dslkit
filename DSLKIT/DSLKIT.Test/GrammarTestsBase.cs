@@ -11,7 +11,7 @@ namespace DSLKIT.Test
 {
     public class GrammarTestsBase
     {
-        private readonly ITestOutputHelper _testOutputHelper;
+        protected readonly ITestOutputHelper _testOutputHelper;
 
         public GrammarTestsBase(ITestOutputHelper testOutputHelper)
         {

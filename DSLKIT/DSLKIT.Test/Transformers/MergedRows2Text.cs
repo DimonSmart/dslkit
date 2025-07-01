@@ -18,7 +18,7 @@ namespace DSLKIT.Test.Transformers
                     mergedRow.FinalSet?.SetNumber,
                     $"({mergedRow.PreMergedRules.Count}) " +
                     string.Join(", ", mergedRow.PreMergedRules.Select(r => r.ToString())),
-                    mergedRow.Production.ToString(),
+                    mergedRow.Production.ProductionToString(),
                     string.Join(", ", mergedRow.FollowSet.Select(f => f.ToString()))
                 };
                 data.Add(row);
