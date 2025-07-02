@@ -31,12 +31,12 @@ namespace DSLKIT.Test.ParserTests
         [InlineData("slystudy", "S1",
             "S1 → S; S → A C d; S → C b a b; S → B a; S → d; A → c; A → C B; B → S d; B → ε; C → e; C → ε;",
             "A → e;A → e;B → a;B → a e;C → a b c d e;C → d;C → a b c d e;S → d Eof;S → d;S1 → Eof")]
-        
+
         // Additional test cases to verify the fix for back-cycle epsilon checking
         [InlineData("epsilon_test1", "S",
             "S → A B C; A → a; A → ε; B → b; B → ε; C → c",
             "A → b c;B → c;C → Eof;S → Eof")]
-        [InlineData("epsilon_test2", "S", 
+        [InlineData("epsilon_test2", "S",
             "S → A B; A → C D; B → b; C → c; C → ε; D → d; D → ε",
             "A → b;B → Eof;C → d b;D → b;S → Eof")]
         public void FollowSetCreation_Test(string grammarName, string rootProductionName, string grammarDefinition,

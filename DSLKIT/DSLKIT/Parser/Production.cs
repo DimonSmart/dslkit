@@ -79,12 +79,12 @@ namespace DSLKIT.Parser
         {
             var hash = new HashCode();
             hash.Add(LeftNonTerminal.Name);
-            
+
             foreach (var term in ProductionDefinition)
             {
                 hash.Add(term.Name);
             }
-            
+
             return hash.ToHashCode();
         }
 

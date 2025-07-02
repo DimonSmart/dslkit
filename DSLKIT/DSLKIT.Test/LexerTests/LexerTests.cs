@@ -27,7 +27,7 @@ namespace DSLKIT.Test.LexerTests
         {
             var tokens = new Lexer.Lexer(GetSampleLexerSettings())
                 .GetTokens(new StringSourceStream(SampleCode)).ToList();
-                
+
             tokens.Dump();
 
             // assert

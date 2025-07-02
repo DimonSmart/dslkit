@@ -52,7 +52,7 @@ namespace DSLKIT.Parser
             BuildShifts();
             ReductionsSubStep1();
             BuildReductions();
-            
+
             return _actionAndGotoTable;
         }
 
@@ -170,18 +170,18 @@ namespace DSLKIT.Parser
                     if (followTerm is ITerminal terminal)
                     {
                         var key = new KeyValuePair<ITerm, RuleSet>(terminal, mergedRow.FinalSet);
-                        
+
                         if (_actionAndGotoTable.ActionTable.ContainsKey(key))
                         {
                             var existingAction = _actionAndGotoTable.ActionTable[key];
                             var conflictType = existingAction is ShiftAction ? "shift/reduce" : "reduce/reduce";
-                            
+
                             System.Diagnostics.Debug.WriteLine(
                                 $"Conflict detected: {conflictType} conflict for terminal '{terminal.Name}' " +
                                 $"in state {mergedRow.FinalSet.SetNumber}. " +
                                 $"Existing: {existingAction}, New: {reduceAction}. " +
                                 $"Merged from {mergedRow.PreMergedRules.Count} rules.");
-                            
+
                             continue;
                         }
 

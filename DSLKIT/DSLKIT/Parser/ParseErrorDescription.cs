@@ -1,6 +1,6 @@
 namespace DSLKIT.Parser
 {
-    public record ParseErrorDescription (string Message, int ErrorPosition)
+    public record ParseErrorDescription(string Message, int ErrorPosition)
     {
         public override string ToString()
         {
