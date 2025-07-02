@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using DSLKIT.Terminals;
 
-namespace DSLKIT
+namespace DSLKIT.Lexer
 {
     public class LexerSettings : List<ITerminal>
     {

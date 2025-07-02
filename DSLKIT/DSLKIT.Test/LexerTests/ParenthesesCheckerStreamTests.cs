@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xunit;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
-namespace DSLKIT.Test
+namespace DSLKIT.Test.LexerTests
 {
     [TestClass]
     public class ParenthesesCheckerStreamTests

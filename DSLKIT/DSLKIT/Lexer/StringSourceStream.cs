@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace DSLKIT
+namespace DSLKIT.Lexer
 {
     public class StringSourceStream : ISourceStream
     {

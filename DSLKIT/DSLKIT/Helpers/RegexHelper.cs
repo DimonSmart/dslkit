@@ -1,6 +1,7 @@
-﻿using System.Text.RegularExpressions;
+﻿using DSLKIT.Lexer;
+using System.Text.RegularExpressions;
 
-namespace DSLKIT
+namespace DSLKIT.Helpers
 {
     public static class RegexHelper
     {

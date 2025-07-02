@@ -1,4 +1,4 @@
-﻿namespace DSLKIT
+﻿namespace DSLKIT.Lexer
 {
     public interface ISourceStream
     {

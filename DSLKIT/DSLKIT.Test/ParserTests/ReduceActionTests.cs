@@ -5,7 +5,7 @@ using FluentAssertions;
 using System.Collections.Generic;
 using Xunit;
 
-namespace DSLKIT.Test
+namespace DSLKIT.Test.ParserTests
 {
     public class ReduceActionTests
     {

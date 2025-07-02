@@ -1,12 +1,13 @@
 using DSLKIT.Parser;
 using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
+using DSLKIT.Test.BaseTests;
 using FluentAssertions;
 using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace DSLKIT.Test
+namespace DSLKIT.Test.ParserTests
 {
     public class ActionAndGotoTableBuilderTests : GrammarTestsBase
     {

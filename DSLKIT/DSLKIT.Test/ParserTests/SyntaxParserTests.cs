@@ -1,11 +1,13 @@
+using DSLKIT.Lexer;
 using DSLKIT.Parser;
 using DSLKIT.Terminals;
+using DSLKIT.Test.BaseTests;
 using FluentAssertions;
 using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace DSLKIT.Test
+namespace DSLKIT.Test.ParserTests
 {
     public class SyntaxParserTests : GrammarTestsBase
     {
@@ -42,7 +44,7 @@ namespace DSLKIT.Test
 
             // Debug: show productions
             _testOutputHelper.WriteLine("Productions:");
-            for (int i = 0; i < grammar.Productions.Count; i++)
+            for (var i = 0; i < grammar.Productions.Count; i++)
             {
                 _testOutputHelper.WriteLine($"  {i}: {grammar.Productions.ElementAt(i)}");
             }

@@ -1,4 +1,5 @@
-﻿using DSLKIT.Terminals;
+﻿using DSLKIT.Lexer;
+using DSLKIT.Terminals;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xunit;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;

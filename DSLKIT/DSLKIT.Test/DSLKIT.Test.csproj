@@ -38,9 +38,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Update="LexerTestData.txt">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
+      <None Update="LexerTests\LexerTestData.txt">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
+
 
 </Project>

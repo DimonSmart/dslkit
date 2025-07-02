@@ -1,0 +1,6 @@
+﻿/* This is a
+multiline comment */
+// This is a single line comment
+VAR X = SIN(10);
+INT PI = 3.14;
+VAR Y = COS(3);

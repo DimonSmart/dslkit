@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using DSLKIT.Helpers;
+using System.Text.RegularExpressions;
 
 namespace DSLKIT.Terminals
 {

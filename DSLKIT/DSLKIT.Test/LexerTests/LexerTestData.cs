@@ -1,11 +1,12 @@
 ﻿using System.IO;
+using DSLKIT.Lexer;
 using DSLKIT.Terminals;
 
-namespace DSLKIT.Test
+namespace DSLKIT.Test.LexerTests
 {
     public static class LexerTestData
     {
-        public static string SampleCode = File.ReadAllText("LexerTestData.txt");
+        public static string SampleCode = File.ReadAllText(@"LexerTests\LexerTestData.txt");
 
         public static LexerSettings GetSampleLexerSettings()
         {

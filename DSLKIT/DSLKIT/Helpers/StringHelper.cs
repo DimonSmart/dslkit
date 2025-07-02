@@ -1,4 +1,4 @@
-﻿namespace DSLKIT
+﻿namespace DSLKIT.Helpers
 {
     public static class StringHelper
     {

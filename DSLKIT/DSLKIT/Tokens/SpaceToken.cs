@@ -1,4 +1,6 @@
-﻿namespace DSLKIT.Tokens
+﻿using DSLKIT.Helpers;
+
+namespace DSLKIT.Tokens
 {
     public class SpaceToken : Token
     {

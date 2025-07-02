@@ -1,4 +1,5 @@
-﻿using DSLKIT.Tokens;
+﻿using DSLKIT.Lexer;
+using DSLKIT.Tokens;
 
 namespace DSLKIT.Terminals
 {

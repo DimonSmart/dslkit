@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using DSLKIT.Tokens;
 
-namespace DSLKIT
+namespace DSLKIT.Lexer
 {
     public abstract class LexerStreamBase : IEnumerable<IToken>
     {
