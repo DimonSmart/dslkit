@@ -7,7 +7,7 @@
 **/bin/*
 
 
-/DSLKIT/.vs
+/**/.vs
 *.binlog
 /DSLKIT/packages
 /DSLKIT/CodeGraphData

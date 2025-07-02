@@ -1,7 +1,7 @@
 using DSLKIT.Lexer;
 using DSLKIT.Parser;
 using DSLKIT.Terminals;
-using DSLKIT.Test.BaseTests;
+using DSLKIT.Test.Common;
 using FluentAssertions;
 using System.Linq;
 using Xunit;

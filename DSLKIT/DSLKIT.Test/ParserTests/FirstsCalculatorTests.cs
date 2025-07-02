@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using DSLKIT.Terminals;
-using DSLKIT.Test.BaseTests;
+using DSLKIT.Test.Common;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;

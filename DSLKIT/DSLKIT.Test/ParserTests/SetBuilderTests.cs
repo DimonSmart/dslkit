@@ -1,10 +1,10 @@
 ﻿using System.IO;
 using DSLKIT.Terminals;
-using DSLKIT.Test.BaseTests;
-using DSLKIT.Test.Transformers;
+using DSLKIT.Visualizers;
 using DSLKIT.Test.Utils;
 using Xunit;
 using Xunit.Abstractions;
+using DSLKIT.Test.Common;
 
 namespace DSLKIT.Test.ParserTests
 {
@@ -39,42 +39,42 @@ namespace DSLKIT.Test.ParserTests
                     }
 
                     File.WriteAllText($"{grammarName}_RuleSets.txt",
-                        RuleSets2Text.Transform(ruleSets));
+                        RuleSetsVisualizer.Visualize(ruleSets));
                 })
                 .WithOnTranslationTableCreated(translationTable =>
                 {
                     File.WriteAllText($"{grammarName}_TranslationTable.txt",
-                        TranslationTable2Text.Transform(translationTable));
+                        TranslationTableVisualizer.Visualize(translationTable));
                 })
                 .WithOnExtendedGrammarCreated(exProductions =>
                 {
                     File.WriteAllText($"{grammarName}_ExtendedGrammar.txt",
-                        ExtendedGrammar2Text.Transform(exProductions));
+                        ExtendedGrammarVisualizer.Visualize(exProductions));
                 })
                 .WithOnFirstsCreated(firsts =>
                 {
                     File.WriteAllText($"{grammarName}_Firsts.txt",
-                        Firsts2Text.Transform(firsts));
+                        FirstsVisualizer.Visualize(firsts));
                 })
                 .WithOnReductionStep0(rule2FollowSet =>
                     {
                         File.WriteAllText($"{grammarName}_ReductionStep0.txt",
-                            Rule2FollowSet2Text.Transform(rule2FollowSet));
+                            Rule2FollowSetVisualizer.Visualize(rule2FollowSet));
                     }
                 )
                 .WithOnReductionStep1(mergedRows =>
                 {
                     File.WriteAllText($"{grammarName}_ReductionStep1.txt",
-                        MergedRows2Text.Transform(mergedRows));
+                        MergedRowsVisualizer.Visualize(mergedRows));
                 })
                 .BuildGrammar(rootName);
 
             ShowGrammar(grammar);
-            File.WriteAllText($"{grammarName}_Follow.txt", Follow2Text.Transform(grammar.Follows));
+            File.WriteAllText($"{grammarName}_Follow.txt", FollowVisualizer.Visualize(grammar.Follows));
             File.WriteAllText($"{grammarName}_RuleSetsInGraphvizFormat.dot",
-                RuleSets2GraphVizDotFormat.Transform(grammar.RuleSets));
+                RuleSetsDotExporter.Visualize(grammar.RuleSets));
             File.WriteAllText($"{grammarName}_ActionAndGotoTable.txt",
-                ActionAndGotoTable2Text.Transform(grammar.ActionAndGotoTable));
+                ActionAndGotoTableVisualizer.Visualize(grammar.ActionAndGotoTable));
         }
     }
 }

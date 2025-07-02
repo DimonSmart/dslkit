@@ -7,7 +7,7 @@ using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
 using Xunit.Abstractions;
 
-namespace DSLKIT.Test.BaseTests
+namespace DSLKIT.Test.Common
 {
     public class GrammarTestsBase
     {
@@ -29,7 +29,7 @@ namespace DSLKIT.Test.BaseTests
         {
             if (delimiter == null)
             {
-                delimiter = new[] { Environment.NewLine, ";" };
+                delimiter = [Environment.NewLine, ";"];
             }
 
             var result = new Dictionary<string, List<ITerm>>();
@@ -46,7 +46,7 @@ namespace DSLKIT.Test.BaseTests
         private static KeyValuePair<string, List<ITerm>> GetSetRecord(Dictionary<string, ITerminal> terminals,
             string setDefinition)
         {
-            var pair = setDefinition.Split(new[] { "→", "->" }, StringSplitOptions.RemoveEmptyEntries);
+            var pair = setDefinition.Split(["→", "->"], StringSplitOptions.RemoveEmptyEntries);
             if (pair.Length != 2)
             {
                 throw new ArgumentException($"{setDefinition} should be in form A→zxcA with → as delimiter");

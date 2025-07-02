@@ -1,7 +1,7 @@
 ﻿using DSLKIT.NonTerminals;
 using DSLKIT.Parser;
 using DSLKIT.Terminals;
-using DSLKIT.Test.BaseTests;
+using DSLKIT.Test.Common;
 using Xunit;
 using Xunit.Abstractions;
 
