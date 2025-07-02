@@ -1,7 +1,7 @@
 using DSLKIT.Tokens;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using DSLKIT.Helpers;
 
 namespace DSLKIT.Parser
 {
@@ -20,6 +20,7 @@ namespace DSLKIT.Parser
             var inputPosition = 0;
             var output = new List<int>();
             var stateStack = new Stack<RuleSet>();
+            var nodeStack = new Stack<ParseTreeNode>();
 
             var initialState = _grammar.RuleSets.First(rs => rs.SetNumber == 0);
             stateStack.Push(initialState);
@@ -41,38 +42,15 @@ namespace DSLKIT.Parser
                 switch (action)
                 {
                     case ShiftAction shiftAction:
-                        stateStack.Push(shiftAction.RuleSet);
-                        inputPosition++;
+                        ProcessShift(shiftAction, currentToken, ref inputPosition, stateStack, nodeStack);
                         break;
 
                     case ReduceAction reduceAction:
-                        var productionNumber = GetProductionNumber(reduceAction.Production);
-                        output.Add(productionNumber);
-
-                        // Pop states according to production length
-                        stateStack.PopMany(reduceAction.PopLength);
-
-                        // Goto action with left-hand side non-terminal
-                        var newCurrentState = stateStack.Peek();
-                        var leftNonTerminal = reduceAction.Production.LeftNonTerminal;
-
-                        if (!_grammar.ActionAndGotoTable.TryGetGotoValue(leftNonTerminal, newCurrentState, out var gotoState))
-                        {
-                            return new ParseResult
-                            {
-                                Error = new ParseErrorDescription($"No goto found for non-terminal '{leftNonTerminal.Name}' in state {newCurrentState.SetNumber}", currentToken.Position),
-                                Productions = output
-                            };
-                        }
-
-                        stateStack.Push(gotoState);
+                        ProcessReduce(reduceAction, currentToken, stateStack, nodeStack, output);
                         break;
 
                     case AcceptAction _:
-                        return new ParseResult
-                        {
-                            Productions = output
-                        };
+                        return ProcessAccept(nodeStack, output);
 
                     default:
                         return new ParseResult
@@ -82,6 +60,59 @@ namespace DSLKIT.Parser
                         };
                 }
             }
+        }
+
+        private void ProcessShift(ShiftAction shiftAction, IToken currentToken, ref int inputPosition,
+                                Stack<RuleSet> stateStack, Stack<ParseTreeNode> nodeStack)
+        {
+            nodeStack.Push(new TerminalNode(currentToken));
+            stateStack.Push(shiftAction.RuleSet);
+            inputPosition++;
+        }
+
+        private void ProcessReduce(ReduceAction reduceAction, IToken currentToken,
+                                 Stack<RuleSet> stateStack, Stack<ParseTreeNode> nodeStack, List<int> output)
+        {
+            var production = reduceAction.Production;
+            var productionNumber = GetProductionNumber(production);
+            output.Add(productionNumber);
+
+            var popCount = reduceAction.PopLength;
+
+            var children = new List<ParseTreeNode>();
+            for (int i = 0; i < popCount; i++)
+            {
+                stateStack.Pop();
+                children.Insert(0, nodeStack.Pop());
+            }
+
+            var parent = new NonTerminalNode(production.LeftNonTerminal, children);
+            nodeStack.Push(parent);
+
+            var newCurrentState = stateStack.Peek();
+            var leftNonTerminal = production.LeftNonTerminal;
+
+            if (!_grammar.ActionAndGotoTable.TryGetGotoValue(leftNonTerminal, newCurrentState, out var gotoState))
+            {
+                throw new System.InvalidOperationException($"No goto found for non-terminal '{leftNonTerminal.Name}' in state {newCurrentState.SetNumber}");
+            }
+
+            stateStack.Push(gotoState);
+        }
+
+        private ParseResult ProcessAccept(Stack<ParseTreeNode> nodeStack, List<int> output)
+        {
+            var result = new ParseResult
+            {
+                Productions = output
+            };
+
+            if (nodeStack.Count > 0)
+            {
+                result.ParseTree = nodeStack.Pop();
+            }
+
+            return result;
         }
 
         protected IToken GetCurrentToken(IList<IToken> tokens, int position)
@@ -108,11 +139,9 @@ namespace DSLKIT.Parser
         protected int GetProductionNumber(Production production)
         {
             var productions = _grammar.Productions.ToList();
-            
-            // Используем встроенный метод поиска с переопределенным Equals
             var index = productions.IndexOf(production);
-            
-            return index; // Вернет -1 если не найдено (что не должно происходить в корректной грамматике)
+            Debug.Assert(index != -1, "Production not found in grammar.Productions. This should not happen in a correct grammar.");
+            return index;
         }
     }
 }
