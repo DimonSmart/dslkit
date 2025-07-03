@@ -1,4 +1,5 @@
 ﻿using DSLKIT.Terminals;
+using DSLKIT.Formatting;
 
 namespace DSLKIT.Tokens
 {
@@ -26,5 +27,23 @@ namespace DSLKIT.Tokens
         public object Value { get; internal set; }
 
         public ITerminal Terminal { get; internal set; }
+
+        public FormattingTrivia Trivia { get; internal set; } = FormattingTrivia.Empty;
+
+        /// <summary>
+        /// Creates a new token with the specified trivia
+        /// </summary>
+        public IToken WithTrivia(FormattingTrivia trivia)
+        {
+            return new Token
+            {
+                Position = Position,
+                Length = Length,
+                OriginalString = OriginalString,
+                Value = Value,
+                Terminal = Terminal,
+                Trivia = trivia
+            };
+        }
     }
 }

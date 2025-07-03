@@ -9,6 +9,10 @@
       "DictionaryKey": "Multi line comment",
       "Flags": "Comment",
       "Priority": "Normal"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -21,6 +25,10 @@
       "Flags": "Space",
       "Priority": "High",
       "DictionaryKey": "Terminal[space]"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -33,6 +41,10 @@
       "Flags": "Space",
       "Priority": "High",
       "DictionaryKey": "Terminal[space]"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -45,6 +57,10 @@
       "DictionaryKey": "Single line comment",
       "Flags": "Comment",
       "Priority": "Normal"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -57,6 +73,10 @@
       "Flags": "Space",
       "Priority": "High",
       "DictionaryKey": "Terminal[space]"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -69,6 +89,10 @@
       "DictionaryKey": "Id",
       "Name": "Id",
       "Priority": "Low"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -81,6 +105,10 @@
       "Flags": "Space",
       "Priority": "High",
       "DictionaryKey": "Terminal[space]"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -93,6 +121,10 @@
       "DictionaryKey": "Id",
       "Name": "Id",
       "Priority": "Low"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -105,6 +137,10 @@
       "Flags": "Space",
       "Priority": "High",
       "DictionaryKey": "Terminal[space]"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -117,6 +153,10 @@
       "DictionaryKey": "Keyword[=]",
       "Name": "=",
       "Flags": "None"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -129,6 +169,10 @@
       "Flags": "Space",
       "Priority": "High",
       "DictionaryKey": "Terminal[space]"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -141,6 +185,10 @@
       "DictionaryKey": "Keyword[SIN]",
       "Name": "SIN",
       "Flags": "None"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -153,6 +201,10 @@
       "DictionaryKey": "Keyword[(]",
       "Name": "(",
       "Flags": "OpenBrace"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -165,6 +217,10 @@
       "Flags": "Const",
       "Priority": "Normal",
       "DictionaryKey": "Integer"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -177,6 +233,10 @@
       "DictionaryKey": "Keyword[)]",
       "Name": ")",
       "Flags": "CloseBrace"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -189,6 +249,10 @@
       "DictionaryKey": "Keyword[;]",
       "Name": ";",
       "Flags": "None"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -201,6 +265,10 @@
       "Flags": "Space",
       "Priority": "High",
       "DictionaryKey": "Terminal[space]"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -213,6 +281,10 @@
       "Flags": "Space",
       "Priority": "High",
       "DictionaryKey": "Terminal[space]"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -225,6 +297,10 @@
       "DictionaryKey": "Id",
       "Name": "Id",
       "Priority": "Low"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -237,6 +313,10 @@
       "Flags": "Space",
       "Priority": "High",
       "DictionaryKey": "Terminal[space]"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -249,6 +329,10 @@
       "DictionaryKey": "Id",
       "Name": "Id",
       "Priority": "Low"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -261,6 +345,10 @@
       "Flags": "Space",
       "Priority": "High",
       "DictionaryKey": "Terminal[space]"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -273,6 +361,10 @@
       "DictionaryKey": "Keyword[=]",
       "Name": "=",
       "Flags": "None"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -285,6 +377,10 @@
       "Flags": "Space",
       "Priority": "High",
       "DictionaryKey": "Terminal[space]"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -297,6 +393,10 @@
       "Flags": "Const",
       "Priority": "Normal",
       "DictionaryKey": "Integer"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -309,6 +409,10 @@
       "DictionaryKey": "Keyword[.]",
       "Name": ".",
       "Flags": "None"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -321,6 +425,10 @@
       "Flags": "Const",
       "Priority": "Normal",
       "DictionaryKey": "Integer"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -333,6 +441,10 @@
       "DictionaryKey": "Keyword[;]",
       "Name": ";",
       "Flags": "None"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -345,6 +457,10 @@
       "Flags": "Space",
       "Priority": "High",
       "DictionaryKey": "Terminal[space]"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -357,6 +473,10 @@
       "Flags": "Space",
       "Priority": "High",
       "DictionaryKey": "Terminal[space]"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -369,6 +489,10 @@
       "DictionaryKey": "Id",
       "Name": "Id",
       "Priority": "Low"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -381,6 +505,10 @@
       "Flags": "Space",
       "Priority": "High",
       "DictionaryKey": "Terminal[space]"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -393,6 +521,10 @@
       "DictionaryKey": "Id",
       "Name": "Id",
       "Priority": "Low"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -405,6 +537,10 @@
       "Flags": "Space",
       "Priority": "High",
       "DictionaryKey": "Terminal[space]"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -417,6 +553,10 @@
       "DictionaryKey": "Keyword[=]",
       "Name": "=",
       "Flags": "None"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -429,6 +569,10 @@
       "Flags": "Space",
       "Priority": "High",
       "DictionaryKey": "Terminal[space]"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -441,6 +585,10 @@
       "DictionaryKey": "Keyword[COS]",
       "Name": "COS",
       "Flags": "None"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -453,6 +601,10 @@
       "DictionaryKey": "Keyword[(]",
       "Name": "(",
       "Flags": "OpenBrace"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -465,6 +617,10 @@
       "Flags": "Const",
       "Priority": "Normal",
       "DictionaryKey": "Integer"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -477,6 +633,10 @@
       "DictionaryKey": "Keyword[)]",
       "Name": ")",
       "Flags": "CloseBrace"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -489,6 +649,10 @@
       "DictionaryKey": "Keyword[;]",
       "Name": ";",
       "Flags": "None"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -501,6 +665,10 @@
       "Flags": "Space",
       "Priority": "High",
       "DictionaryKey": "Terminal[space]"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -513,6 +681,10 @@
       "Flags": "Space",
       "Priority": "High",
       "DictionaryKey": "Terminal[space]"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   },
   {
@@ -525,6 +697,10 @@
       "Flags": "None",
       "Priority": "High",
       "DictionaryKey": "Eof"
+    },
+    "Trivia": {
+      "LeadingTrivia": [],
+      "TrailingTrivia": []
     }
   }
 ]
