@@ -2,11 +2,7 @@
 
 namespace DSLKIT.Tokens
 {
-    public interface IToken : IPosition
+    public interface IToken : ITokenBase
     {
-        int Length { get; }
-        string OriginalString { get; }
-        object Value { get; }
-        ITerminal Terminal { get; }
     }
 }
