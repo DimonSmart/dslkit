@@ -8,7 +8,10 @@ namespace DSLKIT.Parser
         public ParseErrorDescription Error { get; set; }
         public ParseTreeNode ParseTree { get; set; }
 
-        // TODO: May be we should delete it?
+        /// <summary>
+        /// List of production numbers applied during parsing, in the order they were applied.
+        /// Useful for debugging and analysis of the parsing process.
+        /// </summary>
         public List<int> Productions { get; set; } = new List<int>();
     }
 }
