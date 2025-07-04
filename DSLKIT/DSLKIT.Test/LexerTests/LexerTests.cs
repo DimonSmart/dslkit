@@ -3,7 +3,6 @@ using System.Linq;
 using DSLKIT.Lexer;
 using DSLKIT.Terminals;
 using DSLKIT.Test.Utils;
-using Snapshooter.Xunit;
 using Xunit;
 using static DSLKIT.Test.LexerTests.LexerTestData;
 
@@ -31,7 +30,7 @@ namespace DSLKIT.Test.LexerTests
             tokens.Dump();
 
             // assert
-            Snapshot.Match(tokens);
+            TestDataComparer.AssertMatches(tokens, "ExpectedTokens.json");
         }
 
         [Fact]

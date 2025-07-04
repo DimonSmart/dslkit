@@ -1,0 +1,706 @@
+[
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 34,
+    "originalString": "/* This is a\r\nmultiline comment */",
+    "value": " This is a\r\nmultiline comment ",
+    "terminal": {
+      "flags": 6,
+      "priority": 10,
+      "dictionaryKey": "Multi line comment",
+      "name": "Multi line comment"
+    },
+    "position": 0
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": "\r",
+    "value": "\r",
+    "terminal": {
+      "flags": 1,
+      "priority": 20,
+      "dictionaryKey": "Terminal[space]",
+      "name": "Space"
+    },
+    "position": 34
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": "\n",
+    "value": "\n",
+    "terminal": {
+      "flags": 1,
+      "priority": 20,
+      "dictionaryKey": "Terminal[space]",
+      "name": "Space"
+    },
+    "position": 35
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 33,
+    "originalString": "// This is a single line comment\r",
+    "value": " This is a single line comment\r",
+    "terminal": {
+      "flags": 6,
+      "priority": 10,
+      "dictionaryKey": "Single line comment",
+      "name": "Single line comment"
+    },
+    "position": 36
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": "\n",
+    "value": "\n",
+    "terminal": {
+      "flags": 1,
+      "priority": 20,
+      "dictionaryKey": "Terminal[space]",
+      "name": "Space"
+    },
+    "position": 69
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 3,
+    "originalString": "VAR",
+    "value": "VAR",
+    "terminal": {
+      "flags": 4,
+      "priority": 0,
+      "dictionaryKey": "Id",
+      "name": "Id"
+    },
+    "position": 70
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": " ",
+    "value": " ",
+    "terminal": {
+      "flags": 1,
+      "priority": 20,
+      "dictionaryKey": "Terminal[space]",
+      "name": "Space"
+    },
+    "position": 73
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": "X",
+    "value": "X",
+    "terminal": {
+      "flags": 4,
+      "priority": 0,
+      "dictionaryKey": "Id",
+      "name": "Id"
+    },
+    "position": 74
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": " ",
+    "value": " ",
+    "terminal": {
+      "flags": 1,
+      "priority": 20,
+      "dictionaryKey": "Terminal[space]",
+      "name": "Space"
+    },
+    "position": 75
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": "=",
+    "value": "=",
+    "terminal": {
+      "flags": 0,
+      "priority": 10,
+      "dictionaryKey": "Keyword[=]",
+      "name": "="
+    },
+    "position": 76
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": " ",
+    "value": " ",
+    "terminal": {
+      "flags": 1,
+      "priority": 20,
+      "dictionaryKey": "Terminal[space]",
+      "name": "Space"
+    },
+    "position": 77
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 3,
+    "originalString": "SIN",
+    "value": "SIN",
+    "terminal": {
+      "flags": 0,
+      "priority": 10,
+      "dictionaryKey": "Keyword[SIN]",
+      "name": "SIN"
+    },
+    "position": 78
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": "(",
+    "value": "(",
+    "terminal": {
+      "flags": 2,
+      "priority": 10,
+      "dictionaryKey": "Keyword[(]",
+      "name": "("
+    },
+    "position": 81
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 2,
+    "originalString": "10",
+    "value": 10,
+    "terminal": {
+      "flags": 5,
+      "priority": 10,
+      "dictionaryKey": "Integer",
+      "name": "Integer"
+    },
+    "position": 82
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": ")",
+    "value": ")",
+    "terminal": {
+      "flags": 3,
+      "priority": 10,
+      "dictionaryKey": "Keyword[)]",
+      "name": ")"
+    },
+    "position": 84
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": ";",
+    "value": ";",
+    "terminal": {
+      "flags": 0,
+      "priority": 10,
+      "dictionaryKey": "Keyword[;]",
+      "name": ";"
+    },
+    "position": 85
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": "\r",
+    "value": "\r",
+    "terminal": {
+      "flags": 1,
+      "priority": 20,
+      "dictionaryKey": "Terminal[space]",
+      "name": "Space"
+    },
+    "position": 86
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": "\n",
+    "value": "\n",
+    "terminal": {
+      "flags": 1,
+      "priority": 20,
+      "dictionaryKey": "Terminal[space]",
+      "name": "Space"
+    },
+    "position": 87
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 3,
+    "originalString": "INT",
+    "value": "INT",
+    "terminal": {
+      "flags": 4,
+      "priority": 0,
+      "dictionaryKey": "Id",
+      "name": "Id"
+    },
+    "position": 88
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": " ",
+    "value": " ",
+    "terminal": {
+      "flags": 1,
+      "priority": 20,
+      "dictionaryKey": "Terminal[space]",
+      "name": "Space"
+    },
+    "position": 91
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 2,
+    "originalString": "PI",
+    "value": "PI",
+    "terminal": {
+      "flags": 4,
+      "priority": 0,
+      "dictionaryKey": "Id",
+      "name": "Id"
+    },
+    "position": 92
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": " ",
+    "value": " ",
+    "terminal": {
+      "flags": 1,
+      "priority": 20,
+      "dictionaryKey": "Terminal[space]",
+      "name": "Space"
+    },
+    "position": 94
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": "=",
+    "value": "=",
+    "terminal": {
+      "flags": 0,
+      "priority": 10,
+      "dictionaryKey": "Keyword[=]",
+      "name": "="
+    },
+    "position": 95
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": " ",
+    "value": " ",
+    "terminal": {
+      "flags": 1,
+      "priority": 20,
+      "dictionaryKey": "Terminal[space]",
+      "name": "Space"
+    },
+    "position": 96
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": "3",
+    "value": 3,
+    "terminal": {
+      "flags": 5,
+      "priority": 10,
+      "dictionaryKey": "Integer",
+      "name": "Integer"
+    },
+    "position": 97
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": ".",
+    "value": ".",
+    "terminal": {
+      "flags": 0,
+      "priority": 10,
+      "dictionaryKey": "Keyword[.]",
+      "name": "."
+    },
+    "position": 98
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 2,
+    "originalString": "14",
+    "value": 14,
+    "terminal": {
+      "flags": 5,
+      "priority": 10,
+      "dictionaryKey": "Integer",
+      "name": "Integer"
+    },
+    "position": 99
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": ";",
+    "value": ";",
+    "terminal": {
+      "flags": 0,
+      "priority": 10,
+      "dictionaryKey": "Keyword[;]",
+      "name": ";"
+    },
+    "position": 101
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": "\r",
+    "value": "\r",
+    "terminal": {
+      "flags": 1,
+      "priority": 20,
+      "dictionaryKey": "Terminal[space]",
+      "name": "Space"
+    },
+    "position": 102
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": "\n",
+    "value": "\n",
+    "terminal": {
+      "flags": 1,
+      "priority": 20,
+      "dictionaryKey": "Terminal[space]",
+      "name": "Space"
+    },
+    "position": 103
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 3,
+    "originalString": "VAR",
+    "value": "VAR",
+    "terminal": {
+      "flags": 4,
+      "priority": 0,
+      "dictionaryKey": "Id",
+      "name": "Id"
+    },
+    "position": 104
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": " ",
+    "value": " ",
+    "terminal": {
+      "flags": 1,
+      "priority": 20,
+      "dictionaryKey": "Terminal[space]",
+      "name": "Space"
+    },
+    "position": 107
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": "Y",
+    "value": "Y",
+    "terminal": {
+      "flags": 4,
+      "priority": 0,
+      "dictionaryKey": "Id",
+      "name": "Id"
+    },
+    "position": 108
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": " ",
+    "value": " ",
+    "terminal": {
+      "flags": 1,
+      "priority": 20,
+      "dictionaryKey": "Terminal[space]",
+      "name": "Space"
+    },
+    "position": 109
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": "=",
+    "value": "=",
+    "terminal": {
+      "flags": 0,
+      "priority": 10,
+      "dictionaryKey": "Keyword[=]",
+      "name": "="
+    },
+    "position": 110
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": " ",
+    "value": " ",
+    "terminal": {
+      "flags": 1,
+      "priority": 20,
+      "dictionaryKey": "Terminal[space]",
+      "name": "Space"
+    },
+    "position": 111
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 3,
+    "originalString": "COS",
+    "value": "COS",
+    "terminal": {
+      "flags": 0,
+      "priority": 10,
+      "dictionaryKey": "Keyword[COS]",
+      "name": "COS"
+    },
+    "position": 112
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": "(",
+    "value": "(",
+    "terminal": {
+      "flags": 2,
+      "priority": 10,
+      "dictionaryKey": "Keyword[(]",
+      "name": "("
+    },
+    "position": 115
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": "3",
+    "value": 3,
+    "terminal": {
+      "flags": 5,
+      "priority": 10,
+      "dictionaryKey": "Integer",
+      "name": "Integer"
+    },
+    "position": 116
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": ")",
+    "value": ")",
+    "terminal": {
+      "flags": 3,
+      "priority": 10,
+      "dictionaryKey": "Keyword[)]",
+      "name": ")"
+    },
+    "position": 117
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": ";",
+    "value": ";",
+    "terminal": {
+      "flags": 0,
+      "priority": 10,
+      "dictionaryKey": "Keyword[;]",
+      "name": ";"
+    },
+    "position": 118
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": "\r",
+    "value": "\r",
+    "terminal": {
+      "flags": 1,
+      "priority": 20,
+      "dictionaryKey": "Terminal[space]",
+      "name": "Space"
+    },
+    "position": 119
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 1,
+    "originalString": "\n",
+    "value": "\n",
+    "terminal": {
+      "flags": 1,
+      "priority": 20,
+      "dictionaryKey": "Terminal[space]",
+      "name": "Space"
+    },
+    "position": 120
+  },
+  {
+    "trivia": {
+      "leadingTrivia": [],
+      "trailingTrivia": []
+    },
+    "length": 0,
+    "originalString": "EOF",
+    "value": null,
+    "terminal": {
+      "flags": 0,
+      "priority": 20,
+      "dictionaryKey": "Eof",
+      "name": "Eof"
+    },
+    "position": 121
+  }
+]

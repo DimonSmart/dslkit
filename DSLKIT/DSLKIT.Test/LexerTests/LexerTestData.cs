@@ -10,6 +10,7 @@ namespace DSLKIT.Test.LexerTests
         public static string SampleCode = File.ReadAllText(Path.Combine(
             Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!,
             "LexerTests", 
+            "TestData",
             "LexerTestData.txt"));
 
         public static LexerSettings GetSampleLexerSettings()
