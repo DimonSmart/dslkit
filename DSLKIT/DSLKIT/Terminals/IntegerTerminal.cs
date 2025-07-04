@@ -39,14 +39,12 @@ namespace DSLKIT.Terminals
                 return false;
             }
 
-            token = new IntegerToken
-            {
-                Position = source.Position,
-                Length = result.Length,
-                Terminal = this,
-                OriginalString = stringBody,
-                Value = intValue
-            };
+            token = new IntegerToken(
+                Position: source.Position,
+                Length: result.Length,
+                OriginalString: stringBody,
+                Value: intValue,
+                Terminal: this);
 
             return true;
         }

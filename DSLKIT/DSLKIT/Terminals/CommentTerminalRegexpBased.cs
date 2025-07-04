@@ -32,14 +32,12 @@ namespace DSLKIT.Terminals
 
             var commentBody = result.Groups["CommentBody"].Value;
 
-            token = new CommentToken
-            {
-                Position = source.Position,
-                Length = result.Length,
-                Terminal = this,
-                OriginalString = result.Value,
-                Value = commentBody
-            };
+            token = new CommentToken(
+                Position: source.Position,
+                Length: result.Length,
+                OriginalString: result.Value,
+                Value: commentBody,
+                Terminal: this);
 
             return true;
         }

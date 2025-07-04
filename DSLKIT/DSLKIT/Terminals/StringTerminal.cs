@@ -87,14 +87,12 @@ namespace DSLKIT.Terminals
             var stringBody = result.Groups["StringBody"].Value;
             var closeQuote = result.Groups["CloseQuote"].Value;
 
-            token = new StringToken
-            {
-                Position = source.Position,
-                Length = result.Length,
-                Terminal = this,
-                OriginalString = result.Value,
-                Value = stringBody
-            };
+            token = new StringToken(
+                Position: source.Position,
+                Length: result.Length,
+                OriginalString: result.Value,
+                Value: stringBody,
+                Terminal: this);
 
             return true;
         }

@@ -54,15 +54,12 @@ namespace DSLKIT.Terminals
             ITerminal terminal
         )
         {
-            // var instance = (IToken)Activator.CreateInstance(typeof(KeywordToken));
-            return new KeywordToken
-            {
-                Position = position,
-                Length = length,
-                Terminal = this,
-                OriginalString = originalString,
-                Value = value
-            };
+            return new KeywordToken(
+                Position: position,
+                Length: length,
+                OriginalString: originalString,
+                Value: value,
+                Terminal: this);
         }
     }
 }

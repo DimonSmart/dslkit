@@ -23,14 +23,12 @@ namespace DSLKIT.Terminals
                 return false;
             }
 
-            token = new SpaceToken
-            {
-                Length = 1,
-                Position = source.Position,
-                Terminal = this,
-                OriginalString = previewChar.ToString(),
-                Value = previewChar
-            };
+            token = new SpaceToken(
+                Position: source.Position,
+                Length: 1,
+                OriginalString: previewChar.ToString(),
+                Value: previewChar,
+                Terminal: this);
             return true;
         }
 

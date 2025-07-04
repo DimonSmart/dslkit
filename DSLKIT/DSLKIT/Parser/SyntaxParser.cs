@@ -123,14 +123,12 @@ namespace DSLKIT.Parser
                 var lastToken = tokens.LastOrDefault();
                 var eofPosition = lastToken?.Position + lastToken?.Length ?? 0;
 
-                return new Token
-                {
-                    Terminal = _grammar.Eof,
-                    Position = eofPosition,
-                    Length = 0,
-                    OriginalString = string.Empty,
-                    Value = null
-                };
+                return new EofToken(
+                    Position: eofPosition,
+                    Length: 0,
+                    OriginalString: string.Empty,
+                    Value: null,
+                    Terminal: _grammar.Eof);
             }
 
             return tokens[position];

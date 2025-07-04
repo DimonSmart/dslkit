@@ -33,14 +33,12 @@ namespace DSLKIT.SpecialTerms
                 return false;
             }
 
-            token = new EofToken
-            {
-                Position = source.Position,
-                Length = 0,
-                OriginalString = "EOF",
-                Terminal = this,
-                Value = null
-            };
+            token = new EofToken(
+                Position: source.Position,
+                Length: 0,
+                OriginalString: "EOF",
+                Value: null,
+                Terminal: this);
 
             return true;
         }

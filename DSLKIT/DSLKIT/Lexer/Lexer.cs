@@ -40,7 +40,7 @@ namespace DSLKIT.Lexer
                     .AsReadOnly();
                 if (!matches.Any())
                 {
-                    yield return new ErrorToken("No terminal found") { Length = 0, Position = source.Position };
+                    yield return new ErrorToken("No terminal found", source.Position, 0);
                     yield break;
                 }
 
@@ -61,11 +61,8 @@ namespace DSLKIT.Lexer
                 {
                     var msg = string.Join(",", matches);
                     yield return new ErrorToken(
-                        $"Many terminals found at same position. Possible duplicates or priority error : {msg}")
-                    {
-                        Length = 0,
-                        Position = source.Position
-                    };
+                        $"Many terminals found at same position. Possible duplicates or priority error : {msg}",
+                        source.Position, 0);
                 }
 
                 var bestMatch = matches.Single();
