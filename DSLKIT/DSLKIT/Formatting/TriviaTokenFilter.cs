@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace DSLKIT.Formatting
 {
-    public class FormattingTokenFilter
+    public class TriviaTokenFilter
     {
         public IEnumerable<IToken> FilterTokens(IReadOnlyList<IToken> tokens)
         {
