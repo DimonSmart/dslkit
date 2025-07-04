@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Reflection;
 using DSLKIT.Lexer;
 using DSLKIT.Terminals;
 
@@ -6,7 +7,10 @@ namespace DSLKIT.Test.LexerTests
 {
     public static class LexerTestData
     {
-        public static string SampleCode = File.ReadAllText(@"LexerTests\LexerTestData.txt");
+        public static string SampleCode = File.ReadAllText(Path.Combine(
+            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!,
+            "LexerTests", 
+            "LexerTestData.txt"));
 
         public static LexerSettings GetSampleLexerSettings()
         {
