@@ -1,7 +1,8 @@
-﻿using System.IO;
-using System.Reflection;
-using DSLKIT.Lexer;
+﻿using DSLKIT.Lexer;
 using DSLKIT.Terminals;
+using DSLKIT.Test.Utils;
+using System.IO;
+using System.Reflection;
 
 namespace DSLKIT.Test.LexerTests
 {
@@ -9,14 +10,15 @@ namespace DSLKIT.Test.LexerTests
     {
         public static string SampleCode = File.ReadAllText(Path.Combine(
             Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!,
-            "LexerTests", 
+            "LexerTests",
             "TestData",
-            "LexerTestData.txt"));
+            "LexerTestData.txt"))
+            .NormalizeLineEndings();
 
         public static LexerSettings GetSampleLexerSettings()
         {
-            return new LexerSettings
-            {
+            return
+            [
                 new SpaceTerminal(),
                 new KeywordTerminal("SIN"),
                 new KeywordTerminal("COS"),
@@ -45,7 +47,7 @@ namespace DSLKIT.Test.LexerTests
                 new KeywordTerminal(">="),
                 new KeywordTerminal("=="),
                 new IdentifierTerminal()
-            };
+            ];
         }
     }
 }

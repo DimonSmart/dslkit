@@ -22,6 +22,9 @@ namespace DSLKIT.Test.Utils
             var expectedJson = LoadExpectedData(expectedDataFileName);
             var actualJson = JsonSerializer.Serialize(actual, JsonOptions);
 
+            expectedJson = StringUtils.NormalizeLineEndings(expectedJson);
+            actualJson = StringUtils.NormalizeLineEndings(actualJson);
+
             var expectedNormalized = NormalizeJson(expectedJson);
             var actualNormalized = NormalizeJson(actualJson);
 
