@@ -6,7 +6,6 @@ namespace DSLKIT.Tokens
     {
         FormattingTrivia Trivia { get; }
 
-        // TODO: THis should be extension or something like this
         IToken WithTrivia(FormattingTrivia trivia);
     }
 }

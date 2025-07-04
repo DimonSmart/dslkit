@@ -30,10 +30,7 @@ namespace DSLKIT.Formatting
                         j++;
                     }
 
-                    // Create trivia and attach to token
-                    // TODO find better way to do this!
-                    var trivia = new FormattingTrivia(pendingTrivia, trailingTrivia);
-                    result.Add(token.WithTrivia(trivia));
+                    result.Add(token.WithTrivia(new FormattingTrivia(pendingTrivia, trailingTrivia)));
 
                     // Clear pending trivia and skip trailing trivia tokens
                     pendingTrivia.Clear();
