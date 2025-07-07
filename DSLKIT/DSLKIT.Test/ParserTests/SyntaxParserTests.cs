@@ -194,5 +194,37 @@ namespace DSLKIT.Test.ParserTests
             result.IsSuccess.Should().BeTrue($"parsing should succeed for epsilon production. Error: {result.Error?.Message}");
             result.Productions.Should().NotBeEmpty("should apply productions including epsilon");
         }
+
+        [Fact]
+        public void Parse_WithAugmentedGrammar_ShouldSucceed()
+        {
+            // Arrange - Simple grammar with augmented start symbol
+            var xTerminal = new KeywordTerminal("x");
+
+            var grammar = new GrammarBuilder()
+                .WithGrammarName("simple_augmented")
+                .AddProduction("S").AddProductionDefinition(xTerminal)
+                .WithAugmentedGrammar(true) // Enable augmented grammar
+                .BuildGrammar();
+
+            // Verify the grammar has augmented start symbol
+            grammar.Root.Name.Should().Be("S'", "augmented grammar should have S' as root");
+
+            var lexerSettings = new LexerSettings
+            {
+                xTerminal
+            };
+
+            var lexer = new Lexer.Lexer(lexerSettings);
+            var parser = new SyntaxParser(grammar);
+
+            // Act
+            var tokens = lexer.GetTokens(new StringSourceStream("x")).ToList();
+            var result = parser.Parse(tokens);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue($"parsing should succeed with augmented grammar. Error: {result.Error?.Message}");
+            result.ParseTree.Should().NotBeNull("should create parse tree");
+        }
     }
 }

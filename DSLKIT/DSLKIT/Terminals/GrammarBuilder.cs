@@ -25,6 +25,8 @@ namespace DSLKIT.Terminals
         private IEofTerminal _eof = EofTerminal.Instance;
 
         private string _name;
+        
+        private bool _createAugmentedGrammar = false;
 
         public INonTerminal GetOrAddNonTerminal(string nonTerminalName)
         {
@@ -61,10 +63,19 @@ namespace DSLKIT.Terminals
             return this;
         }
 
+        public GrammarBuilder WithAugmentedGrammar(bool createAugmented = true)
+        {
+            _createAugmentedGrammar = createAugmented;
+            return this;
+        }
+
         public Grammar BuildGrammar(string rootProductionName = null)
         {
             var root = GetRootNonTerminal(rootProductionName);
-            var ruleSets = new ItemSetsBuilder(_productions, root).Build().ToList();
+            
+            var augmentedRoot = _createAugmentedGrammar ? CreateAugmentedGrammarIfNeeded(root) : root;
+            
+            var ruleSets = new ItemSetsBuilder(_productions, augmentedRoot).Build().ToList();
             OnRuleSetCreated?.Invoke(ruleSets);
 
             var translationTable = TranslationTableBuilder.Build(ruleSets);
@@ -76,11 +87,11 @@ namespace DSLKIT.Terminals
             var firsts = new FirstsCalculator(exProductions).Calculate();
             OnFirstsCreated?.Invoke(firsts);
 
-            var follows = new FollowCalculator(root, _eof, exProductions, firsts).Calculate();
+            var follows = new FollowCalculator(augmentedRoot, _eof, exProductions, firsts).Calculate();
             OnFollowsCreated?.Invoke(follows);
 
             var actionAndGotoTable = new ActionAndGotoTableBuilder(
-                    root,
+                    augmentedRoot,
                     exProductions,
                     follows,
                     ruleSets,
@@ -90,7 +101,7 @@ namespace DSLKIT.Terminals
                 .Build();
 
             return new Grammar(_name,
-                root,
+                augmentedRoot,
                 _terminals.Values,
                 _nonTerminals.Values.AsEnumerable(),
                 _productions,
@@ -100,6 +111,31 @@ namespace DSLKIT.Terminals
                 ruleSets,
                 translationTable,
                 actionAndGotoTable);
+        }
+
+        private INonTerminal CreateAugmentedGrammarIfNeeded(INonTerminal originalRoot)
+        {
+            var augmentedStartName = GenerateUniqueAugmentedStartName(originalRoot.Name);
+            var augmentedStart = GetOrAddNonTerminal(augmentedStartName);
+
+            // Create augmented production: S' → S
+            var augmentedProduction = new Production(augmentedStart, [originalRoot]);
+            
+            // Insert at the beginning to ensure it's the first production
+            _productions.Insert(0, augmentedProduction);
+
+            return augmentedStart;
+        }
+
+        private string GenerateUniqueAugmentedStartName(string originalName)
+        {
+            var apostrophes = 1;
+            string candidateName;
+            do
+            {
+                candidateName = originalName + new string('\'', apostrophes++);
+            } while (_nonTerminals.ContainsKey(candidateName));
+            return candidateName;
         }
 
         private INonTerminal GetRootNonTerminal(string rootProductionName)

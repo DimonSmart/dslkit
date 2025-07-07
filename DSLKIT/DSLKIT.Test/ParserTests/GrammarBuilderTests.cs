@@ -25,6 +25,23 @@ namespace DSLKIT.Test.ParserTests
             ShowGrammar(GetGrammarB());
         }
 
+
+        [Fact]
+        public void AugmentedGrammar_NameConflict_Test()
+        {
+            // Test when S' name conflicts
+            var grammar = new GrammarBuilder()
+                .WithGrammarName("Grammar with S' conflict")
+                .AddProductionFromString("S → x")
+                .AddProductionFromString("S' → y") // This creates a conflict
+                .WithAugmentedGrammar(true)
+                .BuildGrammar();
+
+            Assert.Equal("S''", grammar.Root.Name);
+
+            ShowGrammar(grammar);
+        }
+
         private static Grammar GetGrammarA()
         {
             return new GrammarBuilder()
