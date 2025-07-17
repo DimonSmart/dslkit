@@ -192,5 +192,18 @@ namespace DSLKIT.Test.ParserTests
             grammar.ActionAndGotoTable.Should().NotBeNull();
             grammar.ActionAndGotoTable.ActionTable.Should().NotBeEmpty();
         }
+
+        [Fact]
+        public void AddProductionFromString_WithAngleBrackets_Works()
+        {
+            var grammar = new GrammarBuilder()
+                .WithGrammarName("brackets")
+                .AddProductionFromString("<S> → <A>")
+                .AddProductionFromString("<A> → a")
+                .BuildGrammar();
+
+            grammar.Productions.Should().Contain(p => p.LeftNonTerminal.Name == "S");
+            grammar.Productions.Should().Contain(p => p.LeftNonTerminal.Name == "A");
+        }
     }
 }
