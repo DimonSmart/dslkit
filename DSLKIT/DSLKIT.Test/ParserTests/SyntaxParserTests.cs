@@ -73,12 +73,12 @@ namespace DSLKIT.Test.ParserTests
             // Create grammar using string notation first, then replace terminals
             var grammar = new GrammarBuilder()
                 .WithGrammarName("sjackson")
-                .AddProductionFromString("S → N")
-                .AddProductionFromString("N → V = E")
-                .AddProductionFromString("N → E")
-                .AddProductionFromString("E → V")
-                .AddProductionFromString("V → x")
-                .AddProductionFromString("V → * E")
+                .AddProductionFromString("<S> → <N>")
+                .AddProductionFromString("<N> → <V> = <E>")
+                .AddProductionFromString("<N> → <E>")
+                .AddProductionFromString("<E> → <V>")
+                .AddProductionFromString("<V> → x")
+                .AddProductionFromString("<V> → * <E>")
                 .BuildGrammar();
 
             // Now we need to use the same terminal instances for lexer

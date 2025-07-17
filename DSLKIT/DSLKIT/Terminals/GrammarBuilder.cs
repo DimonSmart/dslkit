@@ -184,13 +184,26 @@ namespace DSLKIT.Terminals
             }
 
             var left = production[0].Trim();
+            if (left.StartsWith("<") && left.EndsWith(">"))
+            {
+                left = left.Substring(1, left.Length - 2);
+            }
+
             var productionBuilder = AddProduction(left);
             var definition = new List<ITerm>();
+
             foreach (var item in production[1].Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 if (item == "ε")
                 {
                     definition.Add(Empty);
+                    continue;
+                }
+
+                if (item.StartsWith("<") && item.EndsWith(">"))
+                {
+                    var ntName = item.Substring(1, item.Length - 2);
+                    definition.Add(ntName.AsNonTerminal());
                     continue;
                 }
 
