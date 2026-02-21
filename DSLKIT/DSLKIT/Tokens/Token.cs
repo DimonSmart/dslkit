@@ -5,7 +5,7 @@ namespace DSLKIT.Tokens
 {
     public record Token(
         int Position,
-        int Length, 
+        int Length,
         string OriginalString,
         object? Value,
         ITerminal Terminal,
