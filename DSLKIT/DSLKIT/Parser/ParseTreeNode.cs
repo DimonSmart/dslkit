@@ -16,7 +16,7 @@ namespace DSLKIT.Parser
 
         public abstract ITerm Term { get; }
 
-        protected ParseTreeNode(IEnumerable<ParseTreeNode> children)
+        protected ParseTreeNode(IEnumerable<ParseTreeNode>? children)
         {
             Children = children?.ToList() ?? [];
         }

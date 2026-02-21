@@ -1,6 +1,5 @@
 using DSLKIT.Base;
 using DSLKIT.Tokens;
-using System;
 using System.Collections.Generic;
 
 namespace DSLKIT.Parser
@@ -11,10 +10,10 @@ namespace DSLKIT.Parser
 
         public IToken Token { get; }
 
-        public TerminalNode(IToken token, IEnumerable<ParseTreeNode> children = null)
+        public TerminalNode(IToken token, IEnumerable<ParseTreeNode>? children = null)
             : base(children)
         {
-            Token = token ?? throw new ArgumentNullException(nameof(token));
+            Token = token;
         }
     }
 }

@@ -21,7 +21,7 @@ namespace DSLKIT.Parser
             return new ReadOnlyDictionary<KeyValuePair<ITerm, RuleSet>, RuleSet>(_table);
         }
 
-        public bool TryGetValue(ITerm x, RuleSet y, out RuleSet result)
+        public bool TryGetValue(ITerm x, RuleSet y, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out RuleSet? result)
         {
             return _table.TryGetValue(new KeyValuePair<ITerm, RuleSet>(x, y), out result);
         }

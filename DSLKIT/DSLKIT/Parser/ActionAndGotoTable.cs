@@ -36,12 +36,12 @@ namespace DSLKIT.Parser
             return ActionTable.Keys.Select(i => i.Value).Union(GotoTable.Keys.Select(i => i.Value)).Distinct();
         }
 
-        public bool TryGetActionValue(ITerm x, RuleSet y, out IActionItem result)
+        public bool TryGetActionValue(ITerm x, RuleSet y, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out IActionItem? result)
         {
             return ActionTable.TryGetValue(new KeyValuePair<ITerm, RuleSet>(x, y), out result);
         }
 
-        public bool TryGetGotoValue(INonTerminal x, RuleSet y, out RuleSet result)
+        public bool TryGetGotoValue(INonTerminal x, RuleSet y, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out RuleSet? result)
         {
             return GotoTable.TryGetValue(new KeyValuePair<INonTerminal, RuleSet>(x, y), out result);
         }

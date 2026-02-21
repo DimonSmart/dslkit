@@ -29,12 +29,13 @@ namespace DSLKIT.Parser.ExtendedGrammar
             {
                 translationTable.TryGetValue(term, currentSet, out var nextSet);
                 exProductionDefinition.Add(term.ToExTerm(currentSet, nextSet));
-                currentSet = nextSet;
-                if (currentSet == null)
+                if (nextSet == null)
                 {
                     throw new Exception(
                         $"CreateExtendedGrammarProduction failed for set:{set.SetNumber}, Production:{production}");
                 }
+
+                currentSet = nextSet;
             }
 
             return new ExProduction(production, production.LeftNonTerminal.ToExNonTerminal(set, startRuleSet),

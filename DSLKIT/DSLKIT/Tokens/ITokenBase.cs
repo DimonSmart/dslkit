@@ -6,7 +6,7 @@ namespace DSLKIT.Tokens
     {
         int Length { get; }
         string OriginalString { get; }
-        object Value { get; }
+        object? Value { get; }
         ITerminal Terminal { get; }
     }
 }

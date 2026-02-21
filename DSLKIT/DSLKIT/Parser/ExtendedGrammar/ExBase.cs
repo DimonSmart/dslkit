@@ -4,21 +4,21 @@ namespace DSLKIT.Parser.ExtendedGrammar
 {
     public abstract class ExBase : IExBase
     {
-        protected ExBase(RuleSet from, RuleSet to)
+        protected ExBase(RuleSet from, RuleSet? to)
         {
             From = from;
             To = to;
         }
 
         public RuleSet From { get; }
-        public RuleSet To { get; }
+        public RuleSet? To { get; }
         public abstract ITerm Term { get; }
 
         #region Equality
 
-        public bool Equals(ExBase other)
+        public bool Equals(ExBase? other)
         {
-            if (ReferenceEquals(null, other))
+            if (other is null)
             {
                 return false;
             }
@@ -31,9 +31,9 @@ namespace DSLKIT.Parser.ExtendedGrammar
             return Equals(From, other.From) && Equals(To, other.To) && Equals(Term, other.Term);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            return ReferenceEquals(this, obj) || obj is ExBase other && Equals(other);
+            return obj is ExBase other && Equals(other);
         }
 
         public override int GetHashCode()

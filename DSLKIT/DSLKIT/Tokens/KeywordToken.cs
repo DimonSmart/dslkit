@@ -7,7 +7,7 @@ namespace DSLKIT.Tokens
         int Position,
         int Length,
         string OriginalString,
-        object Value,
+        object? Value,
         ITerminal Terminal,
-        FormattingTrivia Trivia = null) : StringTokenBase(Position, Length, OriginalString, Value, Terminal, Trivia);
+        FormattingTrivia? Trivia = null) : StringTokenBase(Position, Length, OriginalString, Value, Terminal, Trivia);
 }

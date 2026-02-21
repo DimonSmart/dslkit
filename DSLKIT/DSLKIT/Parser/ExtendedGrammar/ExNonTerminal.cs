@@ -5,7 +5,7 @@ namespace DSLKIT.Parser.ExtendedGrammar
 {
     public class ExNonTerminal : ExBase, IExNonTerminal
     {
-        public ExNonTerminal(INonTerminal t, RuleSet from, RuleSet to) : base(from, to)
+        public ExNonTerminal(INonTerminal t, RuleSet from, RuleSet? to) : base(from, to)
         {
             NonTerminal = t;
         }

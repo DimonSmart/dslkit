@@ -86,7 +86,7 @@ namespace DSLKIT.Parser
                 children.Insert(0, nodeStack.Pop());
             }
 
-            var parent = new NonTerminalNode(production.LeftNonTerminal, children);
+            var parent = new NonTerminalNode(production.LeftNonTerminal, production, children);
             nodeStack.Push(parent);
 
             var newCurrentState = stateStack.Peek();

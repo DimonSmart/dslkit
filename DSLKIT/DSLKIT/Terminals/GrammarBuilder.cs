@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using DSLKIT.Ast;
 using DSLKIT.Base;
 using DSLKIT.NonTerminals;
 using DSLKIT.Parser;
@@ -22,9 +23,15 @@ namespace DSLKIT.Terminals
         private readonly ConcurrentDictionary<string, ITerminal> _terminals =
             new ConcurrentDictionary<string, ITerminal>();
 
+        private readonly Dictionary<Production, AstNodeBinding> _productionAstBindings =
+            new Dictionary<Production, AstNodeBinding>();
+
+        private readonly Dictionary<INonTerminal, AstNodeBinding> _nonTerminalAstBindings =
+            new Dictionary<INonTerminal, AstNodeBinding>();
+
         private IEofTerminal _eof = EofTerminal.Instance;
 
-        private string _name;
+        private string _name = string.Empty;
 
         public INonTerminal GetOrAddNonTerminal(string nonTerminalName)
         {
@@ -34,6 +41,12 @@ namespace DSLKIT.Terminals
         public INonTerminal AddNonTerminal(INonTerminal nonTerminal)
         {
             return _nonTerminals.GetOrAdd(nonTerminal.Name, i => nonTerminal);
+        }
+
+        public NonTerminalBindingBuilder NT(string nonTerminalName)
+        {
+            var nonTerminal = GetOrAddNonTerminal(nonTerminalName);
+            return new NonTerminalBindingBuilder(this, nonTerminal);
         }
 
         public GrammarBuilder AddTerminal(ITerminal terminal)
@@ -61,7 +74,7 @@ namespace DSLKIT.Terminals
             return this;
         }
 
-        public Grammar BuildGrammar(string rootProductionName = null)
+        public Grammar BuildGrammar(string? rootProductionName = null)
         {
             var root = GetRootNonTerminal(rootProductionName);
             var ruleSets = new ItemSetsBuilder(_productions, root).Build().ToList();
@@ -89,6 +102,8 @@ namespace DSLKIT.Terminals
                     OnReductionStep1)
                 .Build();
 
+            var astBindings = new AstBindings(_productionAstBindings, _nonTerminalAstBindings);
+
             return new Grammar(_name,
                 root,
                 _terminals.Values,
@@ -99,12 +114,14 @@ namespace DSLKIT.Terminals
                 new ReadOnlyDictionary<IExNonTerminal, IList<ITerm>>(follows),
                 ruleSets,
                 translationTable,
-                actionAndGotoTable);
+                actionAndGotoTable,
+                _eof,
+                astBindings);
         }
 
-        private INonTerminal GetRootNonTerminal(string rootProductionName)
+        private INonTerminal GetRootNonTerminal(string? rootProductionName)
         {
-            INonTerminal root;
+            INonTerminal? root;
             if (!string.IsNullOrEmpty(rootProductionName))
             {
                 root = _productions.SingleOrDefault(i => i.LeftNonTerminal.Name == rootProductionName)?.LeftNonTerminal;
@@ -112,6 +129,11 @@ namespace DSLKIT.Terminals
             else
             {
                 root = _productions.First().LeftNonTerminal;
+            }
+
+            if (root is null)
+            {
+                throw new InvalidOperationException($"Root non-terminal '{rootProductionName}' was not found.");
             }
 
             return root;
@@ -122,9 +144,59 @@ namespace DSLKIT.Terminals
             _productions.Add(production);
         }
 
+        public ProductionBuilder Prod(string ruleName)
+        {
+            return AddProduction(ruleName);
+        }
+
         public ProductionBuilder AddProduction(string ruleName)
         {
             return new ProductionBuilder(this, ruleName);
+        }
+
+        public GrammarBuilder BindAst(INonTerminal nonTerminal, Type astType)
+        {
+            return BindAst(nonTerminal, new AstNodeBinding(astType));
+        }
+
+        public GrammarBuilder BindAst<TAst>(INonTerminal nonTerminal)
+            where TAst : IAstNode
+        {
+            return BindAst(nonTerminal, typeof(TAst));
+        }
+
+        public GrammarBuilder BindAst(INonTerminal nonTerminal, Func<AstBuildContext, IAstNode> factory)
+        {
+            return BindAst(nonTerminal, new AstNodeBinding(factory));
+        }
+
+        public GrammarBuilder BindAst(Production production, Type astType)
+        {
+            return BindAst(production, new AstNodeBinding(astType));
+        }
+
+        public GrammarBuilder BindAst<TAst>(Production production)
+            where TAst : IAstNode
+        {
+            return BindAst(production, typeof(TAst));
+        }
+
+        public GrammarBuilder BindAst(Production production, Func<AstBuildContext, IAstNode> factory)
+        {
+            return BindAst(production, new AstNodeBinding(factory));
+        }
+
+        internal GrammarBuilder BindAst(Production production, AstNodeBinding binding)
+        {
+            _productionAstBindings[production] = binding;
+            return this;
+        }
+
+        internal GrammarBuilder BindAst(INonTerminal nonTerminal, AstNodeBinding binding)
+        {
+            var normalizedNonTerminal = GetOrAddNonTerminal(nonTerminal.Name);
+            _nonTerminalAstBindings[normalizedNonTerminal] = binding;
+            return this;
         }
 
         public GrammarBuilder WithEof(IEofTerminal eof)
@@ -220,7 +292,7 @@ namespace DSLKIT.Terminals
             return this;
         }
 
-        public GrammarBuilder AddProductionsFromString(string productions, string[] delimiters = null)
+        public GrammarBuilder AddProductionsFromString(string productions, string[]? delimiters = null)
         {
             if (delimiters == null)
             {
@@ -240,31 +312,31 @@ namespace DSLKIT.Terminals
 
         public delegate void RuleSetCreated(List<RuleSet> ruleSets);
 
-        public event RuleSetCreated OnRuleSetCreated;
+        public event RuleSetCreated? OnRuleSetCreated;
 
         public delegate void TranslationTableCreated(TranslationTable translationTable);
 
-        public event TranslationTableCreated OnTranslationTableCreated;
+        public event TranslationTableCreated? OnTranslationTableCreated;
 
         public delegate void ExtendedGrammarCreated(List<ExProduction> exProductions);
 
-        public event ExtendedGrammarCreated OnExtendedGrammarCreated;
+        public event ExtendedGrammarCreated? OnExtendedGrammarCreated;
 
         public delegate void FirstsCreated(IDictionary<IExNonTerminal, IList<ITerm>> firsts);
 
-        public event FirstsCreated OnFirstsCreated;
+        public event FirstsCreated? OnFirstsCreated;
 
         public delegate void FollowsCreated(IDictionary<IExNonTerminal, IList<ITerm>> follows);
 
-        public event FollowsCreated OnFollowsCreated;
+        public event FollowsCreated? OnFollowsCreated;
 
         public delegate void ReductionStep0(Dictionary<ExProduction, IList<ITerm>> rule2FollowSet);
 
-        public event ReductionStep0 OnReductionStep0;
+        public event ReductionStep0? OnReductionStep0;
 
         public delegate void ReductionStep1(IEnumerable<ActionAndGotoTableBuilder.MergedRow> mergedRows);
 
-        public event ReductionStep1 OnReductionStep1;
+        public event ReductionStep1? OnReductionStep1;
 
         #endregion
     }

@@ -25,7 +25,9 @@ namespace DSLKIT.SpecialTerms
             return false;
         }
 
-        public bool TryMatch(ISourceStream source, out IToken token)
+        public bool TryMatch(
+            ISourceStream source,
+            [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out IToken? token)
         {
             token = null;
             if (source.Position != source.Length)

@@ -28,7 +28,7 @@ namespace DSLKIT.Terminals
 
         public class KeywordTerminalEqualityComparer : IEqualityComparer<ITerminal>
         {
-            public bool Equals(ITerminal x, ITerminal y)
+            public bool Equals(ITerminal? x, ITerminal? y)
             {
                 return x?.DictionaryKey == y?.DictionaryKey;
             }

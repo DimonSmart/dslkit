@@ -7,9 +7,9 @@ namespace DSLKIT.Tokens
         int Position,
         int Length, 
         string OriginalString,
-        object Value,
+        object? Value,
         ITerminal Terminal,
-        FormattingTrivia Trivia = null) : IToken
+        FormattingTrivia? Trivia = null) : IToken
     {
         public FormattingTrivia Trivia { get; init; } = Trivia ?? FormattingTrivia.Empty;
 
@@ -18,7 +18,7 @@ namespace DSLKIT.Tokens
         /// </summary>
         public IToken WithTrivia(FormattingTrivia trivia)
         {
-            return this with { Trivia = trivia };
+            return this with { Trivia = trivia ?? FormattingTrivia.Empty };
         }
     }
 }

@@ -8,9 +8,9 @@ namespace DSLKIT.Tokens
         int Position = 0,
         int Length = 0,
         string OriginalString = "",
-        object Value = null,
-        ITerminal Terminal = null,
-        FormattingTrivia Trivia = null) : Token(Position, Length, OriginalString, Value, Terminal, Trivia)
+        object? Value = null,
+        ITerminal Terminal = null!,
+        FormattingTrivia? Trivia = null) : Token(Position, Length, OriginalString, Value, Terminal, Trivia)
     {
         public override string ToString()
         {

@@ -14,7 +14,9 @@ namespace DSLKIT.Terminals
             return IsSpace(c);
         }
 
-        public bool TryMatch(ISourceStream source, out IToken token)
+        public bool TryMatch(
+            ISourceStream source,
+            [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out IToken? token)
         {
             var previewChar = source.Peek();
             if (!IsSpace(previewChar))

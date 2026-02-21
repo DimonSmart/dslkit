@@ -25,7 +25,7 @@ namespace DSLKIT.Parser
             return _firsts;
         }
 
-        private void AddFirstSets(IExNonTerminal startExNonTerminal = null)
+        private void AddFirstSets(IExNonTerminal? startExNonTerminal = null)
         {
             foreach (var exProduction in _exProductions
                 .Where(p => (startExNonTerminal == null || p.ExLeftNonTerminal.Equals(startExNonTerminal)) &&

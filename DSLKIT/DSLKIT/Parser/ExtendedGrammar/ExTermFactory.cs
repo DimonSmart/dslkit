@@ -8,7 +8,7 @@ namespace DSLKIT.Parser.ExtendedGrammar
 {
     public static class ExTermFactory
     {
-        public static IExTerm ToExTerm(this ITerm term, RuleSet from, RuleSet to)
+        public static IExTerm ToExTerm(this ITerm term, RuleSet from, RuleSet? to)
         {
             switch (term)
             {
@@ -23,17 +23,17 @@ namespace DSLKIT.Parser.ExtendedGrammar
             }
         }
 
-        public static IExTerminal ToExTerminal(this ITerminal terminal, RuleSet from, RuleSet to)
+        public static IExTerminal ToExTerminal(this ITerminal terminal, RuleSet from, RuleSet? to)
         {
             return new ExTerminal(terminal, from, to);
         }
 
-        public static IExNonTerminal ToExNonTerminal(this INonTerminal nonTerminal, RuleSet from, RuleSet to)
+        public static IExNonTerminal ToExNonTerminal(this INonTerminal nonTerminal, RuleSet from, RuleSet? to)
         {
             return new ExNonTerminal(nonTerminal, from, to);
         }
 
-        public static IExEmptyTerm ToExEmpty(this IEmptyTerm emptyTerm, RuleSet from, RuleSet to)
+        public static IExEmptyTerm ToExEmpty(this IEmptyTerm emptyTerm, RuleSet from, RuleSet? to)
         {
             return new ExEmptyTerm(emptyTerm, from, to);
         }

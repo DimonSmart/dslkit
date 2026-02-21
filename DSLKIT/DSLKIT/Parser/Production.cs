@@ -18,7 +18,7 @@ namespace DSLKIT.Parser
             ProductionDefinition = productionDefinition;
         }
 
-        public string ProductionToString(int dotPosition = -1, Func<int, string, string> formatter = null)
+        public string ProductionToString(int dotPosition = -1, Func<int, string, string>? formatter = null)
         {
             const string dot = "● ";
             var sb = new StringBuilder();
@@ -53,7 +53,7 @@ namespace DSLKIT.Parser
 
         #region Equality Implementation
 
-        public bool Equals(Production other)
+        public bool Equals(Production? other)
         {
             if (other is null)
             {
@@ -70,7 +70,7 @@ namespace DSLKIT.Parser
                        .SequenceEqual(other.ProductionDefinition.Select(t => t.Name));
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return Equals(obj as Production);
         }
@@ -88,12 +88,12 @@ namespace DSLKIT.Parser
             return hash.ToHashCode();
         }
 
-        public static bool operator ==(Production left, Production right)
+        public static bool operator ==(Production? left, Production? right)
         {
             return EqualityComparer<Production>.Default.Equals(left, right);
         }
 
-        public static bool operator !=(Production left, Production right)
+        public static bool operator !=(Production? left, Production? right)
         {
             return !(left == right);
         }

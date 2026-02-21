@@ -5,8 +5,8 @@ namespace DSLKIT.Parser
     public class ParseResult
     {
         public bool IsSuccess => Error == null;
-        public ParseErrorDescription Error { get; set; }
-        public ParseTreeNode ParseTree { get; set; }
+        public ParseErrorDescription? Error { get; set; }
+        public ParseTreeNode? ParseTree { get; set; }
 
         /// <summary>
         /// List of production numbers applied during parsing, in the order they were applied.

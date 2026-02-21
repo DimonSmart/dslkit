@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
+using DSLKIT.Ast;
 using DSLKIT.Base;
 using DSLKIT.NonTerminals;
 using DSLKIT.Parser.ExtendedGrammar;
@@ -20,7 +21,9 @@ namespace DSLKIT.Parser
             IReadOnlyDictionary<IExNonTerminal, IList<ITerm>> follows,
             IEnumerable<RuleSet> ruleSets,
             TranslationTable translationTable,
-            ActionAndGotoTable actionAndGotoTable)
+            ActionAndGotoTable actionAndGotoTable,
+            IEofTerminal eof,
+            IAstBindings astBindings)
         {
             Name = name;
             Root = root;
@@ -33,6 +36,8 @@ namespace DSLKIT.Parser
             RuleSets = ruleSets.ToList();
             TranslationTable = translationTable;
             ActionAndGotoTable = actionAndGotoTable;
+            Eof = eof ?? EofTerminal.Instance;
+            AstBindings = astBindings ?? DSLKIT.Ast.AstBindings.Empty;
         }
 
         public string Name { get; }
@@ -46,7 +51,8 @@ namespace DSLKIT.Parser
         public IReadOnlyCollection<RuleSet> RuleSets { get; }
         public TranslationTable TranslationTable { get; }
         public ActionAndGotoTable ActionAndGotoTable { get; }
-        public IEofTerminal Eof { get; } = EofTerminal.Instance;
+        public IEofTerminal Eof { get; }
+        public IAstBindings AstBindings { get; }
 
         public override string ToString()
         {

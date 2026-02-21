@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using DSLKIT.Ast;
 using DSLKIT.Base;
 using DSLKIT.NonTerminals;
 using DSLKIT.Parser.ExtendedGrammar;
@@ -21,5 +22,6 @@ namespace DSLKIT.Parser
         TranslationTable TranslationTable { get; }
         ActionAndGotoTable ActionAndGotoTable { get; }
         IEofTerminal Eof { get; }
+        IAstBindings AstBindings { get; }
     }
 }

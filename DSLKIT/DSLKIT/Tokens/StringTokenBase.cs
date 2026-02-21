@@ -8,13 +8,13 @@ namespace DSLKIT.Tokens
         int Position,
         int Length,
         string OriginalString,
-        object Value,
+        object? Value,
         ITerminal Terminal,
-        FormattingTrivia Trivia = null) : Token(Position, Length, OriginalString, Value, Terminal, Trivia)
+        FormattingTrivia? Trivia = null) : Token(Position, Length, OriginalString, Value, Terminal, Trivia)
     {
         public override string ToString()
         {
-            return ((string)Value).MakeWhiteSpaceVisible().DoubleQuoteIt();
+            return (Value as string ?? string.Empty).MakeWhiteSpaceVisible().DoubleQuoteIt();
         }
     }
 }

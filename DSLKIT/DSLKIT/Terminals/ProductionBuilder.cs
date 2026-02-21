@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using DSLKIT.Ast;
 using DSLKIT.Base;
 using DSLKIT.NonTerminals;
 using DSLKIT.Parser;
@@ -11,7 +12,7 @@ namespace DSLKIT.Terminals
     {
         private readonly GrammarBuilder _grammarBuilder;
         private readonly string _leftNonTerminalName;
-        private readonly List<ITerm> _ruleDefinition = new List<ITerm>();
+        private AstNodeBinding? _pendingAstBinding;
 
         public ProductionBuilder(GrammarBuilder grammarBuilder, string leftNonTerminalName)
         {
@@ -23,23 +24,109 @@ namespace DSLKIT.Terminals
         {
         }
 
+        public Production? Production { get; private set; }
+
+        public ProductionBuilder Ast(Type nodeType)
+        {
+            return Ast(new AstNodeBinding(nodeType));
+        }
+
+        public ProductionBuilder Ast<TAst>()
+            where TAst : IAstNode
+        {
+            return Ast(typeof(TAst));
+        }
+
+        public ProductionBuilder Ast(Func<AstBuildContext, IAstNode> factory)
+        {
+            return Ast(new AstNodeBinding(factory));
+        }
+
+        public ProductionBuilder Ast(AstNodeBinding binding)
+        {
+            if (Production != null)
+            {
+                _grammarBuilder.BindAst(Production, binding);
+            }
+            else
+            {
+                _pendingAstBinding = binding;
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// Backward-compatible API. Defines a production and returns grammar builder.
+        /// </summary>
         public GrammarBuilder AddProductionDefinition(params object[] terms)
         {
+            return Is(terms);
+        }
+
+        /// <summary>
+        /// Defines a production and returns grammar builder to keep old fluent chains.
+        /// </summary>
+        public GrammarBuilder Is(params object[] terms)
+        {
+            Define(terms);
+            return Done();
+        }
+
+        /// <summary>
+        /// Defines a production and keeps the production builder for further configuration.
+        /// </summary>
+        public ProductionBuilder Define(params object[] terms)
+        {
+            if (Production != null)
+            {
+                throw new InvalidOperationException("Production has already been defined for this builder instance.");
+            }
+
+            var leftNonTerminal = _grammarBuilder.GetOrAddNonTerminal(_leftNonTerminalName);
+            var ruleDefinition = BuildRuleDefinition(terms);
+
+            Production = new Production(leftNonTerminal, ruleDefinition);
+            _grammarBuilder.AddProduction(Production);
+
+            if (_pendingAstBinding != null)
+            {
+                _grammarBuilder.BindAst(Production, _pendingAstBinding);
+                _pendingAstBinding = null;
+            }
+
+            return this;
+        }
+
+        public GrammarBuilder Done()
+        {
+            if (Production == null)
+            {
+                throw new InvalidOperationException("Production is not defined. Call Is(...) or Define(...) before Done().");
+            }
+
+            return _grammarBuilder;
+        }
+
+        private List<ITerm> BuildRuleDefinition(params object[] terms)
+        {
+            var ruleDefinition = new List<ITerm>();
+
             foreach (var term in terms)
             {
                 switch (term)
                 {
                     case string keyword:
-                        _ruleDefinition.Add(_grammarBuilder.AddTerminalBody(new KeywordTerminal(keyword)));
+                        ruleDefinition.Add(_grammarBuilder.AddTerminalBody(new KeywordTerminal(keyword)));
                         break;
                     case ITerminal terminal:
-                        _ruleDefinition.Add(_grammarBuilder.AddTerminalBody(terminal));
+                        ruleDefinition.Add(_grammarBuilder.AddTerminalBody(terminal));
                         break;
                     case INonTerminal nonTerminal:
-                        _ruleDefinition.Add(_grammarBuilder.AddNonTerminal(nonTerminal));
+                        ruleDefinition.Add(_grammarBuilder.AddNonTerminal(nonTerminal));
                         break;
                     case EmptyTerm _:
-                        _ruleDefinition.Add(EmptyTerm.Empty);
+                        ruleDefinition.Add(EmptyTerm.Empty);
                         break;
                     default:
                         throw new InvalidOperationException(
@@ -47,9 +134,7 @@ namespace DSLKIT.Terminals
                 }
             }
 
-            var leftNonTerminal = _grammarBuilder.GetOrAddNonTerminal(_leftNonTerminalName);
-            _grammarBuilder.AddProduction(new Production(leftNonTerminal, _ruleDefinition));
-            return _grammarBuilder;
+            return ruleDefinition;
         }
     }
 }

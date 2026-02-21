@@ -5,7 +5,7 @@ namespace DSLKIT.Parser.ExtendedGrammar
 {
     public class ExEmptyTerm : ExBase, IExEmptyTerm
     {
-        public ExEmptyTerm(IEmptyTerm t, RuleSet from, RuleSet to) : base(from, to)
+        public ExEmptyTerm(IEmptyTerm t, RuleSet from, RuleSet? to) : base(from, to)
         {
             EmptyTerm = t;
         }

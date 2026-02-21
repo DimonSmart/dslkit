@@ -43,7 +43,7 @@ namespace DSLKIT.Parser
             return new Rule(Production, DotPosition + 1);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is Rule rule &&
                    DotPosition == rule.DotPosition &&

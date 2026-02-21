@@ -31,7 +31,9 @@ namespace DSLKIT.Terminals
             return _previewChar == c;
         }
 
-        public bool TryMatch(ISourceStream source, out IToken token)
+        public bool TryMatch(
+            ISourceStream source,
+            [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out IToken? token)
         {
             token = null;
             var result = _regex.Match(source);

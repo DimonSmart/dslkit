@@ -20,6 +20,11 @@ namespace DSLKIT.Parser
         public ICollection<RuleSet> Build()
         {
             var startProduction = _productions.FirstOrDefault(i => i.LeftNonTerminal == _root);
+            if (startProduction is null)
+            {
+                throw new InvalidOperationException($"No start production found for root non-terminal '{_root.Name}'.");
+            }
+
             _sets.Add(new RuleSet(_sets.Count, new Rule(startProduction)));
             FillRuleSet(_sets[0]);
             bool changes;
@@ -67,7 +72,7 @@ namespace DSLKIT.Parser
             return anyChanges;
         }
 
-        private RuleSet GetSetBySetDefinitionRules(IEnumerable<Rule> newRules)
+        private RuleSet? GetSetBySetDefinitionRules(IEnumerable<Rule> newRules)
         {
             return _sets.SingleOrDefault(s => s.StartsFrom(newRules));
         }
