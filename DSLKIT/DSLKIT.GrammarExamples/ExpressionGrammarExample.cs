@@ -1,33 +1,23 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using DSLKIT.Ast;
 using DSLKIT.Lexer;
 using DSLKIT.Parser;
 using DSLKIT.Terminals;
-using FluentAssertions;
-using Xunit;
-using Xunit.Abstractions;
 
-namespace DSLKIT.Test.ParserTests
+namespace DSLKIT.GrammarExamples
 {
-    public class ExpressionGrammarVisitorDemoTests
+    /// <summary>
+    /// Example arithmetic language with assignments and expression evaluation.
+    /// </summary>
+    public static class ExpressionGrammarExample
     {
-        private readonly ITestOutputHelper _testOutputHelper;
-
-        public ExpressionGrammarVisitorDemoTests(ITestOutputHelper testOutputHelper)
+        public static double Evaluate(string source)
         {
-            _testOutputHelper = testOutputHelper;
-        }
-
-        [Theory]
-        [InlineData("x=2+3*4;x+1", 15)]
-        [InlineData("a=2;b=a**3;b-1", 7)]
-        [InlineData("v=2**3**2;v", 512)]
-        public void Parse_BuildAst_VisitAndEvaluate_ShouldReturnExpectedResult(string source, int expectedResult)
-        {
-            var grammar = BuildDemoGrammar();
+            var grammar = BuildGrammar();
             var lexer = new Lexer.Lexer(CreateLexerSettings(grammar));
             var parser = new SyntaxParser(grammar);
 
@@ -35,43 +25,31 @@ namespace DSLKIT.Test.ParserTests
             var parseResult = parser.Parse(tokens);
             if (!parseResult.IsSuccess || parseResult.ParseTree == null)
             {
-                throw new Xunit.Sdk.XunitException($"Parse failed for '{source}'. Error: {parseResult.Error?.Message}");
+                throw new InvalidOperationException($"Parse failed for '{source}'. Error: {parseResult.Error?.Message}");
             }
-
-            _testOutputHelper.WriteLine("Parse tree:");
-            _testOutputHelper.WriteLine(RenderParseTree(parseResult.ParseTree));
 
             var ast = new AstBuilder(grammar.AstBindings).Build(parseResult.ParseTree, source);
             if (ast is not ProgramNode programNode)
             {
-                throw new Xunit.Sdk.XunitException($"Unexpected AST root type: {ast.GetType().Name}");
+                throw new InvalidOperationException($"Unexpected AST root type: {ast.GetType().Name}");
             }
 
             var evaluator = new EvaluationVisitor();
-            var actualResult = programNode.Accept(evaluator);
-
-            actualResult.Should().Be(expectedResult);
+            return programNode.Accept(evaluator);
         }
 
-        private static LexerSettings CreateLexerSettings(IGrammar grammar)
+        public static IGrammar BuildGrammar()
         {
-            var settings = new LexerSettings();
-            foreach (var terminal in grammar.Terminals)
-            {
-                settings.Add(terminal);
-            }
-
-            return settings;
-        }
-
-        private static IGrammar BuildDemoGrammar()
-        {
-            var integer = new IntegerTerminal();
+            var number = new RegExpTerminal(
+                "Number",
+                @"\G(?:\d+(\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?",
+                previewChar: null,
+                flags: TermFlags.Const);
             var identifier = new IdentifierTerminal();
 
             var gb = new GrammarBuilder()
                 .WithGrammarName("expression-demo")
-                .AddTerminal(integer)
+                .AddTerminal(number)
                 .AddTerminal(identifier);
 
             var program = gb.NT("Program").Ast<ProgramNode>();
@@ -85,7 +63,7 @@ namespace DSLKIT.Test.ParserTests
             var powExpr = gb.NT("PowExpr");
             var unaryExpr = gb.NT("UnaryExpr");
             var primary = gb.NT("Primary");
-            var intLiteral = gb.NT("IntLiteral").Ast<NumberNode>();
+            var numberLiteral = gb.NT("NumberLiteral").Ast<NumberNode>();
             var idLiteral = gb.NT("IdLiteral").Ast<IdentifierNode>();
 
             gb.Prod("Start").Is(program);
@@ -111,19 +89,37 @@ namespace DSLKIT.Test.ParserTests
             gb.Prod("PowExpr").Is(unaryExpr);
 
             gb.Prod("UnaryExpr").Ast<UnaryNode>().Is("-", unaryExpr);
+            gb.Prod("UnaryExpr").Ast<UnaryNode>().Is("+", unaryExpr);
+            gb.Prod("UnaryExpr").Ast<UnaryNode>().Is("sin", "(", expr, ")");
+            gb.Prod("UnaryExpr").Ast<UnaryNode>().Is("cos", "(", expr, ")");
+            gb.Prod("UnaryExpr").Ast<UnaryNode>().Is("tg", "(", expr, ")");
+            gb.Prod("UnaryExpr").Ast<UnaryNode>().Is("ctg", "(", expr, ")");
+            gb.Prod("UnaryExpr").Ast<UnaryNode>().Is("round", "(", expr, ")");
+            gb.Prod("UnaryExpr").Ast<UnaryNode>().Is("trunc", "(", expr, ")");
             gb.Prod("UnaryExpr").Is(primary);
 
-            gb.Prod("Primary").Is(intLiteral);
+            gb.Prod("Primary").Is(numberLiteral);
             gb.Prod("Primary").Is(idLiteral);
             gb.Prod("Primary").Ast(context => context.AstChild<IAstNode>(1)).Is("(", expr, ")");
 
-            gb.Prod("IntLiteral").Is(integer);
+            gb.Prod("NumberLiteral").Is(number);
             gb.Prod("IdLiteral").Is(identifier);
 
             return gb.BuildGrammar("Start");
         }
 
-        private static string RenderParseTree(ParseTreeNode root)
+        public static LexerSettings CreateLexerSettings(IGrammar grammar)
+        {
+            var settings = new LexerSettings();
+            foreach (var terminal in grammar.Terminals)
+            {
+                settings.Add(terminal);
+            }
+
+            return settings;
+        }
+
+        public static string RenderParseTree(ParseTreeNode root)
         {
             var sb = new StringBuilder();
             WriteParseTreeNode(root, sb, 0);
@@ -268,8 +264,21 @@ namespace DSLKIT.Test.ParserTests
             public UnaryNode(AstBuildContext context, IReadOnlyList<IAstNode> children)
                 : base(context, children)
             {
-                Operator = context.AstChild<AstTokenNode>(0).Text;
-                Operand = context.AstChild<DemoAstNode>(1);
+                if (children.Count == 2)
+                {
+                    Operator = context.AstChild<AstTokenNode>(0).Text;
+                    Operand = context.AstChild<DemoAstNode>(1);
+                    return;
+                }
+
+                if (children.Count == 4)
+                {
+                    Operator = context.AstChild<AstTokenNode>(0).Text;
+                    Operand = context.AstChild<DemoAstNode>(2);
+                    return;
+                }
+
+                throw new InvalidOperationException("Unexpected unary production shape.");
             }
 
             public string Operator { get; }
@@ -286,10 +295,16 @@ namespace DSLKIT.Test.ParserTests
             public NumberNode(AstBuildContext context, IReadOnlyList<IAstNode> children)
                 : base(context, children)
             {
-                Value = (int)context.AstChild<AstTokenNode>(0).Value!;
+                var literal = context.AstChild<AstTokenNode>(0).Text;
+                if (!double.TryParse(literal, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedValue))
+                {
+                    throw new InvalidOperationException($"Cannot parse number literal '{literal}'.");
+                }
+
+                Value = parsedValue;
             }
 
-            public int Value { get; }
+            public double Value { get; }
 
             public override TResult Accept<TResult>(IAstVisitor<TResult> visitor)
             {
@@ -313,13 +328,13 @@ namespace DSLKIT.Test.ParserTests
             }
         }
 
-        private sealed class EvaluationVisitor : IAstVisitor<int>
+        private sealed class EvaluationVisitor : IAstVisitor<double>
         {
-            private readonly Dictionary<string, int> _variables = new Dictionary<string, int>(StringComparer.Ordinal);
+            private readonly Dictionary<string, double> _variables = new(StringComparer.Ordinal);
 
-            public int VisitProgram(ProgramNode node)
+            public double VisitProgram(ProgramNode node)
             {
-                var result = 0;
+                var result = 0d;
                 foreach (var statement in node.Statements)
                 {
                     result = statement.Accept(this);
@@ -328,14 +343,14 @@ namespace DSLKIT.Test.ParserTests
                 return result;
             }
 
-            public int VisitAssignment(AssignmentNode node)
+            public double VisitAssignment(AssignmentNode node)
             {
                 var value = node.Value.Accept(this);
                 _variables[node.Name] = value;
                 return value;
             }
 
-            public int VisitBinary(BinaryNode node)
+            public double VisitBinary(BinaryNode node)
             {
                 var left = node.Left.Accept(this);
                 var right = node.Right.Accept(this);
@@ -346,27 +361,34 @@ namespace DSLKIT.Test.ParserTests
                     "-" => left - right,
                     "*" => left * right,
                     "/" => left / right,
-                    "**" => Pow(left, right),
+                    "**" => Math.Pow(left, right),
                     _ => throw new InvalidOperationException($"Unsupported binary operator '{node.Operator}'.")
                 };
             }
 
-            public int VisitUnary(UnaryNode node)
+            public double VisitUnary(UnaryNode node)
             {
                 var value = node.Operand.Accept(this);
                 return node.Operator switch
                 {
                     "-" => -value,
+                    "+" => value,
+                    "sin" => Math.Sin(value),
+                    "cos" => Math.Cos(value),
+                    "tg" => Math.Tan(value),
+                    "ctg" => Cotangent(value),
+                    "round" => Math.Round(value, MidpointRounding.AwayFromZero),
+                    "trunc" => Math.Truncate(value),
                     _ => throw new InvalidOperationException($"Unsupported unary operator '{node.Operator}'.")
                 };
             }
 
-            public int VisitNumber(NumberNode node)
+            public double VisitNumber(NumberNode node)
             {
                 return node.Value;
             }
 
-            public int VisitIdentifier(IdentifierNode node)
+            public double VisitIdentifier(IdentifierNode node)
             {
                 if (!_variables.TryGetValue(node.Name, out var value))
                 {
@@ -376,20 +398,15 @@ namespace DSLKIT.Test.ParserTests
                 return value;
             }
 
-            private static int Pow(int value, int exponent)
+            private static double Cotangent(double value)
             {
-                if (exponent < 0)
+                var tangent = Math.Tan(value);
+                if (Math.Abs(tangent) < 1e-12)
                 {
-                    throw new InvalidOperationException("Negative powers are not supported for integer arithmetic.");
+                    throw new InvalidOperationException("ctg(x) is undefined for this value.");
                 }
 
-                var result = 1;
-                for (var i = 0; i < exponent; i++)
-                {
-                    result *= value;
-                }
-
-                return result;
+                return 1d / tangent;
             }
         }
     }

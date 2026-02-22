@@ -83,12 +83,18 @@ namespace DSLKIT.Parser
                         exProduction.ExProductionDefinition[^1].To == p.ExProductionDefinition[^1].To).ToList();
                 var finalSet = group.First().ExProductionDefinition[^1].To
                     ?? throw new System.InvalidOperationException("Final set cannot be null when building merged reduction rows.");
+                // FOLLOW is a set by definition. When merged rows share the same terminal in FOLLOW,
+                // keep one copy to avoid duplicate reduction attempts and noisy false conflict logs.
+                var mergedFollowSet = group
+                    .SelectMany(p => rule2FollowSet[p])
+                    .Distinct()
+                    .ToList();
 
                 var mergedRow = new MergedRow
                 {
                     FinalSet = finalSet,
                     Production = new Production(group.First().ExLeftNonTerminal.NonTerminal, group.First().Production.ProductionDefinition),
-                    FollowSet = rule2FollowSet[group.First()],
+                    FollowSet = mergedFollowSet,
                     PreMergedRules = group
                 };
 
