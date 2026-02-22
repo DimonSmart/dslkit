@@ -154,6 +154,120 @@ namespace DSLKIT.Terminals
             return new ProductionBuilder(this, ruleName);
         }
 
+        /// <summary>
+        /// Defines a "zero or more" list production, similar to Irony's MakeStarRule.
+        /// Example: List -> Empty | List Item
+        /// </summary>
+        public GrammarBuilder Star(string listNonTerminalName, INonTerminal repeatedNonTerminal)
+        {
+            var listNonTerminal = GetRequiredListNonTerminal(listNonTerminalName);
+            return Star(listNonTerminal, repeatedNonTerminal);
+        }
+
+        /// <summary>
+        /// Defines a "zero or more" list production, similar to Irony's MakeStarRule.
+        /// Example: List -> Empty | List Item
+        /// </summary>
+        public GrammarBuilder Star(string listNonTerminalName, ITerminal repeatedTerminal)
+        {
+            var listNonTerminal = GetRequiredListNonTerminal(listNonTerminalName);
+            return Star(listNonTerminal, repeatedTerminal);
+        }
+
+        /// <summary>
+        /// Defines a "zero or more" delimited list production, similar to Irony's MakeStarRule.
+        /// Example: List -> Empty | Item | List Delimiter Item
+        /// </summary>
+        public GrammarBuilder Star(string listNonTerminalName, INonTerminal repeatedNonTerminal, ITerminal delimiter)
+        {
+            var listNonTerminal = GetRequiredListNonTerminal(listNonTerminalName);
+            return Star(listNonTerminal, repeatedNonTerminal, delimiter);
+        }
+
+        /// <summary>
+        /// Defines a "zero or more" delimited list production, similar to Irony's MakeStarRule.
+        /// Example: List -> Empty | Item | List Delimiter Item
+        /// </summary>
+        public GrammarBuilder Star(string listNonTerminalName, ITerminal repeatedTerminal, ITerminal delimiter)
+        {
+            var listNonTerminal = GetRequiredListNonTerminal(listNonTerminalName);
+            return Star(listNonTerminal, repeatedTerminal, delimiter);
+        }
+
+        /// <summary>
+        /// Defines a "zero or more" delimited list production, similar to Irony's MakeStarRule.
+        /// Example: List -> Empty | Item | List Delimiter Item
+        /// </summary>
+        public GrammarBuilder Star(string listNonTerminalName, INonTerminal repeatedNonTerminal, string delimiter)
+        {
+            var listNonTerminal = GetRequiredListNonTerminal(listNonTerminalName);
+            return Star(listNonTerminal, repeatedNonTerminal, CreateDelimiterTerminal(delimiter));
+        }
+
+        /// <summary>
+        /// Defines a "zero or more" delimited list production, similar to Irony's MakeStarRule.
+        /// Example: List -> Empty | Item | List Delimiter Item
+        /// </summary>
+        public GrammarBuilder Star(string listNonTerminalName, ITerminal repeatedTerminal, string delimiter)
+        {
+            var listNonTerminal = GetRequiredListNonTerminal(listNonTerminalName);
+            return Star(listNonTerminal, repeatedTerminal, CreateDelimiterTerminal(delimiter));
+        }
+
+        /// <summary>
+        /// Defines a "zero or more" list production, similar to Irony's MakeStarRule.
+        /// Example: List -> Empty | List Item
+        /// </summary>
+        public GrammarBuilder Star(INonTerminal listNonTerminal, INonTerminal repeatedNonTerminal)
+        {
+            return AddStarWithoutDelimiter(listNonTerminal, repeatedNonTerminal);
+        }
+
+        /// <summary>
+        /// Defines a "zero or more" list production, similar to Irony's MakeStarRule.
+        /// Example: List -> Empty | List Item
+        /// </summary>
+        public GrammarBuilder Star(INonTerminal listNonTerminal, ITerminal repeatedTerminal)
+        {
+            return AddStarWithoutDelimiter(listNonTerminal, repeatedTerminal);
+        }
+
+        /// <summary>
+        /// Defines a "zero or more" delimited list production, similar to Irony's MakeStarRule.
+        /// Example: List -> Empty | Item | List Delimiter Item
+        /// </summary>
+        public GrammarBuilder Star(INonTerminal listNonTerminal, INonTerminal repeatedNonTerminal, ITerminal delimiter)
+        {
+            return AddStarWithDelimiter(listNonTerminal, repeatedNonTerminal, delimiter);
+        }
+
+        /// <summary>
+        /// Defines a "zero or more" delimited list production, similar to Irony's MakeStarRule.
+        /// Example: List -> Empty | Item | List Delimiter Item
+        /// </summary>
+        public GrammarBuilder Star(INonTerminal listNonTerminal, ITerminal repeatedTerminal, ITerminal delimiter)
+        {
+            return AddStarWithDelimiter(listNonTerminal, repeatedTerminal, delimiter);
+        }
+
+        /// <summary>
+        /// Defines a "zero or more" delimited list production, similar to Irony's MakeStarRule.
+        /// Example: List -> Empty | Item | List Delimiter Item
+        /// </summary>
+        public GrammarBuilder Star(INonTerminal listNonTerminal, INonTerminal repeatedNonTerminal, string delimiter)
+        {
+            return AddStarWithDelimiter(listNonTerminal, repeatedNonTerminal, CreateDelimiterTerminal(delimiter));
+        }
+
+        /// <summary>
+        /// Defines a "zero or more" delimited list production, similar to Irony's MakeStarRule.
+        /// Example: List -> Empty | Item | List Delimiter Item
+        /// </summary>
+        public GrammarBuilder Star(INonTerminal listNonTerminal, ITerminal repeatedTerminal, string delimiter)
+        {
+            return AddStarWithDelimiter(listNonTerminal, repeatedTerminal, CreateDelimiterTerminal(delimiter));
+        }
+
         public GrammarBuilder BindAst(INonTerminal nonTerminal, Type astType)
         {
             return BindAst(nonTerminal, new AstNodeBinding(astType));
@@ -306,6 +420,71 @@ namespace DSLKIT.Terminals
             }
 
             return this;
+        }
+
+        private INonTerminal GetRequiredListNonTerminal(string listNonTerminalName)
+        {
+            if (string.IsNullOrWhiteSpace(listNonTerminalName))
+            {
+                throw new ArgumentException("Non-terminal name must be specified.", nameof(listNonTerminalName));
+            }
+
+            return GetOrAddNonTerminal(listNonTerminalName);
+        }
+
+        private GrammarBuilder AddStarWithoutDelimiter(INonTerminal listNonTerminal, ITerm repeatedTerm)
+        {
+            if (listNonTerminal == null)
+            {
+                throw new ArgumentNullException(nameof(listNonTerminal));
+            }
+
+            if (repeatedTerm == null)
+            {
+                throw new ArgumentNullException(nameof(repeatedTerm));
+            }
+
+            AddProduction(listNonTerminal.Name).Is(Empty);
+            AddProduction(listNonTerminal.Name).Is(listNonTerminal, repeatedTerm);
+            return this;
+        }
+
+        private GrammarBuilder AddStarWithDelimiter(INonTerminal listNonTerminal, ITerm repeatedTerm, ITerminal delimiter)
+        {
+            if (listNonTerminal == null)
+            {
+                throw new ArgumentNullException(nameof(listNonTerminal));
+            }
+
+            if (repeatedTerm == null)
+            {
+                throw new ArgumentNullException(nameof(repeatedTerm));
+            }
+
+            if (delimiter == null)
+            {
+                throw new ArgumentNullException(nameof(delimiter));
+            }
+
+            AddProduction(listNonTerminal.Name).Is(Empty);
+            AddProduction(listNonTerminal.Name).Is(repeatedTerm);
+            AddProduction(listNonTerminal.Name).Is(listNonTerminal, delimiter, repeatedTerm);
+            return this;
+        }
+
+        private static ITerminal CreateDelimiterTerminal(string delimiter)
+        {
+            if (delimiter == null)
+            {
+                throw new ArgumentNullException(nameof(delimiter));
+            }
+
+            if (delimiter.Length == 0)
+            {
+                throw new ArgumentException("Delimiter must not be empty.", nameof(delimiter));
+            }
+
+            return new KeywordTerminal(delimiter);
         }
 
         #region Events
