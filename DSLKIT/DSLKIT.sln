@@ -18,6 +18,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLKIT.Visualizers.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLKIT.GrammarExamples", "DSLKIT.GrammarExamples\DSLKIT.GrammarExamples.csproj", "{52425D3F-EA7E-4EBB-A6B2-F119147CC041}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLKIT.GrammarExamples.MsSql", "DSLKIT.GrammarExamples.MsSql\DSLKIT.GrammarExamples.MsSql.csproj", "{0CA763F4-9C5D-4DE6-ACE2-970BB9CE88EC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -88,6 +90,18 @@ Global
 		{52425D3F-EA7E-4EBB-A6B2-F119147CC041}.Release|x64.Build.0 = Release|Any CPU
 		{52425D3F-EA7E-4EBB-A6B2-F119147CC041}.Release|x86.ActiveCfg = Release|Any CPU
 		{52425D3F-EA7E-4EBB-A6B2-F119147CC041}.Release|x86.Build.0 = Release|Any CPU
+		{0CA763F4-9C5D-4DE6-ACE2-970BB9CE88EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0CA763F4-9C5D-4DE6-ACE2-970BB9CE88EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0CA763F4-9C5D-4DE6-ACE2-970BB9CE88EC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0CA763F4-9C5D-4DE6-ACE2-970BB9CE88EC}.Debug|x64.Build.0 = Debug|Any CPU
+		{0CA763F4-9C5D-4DE6-ACE2-970BB9CE88EC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0CA763F4-9C5D-4DE6-ACE2-970BB9CE88EC}.Debug|x86.Build.0 = Debug|Any CPU
+		{0CA763F4-9C5D-4DE6-ACE2-970BB9CE88EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CA763F4-9C5D-4DE6-ACE2-970BB9CE88EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0CA763F4-9C5D-4DE6-ACE2-970BB9CE88EC}.Release|x64.ActiveCfg = Release|Any CPU
+		{0CA763F4-9C5D-4DE6-ACE2-970BB9CE88EC}.Release|x64.Build.0 = Release|Any CPU
+		{0CA763F4-9C5D-4DE6-ACE2-970BB9CE88EC}.Release|x86.ActiveCfg = Release|Any CPU
+		{0CA763F4-9C5D-4DE6-ACE2-970BB9CE88EC}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

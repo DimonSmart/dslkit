@@ -24,7 +24,7 @@ namespace DSLKIT.Visualizers
                 var form = 0;
                 foreach (var rule in set.Rules)
                 {
-                    var ruleText = (form >= set.SetFormRules ? "+" : " ") + rule;
+                    var ruleText = (form >= set.KernelRuleCount ? "+" : " ") + rule;
                     sb.AppendLine($@"<tr><td align=""left"" port=""r0"">{ruleText}</td></tr>");
                     form++;
                 }

@@ -36,6 +36,7 @@
         <ProjectReference Include="..\DSLKIT\DSLKIT.csproj" />
         <ProjectReference Include="..\DSLKIT.GrammarExamples\DSLKIT.GrammarExamples.csproj" />
         <ProjectReference Include="..\DSLKIT.Visualizers\DSLKIT.Visualizers.csproj" />
+        <ProjectReference Include="..\DSLKIT.GrammarExamples.MsSql\DSLKIT.GrammarExamples.MsSql.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -43,6 +44,9 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
       <None Update="LexerTests\TestData\ExpectedTokens.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="GrammarExamples\TestData\MsSql\Valid\**\*.sql">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>
