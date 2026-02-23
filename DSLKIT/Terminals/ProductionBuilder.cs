@@ -57,20 +57,17 @@ namespace DSLKIT.Terminals
         }
 
         /// <summary>
-        /// Backward-compatible API. Defines a production and returns grammar builder.
-        /// </summary>
-        public GrammarBuilder AddProductionDefinition(params object[] terms)
-        {
-            return Is(terms);
-        }
-
-        /// <summary>
-        /// Defines a production and returns grammar builder to keep old fluent chains.
+        /// Defines a production and returns grammar builder for fluent grammar declarations.
         /// </summary>
         public GrammarBuilder Is(params object[] terms)
         {
             Define(terms);
             return Done();
+        }
+
+        public GrammarBuilder AddProductionDefinition(params object[] terms)
+        {
+            return Is(terms);
         }
 
         /// <summary>

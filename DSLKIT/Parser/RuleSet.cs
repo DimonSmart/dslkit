@@ -36,9 +36,6 @@ namespace DSLKIT.Parser
         public int KernelRuleCount { get; }
         public int SetNumber { get; set; }
 
-        [Obsolete("Use KernelRuleCount instead.")]
-        public int SetFormRules => KernelRuleCount;
-
         internal void AddRule(Rule rule)
         {
             if (rule is null)

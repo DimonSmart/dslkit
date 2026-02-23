@@ -146,32 +146,12 @@ namespace DSLKIT.Terminals
 
         public ProductionBuilder Prod(string ruleName)
         {
-            return AddProduction(ruleName);
+            return new ProductionBuilder(this, ruleName);
         }
 
         public ProductionBuilder AddProduction(string ruleName)
         {
             return new ProductionBuilder(this, ruleName);
-        }
-
-        /// <summary>
-        /// Defines a "zero or more" list production, similar to Irony's MakeStarRule.
-        /// Example: List -> Empty | List Item
-        /// </summary>
-        public GrammarBuilder Star(string listNonTerminalName, INonTerminal repeatedNonTerminal)
-        {
-            var listNonTerminal = GetRequiredListNonTerminal(listNonTerminalName);
-            return Star(listNonTerminal, repeatedNonTerminal);
-        }
-
-        /// <summary>
-        /// Defines a "zero or more" list production, similar to Irony's MakeStarRule.
-        /// Example: List -> Empty | List Item
-        /// </summary>
-        public GrammarBuilder Star(string listNonTerminalName, ITerminal repeatedTerminal)
-        {
-            var listNonTerminal = GetRequiredListNonTerminal(listNonTerminalName);
-            return Star(listNonTerminal, repeatedTerminal);
         }
 
         /// <summary>
@@ -402,7 +382,7 @@ namespace DSLKIT.Terminals
                 definition.Add(item.AsKeywordTerminal());
             }
 
-            productionBuilder.AddProductionDefinition(definition.ToArray());
+            productionBuilder.Define(definition.ToArray()).Done();
             return this;
         }
 
@@ -444,8 +424,8 @@ namespace DSLKIT.Terminals
                 throw new ArgumentNullException(nameof(repeatedTerm));
             }
 
-            AddProduction(listNonTerminal.Name).Is(Empty);
-            AddProduction(listNonTerminal.Name).Is(listNonTerminal, repeatedTerm);
+            AddProduction(listNonTerminal.Name).Define(Empty);
+            AddProduction(listNonTerminal.Name).Define(listNonTerminal, repeatedTerm);
             return this;
         }
 
@@ -466,9 +446,9 @@ namespace DSLKIT.Terminals
                 throw new ArgumentNullException(nameof(delimiter));
             }
 
-            AddProduction(listNonTerminal.Name).Is(Empty);
-            AddProduction(listNonTerminal.Name).Is(repeatedTerm);
-            AddProduction(listNonTerminal.Name).Is(listNonTerminal, delimiter, repeatedTerm);
+            AddProduction(listNonTerminal.Name).Define(Empty);
+            AddProduction(listNonTerminal.Name).Define(repeatedTerm);
+            AddProduction(listNonTerminal.Name).Define(listNonTerminal, delimiter, repeatedTerm);
             return this;
         }
 
