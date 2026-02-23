@@ -98,7 +98,8 @@ namespace DSLKIT.Parser
                         .ToList();
                     if (!toAdd.Any())
                     {
-                        throw new Exception($"No productions for non terminal:{nextNonTerminal}");
+                        throw new InvalidOperationException(
+                            $"No productions found for non-terminal '{nextNonTerminal.Name}'.");
                     }
 
                     toAdd = toAdd.Except(set.Rules).ToList();

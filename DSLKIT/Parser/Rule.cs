@@ -37,7 +37,7 @@ namespace DSLKIT.Parser
         {
             if (IsFinished)
             {
-                throw new Exception($"Could not move dot for rule: {ToString()}");
+                throw new InvalidOperationException($"Cannot move dot for finished rule: {this}.");
             }
 
             return new Rule(Production, DotPosition + 1);

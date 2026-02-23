@@ -31,8 +31,8 @@ namespace DSLKIT.Parser.ExtendedGrammar
                 exProductionDefinition.Add(term.ToExTerm(currentSet, nextSet));
                 if (nextSet == null)
                 {
-                    throw new Exception(
-                        $"CreateExtendedGrammarProduction failed for set:{set.SetNumber}, Production:{production}");
+                    throw new InvalidOperationException(
+                        $"Failed to create extended production: no transition found from set {set.SetNumber} for term '{term.Name}' in production '{production}'.");
                 }
 
                 currentSet = nextSet;
