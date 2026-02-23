@@ -17,8 +17,8 @@ namespace DSLKIT.Parser
             IEnumerable<INonTerminal> nonTerminals,
             IEnumerable<Production> productions,
             IEnumerable<ExProduction> exProductions,
-            IReadOnlyDictionary<IExNonTerminal, IList<ITerm>> firsts,
-            IReadOnlyDictionary<IExNonTerminal, IList<ITerm>> follows,
+            IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> firsts,
+            IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> follows,
             IEnumerable<RuleSet> ruleSets,
             TranslationTable translationTable,
             ActionAndGotoTable actionAndGotoTable,
@@ -46,8 +46,8 @@ namespace DSLKIT.Parser
         public IReadOnlyCollection<ExProduction> ExProductions { get; }
         public IReadOnlyCollection<ITerminal> Terminals { get; }
         public IReadOnlyCollection<INonTerminal> NonTerminals { get; }
-        public IReadOnlyDictionary<IExNonTerminal, IList<ITerm>> Firsts { get; }
-        public IReadOnlyDictionary<IExNonTerminal, IList<ITerm>> Follows { get; }
+        public IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> Firsts { get; }
+        public IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> Follows { get; }
         public IReadOnlyCollection<RuleSet> RuleSets { get; }
         public TranslationTable TranslationTable { get; }
         public ActionAndGotoTable ActionAndGotoTable { get; }

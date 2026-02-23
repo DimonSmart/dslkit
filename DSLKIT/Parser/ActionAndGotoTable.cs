@@ -9,12 +9,13 @@ namespace DSLKIT.Parser
     public class ActionAndGotoTable
     {
         private readonly INonTerminal _root;
+        private readonly Dictionary<KeyValuePair<ITerm, RuleSet>, IActionItem> _actionTable = [];
+        private readonly Dictionary<KeyValuePair<INonTerminal, RuleSet>, RuleSet> _gotoTable = [];
 
-        public readonly Dictionary<KeyValuePair<ITerm, RuleSet>, IActionItem> ActionTable =
-            new Dictionary<KeyValuePair<ITerm, RuleSet>, IActionItem>();
-
-        public readonly Dictionary<KeyValuePair<INonTerminal, RuleSet>, RuleSet> GotoTable =
-            new Dictionary<KeyValuePair<INonTerminal, RuleSet>, RuleSet>();
+        public IReadOnlyDictionary<KeyValuePair<ITerm, RuleSet>, IActionItem> ActionTable => _actionTable;
+        public IReadOnlyDictionary<KeyValuePair<INonTerminal, RuleSet>, RuleSet> GotoTable => _gotoTable;
+        internal Dictionary<KeyValuePair<ITerm, RuleSet>, IActionItem> MutableActionTable => _actionTable;
+        internal Dictionary<KeyValuePair<INonTerminal, RuleSet>, RuleSet> MutableGotoTable => _gotoTable;
 
         public ActionAndGotoTable(INonTerminal root)
         {
@@ -23,27 +24,27 @@ namespace DSLKIT.Parser
 
         public IEnumerable<INonTerminal> GetGotoColumns()
         {
-            return _root.Union(GotoTable.Keys.Select(i => i.Key)).Distinct();
+            return _root.Union(_gotoTable.Keys.Select(i => i.Key)).Distinct();
         }
 
         public IEnumerable<ITerm> GetActionColumns()
         {
-            return ActionTable.Keys.Select(i => i.Key).Distinct();
+            return _actionTable.Keys.Select(i => i.Key).Distinct();
         }
 
         public IEnumerable<RuleSet> GetAllSets()
         {
-            return ActionTable.Keys.Select(i => i.Value).Union(GotoTable.Keys.Select(i => i.Value)).Distinct();
+            return _actionTable.Keys.Select(i => i.Value).Union(_gotoTable.Keys.Select(i => i.Value)).Distinct();
         }
 
         public bool TryGetActionValue(ITerm x, RuleSet y, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out IActionItem? result)
         {
-            return ActionTable.TryGetValue(new KeyValuePair<ITerm, RuleSet>(x, y), out result);
+            return _actionTable.TryGetValue(new KeyValuePair<ITerm, RuleSet>(x, y), out result);
         }
 
         public bool TryGetGotoValue(INonTerminal x, RuleSet y, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out RuleSet? result)
         {
-            return GotoTable.TryGetValue(new KeyValuePair<INonTerminal, RuleSet>(x, y), out result);
+            return _gotoTable.TryGetValue(new KeyValuePair<INonTerminal, RuleSet>(x, y), out result);
         }
     }
 }

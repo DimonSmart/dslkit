@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using DSLKIT.Ast;
 using DSLKIT.Base;
@@ -110,8 +109,8 @@ namespace DSLKIT.Terminals
                 _nonTerminals.Values.AsEnumerable(),
                 _productions,
                 exProductions,
-                new ReadOnlyDictionary<IExNonTerminal, IList<ITerm>>(firsts),
-                new ReadOnlyDictionary<IExNonTerminal, IList<ITerm>>(follows),
+                firsts,
+                follows,
                 ruleSets,
                 translationTable,
                 actionAndGotoTable,
@@ -469,7 +468,7 @@ namespace DSLKIT.Terminals
 
         #region Events
 
-        public delegate void RuleSetCreated(List<RuleSet> ruleSets);
+        public delegate void RuleSetCreated(IReadOnlyList<RuleSet> ruleSets);
 
         public event RuleSetCreated? OnRuleSetCreated;
 
@@ -477,19 +476,19 @@ namespace DSLKIT.Terminals
 
         public event TranslationTableCreated? OnTranslationTableCreated;
 
-        public delegate void ExtendedGrammarCreated(List<ExProduction> exProductions);
+        public delegate void ExtendedGrammarCreated(IReadOnlyList<ExProduction> exProductions);
 
         public event ExtendedGrammarCreated? OnExtendedGrammarCreated;
 
-        public delegate void FirstsCreated(IDictionary<IExNonTerminal, IList<ITerm>> firsts);
+        public delegate void FirstsCreated(IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> firsts);
 
         public event FirstsCreated? OnFirstsCreated;
 
-        public delegate void FollowsCreated(IDictionary<IExNonTerminal, IList<ITerm>> follows);
+        public delegate void FollowsCreated(IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> follows);
 
         public event FollowsCreated? OnFollowsCreated;
 
-        public delegate void ReductionStep0(Dictionary<ExProduction, IList<ITerm>> rule2FollowSet);
+        public delegate void ReductionStep0(IReadOnlyDictionary<ExProduction, IReadOnlyCollection<ITerm>> rule2FollowSet);
 
         public event ReductionStep0? OnReductionStep0;
 

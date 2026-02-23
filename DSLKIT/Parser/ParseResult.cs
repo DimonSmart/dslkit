@@ -12,6 +12,6 @@ namespace DSLKIT.Parser
         /// List of production numbers applied during parsing, in the order they were applied.
         /// Useful for debugging and analysis of the parsing process.
         /// </summary>
-        public List<int> Productions { get; set; } = new List<int>();
+        public IReadOnlyList<int> Productions { get; init; } = [];
     }
 }

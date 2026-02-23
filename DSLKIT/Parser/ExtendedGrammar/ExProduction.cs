@@ -7,12 +7,12 @@ namespace DSLKIT.Parser.ExtendedGrammar
     {
         public readonly Production Production;
         public readonly IExNonTerminal ExLeftNonTerminal;
-        public readonly IList<IExTerm> ExProductionDefinition;
+        public readonly IReadOnlyList<IExTerm> ExProductionDefinition;
 
         public ExProduction(
             Production production,
             IExNonTerminal exLeftNonTerminal,
-            IList<IExTerm> exProductionDefinition)
+            IReadOnlyList<IExTerm> exProductionDefinition)
         {
             Production = production;
             ExLeftNonTerminal = exLeftNonTerminal;

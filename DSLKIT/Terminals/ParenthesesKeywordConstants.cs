@@ -4,16 +4,16 @@ namespace DSLKIT.Terminals
 {
     public static class ParenthesesKeywordConstants
     {
-        public static KeywordTerminal OpenParenthesis = new KeywordTerminal("(");
-        public static KeywordTerminal CloseParenthesis = new KeywordTerminal(")");
-        public static KeywordTerminal OpenSquareBracket = new KeywordTerminal("[");
-        public static KeywordTerminal CloseSquareBracket = new KeywordTerminal("]");
-        public static KeywordTerminal OpenCurlyBracket = new KeywordTerminal("{");
-        public static KeywordTerminal CloseCurlyBracket = new KeywordTerminal("}");
-        public static KeywordTerminal OpenAngleBracket = new KeywordTerminal("<");
-        public static KeywordTerminal CloseAngleBracket = new KeywordTerminal(">");
+        public static readonly KeywordTerminal OpenParenthesis = new KeywordTerminal("(");
+        public static readonly KeywordTerminal CloseParenthesis = new KeywordTerminal(")");
+        public static readonly KeywordTerminal OpenSquareBracket = new KeywordTerminal("[");
+        public static readonly KeywordTerminal CloseSquareBracket = new KeywordTerminal("]");
+        public static readonly KeywordTerminal OpenCurlyBracket = new KeywordTerminal("{");
+        public static readonly KeywordTerminal CloseCurlyBracket = new KeywordTerminal("}");
+        public static readonly KeywordTerminal OpenAngleBracket = new KeywordTerminal("<");
+        public static readonly KeywordTerminal CloseAngleBracket = new KeywordTerminal(">");
 
-        public static Dictionary<ITerminal, ITerminal> ParenthesisPairs =
+        public static IReadOnlyDictionary<ITerminal, ITerminal> ParenthesisPairs { get; } =
             new Dictionary<ITerminal, ITerminal>(new KeywordTerminalEqualityComparer())
             {
                 [OpenParenthesis] = CloseParenthesis,

@@ -8,7 +8,7 @@ namespace DSLKIT.Visualizers
 {
     public static class FollowVisualizer
     {
-        public static string Visualize(IReadOnlyDictionary<IExNonTerminal, IList<ITerm>> follow)
+        public static string Visualize(IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> follow)
         {
             var sb = new StringBuilder();
             sb.AppendLine($"Follow: {follow.Count}");

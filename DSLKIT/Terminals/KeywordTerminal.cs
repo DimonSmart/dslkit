@@ -5,7 +5,7 @@ namespace DSLKIT.Terminals
 {
     public class KeywordTerminal : RegExpTerminalBase
     {
-        public static Dictionary<string, TermFlags> PredefinedFlags = new Dictionary<string, TermFlags>
+        public static IReadOnlyDictionary<string, TermFlags> PredefinedFlags { get; } = new Dictionary<string, TermFlags>
         {
             { "(", TermFlags.OpenBrace },
             { ")", TermFlags.CloseBrace },

@@ -10,9 +10,9 @@ namespace DSLKIT.Parser
     public class Production : IEquatable<Production>
     {
         public readonly INonTerminal LeftNonTerminal;
-        public readonly IList<ITerm> ProductionDefinition;
+        public readonly IReadOnlyList<ITerm> ProductionDefinition;
 
-        public Production(INonTerminal leftNonTerminal, IList<ITerm> productionDefinition)
+        public Production(INonTerminal leftNonTerminal, IReadOnlyList<ITerm> productionDefinition)
         {
             LeftNonTerminal = leftNonTerminal;
             ProductionDefinition = productionDefinition;

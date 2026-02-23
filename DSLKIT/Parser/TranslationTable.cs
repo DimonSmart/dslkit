@@ -11,9 +11,9 @@ namespace DSLKIT.Parser
 
         public RuleSet this[ITerm x, RuleSet y] => _table[new KeyValuePair<ITerm, RuleSet>(x, y)];
 
-        public TranslationTable(Dictionary<KeyValuePair<ITerm, RuleSet>, RuleSet> table)
+        public TranslationTable(IReadOnlyDictionary<KeyValuePair<ITerm, RuleSet>, RuleSet> table)
         {
-            _table = table;
+            _table = new Dictionary<KeyValuePair<ITerm, RuleSet>, RuleSet>(table);
         }
 
         public IReadOnlyDictionary<KeyValuePair<ITerm, RuleSet>, RuleSet> GetAllRecords()

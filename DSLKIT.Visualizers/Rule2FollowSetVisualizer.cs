@@ -7,7 +7,7 @@ namespace DSLKIT.Visualizers
 {
     public static class Rule2FollowSetVisualizer
     {
-        public static string Visualize(Dictionary<ExProduction, IList<ITerm>> rule2FollowSet)
+        public static string Visualize(IReadOnlyDictionary<ExProduction, IReadOnlyCollection<ITerm>> rule2FollowSet)
         {
             var data = new List<List<object>>();
             var i = 0;

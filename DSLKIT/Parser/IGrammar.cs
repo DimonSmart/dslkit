@@ -17,8 +17,8 @@ namespace DSLKIT.Parser
         IReadOnlyCollection<Production> Productions { get; }
         IReadOnlyCollection<ExProduction> ExProductions { get; }
         IReadOnlyCollection<RuleSet> RuleSets { get; }
-        IReadOnlyDictionary<IExNonTerminal, IList<ITerm>> Firsts { get; }
-        IReadOnlyDictionary<IExNonTerminal, IList<ITerm>> Follows { get; }
+        IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> Firsts { get; }
+        IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> Follows { get; }
         TranslationTable TranslationTable { get; }
         ActionAndGotoTable ActionAndGotoTable { get; }
         IEofTerminal Eof { get; }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using DSLKIT.Base;
 using DSLKIT.Parser.ExtendedGrammar;
@@ -9,20 +10,23 @@ namespace DSLKIT.Parser
     public class FirstsCalculator
     {
         private readonly IEnumerable<ExProduction> _exProductions;
-        private readonly Dictionary<IExNonTerminal, IList<ITerm>> _firsts;
+        private readonly Dictionary<IExNonTerminal, List<ITerm>> _firsts;
         private readonly HashSet<ExProduction> _searchStack;
 
         public FirstsCalculator(IEnumerable<ExProduction> exProductions)
         {
             _exProductions = exProductions;
-            _firsts = new Dictionary<IExNonTerminal, IList<ITerm>>();
-            _searchStack = new HashSet<ExProduction>();
+            _firsts = [];
+            _searchStack = [];
         }
 
-        public IDictionary<IExNonTerminal, IList<ITerm>> Calculate()
+        public IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> Calculate()
         {
             AddFirstSets();
-            return _firsts;
+            return new ReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>>(
+                _firsts.ToDictionary(
+                    pair => pair.Key,
+                    pair => (IReadOnlyCollection<ITerm>)pair.Value.AsReadOnly()));
         }
 
         private void AddFirstSets(IExNonTerminal? startExNonTerminal = null)

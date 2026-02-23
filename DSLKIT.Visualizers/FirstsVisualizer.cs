@@ -8,7 +8,7 @@ namespace DSLKIT.Visualizers
 {
     public static class FirstsVisualizer
     {
-        public static string Visualize(IDictionary<IExNonTerminal, IList<ITerm>> firsts)
+        public static string Visualize(IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> firsts)
         {
             var sb = new StringBuilder();
             sb.AppendLine($"Firsts: {firsts.Count}");

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using DSLKIT.Base;
 using DSLKIT.NonTerminals;
@@ -23,17 +24,17 @@ namespace DSLKIT.Parser
     {
         private readonly IEofTerminal _eof;
         private readonly IEnumerable<ExProduction> _exProductions;
-        private readonly IDictionary<IExNonTerminal, IList<ITerm>> _firsts;
+        private readonly IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> _firsts;
 
-        private readonly Dictionary<IExNonTerminal, IList<ITerm>> _follow =
-            new Dictionary<IExNonTerminal, IList<ITerm>>();
+        private readonly Dictionary<IExNonTerminal, List<ITerm>> _follow =
+            [];
 
         private readonly INonTerminal _root;
 
 
         public FollowCalculator(INonTerminal root, IEofTerminal eof,
             IEnumerable<ExProduction> exProductions,
-            IDictionary<IExNonTerminal, IList<ITerm>> firsts)
+            IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> firsts)
         {
             _root = root;
             _eof = eof;
@@ -41,7 +42,7 @@ namespace DSLKIT.Parser
             _firsts = firsts;
         }
 
-        public IDictionary<IExNonTerminal, IList<ITerm>> Calculate()
+        public IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> Calculate()
         {
             _follow.Add(_exProductions.Select(p => p.ExLeftNonTerminal)
                 .Single(p => p.NonTerminal == _root && p.To == null), new List<ITerm> { _eof });
@@ -98,7 +99,10 @@ namespace DSLKIT.Parser
                 }
             } while (updated);
 
-            return _follow;
+            return new ReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>>(
+                _follow.ToDictionary(
+                    pair => pair.Key,
+                    pair => (IReadOnlyCollection<ITerm>)pair.Value.AsReadOnly()));
         }
 
         private bool AddFollow(IExNonTerminal exNonTerminal, ITerm term)
@@ -129,17 +133,17 @@ namespace DSLKIT.Parser
             return added;
         }
 
-        private IList<ITerm> GetFollow(IExNonTerminal exNonTerminal)
+        private IReadOnlyCollection<ITerm> GetFollow(IExNonTerminal exNonTerminal)
         {
-            return _follow.TryGetValue(exNonTerminal, out var follow) ? follow : new List<ITerm>();
+            return _follow.TryGetValue(exNonTerminal, out var follow) ? follow : [];
         }
 
-        private IList<ITerm> GetFirsts(IExTerm term)
+        private IReadOnlyCollection<ITerm> GetFirsts(IExTerm term)
         {
             switch (term)
             {
                 case IExTerminal exTerminal:
-                    return new List<ITerm> { exTerminal.Terminal };
+                    return [exTerminal.Terminal];
                 case IExNonTerminal exNonTerminal:
                     return _firsts[exNonTerminal];
                 default:

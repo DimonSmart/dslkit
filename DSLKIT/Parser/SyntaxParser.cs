@@ -35,7 +35,7 @@ namespace DSLKIT.Parser
                     return new ParseResult
                     {
                         Error = new ParseErrorDescription($"No action found for terminal '{currentToken.Terminal.Name}' in state {currentState.SetNumber}", currentToken.Position),
-                        Productions = output
+                        Productions = output.ToArray()
                     };
                 }
 
@@ -56,7 +56,7 @@ namespace DSLKIT.Parser
                         return new ParseResult
                         {
                             Error = new ParseErrorDescription($"Unknown action type: {action.GetType().Name}", currentToken.Position),
-                            Productions = output
+                            Productions = output.ToArray()
                         };
                 }
             }
@@ -104,7 +104,7 @@ namespace DSLKIT.Parser
         {
             var result = new ParseResult
             {
-                Productions = output
+                Productions = output.ToArray()
             };
 
             if (nodeStack.Count > 0)

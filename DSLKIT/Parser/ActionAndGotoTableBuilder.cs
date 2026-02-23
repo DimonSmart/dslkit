@@ -10,8 +10,8 @@ namespace DSLKIT.Parser
 {
     public class ActionAndGotoTableBuilder
     {
-        private readonly List<ExProduction> _exProductions;
-        private readonly IDictionary<IExNonTerminal, IList<ITerm>> _follows;
+        private readonly IReadOnlyList<ExProduction> _exProductions;
+        private readonly IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> _follows;
         private readonly INonTerminal _root;
         private readonly IEnumerable<RuleSet> _ruleSets;
         private readonly TranslationTable _translationTable;
@@ -22,8 +22,8 @@ namespace DSLKIT.Parser
         public GrammarBuilder.ReductionStep1? OnReductionStep1 { get; }
 
         public ActionAndGotoTableBuilder(INonTerminal root,
-            List<ExProduction> exProductions,
-            IDictionary<IExNonTerminal, IList<ITerm>> follows,
+            IReadOnlyList<ExProduction> exProductions,
+            IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> follows,
             IEnumerable<RuleSet> ruleSets,
             TranslationTable translationTable,
             GrammarBuilder.ReductionStep0? onReductionStep0,
@@ -57,7 +57,7 @@ namespace DSLKIT.Parser
 
         private void ReductionsSubStep1()
         {
-            var rule2FollowSet = new Dictionary<ExProduction, IList<ITerm>>();
+            var rule2FollowSet = new Dictionary<ExProduction, IReadOnlyCollection<ITerm>>();
             foreach (var exProduction in _exProductions)
             {
                 rule2FollowSet[exProduction] = _follows[exProduction.ExLeftNonTerminal];
@@ -122,7 +122,7 @@ namespace DSLKIT.Parser
             {
                 if (ContainStartingRuleWithPointerAtTheEnd(ruleSet))
                 {
-                    actionAndGotoTable.ActionTable[new KeyValuePair<ITerm, RuleSet>(EofTerminal.Instance, ruleSet)] =
+                    actionAndGotoTable.MutableActionTable[new KeyValuePair<ITerm, RuleSet>(EofTerminal.Instance, ruleSet)] =
                         AcceptAction.Instance;
                 }
             }
@@ -141,7 +141,7 @@ namespace DSLKIT.Parser
             {
                 if (record.Key.Key is INonTerminal nonTerminal)
                 {
-                    actionAndGotoTable.GotoTable
+                    actionAndGotoTable.MutableGotoTable
                         [new KeyValuePair<INonTerminal, RuleSet>(nonTerminal, record.Key.Value)] = record.Value;
                 }
             }
@@ -158,7 +158,7 @@ namespace DSLKIT.Parser
             {
                 if (record.Key.Key is ITerminal terminal)
                 {
-                    actionAndGotoTable.ActionTable[new KeyValuePair<ITerm, RuleSet>(terminal, record.Key.Value)] =
+                    actionAndGotoTable.MutableActionTable[new KeyValuePair<ITerm, RuleSet>(terminal, record.Key.Value)] =
                         new ShiftAction(record.Value);
                 }
             }
@@ -199,7 +199,7 @@ namespace DSLKIT.Parser
                             continue;
                         }
 
-                        actionAndGotoTable.ActionTable[key] = reduceAction;
+                        actionAndGotoTable.MutableActionTable[key] = reduceAction;
                     }
                 }
             }
@@ -212,10 +212,10 @@ namespace DSLKIT.Parser
 
         public class MergedRow
         {
-            public RuleSet FinalSet { get; set; } = null!;
-            public List<ExProduction> PreMergedRules { get; set; } = null!;
-            public Production Production { get; set; } = null!;
-            public IList<ITerm> FollowSet { get; set; } = null!;
+            public RuleSet FinalSet { get; init; } = null!;
+            public IReadOnlyList<ExProduction> PreMergedRules { get; init; } = null!;
+            public Production Production { get; init; } = null!;
+            public IReadOnlyCollection<ITerm> FollowSet { get; init; } = null!;
         }
     }
 }
