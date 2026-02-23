@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using DSLKIT.Base;
 
@@ -7,43 +8,81 @@ namespace DSLKIT.Parser
 {
     public class RuleSet
     {
-        public readonly IList<Rule> Rules = new List<Rule>();
-        public IDictionary<ITerm, RuleSet> Arrows = new Dictionary<ITerm, RuleSet>();
-        public int SetFormRules;
-        public int SetNumber { get; set; }
+        private readonly List<Rule> _rules;
+        private readonly Dictionary<ITerm, RuleSet> _arrows;
+        private readonly IReadOnlyList<Rule> _rulesView;
+        private readonly IReadOnlyDictionary<ITerm, RuleSet> _arrowsView;
+        private readonly HashSet<Rule> _kernelRules;
 
         public RuleSet(int setNumber, IEnumerable<Rule> rules)
         {
-            SetNumber = setNumber;
-            foreach (var rule in rules)
+            if (rules == null)
             {
-                Rules.Add(rule);
-                SetFormRules++;
+                throw new ArgumentNullException(nameof(rules));
             }
+
+            _rules = rules.ToList();
+            _arrows = new Dictionary<ITerm, RuleSet>();
+            _rulesView = _rules.AsReadOnly();
+            _arrowsView = new ReadOnlyDictionary<ITerm, RuleSet>(_arrows);
+            _kernelRules = _rules.ToHashSet();
+
+            SetNumber = setNumber;
+            KernelRuleCount = _rules.Count;
+        }
+
+        public IReadOnlyList<Rule> Rules => _rulesView;
+        public IReadOnlyDictionary<ITerm, RuleSet> Arrows => _arrowsView;
+        public int KernelRuleCount { get; }
+        public int SetNumber { get; set; }
+
+        [Obsolete("Use KernelRuleCount instead.")]
+        public int SetFormRules => KernelRuleCount;
+
+        internal void AddRule(Rule rule)
+        {
+            if (rule is null)
+            {
+                throw new ArgumentNullException(nameof(rule));
+            }
+
+            _rules.Add(rule);
+        }
+
+        internal void SetArrow(ITerm term, RuleSet target)
+        {
+            if (term == null)
+            {
+                throw new ArgumentNullException(nameof(term));
+            }
+
+            if (target == null)
+            {
+                throw new ArgumentNullException(nameof(target));
+            }
+
+            _arrows[term] = target;
         }
 
         public override string ToString()
         {
-            return $"Set({SetNumber}){Environment.NewLine}{string.Join(Environment.NewLine, Rules)}";
+            return $"Set({SetNumber}){Environment.NewLine}{string.Join(Environment.NewLine, _rules)}";
         }
 
         internal bool StartsFrom(IEnumerable<Rule> newRules)
         {
-            var otherRules = newRules.ToArray();
-            if (Rules.Count < otherRules.Length)
+            if (newRules == null)
+            {
+                throw new ArgumentNullException(nameof(newRules));
+            }
+
+            var candidateKernel = newRules as ICollection<Rule> ?? newRules.ToArray();
+            if (candidateKernel.Count != KernelRuleCount)
             {
                 return false;
             }
 
-            for (var i = 0; i < otherRules.Length; i++)
-            {
-                if (Rules[i] != otherRules[i])
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return _kernelRules.SetEquals(candidateKernel);
         }
     }
 }

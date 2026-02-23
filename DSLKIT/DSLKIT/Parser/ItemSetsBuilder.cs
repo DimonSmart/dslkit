@@ -57,13 +57,13 @@ namespace DSLKIT.Parser
                     var existsSet = GetSetBySetDefinitionRules(newRules);
                     if (existsSet != null)
                     {
-                        set.Arrows[rule.NextTerm] = existsSet;
+                        set.SetArrow(rule.NextTerm, existsSet);
                         continue;
                     }
 
                     var newRuleSet = new RuleSet(_sets.Count, newRules);
                     _sets.Add(newRuleSet);
-                    set.Arrows[rule.NextTerm] = newRuleSet;
+                    set.SetArrow(rule.NextTerm, newRuleSet);
 
                     anyChanges = true;
                 }
@@ -106,7 +106,7 @@ namespace DSLKIT.Parser
                     {
                         foreach (var item in toAdd)
                         {
-                            set.Rules.Add(item);
+                            set.AddRule(item);
                         }
 
                         changed = true;
