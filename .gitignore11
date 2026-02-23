@@ -1,0 +1,13 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+*.suo
+**/obj/*
+**/bin/*
+
+
+/**/.vs
+*.binlog
+/DSLKIT/packages
+/DSLKIT/CodeGraphData

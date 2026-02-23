@@ -1,0 +1,17 @@
+﻿using DSLKIT.Lexer;
+using DSLKIT.Tokens;
+
+namespace DSLKIT.Terminals
+{
+    public abstract class CommentTerminalBase : ITerminal
+    {
+        public abstract string Name { get; }
+        public TermFlags Flags => TermFlags.Comment;
+        public TerminalPriority Priority => TerminalPriority.Normal;
+        public abstract bool CanStartWith(char c);
+        public abstract bool TryMatch(
+            ISourceStream source,
+            [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out IToken? token);
+        public abstract string DictionaryKey { get; }
+    }
+}
