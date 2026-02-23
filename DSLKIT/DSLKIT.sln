@@ -16,11 +16,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLKIT.Visualizers", "DSLKI
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLKIT.Visualizers.Tests", "DSLKIT.Visualizers.Tests\DSLKIT.Visualizers.Tests.csproj", "{5D069FA2-9F12-4D5E-BB2C-97F5AC4D9572}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLKIT.GrammarExamples", "DSLKIT.GrammarExamples\DSLKIT.GrammarExamples.csproj", "{52425D3F-EA7E-4EBB-A6B2-F119147CC041}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLKIT.GrammarExamples", "Examples\DSLKIT.GrammarExamples\DSLKIT.GrammarExamples.csproj", "{52425D3F-EA7E-4EBB-A6B2-F119147CC041}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLKIT.GrammarExamples.MsSql", "DSLKIT.GrammarExamples.MsSql\DSLKIT.GrammarExamples.MsSql.csproj", "{0CA763F4-9C5D-4DE6-ACE2-970BB9CE88EC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLKIT.GrammarExamples.MsSql", "Examples\DSLKIT.GrammarExamples.MsSql\DSLKIT.GrammarExamples.MsSql.csproj", "{0CA763F4-9C5D-4DE6-ACE2-970BB9CE88EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLKIT.GrammarExamples.Ini", "DSLKIT.GrammarExamples.Ini\DSLKIT.GrammarExamples.Ini.csproj", "{1B4D4484-6C87-4FF0-9C25-BA63F76932D1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLKIT.GrammarExamples.Ini", "Examples\DSLKIT.GrammarExamples.Ini\DSLKIT.GrammarExamples.Ini.csproj", "{1B4D4484-6C87-4FF0-9C25-BA63F76932D1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

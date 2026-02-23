@@ -6,7 +6,7 @@ This chapter explains the core design of the INI grammar example:
 - how the grammar is structured
 - how parse results become a convenient document model
 
-All code discussed here is in `DSLKIT.GrammarExamples.Ini/IniGrammarExample.cs`.
+All code discussed here is in `Examples/DSLKIT.GrammarExamples.Ini/IniGrammarExample.cs`.
 
 ## 1. Input Model
 

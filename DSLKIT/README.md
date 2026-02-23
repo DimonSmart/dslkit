@@ -7,7 +7,7 @@ The implementation in this repository was originally aligned with the tutorial b
 
 - Documentation index: [docs/README.md](docs/README.md)
 - Cleaned and corrected tutorial: [docs/lalr1-tutorial-cleaned.md](docs/lalr1-tutorial-cleaned.md)
-- INI example mini-docs: [DSLKIT.GrammarExamples.Ini/docs/README.md](DSLKIT.GrammarExamples.Ini/docs/README.md)
+- INI example mini-docs: [Examples/DSLKIT.GrammarExamples.Ini/docs/README.md](Examples/DSLKIT.GrammarExamples.Ini/docs/README.md)
 
 ## Implementation Status
 
