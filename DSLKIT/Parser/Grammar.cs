@@ -22,8 +22,8 @@ namespace DSLKIT.Parser
             IEnumerable<RuleSet> ruleSets,
             TranslationTable translationTable,
             ActionAndGotoTable actionAndGotoTable,
-            IEofTerminal eof,
-            IAstBindings astBindings)
+            IEofTerminal? eof = null,
+            IAstBindings? astBindings = null)
         {
             Name = name;
             Root = root;
