@@ -1,0 +1,123 @@
+@using DSLKIT.Visualizer.App.Visualization
+
+<li class="@GetItemCssClass()">
+    <div class="@GetRowCssClass()">
+        @if (HasChildren)
+        {
+            <button type="button"
+                    class="dsl-treeview-toggle"
+                    title="Toggle node"
+                    @onclick="ToggleAsync">
+                @(IsExpanded ? "-" : "+")
+            </button>
+        }
+        else
+        {
+            <span class="dsl-treeview-toggle-placeholder"></span>
+        }
+
+        <button type="button" class="@GetLabelCssClass()" @onclick="SelectAsync">
+            @Node.Label
+        </button>
+    </div>
+
+    @if (HasChildren && IsExpanded)
+    {
+        <ul class="dsl-treeview-list">
+            @for (var index = 0; index < Node.Children.Count; index++)
+            {
+                var child = Node.Children[index];
+                <TreeViewNode Node="child"
+                              State="State"
+                              IsRoot="false"
+                              IsLast="@(index == Node.Children.Count - 1)"
+                              SelectedNodeChanged="SelectedNodeChanged" />
+            }
+        </ul>
+    }
+</li>
+
+@code {
+    [Parameter, EditorRequired]
+    public TreeNodeViewModel Node { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public TreeViewState State { get; set; } = null!;
+
+    [Parameter]
+    public bool IsRoot { get; set; }
+
+    [Parameter]
+    public bool IsLast { get; set; }
+
+    [Parameter]
+    public EventCallback<TreeNodeViewModel> SelectedNodeChanged { get; set; }
+
+    private bool HasChildren => Node.Children.Count > 0;
+
+    private bool IsExpanded => !HasChildren || State.ExpandedNodeIds.Contains(Node.NodeId);
+
+    private bool IsSelected => string.Equals(State.SelectedNodeId, Node.NodeId, StringComparison.Ordinal);
+
+    private Task ToggleAsync()
+    {
+        if (!HasChildren)
+        {
+            return Task.CompletedTask;
+        }
+
+        if (!State.ExpandedNodeIds.Add(Node.NodeId))
+        {
+            State.ExpandedNodeIds.Remove(Node.NodeId);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task SelectAsync()
+    {
+        State.SelectedNodeId = Node.NodeId;
+        if (SelectedNodeChanged.HasDelegate)
+        {
+            await SelectedNodeChanged.InvokeAsync(Node);
+        }
+    }
+
+    private string GetItemCssClass()
+    {
+        var classes = "dsl-treeview-item";
+        if (IsRoot)
+        {
+            classes += " dsl-treeview-item-root";
+        }
+
+        if (IsLast)
+        {
+            classes += " dsl-treeview-item-last";
+        }
+
+        return classes;
+    }
+
+    private string GetRowCssClass()
+    {
+        return IsSelected
+            ? "dsl-treeview-row dsl-treeview-row-selected"
+            : "dsl-treeview-row";
+    }
+
+    private string GetLabelCssClass()
+    {
+        return Node.Kind switch
+        {
+            TreeNodeKind.AstSemanticRoot => "dsl-treeview-label dsl-treeview-label-ast-root",
+            TreeNodeKind.AstSemanticSection => "dsl-treeview-label dsl-treeview-label-ast-section",
+            TreeNodeKind.AstSemanticProperty => "dsl-treeview-label dsl-treeview-label-ast-property",
+            TreeNodeKind.AstSemanticField => "dsl-treeview-label dsl-treeview-label-ast-field",
+            TreeNodeKind.ParseNonTerminal => "dsl-treeview-label dsl-treeview-label-parse-non-terminal",
+            TreeNodeKind.ParseTerminal => "dsl-treeview-label dsl-treeview-label-parse-terminal",
+            TreeNodeKind.AstToken => "dsl-treeview-label dsl-treeview-label-ast-token",
+            _ => "dsl-treeview-label"
+        };
+    }
+}

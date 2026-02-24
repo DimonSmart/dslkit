@@ -1,0 +1,135 @@
+@using DSLKIT.Visualizer.Abstractions
+@inject IGrammarProviderCatalog ProviderCatalog
+@inject IGrammarProviderAssemblyLoader AssemblyLoader
+
+<div class="mb-4">
+    <label class="form-label">Upload Provider Assemblies (.dll)</label>
+    <InputFile OnChange="LoadAssembliesAsync" multiple accept=".dll" />
+</div>
+
+@if (loadMessages.Count > 0)
+{
+    <div class="alert alert-secondary" role="alert">
+        @foreach (var message in loadMessages)
+        {
+            <div>@message</div>
+        }
+    </div>
+}
+
+@if (_providerOptions.Count == 0)
+{
+    <p>No grammar providers are registered.</p>
+}
+else
+{
+    <div class="mb-3">
+        <label class="form-label" for="@SelectElementId">@ProviderLabel</label>
+        <select id="@SelectElementId" class="form-select" value="@SelectedProviderId" @onchange="OnSelectedProviderChangedAsync">
+            @foreach (var provider in _providerOptions)
+            {
+                <option value="@provider.Id">@provider.DisplayName (@provider.Id)</option>
+            }
+        </select>
+    </div>
+
+    <div class="small text-muted mb-3">
+        Registered providers: @_providerOptions.Count
+    </div>
+
+    <table class="table table-sm table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Id</th>
+                <th>API</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var provider in _providerOptions)
+            {
+                <tr>
+                    <td>@provider.DisplayName</td>
+                    <td>@provider.Id</td>
+                    <td>@provider.ApiVersion</td>
+                    <td>@(provider.Id == SelectedProviderId ? "active" : string.Empty)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IReadOnlyList<IDslGrammarProvider> _providerOptions = [];
+    private IReadOnlyList<string> loadMessages = [];
+
+    [Parameter]
+    public string? SelectedProviderId { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> SelectedProviderIdChanged { get; set; }
+
+    [Parameter]
+    public string ProviderLabel { get; set; } = "Provider";
+
+    [Parameter]
+    public string SelectElementId { get; set; } = "provider-select";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshProvidersAsync();
+    }
+
+    private async Task LoadAssembliesAsync(InputFileChangeEventArgs args)
+    {
+        var files = args.GetMultipleFiles();
+        var report = await AssemblyLoader.LoadProvidersAsync(files);
+
+        var messages = new List<string>
+        {
+            $"Selected files: {report.SelectedFileCount}. Processed assemblies: {report.ProcessedAssemblyFileCount}. Registered providers: {report.RegisteredProviderCount}."
+        };
+        messages.AddRange(report.Messages);
+        loadMessages = messages;
+
+        await RefreshProvidersAsync();
+    }
+
+    private async Task OnSelectedProviderChangedAsync(ChangeEventArgs args)
+    {
+        var nextProviderId = args.Value?.ToString();
+        if (string.Equals(SelectedProviderId, nextProviderId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        SelectedProviderId = nextProviderId;
+        await SelectedProviderIdChanged.InvokeAsync(SelectedProviderId);
+    }
+
+    private async Task RefreshProvidersAsync()
+    {
+        _providerOptions = ProviderCatalog.GetAll();
+
+        var nextProviderId = ResolveSelectedProviderId();
+        if (string.Equals(SelectedProviderId, nextProviderId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        SelectedProviderId = nextProviderId;
+        await SelectedProviderIdChanged.InvokeAsync(SelectedProviderId);
+    }
+
+    private string? ResolveSelectedProviderId()
+    {
+        if (!string.IsNullOrWhiteSpace(SelectedProviderId) &&
+            _providerOptions.Any(provider => provider.Id == SelectedProviderId))
+        {
+            return SelectedProviderId;
+        }
+
+        return _providerOptions.FirstOrDefault()?.Id;
+    }
+}

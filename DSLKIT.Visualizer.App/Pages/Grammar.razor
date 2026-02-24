@@ -1,0 +1,151 @@
+@page "/grammar"
+@inject IGrammarProviderCatalog ProviderCatalog
+@inject IGrammarSnapshotMapper SnapshotMapper
+
+<PageTitle>Grammar</PageTitle>
+
+<h1>Grammar</h1>
+
+<ProviderManager SelectedProviderId="selectedProviderId"
+                 SelectedProviderIdChanged="OnSelectedProviderChangedAsync"
+                 SelectElementId="grammar-provider-select" />
+
+<button class="btn btn-primary" @onclick="LoadGrammar" disabled="@string.IsNullOrWhiteSpace(selectedProviderId)">Load Grammar</button>
+
+@if (!string.IsNullOrWhiteSpace(loadErrorMessage))
+{
+    <div class="alert alert-danger mt-3" role="alert">
+        @loadErrorMessage
+    </div>
+}
+
+@if (snapshot != null)
+{
+    <div class="mt-4">
+        <h2>@snapshot.GrammarName</h2>
+
+        <dl class="row">
+            <dt class="col-sm-3">Root</dt>
+            <dd class="col-sm-9">@snapshot.RootName</dd>
+            <dt class="col-sm-3">Terminals</dt>
+            <dd class="col-sm-9">@snapshot.TerminalCount</dd>
+            <dt class="col-sm-3">Non-terminals</dt>
+            <dd class="col-sm-9">@snapshot.NonTerminalCount</dd>
+            <dt class="col-sm-3">Productions</dt>
+            <dd class="col-sm-9">@snapshot.Productions.Count</dd>
+            <dt class="col-sm-3">Rule sets</dt>
+            <dd class="col-sm-9">@snapshot.RuleSetCount</dd>
+        </dl>
+    </div>
+
+    <h3 class="mt-4">Productions</h3>
+    <table class="table table-sm table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Left</th>
+                <th>Right</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var production in snapshot.Productions)
+            {
+                <tr>
+                    <td>@production.Number</td>
+                    <td>@production.Left</td>
+                    <td>@production.Right</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @RenderTable(snapshot.TranslationTable)
+    @RenderTable(snapshot.ActionAndGotoTable)
+    @RenderTable(snapshot.FirstsTable)
+@RenderTable(snapshot.FollowsTable)
+}
+
+@code {
+    private string? selectedProviderId;
+    private GrammarSnapshotDto? snapshot;
+    private string? loadErrorMessage;
+
+    private void LoadGrammar()
+    {
+        snapshot = null;
+        loadErrorMessage = null;
+
+        if (string.IsNullOrWhiteSpace(selectedProviderId))
+        {
+            loadErrorMessage = "Select a grammar provider.";
+            return;
+        }
+
+        var provider = ProviderCatalog.FindById(selectedProviderId);
+        if (provider == null)
+        {
+            loadErrorMessage = $"Provider '{selectedProviderId}' is not registered.";
+            return;
+        }
+
+        try
+        {
+            var grammar = provider.BuildGrammar();
+            snapshot = SnapshotMapper.Map(grammar);
+        }
+        catch (Exception ex)
+        {
+            loadErrorMessage = $"Failed to load grammar: {ex.Message}";
+        }
+    }
+
+    private Task OnSelectedProviderChangedAsync(string? providerId)
+    {
+        selectedProviderId = providerId;
+        snapshot = null;
+        loadErrorMessage = null;
+        return Task.CompletedTask;
+    }
+
+    private static RenderFragment RenderTable(TableDto table) => builder =>
+    {
+        var sequence = 0;
+
+        builder.OpenElement(sequence++, "h3");
+        builder.AddAttribute(sequence++, "class", "mt-4");
+        builder.AddContent(sequence++, table.Name);
+        builder.CloseElement();
+
+        builder.OpenElement(sequence++, "table");
+        builder.AddAttribute(sequence++, "class", "table table-sm table-striped table-bordered");
+
+        builder.OpenElement(sequence++, "thead");
+        builder.OpenElement(sequence++, "tr");
+        foreach (var column in table.Columns)
+        {
+            builder.OpenElement(sequence++, "th");
+            builder.AddContent(sequence++, column);
+            builder.CloseElement();
+        }
+
+        builder.CloseElement();
+        builder.CloseElement();
+
+        builder.OpenElement(sequence++, "tbody");
+        foreach (var row in table.Rows)
+        {
+            builder.OpenElement(sequence++, "tr");
+            foreach (var cell in row)
+            {
+                builder.OpenElement(sequence++, "td");
+                builder.AddContent(sequence++, cell);
+                builder.CloseElement();
+            }
+
+            builder.CloseElement();
+        }
+
+        builder.CloseElement();
+        builder.CloseElement();
+    };
+}

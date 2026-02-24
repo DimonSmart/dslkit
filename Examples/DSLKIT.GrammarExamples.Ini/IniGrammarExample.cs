@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using DSLKIT.Ast;
 using DSLKIT.Lexer;
 using DSLKIT.Parser;
 using DSLKIT.SpecialTerms;
@@ -105,7 +106,7 @@ namespace DSLKIT.GrammarExamples.Ini
                 .AddTerminal(number)
                 .AddTerminal(quotedString);
 
-            var document = gb.NT("Document");
+            var document = gb.NT("Document").Ast<IniDocumentAstNode>();
             var lineList = gb.NT("LineList");
             var line = gb.NT("Line");
             var sectionLine = gb.NT("SectionLine");
@@ -333,6 +334,55 @@ namespace DSLKIT.GrammarExamples.Ini
 
             public string Name { get; }
             public List<IniProperty> Properties { get; }
+        }
+
+        private sealed class IniDocumentAstNode : IAstNode
+        {
+            public IniDocumentAstNode(AstBuildContext context)
+            {
+                var document = BuildDocument(context.ParseNode, diagnostics: new List<IniDiagnostic>());
+                Children = document.Sections
+                    .Select(section => (IAstNode)new IniSectionAstNode(section))
+                    .ToList();
+            }
+
+            public IReadOnlyList<IAstNode> Children { get; }
+            public string DisplayName => "INI";
+            public string? Description => $"Sections: {Children.Count}";
+        }
+
+        private sealed class IniSectionAstNode : IAstNode
+        {
+            private readonly IniSection _section;
+
+            public IniSectionAstNode(IniSection section)
+            {
+                _section = section;
+                Children = section.Properties
+                    .Select(property => (IAstNode)new IniPropertyAstNode(property))
+                    .ToList();
+            }
+
+            public IReadOnlyList<IAstNode> Children { get; }
+            public string DisplayName => $"[{_section.Name}]";
+            public string? Description => $"Properties: {Children.Count}";
+        }
+
+        private sealed class IniPropertyAstNode : IAstNode
+        {
+            private readonly IniProperty _property;
+
+            public IniPropertyAstNode(IniProperty property)
+            {
+                _property = property;
+            }
+
+            public IReadOnlyList<IAstNode> Children => Array.Empty<IAstNode>();
+            public string DisplayName => $"{_property.Key} = {_property.Value.RawText}";
+            public string? Description => _property.IsRecoveredFromMissingEquals
+                ? "Recovered missing '='."
+                : null;
+            public AstChildrenDisplayMode ChildrenDisplayMode => AstChildrenDisplayMode.Hide;
         }
     }
 

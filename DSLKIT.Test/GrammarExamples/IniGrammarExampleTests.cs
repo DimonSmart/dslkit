@@ -2,7 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using DSLKIT.Ast;
 using DSLKIT.GrammarExamples.Ini;
+using DSLKIT.Lexer;
+using DSLKIT.Parser;
+using DSLKIT.Terminals;
 using FluentAssertions;
 using Xunit;
 
@@ -48,6 +52,40 @@ namespace DSLKIT.Test.GrammarExamples
         public static IEnumerable<object[]> RecoverableIniFiles()
         {
             return ReadIniFiles("Recoverable");
+        }
+
+        [Fact]
+        public void BuildAst_ShouldExposeSemanticMetadataForVisualizer()
+        {
+            const string source = "[SECTION]\nA=B\n";
+            var grammar = IniGrammarExample.BuildGrammar();
+            var lexer = new DSLKIT.Lexer.Lexer(IniGrammarExample.CreateLexerSettings(grammar));
+            var parser = new SyntaxParser(grammar);
+
+            var tokens = lexer.GetTokens(new StringSourceStream(source))
+                .Where(token => token.Terminal.Flags != TermFlags.Space && token.Terminal.Flags != TermFlags.Comment)
+                .ToList();
+
+            var parseResult = parser.Parse(tokens);
+            parseResult.IsSuccess.Should().BeTrue();
+            parseResult.ParseTree.Should().NotBeNull();
+
+            var astRoot = new AstBuilder(grammar.AstBindings).Build(parseResult.ParseTree!);
+
+            astRoot.DisplayName.Should().Be("INI");
+            astRoot.Description.Should().Be("Sections: 1");
+
+            astRoot.Children.Should().HaveCount(1);
+            var sectionNode = astRoot.Children[0];
+            sectionNode.DisplayName.Should().Be("[SECTION]");
+            sectionNode.Description.Should().Be("Properties: 1");
+
+            sectionNode.Children.Should().HaveCount(1);
+            var propertyNode = sectionNode.Children[0];
+            propertyNode.DisplayName.Should().Be("A = B");
+            propertyNode.Description.Should().BeNull();
+            propertyNode.ChildrenDisplayMode.Should().Be(AstChildrenDisplayMode.Hide);
+            propertyNode.Children.Should().BeEmpty();
         }
 
         private static IEnumerable<object[]> ReadIniFiles(string profile)

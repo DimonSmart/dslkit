@@ -1,0 +1,92 @@
+@using DSLKIT.Visualizer.App.Visualization
+
+@if (Root != null)
+{
+    <div class="dsl-treeview">
+        <div class="btn-group btn-group-sm mb-2" role="group" aria-label="tree controls">
+            <button type="button" class="btn btn-outline-secondary" @onclick="ExpandAll">Expand all</button>
+            <button type="button" class="btn btn-outline-secondary" @onclick="CollapseAll">Collapse all</button>
+        </div>
+
+        <ul class="dsl-treeview-list dsl-treeview-root">
+            <TreeViewNode Node="Root"
+                          State="State"
+                          IsRoot="true"
+                          IsLast="true"
+                          SelectedNodeChanged="OnSelectedNodeChangedAsync" />
+        </ul>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public TreeNodeViewModel? Root { get; set; }
+
+    [Parameter, EditorRequired]
+    public TreeViewState State { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<TreeNodeViewModel> SelectedNodeChanged { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Root == null)
+        {
+            return;
+        }
+
+        if (State.ExpandedNodeIds.Count == 0 && Root.Children.Count > 0)
+        {
+            State.ExpandedNodeIds.Add(Root.NodeId);
+        }
+
+        if (string.IsNullOrWhiteSpace(State.SelectedNodeId))
+        {
+            State.SelectedNodeId = Root.NodeId;
+        }
+    }
+
+    private void ExpandAll()
+    {
+        if (Root == null)
+        {
+            return;
+        }
+
+        State.ExpandedNodeIds.Clear();
+        foreach (var node in EnumerateNodes(Root))
+        {
+            if (node.Children.Count > 0)
+            {
+                State.ExpandedNodeIds.Add(node.NodeId);
+            }
+        }
+    }
+
+    private void CollapseAll()
+    {
+        State.ExpandedNodeIds.Clear();
+    }
+
+    private async Task OnSelectedNodeChangedAsync(TreeNodeViewModel node)
+    {
+        State.SelectedNodeId = node.NodeId;
+        if (SelectedNodeChanged.HasDelegate)
+        {
+            await SelectedNodeChanged.InvokeAsync(node);
+        }
+    }
+
+    private static IEnumerable<TreeNodeViewModel> EnumerateNodes(TreeNodeViewModel node)
+    {
+        yield return node;
+
+        foreach (var child in node.Children)
+        {
+            foreach (var descendant in EnumerateNodes(child))
+            {
+                yield return descendant;
+            }
+        }
+    }
+}
