@@ -314,3 +314,96 @@ code {
     line-height: 1.1;
     white-space: nowrap;
 }
+
+.dsl-grammar-page {
+    padding-bottom: 1rem;
+}
+
+.dsl-control-panel {
+    border: 1px solid #e5e7eb;
+}
+
+.dsl-control-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.85rem;
+}
+
+.dsl-control-field {
+    flex: 1 1 20rem;
+    min-width: 16rem;
+}
+
+.dsl-control-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.6rem;
+}
+
+.dsl-provider-meta {
+    line-height: 1.45;
+    font-size: 0.92rem;
+}
+
+.dsl-provider-meta-label {
+    color: #475569;
+    font-weight: 600;
+    margin-right: 0.25rem;
+}
+
+.dsl-input-panel,
+.dsl-result-panel {
+    border: 1px solid #e5e7eb;
+}
+
+.dsl-input-panel .card-header,
+.dsl-result-panel .card-header,
+.dsl-ast-inspector .card-header {
+    background: #f8fafc;
+    font-weight: 600;
+}
+
+.dsl-source-editor {
+    min-height: 20rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.4rem;
+    background: #f8fafc;
+    color: #0f172a;
+    line-height: 1.45;
+    font-family: Consolas, "Cascadia Code", "Courier New", monospace;
+    font-size: 0.92rem;
+    resize: vertical;
+}
+
+.dsl-source-editor:focus {
+    background: #fff;
+}
+
+.dsl-result-tabs {
+    margin-top: 0.35rem;
+}
+
+.dsl-ast-inspector dt {
+    color: #64748b;
+    font-weight: 600;
+}
+
+.dsl-node-preview {
+    margin: 0;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.35rem;
+    background: #f8fafc;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: Consolas, "Cascadia Code", "Courier New", monospace;
+    font-size: 0.82rem;
+}
+
+@media (max-width: 1199.98px) {
+    .dsl-source-editor {
+        min-height: 15rem;
+    }
+}

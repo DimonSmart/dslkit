@@ -7,5 +7,8 @@ public sealed class TreeNodeViewModel
     public required TreeNodeKind Kind { get; init; }
     public string? Description { get; init; }
     public string? TypeName { get; init; }
+    public int? SpanStart { get; init; }
+    public int? SpanEnd { get; init; }
+    public string? SourcePreview { get; init; }
     public required IReadOnlyList<TreeNodeViewModel> Children { get; init; }
 }
