@@ -1,21 +1,68 @@
 @page "/grammar"
+@page "/parse"
+@using DSLKIT.Ast
+@using DSLKIT.Lexer
+@using DSLKIT.Parser
+@using DSLKIT.Terminals
+@using DSLKIT.Tokens
 @inject IGrammarProviderCatalog ProviderCatalog
+@inject IGrammarProviderAssemblyLoader AssemblyLoader
 @inject IGrammarSnapshotMapper SnapshotMapper
 
 <PageTitle>Grammar</PageTitle>
 
 <MudText Typo="Typo.h4">Grammar</MudText>
 
-<ProviderManager SelectedProviderId="selectedProviderId"
-                 SelectedProviderIdChanged="OnSelectedProviderChangedAsync"
-                 SelectElementId="grammar-provider-select" />
+<div class="mb-3 mt-3">
+    <label class="form-label" for="grammar-provider-select">Grammar</label>
+    <div class="d-flex gap-2 align-items-start flex-wrap">
+        <select id="grammar-provider-select"
+                class="form-select"
+                value="@selectedProviderId"
+                @onchange="OnSelectedProviderChangedAsync"
+                disabled="@(_providerOptions.Count == 0)">
+            @if (_providerOptions.Count == 0)
+            {
+                <option value="">No providers</option>
+            }
+            else
+            {
+                @foreach (var provider in _providerOptions)
+                {
+                    <option value="@provider.Id">@provider.DisplayName (@provider.Id)</option>
+                }
+            }
+        </select>
 
-<MudButton Variant="Variant.Filled"
-           Color="Color.Primary"
-           OnClick="LoadGrammar"
-           Disabled="@string.IsNullOrWhiteSpace(selectedProviderId)">
-    Load Grammar
-</MudButton>
+        <InputFile id="provider-dll-input"
+                   class="d-none"
+                   OnChange="LoadAssembliesAsync"
+                   accept=".dll" />
+        <label class="btn btn-outline-secondary mb-0" for="provider-dll-input">Upload DLL</label>
+    </div>
+</div>
+
+@if (selectedProvider != null)
+{
+    <MudPaper Class="pa-3 dsl-summary-paper" Elevation="1">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Name</dt>
+            <dd class="col-sm-9">@selectedProvider.DisplayName</dd>
+            <dt class="col-sm-3">Description</dt>
+            <dd class="col-sm-9">@GetProviderDescription()</dd>
+        </dl>
+    </MudPaper>
+}
+
+@if (loadMessages.Count > 0)
+{
+    <div class="alert alert-secondary mt-3" role="alert">
+        @foreach (var message in loadMessages)
+        {
+            <div>@message</div>
+        }
+    </div>
+}
 
 @if (!string.IsNullOrWhiteSpace(loadErrorMessage))
 {
@@ -24,77 +71,293 @@
     </MudAlert>
 }
 
-@if (snapshot != null)
-{
-    <MudPaper Class="mt-4 pa-4 dsl-summary-paper" Elevation="1">
-        <MudText Typo="Typo.h6">@snapshot.GrammarName</MudText>
+<MudTabs Class="mt-4" Rounded="true" Elevation="1">
+    <MudTabPanel Text="Parse">
+        <div class="mb-3">
+            <label class="form-label" for="source-input">Source Text</label>
+            <textarea id="source-input" class="form-control" rows="8" @bind="sourceText"></textarea>
+        </div>
 
-        <dl class="row mb-0 mt-3">
-            <dt class="col-sm-3">Root</dt>
-            <dd class="col-sm-9">@snapshot.RootName</dd>
-            <dt class="col-sm-3">Terminals</dt>
-            <dd class="col-sm-9">@snapshot.TerminalCount</dd>
-            <dt class="col-sm-3">Non-terminals</dt>
-            <dd class="col-sm-9">@snapshot.NonTerminalCount</dd>
-            <dt class="col-sm-3">Productions</dt>
-            <dd class="col-sm-9">@snapshot.Productions.Count</dd>
-            <dt class="col-sm-3">Rule sets</dt>
-            <dd class="col-sm-9">@snapshot.RuleSetCount</dd>
-        </dl>
-    </MudPaper>
+        <button class="btn btn-primary" @onclick="RunParse" disabled="@(loadedGrammar == null)">Parse</button>
 
-    <MudExpansionPanels Class="mt-4" MultiExpansion="true">
-        <MudExpansionPanel Text="Productions" Expanded="true">
-            <div class="dsl-wide-table-container">
-                <MudTable T="ProductionRowDto"
-                          Items="snapshot.Productions"
-                          Dense="true"
-                          Hover="true"
-                          Bordered="true"
-                          Striped="true"
-                          Breakpoint="Breakpoint.None"
-                          Class="dsl-wide-table">
-                    <HeaderContent>
-                        <MudTh>#</MudTh>
-                        <MudTh>Left</MudTh>
-                        <MudTh>Right</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="#">@context.Number</MudTd>
-                        <MudTd DataLabel="Left">@context.Left</MudTd>
-                        <MudTd DataLabel="Right">@context.Right</MudTd>
-                    </RowTemplate>
-                </MudTable>
-            </div>
-        </MudExpansionPanel>
+        <MudTabs Class="mt-4" Rounded="true" Elevation="0">
+            <MudTabPanel Text="AST">
+                @if (activeAstTreeRoot == null)
+                {
+                    <div class="text-muted">Run parsing to see AST.</div>
+                }
+                else
+                {
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="text-muted">View:</span>
+                        <button type="button" class="@GetAstViewButtonClass(technicalView: false)" @onclick="ShowAstSemanticView">Semantic</button>
+                        <button type="button" class="@GetAstViewButtonClass(technicalView: true)" @onclick="ShowAstTechnicalView">Technical</button>
+                    </div>
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <span class="text-muted">Nodes: @GetNodeCount(activeAstTreeRoot), depth: @GetMaxDepth(activeAstTreeRoot)</span>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="ResetActiveAstTreeState">Reset Tree State</button>
+                    </div>
 
-        <MudExpansionPanel Text="@snapshot.TranslationTable.Name">
-            <WideTable Table="snapshot.TranslationTable" />
-        </MudExpansionPanel>
+                    <div class="row g-3">
+                        <div class="col-xl-8">
+                            <TreeView Root="activeAstTreeRoot"
+                                      State="activeAstTreeState"
+                                      SelectedNodeChanged="OnActiveAstNodeSelectedAsync" />
+                        </div>
 
-        <MudExpansionPanel Text="@snapshot.ActionAndGotoTable.Name">
-            <WideTable Table="snapshot.ActionAndGotoTable" />
-        </MudExpansionPanel>
+                        <div class="col-xl-4">
+                            <div class="card">
+                                <div class="card-header">Selected AST Node</div>
+                                <div class="card-body">
+                                    @if (activeSelectedAstNode == null)
+                                    {
+                                        <div class="text-muted">Select a node.</div>
+                                    }
+                                    else
+                                    {
+                                        <dl class="row mb-0">
+                                            <dt class="col-sm-4">Name</dt>
+                                            <dd class="col-sm-8">@activeSelectedAstNode.Label</dd>
 
-        <MudExpansionPanel Text="@snapshot.FirstsTable.Name">
-            <WideTable Table="snapshot.FirstsTable" />
-        </MudExpansionPanel>
+                                            <dt class="col-sm-4">Type</dt>
+                                            <dd class="col-sm-8">@GetNodeTypeLabel(activeSelectedAstNode)</dd>
 
-        <MudExpansionPanel Text="@snapshot.FollowsTable.Name">
-            <WideTable Table="snapshot.FollowsTable" />
-        </MudExpansionPanel>
-    </MudExpansionPanels>
-}
+                                            <dt class="col-sm-4">Kind</dt>
+                                            <dd class="col-sm-8">@activeSelectedAstNode.Kind</dd>
+
+                                            <dt class="col-sm-4">Children</dt>
+                                            <dd class="col-sm-8">@activeSelectedAstNode.Children.Count</dd>
+
+                                            @if (!string.IsNullOrWhiteSpace(activeSelectedAstNode.Description))
+                                            {
+                                                <dt class="col-sm-4">Description</dt>
+                                                <dd class="col-sm-8">
+                                                    <div class="ast-node-description">@activeSelectedAstNode.Description</div>
+                                                </dd>
+                                            }
+                                        </dl>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </MudTabPanel>
+
+            <MudTabPanel Text="Parse Tree">
+                @if (parseTreeRoot == null)
+                {
+                    <div class="text-muted">Run parsing to see parse tree.</div>
+                }
+                else
+                {
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <span class="text-muted">Nodes: @GetNodeCount(parseTreeRoot), depth: @GetMaxDepth(parseTreeRoot)</span>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="ResetParseTreeState">Reset Tree State</button>
+                    </div>
+                    <TreeView Root="parseTreeRoot" State="parseTreeState" />
+                }
+            </MudTabPanel>
+
+            <MudTabPanel Text="Tokens">
+                @if (tokenRows.Count == 0)
+                {
+                    <div class="text-muted">Run parsing to see tokens.</div>
+                }
+                else
+                {
+                    <table class="table table-sm table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Kind</th>
+                                <th>Terminal</th>
+                                <th>Text</th>
+                                <th>Value</th>
+                                <th>Pos</th>
+                                <th>Len</th>
+                                <th>Ignored</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var token in tokenRows)
+                            {
+                                <tr>
+                                    <td>@token.Index</td>
+                                    <td>@token.Kind</td>
+                                    <td>@token.Terminal</td>
+                                    <td>@token.Text</td>
+                                    <td>@token.Value</td>
+                                    <td>@token.Position</td>
+                                    <td>@token.Length</td>
+                                    <td>@(token.IsIgnoredForParsing ? "yes" : string.Empty)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </MudTabPanel>
+        </MudTabs>
+    </MudTabPanel>
+
+    <MudTabPanel Text="Parsing Tables">
+        @if (snapshot == null)
+        {
+            <div class="text-muted">Select a grammar to load parsing tables.</div>
+        }
+        else
+        {
+            <MudPaper Class="mt-2 pa-4 dsl-summary-paper" Elevation="1">
+                <MudText Typo="Typo.h6">@snapshot.GrammarName</MudText>
+
+                <dl class="row mb-0 mt-3">
+                    <dt class="col-sm-3">Root</dt>
+                    <dd class="col-sm-9">@snapshot.RootName</dd>
+                    <dt class="col-sm-3">Terminals</dt>
+                    <dd class="col-sm-9">@snapshot.TerminalCount</dd>
+                    <dt class="col-sm-3">Non-terminals</dt>
+                    <dd class="col-sm-9">@snapshot.NonTerminalCount</dd>
+                    <dt class="col-sm-3">Productions</dt>
+                    <dd class="col-sm-9">@snapshot.Productions.Count</dd>
+                    <dt class="col-sm-3">Rule sets</dt>
+                    <dd class="col-sm-9">@snapshot.RuleSetCount</dd>
+                </dl>
+            </MudPaper>
+
+            <MudExpansionPanels Class="mt-4" MultiExpansion="true">
+                <MudExpansionPanel Text="Productions" Expanded="true">
+                    <div class="dsl-wide-table-container">
+                        <MudTable T="ProductionRowDto"
+                                  Items="snapshot.Productions"
+                                  Dense="true"
+                                  Hover="true"
+                                  Bordered="true"
+                                  Striped="true"
+                                  Breakpoint="Breakpoint.None"
+                                  Class="dsl-wide-table">
+                            <HeaderContent>
+                                <MudTh>#</MudTh>
+                                <MudTh>Left</MudTh>
+                                <MudTh>Right</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="#">@context.Number</MudTd>
+                                <MudTd DataLabel="Left">@context.Left</MudTd>
+                                <MudTd DataLabel="Right">@context.Right</MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </div>
+                </MudExpansionPanel>
+
+                <MudExpansionPanel Text="@snapshot.TranslationTable.Name">
+                    <WideTable Table="snapshot.TranslationTable" />
+                </MudExpansionPanel>
+
+                <MudExpansionPanel Text="@snapshot.ActionAndGotoTable.Name">
+                    <WideTable Table="snapshot.ActionAndGotoTable" />
+                </MudExpansionPanel>
+
+                <MudExpansionPanel Text="@snapshot.FirstsTable.Name">
+                    <WideTable Table="snapshot.FirstsTable" />
+                </MudExpansionPanel>
+
+                <MudExpansionPanel Text="@snapshot.FollowsTable.Name">
+                    <WideTable Table="snapshot.FollowsTable" />
+                </MudExpansionPanel>
+            </MudExpansionPanels>
+        }
+    </MudTabPanel>
+</MudTabs>
 
 @code {
+    private IReadOnlyList<IDslGrammarProvider> _providerOptions = [];
     private string? selectedProviderId;
+    private IGrammar? loadedGrammar;
     private GrammarSnapshotDto? snapshot;
+    private string sourceText = "x=2+3*4;x+1";
     private string? loadErrorMessage;
+    private IReadOnlyList<string> loadMessages = [];
+    private IReadOnlyList<TokenRowDto> tokenRows = [];
+    private TreeNodeViewModel? parseTreeRoot;
+    private TreeNodeViewModel? astSemanticTreeRoot;
+    private TreeNodeViewModel? astTechnicalTreeRoot;
+    private TreeViewState parseTreeState = new();
+    private TreeViewState astSemanticTreeState = new();
+    private TreeViewState astTechnicalTreeState = new();
+    private TreeNodeViewModel? selectedAstSemanticNode;
+    private TreeNodeViewModel? selectedAstTechnicalNode;
+    private bool showAstTechnicalView;
 
-    private void LoadGrammar()
+    private IDslGrammarProvider? selectedProvider =>
+        string.IsNullOrWhiteSpace(selectedProviderId)
+            ? null
+            : ProviderCatalog.FindById(selectedProviderId);
+
+    private TreeNodeViewModel? activeAstTreeRoot => showAstTechnicalView
+        ? astTechnicalTreeRoot
+        : astSemanticTreeRoot;
+
+    private TreeViewState activeAstTreeState => showAstTechnicalView
+        ? astTechnicalTreeState
+        : astSemanticTreeState;
+
+    private TreeNodeViewModel? activeSelectedAstNode => showAstTechnicalView
+        ? selectedAstTechnicalNode
+        : selectedAstSemanticNode;
+
+    protected override async Task OnInitializedAsync()
     {
+        await RefreshProvidersAsync();
+        await LoadSelectedGrammarAsync();
+    }
+
+    private async Task LoadAssembliesAsync(InputFileChangeEventArgs args)
+    {
+        var beforeProviderIds = ProviderCatalog.GetAll()
+            .Select(provider => provider.Id)
+            .ToHashSet(StringComparer.Ordinal);
+
+        var files = args.GetMultipleFiles();
+        var report = await AssemblyLoader.LoadProvidersAsync(files);
+        loadMessages = BuildLoadMessages(report);
+
+        await RefreshProvidersAsync();
+
+        var addedProvider = _providerOptions.FirstOrDefault(provider => !beforeProviderIds.Contains(provider.Id));
+        if (addedProvider != null)
+        {
+            selectedProviderId = addedProvider.Id;
+        }
+
+        await LoadSelectedGrammarAsync();
+    }
+
+    private Task OnSelectedProviderChangedAsync(ChangeEventArgs args)
+    {
+        selectedProviderId = args.Value?.ToString();
+        return LoadSelectedGrammarAsync();
+    }
+
+    private async Task RefreshProvidersAsync()
+    {
+        _providerOptions = ProviderCatalog.GetAll();
+
+        var nextProviderId = ResolveSelectedProviderId();
+        if (string.Equals(selectedProviderId, nextProviderId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        selectedProviderId = nextProviderId;
+        await Task.CompletedTask;
+    }
+
+    private async Task LoadSelectedGrammarAsync()
+    {
+        loadedGrammar = null;
         snapshot = null;
         loadErrorMessage = null;
+        ClearParseOutput();
 
         if (string.IsNullOrWhiteSpace(selectedProviderId))
         {
@@ -111,8 +374,9 @@
 
         try
         {
-            var grammar = provider.BuildGrammar();
-            snapshot = SnapshotMapper.Map(grammar);
+            loadedGrammar = provider.BuildGrammar();
+            snapshot = SnapshotMapper.Map(loadedGrammar);
+            await Task.CompletedTask;
         }
         catch (Exception ex)
         {
@@ -120,11 +384,398 @@
         }
     }
 
-    private Task OnSelectedProviderChangedAsync(string? providerId)
+    private void RunParse()
     {
-        selectedProviderId = providerId;
-        snapshot = null;
+        ClearParseOutput();
+
+        if (loadedGrammar == null || string.IsNullOrWhiteSpace(selectedProviderId))
+        {
+            loadErrorMessage = "Select and load a grammar provider first.";
+            return;
+        }
+
+        var provider = ProviderCatalog.FindById(selectedProviderId);
+        if (provider == null)
+        {
+            loadErrorMessage = $"Provider '{selectedProviderId}' is not registered.";
+            return;
+        }
+
         loadErrorMessage = null;
+
+        try
+        {
+            var lexerSettings = provider.CreateLexerSettings(loadedGrammar);
+            var lexer = new Lexer(lexerSettings);
+
+            var allTokens = lexer.GetTokens(new StringSourceStream(sourceText)).ToList();
+            tokenRows = MapTokenRows(allTokens);
+
+            var lexerError = allTokens.OfType<ErrorToken>().FirstOrDefault();
+            if (lexerError != null)
+            {
+                loadErrorMessage = lexerError.ToString();
+                return;
+            }
+
+            var syntaxTokens = allTokens
+                .Where(token => token.Terminal.Flags != TermFlags.Space && token.Terminal.Flags != TermFlags.Comment)
+                .ToList();
+
+            var parser = new SyntaxParser(loadedGrammar);
+            var parseResult = parser.Parse(syntaxTokens);
+            if (!parseResult.IsSuccess || parseResult.ParseTree == null)
+            {
+                loadErrorMessage = parseResult.Error?.ToString() ?? "Parse failed.";
+                return;
+            }
+
+            parseTreeRoot = MapParseTreeNode(parseResult.ParseTree, "parse:0");
+            parseTreeState = new TreeViewState();
+
+            var astRoot = new AstBuilder(loadedGrammar.AstBindings).Build(parseResult.ParseTree, sourceText);
+            astSemanticTreeRoot = MapAstNodeSemantic(astRoot, "ast:semantic:0", isRoot: true);
+            astTechnicalTreeRoot = MapAstNodeTechnical(astRoot, "ast:technical:0");
+            astSemanticTreeState = new TreeViewState();
+            astTechnicalTreeState = new TreeViewState();
+            selectedAstSemanticNode = astSemanticTreeRoot;
+            selectedAstTechnicalNode = astTechnicalTreeRoot;
+            showAstTechnicalView = false;
+        }
+        catch (Exception ex)
+        {
+            loadErrorMessage = $"Unexpected error: {ex.Message}";
+        }
+    }
+
+    private string GetProviderDescription()
+    {
+        if (snapshot == null)
+        {
+            return "No description available.";
+        }
+
+        return snapshot.GrammarName;
+    }
+
+    private void ClearParseOutput()
+    {
+        tokenRows = [];
+        parseTreeRoot = null;
+        astSemanticTreeRoot = null;
+        astTechnicalTreeRoot = null;
+        parseTreeState = new TreeViewState();
+        astSemanticTreeState = new TreeViewState();
+        astTechnicalTreeState = new TreeViewState();
+        selectedAstSemanticNode = null;
+        selectedAstTechnicalNode = null;
+        showAstTechnicalView = false;
+    }
+
+    private static IReadOnlyList<string> BuildLoadMessages(AssemblyLoadReport report)
+    {
+        var messages = new List<string>
+        {
+            $"Selected files: {report.SelectedFileCount}. Processed assemblies: {report.ProcessedAssemblyFileCount}. Registered providers: {report.RegisteredProviderCount}."
+        };
+        messages.AddRange(report.Messages);
+        return messages;
+    }
+
+    private string? ResolveSelectedProviderId()
+    {
+        if (!string.IsNullOrWhiteSpace(selectedProviderId) &&
+            _providerOptions.Any(provider => provider.Id == selectedProviderId))
+        {
+            return selectedProviderId;
+        }
+
+        return _providerOptions.FirstOrDefault()?.Id;
+    }
+
+    private static IReadOnlyList<TokenRowDto> MapTokenRows(IReadOnlyList<IToken> tokens)
+    {
+        return tokens
+            .Select((token, index) => new TokenRowDto
+            {
+                Index = index,
+                Kind = token.GetType().Name,
+                Terminal = token is ErrorToken ? "LexerError" : token.Terminal.Name,
+                Text = token.OriginalString ?? string.Empty,
+                Value = token.Value?.ToString() ?? string.Empty,
+                Position = token.Position,
+                Length = token.Length,
+                IsIgnoredForParsing = token is not ErrorToken &&
+                                     (token.Terminal.Flags == TermFlags.Space ||
+                                      token.Terminal.Flags == TermFlags.Comment)
+            })
+            .ToList();
+    }
+
+    private static TreeNodeViewModel MapParseTreeNode(ParseTreeNode node, string nodeId)
+    {
+        var (label, kind) = node switch
+        {
+            NonTerminalNode nonTerminalNode => ($"NT: {nonTerminalNode.NonTerminal.Name}", TreeNodeKind.ParseNonTerminal),
+            TerminalNode terminalNode => ($"T: {terminalNode.Token.Terminal.Name} '{terminalNode.Token.OriginalString}'", TreeNodeKind.ParseTerminal),
+            _ => (node.Term.Name, TreeNodeKind.ParseNode)
+        };
+
+        var children = node.Children
+            .Select((child, index) => MapParseTreeNode(child, $"{nodeId}/{index}"))
+            .ToList();
+
+        return new TreeNodeViewModel
+        {
+            NodeId = nodeId,
+            Label = label,
+            Kind = kind,
+            TypeName = node.GetType().Name,
+            Children = children
+        };
+    }
+
+    private static TreeNodeViewModel MapAstNodeTechnical(IAstNode node, string nodeId)
+    {
+        var children = node.Children
+            .Select((child, index) => MapAstNodeTechnical(child, $"{nodeId}/{index}"))
+            .ToList();
+
+        return new TreeNodeViewModel
+        {
+            NodeId = nodeId,
+            Label = GetTechnicalAstLabel(node),
+            Kind = node is AstTokenNode ? TreeNodeKind.AstToken : TreeNodeKind.AstNode,
+            Description = GetTechnicalAstDescription(node),
+            TypeName = node.GetType().Name,
+            Children = children
+        };
+    }
+
+    private static string GetTechnicalAstLabel(IAstNode node)
+    {
+        if (node is AstTokenNode tokenNode)
+        {
+            return $"Token: {tokenNode.TerminalName} '{tokenNode.Text}'";
+        }
+
+        if (node is AstNodeBase astNodeBase)
+        {
+            return $"{node.GetType().Name} ({astNodeBase.ParseNode.Term.Name})";
+        }
+
+        return node.GetType().Name;
+    }
+
+    private static string? GetTechnicalAstDescription(IAstNode node)
+    {
+        if (node is AstTokenNode tokenNode)
+        {
+            return $"Terminal: {tokenNode.TerminalName}; Value: {tokenNode.Value}";
+        }
+
+        if (node is AstNodeBase astNodeBase)
+        {
+            return $"Parse term: {astNodeBase.ParseNode.Term.Name}";
+        }
+
+        return null;
+    }
+
+    private static TreeNodeViewModel MapAstNodeSemantic(IAstNode node, string nodeId, bool isRoot)
+    {
+        var children = node.ChildrenDisplayMode == AstChildrenDisplayMode.Hide
+            ? []
+            : node.Children
+                .Select((child, index) => MapAstNodeSemantic(child, $"{nodeId}/{index}", isRoot: false))
+                .ToList();
+
+        return new TreeNodeViewModel
+        {
+            NodeId = nodeId,
+            Label = BuildSemanticAstLabel(node),
+            Kind = ResolveSemanticAstNodeKind(node, isRoot, hasChildren: children.Count > 0),
+            Description = NormalizeDescription(node.Description),
+            TypeName = node.GetType().Name,
+            Children = children
+        };
+    }
+
+    private static string BuildSemanticAstLabel(IAstNode node)
+    {
+        return string.IsNullOrWhiteSpace(node.DisplayName)
+            ? node.GetType().Name
+            : node.DisplayName;
+    }
+
+    private static string? NormalizeDescription(string? description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            return null;
+        }
+
+        return string.Join(" ",
+            description
+                .Split(new[] { '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(part => part.Trim()));
+    }
+
+    private static TreeNodeKind ResolveSemanticAstNodeKind(IAstNode node, bool isRoot, bool hasChildren)
+    {
+        if (isRoot)
+        {
+            return TreeNodeKind.AstSemanticRoot;
+        }
+
+        var nodeTypeName = node.GetType().Name;
+        if (nodeTypeName.Contains("Section", StringComparison.OrdinalIgnoreCase))
+        {
+            return TreeNodeKind.AstSemanticSection;
+        }
+
+        if (nodeTypeName.Contains("Property", StringComparison.OrdinalIgnoreCase))
+        {
+            return TreeNodeKind.AstSemanticProperty;
+        }
+
+        if (!hasChildren || node.ChildrenDisplayMode == AstChildrenDisplayMode.Hide)
+        {
+            return TreeNodeKind.AstSemanticField;
+        }
+
+        return TreeNodeKind.AstNode;
+    }
+
+    private static int GetNodeCount(TreeNodeViewModel root)
+    {
+        return EnumerateNodes(root).Count();
+    }
+
+    private static int GetMaxDepth(TreeNodeViewModel root)
+    {
+        return GetMaxDepthCore(root, 1);
+    }
+
+    private static int GetMaxDepthCore(TreeNodeViewModel node, int depth)
+    {
+        if (node.Children.Count == 0)
+        {
+            return depth;
+        }
+
+        return node.Children.Max(child => GetMaxDepthCore(child, depth + 1));
+    }
+
+    private static IEnumerable<TreeNodeViewModel> EnumerateNodes(TreeNodeViewModel node)
+    {
+        yield return node;
+
+        foreach (var child in node.Children)
+        {
+            foreach (var descendant in EnumerateNodes(child))
+            {
+                yield return descendant;
+            }
+        }
+    }
+
+    private void ResetParseTreeState()
+    {
+        parseTreeState = new TreeViewState();
+    }
+
+    private void ResetActiveAstTreeState()
+    {
+        if (showAstTechnicalView)
+        {
+            astTechnicalTreeState = new TreeViewState();
+            selectedAstTechnicalNode = astTechnicalTreeRoot;
+            return;
+        }
+
+        astSemanticTreeState = new TreeViewState();
+        selectedAstSemanticNode = astSemanticTreeRoot;
+    }
+
+    private Task OnActiveAstNodeSelectedAsync(TreeNodeViewModel node)
+    {
+        if (showAstTechnicalView)
+        {
+            selectedAstTechnicalNode = node;
+            return Task.CompletedTask;
+        }
+
+        selectedAstSemanticNode = node;
         return Task.CompletedTask;
+    }
+
+    private void ShowAstSemanticView()
+    {
+        showAstTechnicalView = false;
+        if (selectedAstSemanticNode == null)
+        {
+            selectedAstSemanticNode = ResolveSelectedNode(astSemanticTreeRoot, astSemanticTreeState.SelectedNodeId)
+                ?? astSemanticTreeRoot;
+        }
+    }
+
+    private void ShowAstTechnicalView()
+    {
+        showAstTechnicalView = true;
+        if (selectedAstTechnicalNode == null)
+        {
+            selectedAstTechnicalNode = ResolveSelectedNode(astTechnicalTreeRoot, astTechnicalTreeState.SelectedNodeId)
+                ?? astTechnicalTreeRoot;
+        }
+    }
+
+    private string GetAstViewButtonClass(bool technicalView)
+    {
+        var isActive = showAstTechnicalView == technicalView;
+        return isActive
+            ? "btn btn-sm btn-primary"
+            : "btn btn-sm btn-outline-primary";
+    }
+
+    private static TreeNodeViewModel? ResolveSelectedNode(TreeNodeViewModel? root, string? nodeId)
+    {
+        if (root == null)
+        {
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(nodeId))
+        {
+            return root;
+        }
+
+        return FindNodeById(root, nodeId) ?? root;
+    }
+
+    private static TreeNodeViewModel? FindNodeById(TreeNodeViewModel node, string nodeId)
+    {
+        if (string.Equals(node.NodeId, nodeId, StringComparison.Ordinal))
+        {
+            return node;
+        }
+
+        foreach (var child in node.Children)
+        {
+            var foundNode = FindNodeById(child, nodeId);
+            if (foundNode != null)
+            {
+                return foundNode;
+            }
+        }
+
+        return null;
+    }
+
+    private static string GetNodeTypeLabel(TreeNodeViewModel node)
+    {
+        return string.IsNullOrWhiteSpace(node.TypeName)
+            ? "n/a"
+            : node.TypeName;
     }
 }
