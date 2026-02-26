@@ -107,6 +107,8 @@ code {
     --dsl-tree-line-x: 0.25rem;
     --dsl-tree-line-arm: 0.75rem;
     --dsl-tree-row-mid: 0.9rem;
+    --dsl-tree-row-height: 1.8rem;
+    --dsl-tree-item-bottom-gap: 0.2rem;
 }
 
 .dsl-treeview-list {
@@ -123,7 +125,7 @@ code {
 .dsl-treeview-item {
     position: relative;
     margin: 0;
-    padding: 0 0 0.2rem 1rem;
+    padding: 0 0 var(--dsl-tree-item-bottom-gap) 1rem;
 }
 
 .dsl-treeview-item::before {
@@ -144,7 +146,7 @@ code {
     border-top: 1px solid var(--dsl-tree-line-color);
 }
 
-.dsl-treeview-item-last:not(.dsl-treeview-item-expanded)::before {
+.dsl-treeview-item-last::before {
     bottom: auto;
     height: var(--dsl-tree-row-mid);
 }
@@ -162,7 +164,7 @@ code {
     display: flex;
     align-items: center;
     gap: 0.3rem;
-    min-height: 1.8rem;
+    min-height: var(--dsl-tree-row-height);
     border-radius: 0.25rem;
     padding: 0 0.125rem;
 }
@@ -456,10 +458,32 @@ code {
     min-height: 0;
 }
 
+.dsl-result-tabs .mud-tabs-tabbar {
+    flex: 0 0 auto;
+}
+
+.dsl-result-tabs .mud-tabs-tabbar .mud-tabs-tabbar-inner {
+    min-height: 2.2rem;
+}
+
+.dsl-result-tabs .mud-tabs-tabbar .mud-tabs-tabbar-wrapper {
+    gap: 0.2rem;
+}
+
+.dsl-result-tabs .mud-tab {
+    width: auto;
+    min-height: 2.2rem;
+    padding: 0.2rem 0.65rem;
+    line-height: 1.2;
+    font-size: 0.82rem;
+    text-transform: none;
+}
+
 .dsl-result-tabs .mud-tabs-panels {
     display: flex;
     flex: 1 1 auto;
     min-height: 0;
+    margin-top: 0.25rem;
 }
 
 .dsl-result-tabs .mud-tabs-panels > .mud-tab-panel,
