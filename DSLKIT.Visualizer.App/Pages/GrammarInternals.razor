@@ -1,4 +1,5 @@
 @page "/grammar/internals"
+@page "/grammar/internals/{GrammarName}"
 @inject IGrammarProviderCatalog ProviderCatalog
 @inject IGrammarProviderAssemblyLoader AssemblyLoader
 @inject IGrammarSnapshotMapper SnapshotMapper
@@ -17,6 +18,8 @@
                           ProviderDescription="@GetProviderDescription()"
                           SelectedProviderChanged="OnSelectedProviderChangedAsync"
                           LoadAssemblies="LoadAssembliesAsync"
+                          ShowEmptyOption="true"
+                          EmptyOptionLabel="Select grammar"
                           SelectElementId="grammar-internals-provider-select"
                           UploadInputId="internals-provider-dll-input" />
 
@@ -111,13 +114,20 @@
     private GrammarSnapshotDto? snapshot;
     private string? loadErrorMessage;
     private IReadOnlyList<string> loadMessages = [];
+    private string? unresolvedRequestedProviderToken;
+
+    [Parameter]
+    public string? GrammarName { get; set; }
+
+    [SupplyParameterFromQuery(Name = "grammar")]
+    public string? GrammarNameFromQuery { get; set; }
 
     private IDslGrammarProvider? selectedProvider =>
         string.IsNullOrWhiteSpace(selectedProviderId)
             ? null
             : ProviderCatalog.FindById(selectedProviderId);
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         await RefreshProvidersAsync();
         await LoadSelectedGrammarAsync();
@@ -154,7 +164,8 @@
     {
         _providerOptions = ProviderCatalog.GetAll();
 
-        var nextProviderId = ResolveSelectedProviderId();
+        var requestedProviderId = ResolveRequestedProviderId();
+        var nextProviderId = ResolveSelectedProviderId(requestedProviderId);
         if (string.Equals(selectedProviderId, nextProviderId, StringComparison.Ordinal))
         {
             return;
@@ -171,7 +182,11 @@
 
         if (string.IsNullOrWhiteSpace(selectedProviderId))
         {
-            loadErrorMessage = "Select a grammar provider.";
+            if (!string.IsNullOrWhiteSpace(unresolvedRequestedProviderToken))
+            {
+                loadErrorMessage = $"Grammar '{unresolvedRequestedProviderToken}' is not registered.";
+            }
+
             return;
         }
 
@@ -204,7 +219,7 @@
         return selectedProvider.Description;
     }
 
-    private string? ResolveSelectedProviderId()
+    private string? ResolveSelectedProviderId(string? requestedProviderId)
     {
         if (!string.IsNullOrWhiteSpace(selectedProviderId) &&
             _providerOptions.Any(provider => provider.Id == selectedProviderId))
@@ -212,7 +227,50 @@
             return selectedProviderId;
         }
 
-        return _providerOptions.FirstOrDefault()?.Id;
+        return requestedProviderId;
+    }
+
+    private string? ResolveRequestedProviderId()
+    {
+        unresolvedRequestedProviderToken = null;
+
+        var requestedToken = ResolveRequestedProviderToken();
+        if (string.IsNullOrWhiteSpace(requestedToken))
+        {
+            return null;
+        }
+
+        var byId = _providerOptions.FirstOrDefault(provider =>
+            string.Equals(provider.Id, requestedToken, StringComparison.OrdinalIgnoreCase));
+        if (byId != null)
+        {
+            return byId.Id;
+        }
+
+        var byDisplayName = _providerOptions.FirstOrDefault(provider =>
+            string.Equals(provider.DisplayName, requestedToken, StringComparison.OrdinalIgnoreCase));
+        if (byDisplayName != null)
+        {
+            return byDisplayName.Id;
+        }
+
+        unresolvedRequestedProviderToken = requestedToken;
+        return null;
+    }
+
+    private string? ResolveRequestedProviderToken()
+    {
+        if (!string.IsNullOrWhiteSpace(GrammarNameFromQuery))
+        {
+            return GrammarNameFromQuery.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(GrammarName))
+        {
+            return GrammarName.Trim();
+        }
+
+        return null;
     }
 
     private static IReadOnlyList<string> BuildLoadMessages(AssemblyLoadReport report)

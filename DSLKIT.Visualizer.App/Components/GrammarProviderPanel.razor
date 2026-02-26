@@ -15,6 +15,11 @@
                 }
                 else
                 {
+                    @if (ShowEmptyOption)
+                    {
+                        <option value="">@EmptyOptionLabel</option>
+                    }
+
                     @foreach (var provider in ProviderOptions)
                     {
                         <option value="@provider.Id">@provider.DisplayName (@provider.Id)</option>
@@ -68,6 +73,12 @@
 
     [Parameter]
     public string UploadInputId { get; set; } = "provider-dll-input";
+
+    [Parameter]
+    public bool ShowEmptyOption { get; set; }
+
+    [Parameter]
+    public string EmptyOptionLabel { get; set; } = "Select grammar";
 
     [Parameter]
     public EventCallback<ChangeEventArgs> SelectedProviderChanged { get; set; }
