@@ -50,6 +50,15 @@
             <dd class="col-sm-9">@selectedProvider.DisplayName</dd>
             <dt class="col-sm-3">Description</dt>
             <dd class="col-sm-9">@GetProviderDescription()</dd>
+            @if (!string.IsNullOrWhiteSpace(selectedProvider.DocumentationUrl))
+            {
+                <dt class="col-sm-3">Article</dt>
+                <dd class="col-sm-9">
+                    <a href="@selectedProvider.DocumentationUrl"
+                       target="_blank"
+                       rel="noopener noreferrer">@selectedProvider.DocumentationUrl</a>
+                </dd>
+            }
         </dl>
     </MudPaper>
 }
@@ -73,6 +82,35 @@
 
 <MudTabs Class="mt-4" Rounded="true" Elevation="1">
     <MudTabPanel Text="Parse">
+        <div class="mb-3">
+            <label class="form-label" for="grammar-example-select">Example</label>
+            @if (selectedProvider == null)
+            {
+                <div class="text-muted">Select a grammar to load examples.</div>
+            }
+            else if (selectedProvider.Examples.Count == 0)
+            {
+                <div class="text-muted">This grammar does not provide built-in examples.</div>
+            }
+            else
+            {
+                <select id="grammar-example-select"
+                        class="form-select"
+                        value="@selectedExampleId"
+                        @onchange="OnSelectedExampleChangedAsync">
+                    @foreach (var example in selectedProvider.Examples)
+                    {
+                        <option value="@example.Id">@example.Name</option>
+                    }
+                </select>
+
+                @if (selectedExample != null)
+                {
+                    <div class="form-text">@selectedExample.Description</div>
+                }
+            }
+        </div>
+
         <div class="mb-3">
             <label class="form-label" for="source-input">Source Text</label>
             <textarea id="source-input" class="form-control" rows="8" @bind="sourceText"></textarea>
@@ -272,9 +310,11 @@
 @code {
     private IReadOnlyList<IDslGrammarProvider> _providerOptions = [];
     private string? selectedProviderId;
+    private string? selectedExampleId;
+    private string? selectedExampleProviderId;
     private IGrammar? loadedGrammar;
     private GrammarSnapshotDto? snapshot;
-    private string sourceText = "x=2+3*4;x+1";
+    private string sourceText = string.Empty;
     private string? loadErrorMessage;
     private IReadOnlyList<string> loadMessages = [];
     private IReadOnlyList<TokenRowDto> tokenRows = [];
@@ -292,6 +332,9 @@
         string.IsNullOrWhiteSpace(selectedProviderId)
             ? null
             : ProviderCatalog.FindById(selectedProviderId);
+
+    private DslGrammarExample? selectedExample =>
+        selectedProvider?.Examples.FirstOrDefault(example => example.Id == selectedExampleId);
 
     private TreeNodeViewModel? activeAstTreeRoot => showAstTechnicalView
         ? astTechnicalTreeRoot
@@ -338,6 +381,25 @@
         return LoadSelectedGrammarAsync();
     }
 
+    private Task OnSelectedExampleChangedAsync(ChangeEventArgs args)
+    {
+        selectedExampleId = args.Value?.ToString();
+
+        if (selectedProvider == null)
+        {
+            return Task.CompletedTask;
+        }
+
+        var example = selectedProvider.Examples.FirstOrDefault(item => item.Id == selectedExampleId);
+        if (example == null)
+        {
+            return Task.CompletedTask;
+        }
+
+        sourceText = example.SourceText;
+        return Task.CompletedTask;
+    }
+
     private async Task RefreshProvidersAsync()
     {
         _providerOptions = ProviderCatalog.GetAll();
@@ -361,6 +423,8 @@
 
         if (string.IsNullOrWhiteSpace(selectedProviderId))
         {
+            selectedExampleId = null;
+            selectedExampleProviderId = null;
             loadErrorMessage = "Select a grammar provider.";
             return;
         }
@@ -368,9 +432,13 @@
         var provider = ProviderCatalog.FindById(selectedProviderId);
         if (provider == null)
         {
+            selectedExampleId = null;
+            selectedExampleProviderId = null;
             loadErrorMessage = $"Provider '{selectedProviderId}' is not registered.";
             return;
         }
+
+        EnsureExampleSelection(provider);
 
         try
         {
@@ -450,12 +518,52 @@
 
     private string GetProviderDescription()
     {
-        if (snapshot == null)
+        if (selectedProvider == null || string.IsNullOrWhiteSpace(selectedProvider.Description))
         {
             return "No description available.";
         }
 
-        return snapshot.GrammarName;
+        return selectedProvider.Description;
+    }
+
+    private void EnsureExampleSelection(IDslGrammarProvider provider)
+    {
+        if (!string.Equals(selectedExampleProviderId, provider.Id, StringComparison.Ordinal))
+        {
+            selectedExampleProviderId = provider.Id;
+            SelectDefaultExample(provider);
+            return;
+        }
+
+        if (provider.Examples.Count == 0)
+        {
+            selectedExampleId = null;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(selectedExampleId) ||
+            provider.Examples.All(example => example.Id != selectedExampleId))
+        {
+            SelectExample(provider.Examples[0]);
+        }
+    }
+
+    private void SelectDefaultExample(IDslGrammarProvider provider)
+    {
+        if (provider.Examples.Count == 0)
+        {
+            selectedExampleId = null;
+            sourceText = string.Empty;
+            return;
+        }
+
+        SelectExample(provider.Examples[0]);
+    }
+
+    private void SelectExample(DslGrammarExample example)
+    {
+        selectedExampleId = example.Id;
+        sourceText = example.SourceText;
     }
 
     private void ClearParseOutput()
