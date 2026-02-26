@@ -19,6 +19,7 @@
                         class="form-select"
                         value="@SelectedExampleId"
                         @onchange="OnSelectedExampleChangedAsync">
+                    <option value="">-- Select example --</option>
                     @foreach (var example in SelectedProvider.Examples)
                     {
                         <option value="@example.Id">@example.Name</option>

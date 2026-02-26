@@ -43,7 +43,7 @@ public partial class Grammar
     private TreeNodeViewModel? selectedAstTechnicalNode;
     private bool isParsing;
     private bool showAstTechnicalView;
-    private string inputStatusMessage = "Input changed, not parsed.";
+    private string inputStatusMessage = "Enter source text and click Parse.";
     private InputStatusKind inputStatusKind = InputStatusKind.Warning;
 
     private const string SourceInputElementId = "source-input";
@@ -254,6 +254,7 @@ public partial class Grammar
         {
             selectedExampleId = null;
             selectedExampleProviderId = null;
+            SetSourceText(string.Empty);
             loadErrorMessage = "Select a grammar provider.";
             SetInputStatus("Select a grammar provider to start.", InputStatusKind.Warning);
             return;
@@ -264,6 +265,7 @@ public partial class Grammar
         {
             selectedExampleId = null;
             selectedExampleProviderId = null;
+            SetSourceText(string.Empty);
             loadErrorMessage = $"Provider '{selectedProviderId}' is not registered.";
             SetInputStatus("Selected grammar provider is not registered.", InputStatusKind.Error);
             return;
@@ -284,7 +286,7 @@ public partial class Grammar
 
         if (string.IsNullOrWhiteSpace(loadErrorMessage))
         {
-            MarkInputAsChanged();
+            SetInputStatus("Enter source text and click Parse.", InputStatusKind.Warning);
         }
     }
 
@@ -303,25 +305,10 @@ public partial class Grammar
         if (!string.Equals(selectedExampleProviderId, provider.Id, StringComparison.Ordinal))
         {
             selectedExampleProviderId = provider.Id;
-            SelectDefaultExample(provider);
+            ApplyDefaultExample(provider);
             return;
         }
 
-        if (provider.Examples.Count == 0)
-        {
-            selectedExampleId = null;
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(selectedExampleId) ||
-            provider.Examples.All(example => example.Id != selectedExampleId))
-        {
-            SelectExample(provider.Examples[0]);
-        }
-    }
-
-    private void SelectDefaultExample(IDslGrammarProvider provider)
-    {
         if (provider.Examples.Count == 0)
         {
             selectedExampleId = null;
@@ -329,7 +316,25 @@ public partial class Grammar
             return;
         }
 
-        SelectExample(provider.Examples[0]);
+        if (string.IsNullOrWhiteSpace(selectedExampleId) ||
+            provider.Examples.All(example => example.Id != selectedExampleId))
+        {
+            ApplyDefaultExample(provider);
+        }
+    }
+
+    private void ApplyDefaultExample(IDslGrammarProvider provider)
+    {
+        var firstExample = provider.Examples.FirstOrDefault();
+        if (firstExample == null)
+        {
+            selectedExampleId = null;
+            SetSourceText(string.Empty);
+            return;
+        }
+
+        selectedExampleId = firstExample.Id;
+        SetSourceText(firstExample.SourceText);
     }
 
     private void SelectExample(DslGrammarExample example)
@@ -370,7 +375,7 @@ public partial class Grammar
             return selectedProviderId;
         }
 
-        return _providerOptions.FirstOrDefault()?.Id;
+        return null;
     }
 
     private static IReadOnlyList<TokenRowDto> MapTokenRows(IReadOnlyList<IToken> tokens)
@@ -662,11 +667,6 @@ public partial class Grammar
         inputStatusKind = statusKind;
     }
 
-    private void MarkInputAsChanged()
-    {
-        SetInputStatus("Input changed, not parsed.", InputStatusKind.Warning);
-    }
-
     private void SetSourceText(string value)
     {
         if (string.Equals(sourceText, value, StringComparison.Ordinal))
@@ -675,7 +675,6 @@ public partial class Grammar
         }
 
         sourceText = value;
-        MarkInputAsChanged();
     }
 
     private async Task OnSourceInputKeyDownAsync(KeyboardEventArgs args)
