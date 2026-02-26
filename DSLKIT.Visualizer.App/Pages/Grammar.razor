@@ -7,7 +7,7 @@
     <MudText Typo="Typo.h4">Grammar Workspace</MudText>
 
     <GrammarProviderPanel ProviderOptions="_providerOptions"
-                          SelectedProviderId="selectedProviderId"
+                          SelectedProviderId="@selectedProviderId"
                           SelectedProvider="selectedProvider"
                           ProviderDescription="@GetProviderDescription()"
                           SelectedProviderChanged="OnSelectedProviderChangedAsync"
@@ -30,7 +30,7 @@
     <div class="row g-3 mt-1 dsl-workspace">
         <div class="col-xl-5">
             <SourceInputPanel SelectedProvider="selectedProvider"
-                              SelectedExampleId="selectedExampleId"
+                              SelectedExampleId="@selectedExampleId"
                               SelectedExampleChanged="OnSelectedExampleChangedAsync"
                               SourceText="@SourceText"
                               SourceTextChanged="OnSourceTextChangedAsync"

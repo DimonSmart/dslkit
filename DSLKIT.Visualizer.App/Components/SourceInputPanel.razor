@@ -17,12 +17,14 @@
             {
                 <select id="grammar-example-select"
                         class="form-select"
-                        value="@SelectedExampleId"
+                        @key="@($"{SelectedProvider.Id}:{effectiveSelectedExampleId}")"
+                        value="@effectiveSelectedExampleId"
                         @onchange="OnSelectedExampleChangedAsync">
-                    <option value="">-- Select example --</option>
                     @foreach (var example in SelectedProvider.Examples)
                     {
-                        <option value="@example.Id">@example.Name</option>
+                        <option value="@example.Id" selected="@(string.Equals(example.Id, effectiveSelectedExampleId, StringComparison.Ordinal))">
+                            @example.Name
+                        </option>
                     }
                 </select>
 
@@ -66,8 +68,13 @@
 </section>
 
 @code {
+    private string? effectiveSelectedExampleId =>
+        !string.IsNullOrWhiteSpace(SelectedExampleId)
+            ? SelectedExampleId
+            : SelectedProvider?.Examples.FirstOrDefault()?.Id;
+
     private DslGrammarExample? selectedExample =>
-        SelectedProvider?.Examples.FirstOrDefault(example => example.Id == SelectedExampleId);
+        SelectedProvider?.Examples.FirstOrDefault(example => example.Id == effectiveSelectedExampleId);
 
     [Parameter]
     public IDslGrammarProvider? SelectedProvider { get; set; }
