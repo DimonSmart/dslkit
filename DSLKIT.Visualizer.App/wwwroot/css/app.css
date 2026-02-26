@@ -102,6 +102,13 @@ code {
     color: #c02d76;
 }
 
+.dsl-treeview {
+    --dsl-tree-line-color: #ced4da;
+    --dsl-tree-line-x: 0.25rem;
+    --dsl-tree-line-arm: 0.75rem;
+    --dsl-tree-row-mid: 0.9rem;
+}
+
 .dsl-treeview-list {
     list-style: none;
     margin: 0;
@@ -110,6 +117,7 @@ code {
 
 .dsl-treeview-root {
     padding-left: 0;
+    padding-bottom: 0.25rem;
 }
 
 .dsl-treeview-item {
@@ -121,23 +129,24 @@ code {
 .dsl-treeview-item::before {
     content: "";
     position: absolute;
-    top: -0.35rem;
-    bottom: -0.2rem;
-    left: 0.25rem;
-    border-left: 1px solid #ced4da;
+    top: 0;
+    bottom: 0;
+    left: var(--dsl-tree-line-x);
+    border-left: 1px solid var(--dsl-tree-line-color);
 }
 
 .dsl-treeview-item::after {
     content: "";
     position: absolute;
-    top: 0.85rem;
-    left: 0.25rem;
-    width: 0.75rem;
-    border-top: 1px solid #ced4da;
+    top: var(--dsl-tree-row-mid);
+    left: var(--dsl-tree-line-x);
+    width: var(--dsl-tree-line-arm);
+    border-top: 1px solid var(--dsl-tree-line-color);
 }
 
-.dsl-treeview-item-last::before {
-    bottom: 0.75rem;
+.dsl-treeview-item-last:not(.dsl-treeview-item-expanded)::before {
+    bottom: auto;
+    height: var(--dsl-tree-row-mid);
 }
 
 .dsl-treeview-item-root {

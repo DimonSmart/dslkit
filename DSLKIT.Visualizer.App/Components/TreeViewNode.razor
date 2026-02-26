@@ -96,6 +96,11 @@
             classes += " dsl-treeview-item-last";
         }
 
+        if (HasChildren && IsExpanded)
+        {
+            classes += " dsl-treeview-item-expanded";
+        }
+
         return classes;
     }
 
