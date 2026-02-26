@@ -29,8 +29,8 @@ public sealed class ExpressionGrammarProvider : IDslGrammarProvider
     public string DisplayName => "Expression Demo";
     public int ApiVersion => DslGrammarProviderApi.CurrentVersion;
     public string Description =>
-        "Arithmetic expression grammar for AST demos. Based on the LALR(1) tutorial in docs/lalr1-tutorial.md.";
-    public string? DocumentationUrl => "https://web.archive.org/web/20150811005320/http://web.cs.dal.ca/~sjackson/lalr1.html";
+        "Arithmetic expression grammar with assignments, precedence (+, -, *, /, **), unary operators, and built-in math functions.";
+    public string? DocumentationUrl => null;
     public IReadOnlyList<DslGrammarExample> Examples => BuiltInExamples;
 
     public IGrammar BuildGrammar()

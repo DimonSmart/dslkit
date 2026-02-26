@@ -1,4 +1,9 @@
+using System.Linq;
+using DSLKIT.Ast;
 using DSLKIT.GrammarExamples;
+using DSLKIT.Lexer;
+using DSLKIT.Parser;
+using DSLKIT.Terminals;
 using FluentAssertions;
 using Xunit;
 
@@ -32,6 +37,47 @@ namespace DSLKIT.Test.GrammarExamples
             var actualResult = ExpressionGrammarExample.Evaluate(source);
 
             actualResult.Should().BeApproximately(expectedResult, 1e-9);
+        }
+
+        [Fact]
+        public void BuildAst_ShouldExposeSemanticMetadataForVisualizer()
+        {
+            const string source = "x=2+3*4;x+1";
+            var grammar = ExpressionGrammarExample.BuildGrammar();
+            var lexer = new DSLKIT.Lexer.Lexer(ExpressionGrammarExample.CreateLexerSettings(grammar));
+            var parser = new SyntaxParser(grammar);
+
+            var tokens = lexer.GetTokens(new StringSourceStream(source))
+                .Where(token => token.Terminal.Flags != TermFlags.Space && token.Terminal.Flags != TermFlags.Comment)
+                .ToList();
+
+            var parseResult = parser.Parse(tokens);
+            parseResult.IsSuccess.Should().BeTrue();
+            parseResult.ParseTree.Should().NotBeNull();
+
+            var astRoot = new AstBuilder(grammar.AstBindings).Build(parseResult.ParseTree!);
+
+            astRoot.DisplayName.Should().Be("Program");
+            astRoot.Description.Should().Be("Statements: 2");
+            astRoot.Children.Should().HaveCount(2);
+
+            var assignmentNode = astRoot.Children[0];
+            assignmentNode.DisplayName.Should().Be("x =");
+            assignmentNode.Children.Should().HaveCount(1);
+            assignmentNode.Children[0].DisplayName.Should().Be("+");
+
+            var additionNode = assignmentNode.Children[0];
+            additionNode.Children.Should().HaveCount(2);
+            additionNode.Children[0].DisplayName.Should().Be("2");
+            additionNode.Children[0].ChildrenDisplayMode.Should().Be(AstChildrenDisplayMode.Hide);
+            additionNode.Children[1].DisplayName.Should().Be("*");
+
+            var secondStatementNode = astRoot.Children[1];
+            secondStatementNode.DisplayName.Should().Be("+");
+            secondStatementNode.Children.Should().HaveCount(2);
+            secondStatementNode.Children[0].DisplayName.Should().Be("x");
+            secondStatementNode.Children[0].ChildrenDisplayMode.Should().Be(AstChildrenDisplayMode.Hide);
+            secondStatementNode.Children[1].DisplayName.Should().Be("1");
         }
     }
 }

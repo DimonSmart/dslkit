@@ -172,28 +172,41 @@ namespace DSLKIT.GrammarExamples
         private sealed class ProgramNode : DemoAstNode
         {
             public ProgramNode(AstBuildContext context, IReadOnlyList<IAstNode> children)
-                : base(context, children)
+                : base(context, BuildSemanticChildren(children))
             {
                 Statements = context.AstChild<StatementListNode>(0).Statements;
             }
 
             public IReadOnlyList<DemoAstNode> Statements { get; }
+            public override string DisplayName => "Program";
+            public override string? Description => $"Statements: {Statements.Count}";
 
             public override TResult Accept<TResult>(IAstVisitor<TResult> visitor)
             {
                 return visitor.VisitProgram(this);
+            }
+
+            private static IReadOnlyList<IAstNode> BuildSemanticChildren(IReadOnlyList<IAstNode> children)
+            {
+                if (children.Count == 1 && children[0] is StatementListNode statementListNode)
+                {
+                    return statementListNode.Statements.Cast<IAstNode>().ToList();
+                }
+
+                throw new InvalidOperationException("Unexpected program production shape.");
             }
         }
 
         private sealed class StatementListNode : AstNodeBase
         {
             public StatementListNode(AstBuildContext context, IReadOnlyList<IAstNode> children)
-                : base(context, children)
+                : base(context, Array.Empty<IAstNode>())
             {
                 Statements = BuildStatements(children);
             }
 
             public IReadOnlyList<DemoAstNode> Statements { get; }
+            public override AstChildrenDisplayMode ChildrenDisplayMode => AstChildrenDisplayMode.Hide;
 
             private static IReadOnlyList<DemoAstNode> BuildStatements(IReadOnlyList<IAstNode> children)
             {
@@ -224,7 +237,7 @@ namespace DSLKIT.GrammarExamples
         private sealed class AssignmentNode : DemoAstNode
         {
             public AssignmentNode(AstBuildContext context, IReadOnlyList<IAstNode> children)
-                : base(context, children)
+                : base(context, BuildSemanticChildren(children))
             {
                 Name = context.AstChild<IdentifierNode>(0).Name;
                 Value = context.AstChild<DemoAstNode>(2);
@@ -232,17 +245,28 @@ namespace DSLKIT.GrammarExamples
 
             public string Name { get; }
             public DemoAstNode Value { get; }
+            public override string DisplayName => $"{Name} =";
 
             public override TResult Accept<TResult>(IAstVisitor<TResult> visitor)
             {
                 return visitor.VisitAssignment(this);
+            }
+
+            private static IReadOnlyList<IAstNode> BuildSemanticChildren(IReadOnlyList<IAstNode> children)
+            {
+                if (children.Count == 3)
+                {
+                    return [children[2]];
+                }
+
+                throw new InvalidOperationException("Unexpected assignment production shape.");
             }
         }
 
         private sealed class BinaryNode : DemoAstNode
         {
             public BinaryNode(AstBuildContext context, IReadOnlyList<IAstNode> children)
-                : base(context, children)
+                : base(context, BuildSemanticChildren(children))
             {
                 Left = context.AstChild<DemoAstNode>(0);
                 Operator = context.AstChild<AstTokenNode>(1).Text;
@@ -252,17 +276,28 @@ namespace DSLKIT.GrammarExamples
             public DemoAstNode Left { get; }
             public string Operator { get; }
             public DemoAstNode Right { get; }
+            public override string DisplayName => Operator;
 
             public override TResult Accept<TResult>(IAstVisitor<TResult> visitor)
             {
                 return visitor.VisitBinary(this);
+            }
+
+            private static IReadOnlyList<IAstNode> BuildSemanticChildren(IReadOnlyList<IAstNode> children)
+            {
+                if (children.Count == 3)
+                {
+                    return [children[0], children[2]];
+                }
+
+                throw new InvalidOperationException("Unexpected binary production shape.");
             }
         }
 
         private sealed class UnaryNode : DemoAstNode
         {
             public UnaryNode(AstBuildContext context, IReadOnlyList<IAstNode> children)
-                : base(context, children)
+                : base(context, BuildSemanticChildren(children))
             {
                 if (children.Count == 2)
                 {
@@ -283,17 +318,33 @@ namespace DSLKIT.GrammarExamples
 
             public string Operator { get; }
             public DemoAstNode Operand { get; }
+            public override string DisplayName => Operator;
 
             public override TResult Accept<TResult>(IAstVisitor<TResult> visitor)
             {
                 return visitor.VisitUnary(this);
+            }
+
+            private static IReadOnlyList<IAstNode> BuildSemanticChildren(IReadOnlyList<IAstNode> children)
+            {
+                if (children.Count == 2)
+                {
+                    return [children[1]];
+                }
+
+                if (children.Count == 4)
+                {
+                    return [children[2]];
+                }
+
+                throw new InvalidOperationException("Unexpected unary production shape.");
             }
         }
 
         private sealed class NumberNode : DemoAstNode
         {
             public NumberNode(AstBuildContext context, IReadOnlyList<IAstNode> children)
-                : base(context, children)
+                : base(context, Array.Empty<IAstNode>())
             {
                 var literal = context.AstChild<AstTokenNode>(0).Text;
                 if (!double.TryParse(literal, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedValue))
@@ -305,6 +356,8 @@ namespace DSLKIT.GrammarExamples
             }
 
             public double Value { get; }
+            public override string DisplayName => Value.ToString(CultureInfo.InvariantCulture);
+            public override AstChildrenDisplayMode ChildrenDisplayMode => AstChildrenDisplayMode.Hide;
 
             public override TResult Accept<TResult>(IAstVisitor<TResult> visitor)
             {
@@ -315,12 +368,14 @@ namespace DSLKIT.GrammarExamples
         private sealed class IdentifierNode : DemoAstNode
         {
             public IdentifierNode(AstBuildContext context, IReadOnlyList<IAstNode> children)
-                : base(context, children)
+                : base(context, Array.Empty<IAstNode>())
             {
                 Name = context.AstChild<AstTokenNode>(0).Text;
             }
 
             public string Name { get; }
+            public override string DisplayName => Name;
+            public override AstChildrenDisplayMode ChildrenDisplayMode => AstChildrenDisplayMode.Hide;
 
             public override TResult Accept<TResult>(IAstVisitor<TResult> visitor)
             {

@@ -25,15 +25,17 @@
             <HeaderContent>
                 @for (var columnIndex = 0; columnIndex < visibleColumnCount; columnIndex++)
                 {
+                    var headerColumnIndex = columnIndex;
                     <MudTh Class="dsl-wide-table-header">
-                        <span>@columnNames[columnIndex]</span>
+                        <span>@columnNames[headerColumnIndex]</span>
                     </MudTh>
                 }
             </HeaderContent>
             <RowTemplate>
                 @for (var columnIndex = 0; columnIndex < visibleColumnCount; columnIndex++)
                 {
-                    var cellValue = ResolveCellValue(context.Cells, columnIndex);
+                    var cellColumnIndex = columnIndex;
+                    var cellValue = ResolveCellValue(context.Cells, cellColumnIndex);
                     <MudTd Class="dsl-wide-table-cell" title="@cellValue">
                         @cellValue
                     </MudTd>
