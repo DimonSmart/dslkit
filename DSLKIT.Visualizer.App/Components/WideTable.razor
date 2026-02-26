@@ -1,0 +1,134 @@
+@using DSLKIT.Visualizer.App.Visualization
+
+<MudPaper Class="pa-3" Elevation="0">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   Size="Size.Small"
+                   OnClick="ToggleVerticalHeaders">
+            @GetVerticalHeaderButtonText()
+        </MudButton>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   Size="Size.Small"
+                   OnClick="ToggleWrapCells">
+            @GetWrapCellsButtonText()
+        </MudButton>
+        <MudText Typo="Typo.caption" Class="text-muted">
+            columns: @Table.Columns.Count, rows: @Table.Rows.Count
+        </MudText>
+    </div>
+
+    <div class="@GetContainerClass()">
+        <MudTable T="WideTableRow"
+                  Items="GetRows()"
+                  Dense="true"
+                  Hover="true"
+                  Bordered="true"
+                  Striped="true"
+                  Breakpoint="Breakpoint.None"
+                  Class="dsl-wide-table">
+            <HeaderContent>
+                @foreach (var column in Table.Columns)
+                {
+                    <MudTh Class="dsl-wide-table-header">
+                        <span>@column</span>
+                    </MudTh>
+                }
+            </HeaderContent>
+            <RowTemplate>
+                @for (var columnIndex = 0; columnIndex < GetVisibleColumnCount(context.Cells); columnIndex++)
+                {
+                    var currentColumnIndex = columnIndex;
+                    var columnName = ResolveColumnName(currentColumnIndex);
+                    <MudTd DataLabel="@columnName" Class="dsl-wide-table-cell">
+                        @ResolveCellValue(context.Cells, currentColumnIndex)
+                    </MudTd>
+                }
+            </RowTemplate>
+        </MudTable>
+    </div>
+</MudPaper>
+
+@code {
+    private bool showVerticalHeaders;
+    private bool wrapCells;
+    private IReadOnlyList<WideTableRow> rows = [];
+
+    [Parameter]
+    public required TableDto Table { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        rows = Table.Rows
+            .Select(cells => new WideTableRow(cells))
+            .ToList();
+    }
+
+    private void ToggleVerticalHeaders()
+    {
+        showVerticalHeaders = !showVerticalHeaders;
+    }
+
+    private void ToggleWrapCells()
+    {
+        wrapCells = !wrapCells;
+    }
+
+    private string GetContainerClass()
+    {
+        var classNames = new List<string> { "dsl-wide-table-container" };
+
+        if (showVerticalHeaders)
+        {
+            classNames.Add("dsl-wide-table-container-vertical-headers");
+        }
+
+        if (wrapCells)
+        {
+            classNames.Add("dsl-wide-table-container-wrap-cells");
+        }
+
+        return string.Join(" ", classNames);
+    }
+
+    private string ResolveColumnName(int columnIndex)
+    {
+        return columnIndex < Table.Columns.Count
+            ? Table.Columns[columnIndex]
+            : $"Column {columnIndex + 1}";
+    }
+
+    private int GetVisibleColumnCount(IReadOnlyList<string> row)
+    {
+        return Math.Max(Table.Columns.Count, row.Count);
+    }
+
+    private IReadOnlyList<WideTableRow> GetRows()
+    {
+        return rows;
+    }
+
+    private static string ResolveCellValue(IReadOnlyList<string> row, int columnIndex)
+    {
+        return columnIndex < row.Count
+            ? row[columnIndex]
+            : string.Empty;
+    }
+
+    private string GetVerticalHeaderButtonText()
+    {
+        return showVerticalHeaders
+            ? "Horizontal headers"
+            : "Vertical headers";
+    }
+
+    private string GetWrapCellsButtonText()
+    {
+        return wrapCells
+            ? "Single-line cells"
+            : "Wrap cell text";
+    }
+
+    private sealed record WideTableRow(IReadOnlyList<string> Cells);
+}

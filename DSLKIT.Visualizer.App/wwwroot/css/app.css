@@ -237,3 +237,80 @@ code {
     white-space: pre-wrap;
     word-break: break-word;
 }
+
+.dsl-summary-paper dt {
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.dsl-wide-table-container {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    background: #fff;
+}
+
+.dsl-wide-table {
+    min-width: 0;
+}
+
+.dsl-wide-table .mud-table-container {
+    overflow: visible;
+}
+
+.dsl-wide-table .mud-table-root {
+    width: max-content;
+}
+
+.dsl-wide-table .mud-table-cell {
+    padding: 0.2rem 0.4rem;
+}
+
+.dsl-wide-table-header {
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.dsl-wide-table-cell {
+    white-space: nowrap;
+    max-width: 24rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dsl-wide-table-container-wrap-cells .dsl-wide-table-cell {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    word-break: break-word;
+}
+
+.dsl-wide-table-container table > thead > tr > th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    background: #f3f4f6;
+}
+
+.dsl-wide-table-container table > tbody > tr > td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: #fff;
+}
+
+.dsl-wide-table-container-vertical-headers .dsl-wide-table-header {
+    width: 2.4rem;
+    min-width: 2.4rem;
+    padding: 0.4rem 0.25rem;
+    vertical-align: bottom;
+}
+
+.dsl-wide-table-container-vertical-headers .dsl-wide-table-header > span {
+    display: inline-block;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    line-height: 1.1;
+    white-space: nowrap;
+}

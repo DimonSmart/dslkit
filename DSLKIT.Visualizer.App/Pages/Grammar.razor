@@ -4,27 +4,32 @@
 
 <PageTitle>Grammar</PageTitle>
 
-<h1>Grammar</h1>
+<MudText Typo="Typo.h4">Grammar</MudText>
 
 <ProviderManager SelectedProviderId="selectedProviderId"
                  SelectedProviderIdChanged="OnSelectedProviderChangedAsync"
                  SelectElementId="grammar-provider-select" />
 
-<button class="btn btn-primary" @onclick="LoadGrammar" disabled="@string.IsNullOrWhiteSpace(selectedProviderId)">Load Grammar</button>
+<MudButton Variant="Variant.Filled"
+           Color="Color.Primary"
+           OnClick="LoadGrammar"
+           Disabled="@string.IsNullOrWhiteSpace(selectedProviderId)">
+    Load Grammar
+</MudButton>
 
 @if (!string.IsNullOrWhiteSpace(loadErrorMessage))
 {
-    <div class="alert alert-danger mt-3" role="alert">
+    <MudAlert Severity="Severity.Error" Class="mt-3">
         @loadErrorMessage
-    </div>
+    </MudAlert>
 }
 
 @if (snapshot != null)
 {
-    <div class="mt-4">
-        <h2>@snapshot.GrammarName</h2>
+    <MudPaper Class="mt-4 pa-4 dsl-summary-paper" Elevation="1">
+        <MudText Typo="Typo.h6">@snapshot.GrammarName</MudText>
 
-        <dl class="row">
+        <dl class="row mb-0 mt-3">
             <dt class="col-sm-3">Root</dt>
             <dd class="col-sm-9">@snapshot.RootName</dd>
             <dt class="col-sm-3">Terminals</dt>
@@ -36,33 +41,49 @@
             <dt class="col-sm-3">Rule sets</dt>
             <dd class="col-sm-9">@snapshot.RuleSetCount</dd>
         </dl>
-    </div>
+    </MudPaper>
 
-    <h3 class="mt-4">Productions</h3>
-    <table class="table table-sm table-striped table-bordered">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Left</th>
-                <th>Right</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var production in snapshot.Productions)
-            {
-                <tr>
-                    <td>@production.Number</td>
-                    <td>@production.Left</td>
-                    <td>@production.Right</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <MudExpansionPanels Class="mt-4" MultiExpansion="true">
+        <MudExpansionPanel Text="Productions" Expanded="true">
+            <div class="dsl-wide-table-container">
+                <MudTable T="ProductionRowDto"
+                          Items="snapshot.Productions"
+                          Dense="true"
+                          Hover="true"
+                          Bordered="true"
+                          Striped="true"
+                          Breakpoint="Breakpoint.None"
+                          Class="dsl-wide-table">
+                    <HeaderContent>
+                        <MudTh>#</MudTh>
+                        <MudTh>Left</MudTh>
+                        <MudTh>Right</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="#">@context.Number</MudTd>
+                        <MudTd DataLabel="Left">@context.Left</MudTd>
+                        <MudTd DataLabel="Right">@context.Right</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </div>
+        </MudExpansionPanel>
 
-    @RenderTable(snapshot.TranslationTable)
-    @RenderTable(snapshot.ActionAndGotoTable)
-    @RenderTable(snapshot.FirstsTable)
-@RenderTable(snapshot.FollowsTable)
+        <MudExpansionPanel Text="@snapshot.TranslationTable.Name">
+            <WideTable Table="snapshot.TranslationTable" />
+        </MudExpansionPanel>
+
+        <MudExpansionPanel Text="@snapshot.ActionAndGotoTable.Name">
+            <WideTable Table="snapshot.ActionAndGotoTable" />
+        </MudExpansionPanel>
+
+        <MudExpansionPanel Text="@snapshot.FirstsTable.Name">
+            <WideTable Table="snapshot.FirstsTable" />
+        </MudExpansionPanel>
+
+        <MudExpansionPanel Text="@snapshot.FollowsTable.Name">
+            <WideTable Table="snapshot.FollowsTable" />
+        </MudExpansionPanel>
+    </MudExpansionPanels>
 }
 
 @code {
@@ -106,46 +127,4 @@
         loadErrorMessage = null;
         return Task.CompletedTask;
     }
-
-    private static RenderFragment RenderTable(TableDto table) => builder =>
-    {
-        var sequence = 0;
-
-        builder.OpenElement(sequence++, "h3");
-        builder.AddAttribute(sequence++, "class", "mt-4");
-        builder.AddContent(sequence++, table.Name);
-        builder.CloseElement();
-
-        builder.OpenElement(sequence++, "table");
-        builder.AddAttribute(sequence++, "class", "table table-sm table-striped table-bordered");
-
-        builder.OpenElement(sequence++, "thead");
-        builder.OpenElement(sequence++, "tr");
-        foreach (var column in table.Columns)
-        {
-            builder.OpenElement(sequence++, "th");
-            builder.AddContent(sequence++, column);
-            builder.CloseElement();
-        }
-
-        builder.CloseElement();
-        builder.CloseElement();
-
-        builder.OpenElement(sequence++, "tbody");
-        foreach (var row in table.Rows)
-        {
-            builder.OpenElement(sequence++, "tr");
-            foreach (var cell in row)
-            {
-                builder.OpenElement(sequence++, "td");
-                builder.AddContent(sequence++, cell);
-                builder.CloseElement();
-            }
-
-            builder.CloseElement();
-        }
-
-        builder.CloseElement();
-        builder.CloseElement();
-    };
 }
