@@ -1,0 +1,68 @@
+@using DSLKIT.Visualizer.App.Visualization
+
+@if (Root == null)
+{
+    <div class="text-muted">Run parsing to see parse tree.</div>
+}
+else
+{
+    <div class="d-flex align-items-center gap-3 mb-2 flex-wrap">
+        <span class="text-muted">Nodes: @GetNodeCount(Root), depth: @GetMaxDepth(Root)</span>
+        <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="OnResetRequestedAsync">Reset Tree State</button>
+    </div>
+    <TreeView Root="Root" State="State" />
+}
+
+@code {
+    [Parameter]
+    public TreeNodeViewModel? Root { get; set; }
+
+    [Parameter]
+    public TreeViewState State { get; set; } = new();
+
+    [Parameter]
+    public EventCallback ResetRequested { get; set; }
+
+    private Task OnResetRequestedAsync()
+    {
+        if (!ResetRequested.HasDelegate)
+        {
+            return Task.CompletedTask;
+        }
+
+        return ResetRequested.InvokeAsync();
+    }
+
+    private static int GetNodeCount(TreeNodeViewModel root)
+    {
+        return EnumerateNodes(root).Count();
+    }
+
+    private static int GetMaxDepth(TreeNodeViewModel root)
+    {
+        return GetMaxDepthCore(root, 1);
+    }
+
+    private static int GetMaxDepthCore(TreeNodeViewModel node, int depth)
+    {
+        if (node.Children.Count == 0)
+        {
+            return depth;
+        }
+
+        return node.Children.Max(child => GetMaxDepthCore(child, depth + 1));
+    }
+
+    private static IEnumerable<TreeNodeViewModel> EnumerateNodes(TreeNodeViewModel node)
+    {
+        yield return node;
+
+        foreach (var child in node.Children)
+        {
+            foreach (var descendant in EnumerateNodes(child))
+            {
+                yield return descendant;
+            }
+        }
+    }
+}

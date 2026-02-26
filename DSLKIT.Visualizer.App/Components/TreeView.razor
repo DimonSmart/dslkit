@@ -3,10 +3,13 @@
 @if (Root != null)
 {
     <div class="dsl-treeview">
-        <div class="btn-group btn-group-sm mb-2" role="group" aria-label="tree controls">
-            <button type="button" class="btn btn-outline-secondary" @onclick="ExpandAll">Expand all</button>
-            <button type="button" class="btn btn-outline-secondary" @onclick="CollapseAll">Collapse all</button>
-        </div>
+        @if (ShowControls)
+        {
+            <div class="btn-group btn-group-sm mb-2" role="group" aria-label="tree controls">
+                <button type="button" class="btn btn-outline-secondary" @onclick="ExpandAll">Expand all</button>
+                <button type="button" class="btn btn-outline-secondary" @onclick="CollapseAll">Collapse all</button>
+            </div>
+        }
 
         <ul class="dsl-treeview-list dsl-treeview-root">
             <TreeViewNode Node="Root"
@@ -27,6 +30,9 @@
 
     [Parameter]
     public EventCallback<TreeNodeViewModel> SelectedNodeChanged { get; set; }
+
+    [Parameter]
+    public bool ShowControls { get; set; } = true;
 
     protected override void OnParametersSet()
     {

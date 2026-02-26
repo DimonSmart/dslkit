@@ -1,0 +1,227 @@
+@page "/grammar/internals"
+@inject IGrammarProviderCatalog ProviderCatalog
+@inject IGrammarProviderAssemblyLoader AssemblyLoader
+@inject IGrammarSnapshotMapper SnapshotMapper
+
+<PageTitle>Grammar Internals</PageTitle>
+
+<div class="dsl-grammar-page">
+    <MudText Typo="Typo.h4">Grammar Internals</MudText>
+    <MudText Typo="Typo.body2" Class="text-muted">
+        Parsing tables and grammar metadata for the selected provider.
+    </MudText>
+
+    <GrammarProviderPanel ProviderOptions="_providerOptions"
+                          SelectedProviderId="selectedProviderId"
+                          SelectedProvider="selectedProvider"
+                          ProviderDescription="@GetProviderDescription()"
+                          SelectedProviderChanged="OnSelectedProviderChangedAsync"
+                          LoadAssemblies="LoadAssembliesAsync"
+                          SelectElementId="grammar-internals-provider-select"
+                          UploadInputId="internals-provider-dll-input" />
+
+    @if (loadMessages.Count > 0)
+    {
+        <div class="alert alert-secondary mt-3" role="alert">
+            @foreach (var message in loadMessages)
+            {
+                <div>@message</div>
+            }
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(loadErrorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Class="mt-3">
+            @loadErrorMessage
+        </MudAlert>
+    }
+    else if (snapshot == null)
+    {
+        <div class="alert alert-light mt-3" role="status">
+            Select a grammar to load parsing tables.
+        </div>
+    }
+    else
+    {
+        <MudPaper Class="mt-3 pa-4 dsl-summary-paper" Elevation="1">
+            <MudText Typo="Typo.h6">@snapshot.GrammarName</MudText>
+
+            <dl class="row mb-0 mt-3">
+                <dt class="col-sm-3">Root</dt>
+                <dd class="col-sm-9">@snapshot.RootName</dd>
+                <dt class="col-sm-3">Terminals</dt>
+                <dd class="col-sm-9">@snapshot.TerminalCount</dd>
+                <dt class="col-sm-3">Non-terminals</dt>
+                <dd class="col-sm-9">@snapshot.NonTerminalCount</dd>
+                <dt class="col-sm-3">Productions</dt>
+                <dd class="col-sm-9">@snapshot.Productions.Count</dd>
+                <dt class="col-sm-3">Rule sets</dt>
+                <dd class="col-sm-9">@snapshot.RuleSetCount</dd>
+            </dl>
+        </MudPaper>
+
+        <MudExpansionPanels Class="mt-4" MultiExpansion="true">
+            <MudExpansionPanel Text="Productions" Expanded="true">
+                <div class="dsl-wide-table-container">
+                    <MudTable T="ProductionRowDto"
+                              Items="snapshot.Productions"
+                              Dense="true"
+                              Hover="true"
+                              Bordered="true"
+                              Striped="true"
+                              Breakpoint="Breakpoint.None"
+                              Class="dsl-wide-table">
+                        <HeaderContent>
+                            <MudTh>#</MudTh>
+                            <MudTh>Left</MudTh>
+                            <MudTh>Right</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="#">@context.Number</MudTd>
+                            <MudTd DataLabel="Left">@context.Left</MudTd>
+                            <MudTd DataLabel="Right">@context.Right</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </div>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel Text="@snapshot.TranslationTable.Name">
+                <WideTable Table="snapshot.TranslationTable" />
+            </MudExpansionPanel>
+
+            <MudExpansionPanel Text="@snapshot.ActionAndGotoTable.Name">
+                <WideTable Table="snapshot.ActionAndGotoTable" />
+            </MudExpansionPanel>
+
+            <MudExpansionPanel Text="@snapshot.FirstsTable.Name">
+                <WideTable Table="snapshot.FirstsTable" />
+            </MudExpansionPanel>
+
+            <MudExpansionPanel Text="@snapshot.FollowsTable.Name">
+                <WideTable Table="snapshot.FollowsTable" />
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    }
+</div>
+
+@code {
+    private IReadOnlyList<IDslGrammarProvider> _providerOptions = [];
+    private string? selectedProviderId;
+    private GrammarSnapshotDto? snapshot;
+    private string? loadErrorMessage;
+    private IReadOnlyList<string> loadMessages = [];
+
+    private IDslGrammarProvider? selectedProvider =>
+        string.IsNullOrWhiteSpace(selectedProviderId)
+            ? null
+            : ProviderCatalog.FindById(selectedProviderId);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshProvidersAsync();
+        await LoadSelectedGrammarAsync();
+    }
+
+    private async Task LoadAssembliesAsync(InputFileChangeEventArgs args)
+    {
+        var beforeProviderIds = ProviderCatalog.GetAll()
+            .Select(provider => provider.Id)
+            .ToHashSet(StringComparer.Ordinal);
+
+        var files = args.GetMultipleFiles();
+        var report = await AssemblyLoader.LoadProvidersAsync(files);
+        loadMessages = BuildLoadMessages(report);
+
+        await RefreshProvidersAsync();
+
+        var addedProvider = _providerOptions.FirstOrDefault(provider => !beforeProviderIds.Contains(provider.Id));
+        if (addedProvider != null)
+        {
+            selectedProviderId = addedProvider.Id;
+        }
+
+        await LoadSelectedGrammarAsync();
+    }
+
+    private Task OnSelectedProviderChangedAsync(ChangeEventArgs args)
+    {
+        selectedProviderId = args.Value?.ToString();
+        return LoadSelectedGrammarAsync();
+    }
+
+    private async Task RefreshProvidersAsync()
+    {
+        _providerOptions = ProviderCatalog.GetAll();
+
+        var nextProviderId = ResolveSelectedProviderId();
+        if (string.Equals(selectedProviderId, nextProviderId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        selectedProviderId = nextProviderId;
+        await Task.CompletedTask;
+    }
+
+    private async Task LoadSelectedGrammarAsync()
+    {
+        snapshot = null;
+        loadErrorMessage = null;
+
+        if (string.IsNullOrWhiteSpace(selectedProviderId))
+        {
+            loadErrorMessage = "Select a grammar provider.";
+            return;
+        }
+
+        var provider = ProviderCatalog.FindById(selectedProviderId);
+        if (provider == null)
+        {
+            loadErrorMessage = $"Provider '{selectedProviderId}' is not registered.";
+            return;
+        }
+
+        try
+        {
+            var grammar = provider.BuildGrammar();
+            snapshot = SnapshotMapper.Map(grammar);
+            await Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            loadErrorMessage = $"Failed to load grammar: {ex.Message}";
+        }
+    }
+
+    private string GetProviderDescription()
+    {
+        if (selectedProvider == null || string.IsNullOrWhiteSpace(selectedProvider.Description))
+        {
+            return "No description available.";
+        }
+
+        return selectedProvider.Description;
+    }
+
+    private string? ResolveSelectedProviderId()
+    {
+        if (!string.IsNullOrWhiteSpace(selectedProviderId) &&
+            _providerOptions.Any(provider => provider.Id == selectedProviderId))
+        {
+            return selectedProviderId;
+        }
+
+        return _providerOptions.FirstOrDefault()?.Id;
+    }
+
+    private static IReadOnlyList<string> BuildLoadMessages(AssemblyLoadReport report)
+    {
+        var messages = new List<string>
+        {
+            $"Selected files: {report.SelectedFileCount}. Processed assemblies: {report.ProcessedAssemblyFileCount}. Registered providers: {report.RegisteredProviderCount}."
+        };
+        messages.AddRange(report.Messages);
+        return messages;
+    }
+}

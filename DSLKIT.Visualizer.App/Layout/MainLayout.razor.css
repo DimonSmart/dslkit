@@ -11,9 +11,9 @@
 }
 
 .sidebar {
-    background-color: #111827;
-    border-right: 1px solid #1f2937;
-    box-shadow: inset -1px 0 0 #1f2937;
+    background: linear-gradient(180deg, #1a2a40 0%, #22344d 100%);
+    border-right: 1px solid #314863;
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.05);
 }
 
 .content {

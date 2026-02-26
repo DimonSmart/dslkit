@@ -17,5 +17,14 @@ window.dslkitSourceEditor = {
         const lineIndex = beforeSelection.split("\n").length - 1;
         const targetScrollTop = Math.max(0, lineIndex * lineHeight - element.clientHeight / 2);
         element.scrollTop = targetScrollTop;
+    },
+
+    revealSelectionById(elementId, start, end) {
+        if (typeof elementId !== "string" || !elementId) {
+            return;
+        }
+
+        const element = document.getElementById(elementId);
+        this.revealSelection(element, start, end);
     }
 };

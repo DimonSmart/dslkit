@@ -1,0 +1,298 @@
+@using DSLKIT.Visualizer.App.Visualization
+
+@if (Root == null)
+{
+    <div class="text-muted">Run parsing to see AST.</div>
+}
+else
+{
+    <div class="dsl-ast-toolbar mb-2">
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-muted">View:</span>
+            <button type="button" class="@GetAstViewButtonClass(technicalView: false)" @onclick="OnShowSemanticRequestedAsync">Semantic</button>
+            <button type="button" class="@GetAstViewButtonClass(technicalView: true)" @onclick="OnShowTechnicalRequestedAsync">Technical</button>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="text-muted">Nodes: @GetNodeCount(Root), depth: @GetMaxDepth(Root)</span>
+            <button type="button"
+                    class="btn btn-outline-secondary btn-sm dsl-icon-button"
+                    title="Expand all"
+                    aria-label="Expand all nodes"
+                    @onclick="OnExpandAllRequestedAsync">
+                +
+            </button>
+            <button type="button"
+                    class="btn btn-outline-secondary btn-sm dsl-icon-button"
+                    title="Collapse all"
+                    aria-label="Collapse all nodes"
+                    @onclick="OnCollapseAllRequestedAsync">
+                -
+            </button>
+            <button type="button"
+                    class="btn btn-outline-secondary btn-sm dsl-icon-button"
+                    title="Reset tree state"
+                    aria-label="Reset tree state"
+                    @onclick="OnResetRequestedAsync">
+                R
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-3 dsl-ast-layout">
+        <div class="col-xxl-8 d-flex">
+            <TreeView Root="Root"
+                      State="State"
+                      ShowControls="false"
+                      SelectedNodeChanged="OnSelectedNodeChangedAsync" />
+        </div>
+
+        <div class="col-xxl-4 d-flex">
+            <div class="card dsl-ast-inspector w-100">
+                <div class="card-header">AST Inspector</div>
+                <div class="card-body">
+                    @if (SelectedNode == null)
+                    {
+                        <div class="text-muted">Select a node.</div>
+                    }
+                    else
+                    {
+                        <dl class="dsl-ast-kv mb-0">
+                            <dt>Name</dt>
+                            <dd>@SelectedNode.Label</dd>
+
+                            <dt>Type</dt>
+                            <dd>@GetNodeTypeLabel(SelectedNode)</dd>
+
+                            <dt>Kind</dt>
+                            <dd>@SelectedNode.Kind</dd>
+
+                            <dt>Children</dt>
+                            <dd>@SelectedNode.Children.Count</dd>
+
+                            <dt>Span</dt>
+                            <dd>@GetNodeSpanLabel(SelectedNode)</dd>
+
+                            <dt>Preview</dt>
+                            <dd>
+                                <pre class="dsl-node-preview">@GetNodePreview(SelectedNode)</pre>
+                            </dd>
+
+                            @if (!string.IsNullOrWhiteSpace(SelectedNode.Description))
+                            {
+                                <dt>Description</dt>
+                                <dd>
+                                    <div class="ast-node-description">@SelectedNode.Description</div>
+                                </dd>
+                            }
+                        </dl>
+
+                        @if (CanRevealInSource(SelectedNode))
+                        {
+                            <button type="button"
+                                    class="btn btn-outline-primary btn-sm mt-3"
+                                    @onclick="OnRevealInSourceRequestedAsync">Reveal in source</button>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public TreeNodeViewModel? Root { get; set; }
+
+    [Parameter]
+    public TreeViewState State { get; set; } = new();
+
+    [Parameter]
+    public TreeNodeViewModel? SelectedNode { get; set; }
+
+    [Parameter]
+    public bool ShowTechnicalView { get; set; }
+
+    [Parameter]
+    public EventCallback ShowSemanticRequested { get; set; }
+
+    [Parameter]
+    public EventCallback ShowTechnicalRequested { get; set; }
+
+    [Parameter]
+    public EventCallback ExpandAllRequested { get; set; }
+
+    [Parameter]
+    public EventCallback CollapseAllRequested { get; set; }
+
+    [Parameter]
+    public EventCallback ResetRequested { get; set; }
+
+    [Parameter]
+    public EventCallback<TreeNodeViewModel> SelectedNodeChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<TreeNodeViewModel?> RevealInSourceRequested { get; set; }
+
+    private Task OnShowSemanticRequestedAsync()
+    {
+        if (!ShowSemanticRequested.HasDelegate)
+        {
+            return Task.CompletedTask;
+        }
+
+        return ShowSemanticRequested.InvokeAsync();
+    }
+
+    private Task OnShowTechnicalRequestedAsync()
+    {
+        if (!ShowTechnicalRequested.HasDelegate)
+        {
+            return Task.CompletedTask;
+        }
+
+        return ShowTechnicalRequested.InvokeAsync();
+    }
+
+    private Task OnExpandAllRequestedAsync()
+    {
+        if (!ExpandAllRequested.HasDelegate)
+        {
+            return Task.CompletedTask;
+        }
+
+        return ExpandAllRequested.InvokeAsync();
+    }
+
+    private Task OnCollapseAllRequestedAsync()
+    {
+        if (!CollapseAllRequested.HasDelegate)
+        {
+            return Task.CompletedTask;
+        }
+
+        return CollapseAllRequested.InvokeAsync();
+    }
+
+    private Task OnResetRequestedAsync()
+    {
+        if (!ResetRequested.HasDelegate)
+        {
+            return Task.CompletedTask;
+        }
+
+        return ResetRequested.InvokeAsync();
+    }
+
+    private Task OnSelectedNodeChangedAsync(TreeNodeViewModel node)
+    {
+        if (!SelectedNodeChanged.HasDelegate)
+        {
+            return Task.CompletedTask;
+        }
+
+        return SelectedNodeChanged.InvokeAsync(node);
+    }
+
+    private Task OnRevealInSourceRequestedAsync()
+    {
+        if (!RevealInSourceRequested.HasDelegate)
+        {
+            return Task.CompletedTask;
+        }
+
+        return RevealInSourceRequested.InvokeAsync(SelectedNode);
+    }
+
+    private string GetAstViewButtonClass(bool technicalView)
+    {
+        var isActive = ShowTechnicalView == technicalView;
+        return isActive
+            ? "btn btn-sm btn-primary"
+            : "btn btn-sm btn-outline-primary";
+    }
+
+    private static int GetNodeCount(TreeNodeViewModel root)
+    {
+        return EnumerateNodes(root).Count();
+    }
+
+    private static int GetMaxDepth(TreeNodeViewModel root)
+    {
+        return GetMaxDepthCore(root, 1);
+    }
+
+    private static int GetMaxDepthCore(TreeNodeViewModel node, int depth)
+    {
+        if (node.Children.Count == 0)
+        {
+            return depth;
+        }
+
+        return node.Children.Max(child => GetMaxDepthCore(child, depth + 1));
+    }
+
+    private static IEnumerable<TreeNodeViewModel> EnumerateNodes(TreeNodeViewModel node)
+    {
+        yield return node;
+
+        foreach (var child in node.Children)
+        {
+            foreach (var descendant in EnumerateNodes(child))
+            {
+                yield return descendant;
+            }
+        }
+    }
+
+    private static string GetNodeTypeLabel(TreeNodeViewModel node)
+    {
+        return string.IsNullOrWhiteSpace(node.TypeName)
+            ? "n/a"
+            : node.TypeName;
+    }
+
+    private static string GetNodeSpanLabel(TreeNodeViewModel? node)
+    {
+        if (!TryGetNodeSpan(node, out var spanStart, out var spanEnd))
+        {
+            return "n/a";
+        }
+
+        return $"{spanStart}..{spanEnd}";
+    }
+
+    private static string GetNodePreview(TreeNodeViewModel? node)
+    {
+        if (string.IsNullOrWhiteSpace(node?.SourcePreview))
+        {
+            return "n/a";
+        }
+
+        return node.SourcePreview;
+    }
+
+    private static bool CanRevealInSource(TreeNodeViewModel? node)
+    {
+        return TryGetNodeSpan(node, out _, out _);
+    }
+
+    private static bool TryGetNodeSpan(TreeNodeViewModel? node, out int spanStart, out int spanEnd)
+    {
+        spanStart = 0;
+        spanEnd = 0;
+
+        if (node?.SpanStart is not int start || node.SpanEnd is not int end)
+        {
+            return false;
+        }
+
+        if (end < start)
+        {
+            return false;
+        }
+
+        spanStart = start;
+        spanEnd = end;
+        return true;
+    }
+}

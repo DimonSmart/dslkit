@@ -1,0 +1,97 @@
+@using DSLKIT.Visualizer.Abstractions
+
+<MudPaper Class="dsl-control-panel mt-3 pa-3" Elevation="1">
+    <div class="dsl-control-row">
+        <div class="dsl-control-field">
+            <label class="form-label mb-1" for="@SelectElementId">Grammar</label>
+            <select id="@SelectElementId"
+                    class="form-select"
+                    value="@SelectedProviderId"
+                    @onchange="OnSelectedProviderChangedAsync"
+                    disabled="@(ProviderOptions.Count == 0)">
+                @if (ProviderOptions.Count == 0)
+                {
+                    <option value="">No providers</option>
+                }
+                else
+                {
+                    @foreach (var provider in ProviderOptions)
+                    {
+                        <option value="@provider.Id">@provider.DisplayName (@provider.Id)</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="dsl-control-actions">
+            <InputFile id="@UploadInputId"
+                       class="d-none"
+                       OnChange="OnLoadAssembliesAsync"
+                       accept=".dll" />
+            <label class="btn btn-outline-secondary mb-0" for="@UploadInputId">Upload DLL</label>
+        </div>
+    </div>
+
+    @if (SelectedProvider != null)
+    {
+        <div class="dsl-provider-meta mt-3">
+            <div><span class="dsl-provider-meta-label">Name:</span> @SelectedProvider.DisplayName (@SelectedProvider.Id)</div>
+            <div class="text-muted"><span class="dsl-provider-meta-label">Description:</span> @ProviderDescription</div>
+            @if (!string.IsNullOrWhiteSpace(SelectedProvider.DocumentationUrl))
+            {
+                <div>
+                    <span class="dsl-provider-meta-label">Article:</span>
+                    <a href="@SelectedProvider.DocumentationUrl"
+                       target="_blank"
+                       rel="noopener noreferrer">@SelectedProvider.DocumentationUrl</a>
+                </div>
+            }
+        </div>
+    }
+</MudPaper>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<IDslGrammarProvider> ProviderOptions { get; set; } = [];
+
+    [Parameter]
+    public string? SelectedProviderId { get; set; }
+
+    [Parameter]
+    public IDslGrammarProvider? SelectedProvider { get; set; }
+
+    [Parameter]
+    public string ProviderDescription { get; set; } = "No description available.";
+
+    [Parameter]
+    public string SelectElementId { get; set; } = "grammar-provider-select";
+
+    [Parameter]
+    public string UploadInputId { get; set; } = "provider-dll-input";
+
+    [Parameter]
+    public EventCallback<ChangeEventArgs> SelectedProviderChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<InputFileChangeEventArgs> LoadAssemblies { get; set; }
+
+    private Task OnSelectedProviderChangedAsync(ChangeEventArgs args)
+    {
+        if (!SelectedProviderChanged.HasDelegate)
+        {
+            return Task.CompletedTask;
+        }
+
+        return SelectedProviderChanged.InvokeAsync(args);
+    }
+
+    private Task OnLoadAssembliesAsync(InputFileChangeEventArgs args)
+    {
+        if (!LoadAssemblies.HasDelegate)
+        {
+            return Task.CompletedTask;
+        }
+
+        return LoadAssemblies.InvokeAsync(args);
+    }
+}

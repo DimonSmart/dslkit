@@ -319,6 +319,10 @@ code {
     padding-bottom: 1rem;
 }
 
+.dsl-workspace {
+    min-height: 44rem;
+}
+
 .dsl-control-panel {
     border: 1px solid #e5e7eb;
 }
@@ -358,6 +362,11 @@ code {
     border: 1px solid #e5e7eb;
 }
 
+.dsl-input-panel .card-body,
+.dsl-result-panel .card-body {
+    min-height: 0;
+}
+
 .dsl-input-panel .card-header,
 .dsl-result-panel .card-header,
 .dsl-ast-inspector .card-header {
@@ -365,8 +374,24 @@ code {
     font-weight: 600;
 }
 
+.dsl-input-editor-wrap {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.dsl-input-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
 .dsl-source-editor {
-    min-height: 20rem;
+    flex: 1 1 auto;
+    min-height: 22rem;
     border: 1px solid #cbd5e1;
     border-radius: 0.4rem;
     background: #f8fafc;
@@ -381,13 +406,101 @@ code {
     background: #fff;
 }
 
-.dsl-result-tabs {
-    margin-top: 0.35rem;
+.dsl-input-status {
+    margin-top: 0.45rem;
+    font-size: 0.84rem;
 }
 
-.dsl-ast-inspector dt {
+.dsl-input-status-warning {
+    color: #475569;
+}
+
+.dsl-input-status-success {
+    color: #166534;
+}
+
+.dsl-input-status-error {
+    color: #b91c1c;
+}
+
+.dsl-result-body {
+    min-height: 0;
+}
+
+.dsl-result-tabs {
+    margin-top: 0.35rem;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.dsl-result-tabs .mud-tabs-panels {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.dsl-result-tabs .mud-tabpanel {
+    width: 100%;
+}
+
+.dsl-ast-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.dsl-icon-button {
+    width: 2rem;
+    padding: 0;
+    font-weight: 700;
+}
+
+.dsl-ast-layout {
+    min-height: 30rem;
+}
+
+.dsl-ast-layout > [class*="col-"] {
+    min-height: 0;
+}
+
+.dsl-ast-layout .dsl-treeview {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.4rem;
+    padding: 0.5rem;
+}
+
+.dsl-ast-inspector {
+    border: 1px solid #e2e8f0;
+}
+
+.dsl-ast-inspector .card-body {
+    overflow: auto;
+}
+
+.dsl-ast-kv {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    column-gap: 0.6rem;
+    row-gap: 0.55rem;
+}
+
+.dsl-ast-kv dt {
+    margin: 0;
     color: #64748b;
     font-weight: 600;
+    white-space: nowrap;
+}
+
+.dsl-ast-kv dd {
+    margin: 0;
+    min-width: 0;
 }
 
 .dsl-node-preview {
@@ -396,14 +509,23 @@ code {
     border: 1px solid #e2e8f0;
     border-radius: 0.35rem;
     background: #f8fafc;
-    white-space: pre-wrap;
-    word-break: break-word;
+    white-space: pre;
+    overflow-x: auto;
+    word-break: normal;
     font-family: Consolas, "Cascadia Code", "Courier New", monospace;
     font-size: 0.82rem;
 }
 
 @media (max-width: 1199.98px) {
+    .dsl-workspace {
+        min-height: auto;
+    }
+
     .dsl-source-editor {
         min-height: 15rem;
+    }
+
+    .dsl-ast-layout {
+        min-height: auto;
     }
 }

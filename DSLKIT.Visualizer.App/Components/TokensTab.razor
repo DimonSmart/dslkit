@@ -1,0 +1,41 @@
+@if (TokenRows.Count == 0)
+{
+    <div class="text-muted">Run parsing to see tokens.</div>
+}
+else
+{
+    <table class="table table-sm table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Kind</th>
+                <th>Terminal</th>
+                <th>Text</th>
+                <th>Value</th>
+                <th>Pos</th>
+                <th>Len</th>
+                <th>Ignored</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var token in TokenRows)
+            {
+                <tr>
+                    <td>@token.Index</td>
+                    <td>@token.Kind</td>
+                    <td>@token.Terminal</td>
+                    <td>@token.Text</td>
+                    <td>@token.Value</td>
+                    <td>@token.Position</td>
+                    <td>@token.Length</td>
+                    <td>@(token.IsIgnoredForParsing ? "yes" : string.Empty)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<TokenRowDto> TokenRows { get; set; } = [];
+}
