@@ -320,7 +320,19 @@ code {
 }
 
 .dsl-workspace {
+    height: 44rem;
     min-height: 44rem;
+}
+
+.dsl-workspace-split {
+    height: 100%;
+}
+
+.dsl-workspace-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
 }
 
 .dsl-control-panel {
@@ -441,8 +453,11 @@ code {
     min-height: 0;
 }
 
-.dsl-result-tabs .mud-tabpanel {
+.dsl-result-tabs .mud-tabs-panels > .mud-tab-panel,
+.dsl-result-tabs .mud-tabs-panels > .mud-tabpanel {
     width: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .dsl-ast-toolbar {
@@ -460,11 +475,17 @@ code {
 }
 
 .dsl-ast-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(18rem, 32%, 24rem);
+    gap: 0.75rem;
     min-height: 30rem;
 }
 
-.dsl-ast-layout > [class*="col-"] {
+.dsl-ast-tree-panel,
+.dsl-ast-inspector-panel {
+    display: flex;
     min-height: 0;
+    min-width: 0;
 }
 
 .dsl-ast-layout .dsl-treeview {
@@ -477,6 +498,7 @@ code {
 }
 
 .dsl-ast-inspector {
+    height: 100%;
     border: 1px solid #e2e8f0;
 }
 
@@ -486,7 +508,7 @@ code {
 
 .dsl-ast-kv {
     display: grid;
-    grid-template-columns: 7.5rem minmax(0, 1fr);
+    grid-template-columns: minmax(6rem, 7.5rem) minmax(0, 1fr);
     column-gap: 0.6rem;
     row-gap: 0.55rem;
 }
@@ -501,6 +523,8 @@ code {
 .dsl-ast-kv dd {
     margin: 0;
     min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .dsl-node-preview {
@@ -518,6 +542,7 @@ code {
 
 @media (max-width: 1199.98px) {
     .dsl-workspace {
+        height: auto;
         min-height: auto;
     }
 
@@ -527,5 +552,11 @@ code {
 
     .dsl-ast-layout {
         min-height: auto;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .dsl-ast-layout {
+        grid-template-columns: 1fr;
     }
 }

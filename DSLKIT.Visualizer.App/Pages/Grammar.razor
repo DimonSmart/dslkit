@@ -27,74 +27,83 @@
         </div>
     }
 
-    <div class="row g-3 mt-1 dsl-workspace">
-        <div class="col-xl-5">
-            <SourceInputPanel SelectedProvider="selectedProvider"
-                              SelectedExampleId="@selectedExampleId"
-                              SelectedExampleChanged="OnSelectedExampleChangedAsync"
-                              SourceText="@SourceText"
-                              SourceTextChanged="OnSourceTextChangedAsync"
-                              SourceInputKeyDown="OnSourceInputKeyDownAsync"
-                              ParseRequested="RunParseAsync"
-                              IsParsing="isParsing"
-                              IsParseDisabled="@IsParseDisabled"
-                              InputStatusClass="@GetInputStatusClass()"
-                              InputStatusText="@GetInputStatusText()"
-                              SourceInputId="@SourceInputElementId" />
-        </div>
-
-        <div class="col-xl-7">
-            <section class="card h-100 dsl-result-panel">
-                <div class="card-header">Result</div>
-                <div class="card-body d-flex flex-column dsl-result-body">
-                    @if (!string.IsNullOrWhiteSpace(loadErrorMessage))
-                    {
-                        <MudAlert Severity="Severity.Error" Class="mb-3">
-                            @loadErrorMessage
-                        </MudAlert>
-                    }
-
-                    @if (isParsing)
-                    {
-                        <div class="alert alert-info d-flex align-items-center gap-2" role="status">
-                            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-                            <span>Parsing in progress...</span>
-                        </div>
-                    }
-                    else if (!HasParseOutput && string.IsNullOrWhiteSpace(loadErrorMessage))
-                    {
-                        <div class="alert alert-light" role="status">
-                            Enter source text and click Parse.
-                        </div>
-                    }
-
-                    <MudTabs Rounded="true" Elevation="0" Class="dsl-result-tabs">
-                        <MudTabPanel Text="AST">
-                            <AstTab Root="activeAstTreeRoot"
-                                    State="activeAstTreeState"
-                                    SelectedNode="activeSelectedAstNode"
-                                    ShowTechnicalView="showAstTechnicalView"
-                                    ShowSemanticRequested="ShowAstSemanticView"
-                                    ShowTechnicalRequested="ShowAstTechnicalView"
-                                    ExpandAllRequested="ExpandActiveAstTree"
-                                    CollapseAllRequested="CollapseActiveAstTree"
-                                    ResetRequested="ResetActiveAstTreeState"
-                                    SelectedNodeChanged="OnActiveAstNodeSelectedAsync"
-                                    RevealInSourceRequested="RevealActiveAstNodeInSourceAsync" />
-                        </MudTabPanel>
-
-                        <MudTabPanel Text="Parse Tree">
-                            <ParseTreeTab Root="parseTreeRoot"
-                                          State="parseTreeState"
-                                          ResetRequested="ResetParseTreeState" />
-                        </MudTabPanel>
-
-                        <MudTabPanel Text="Tokens">
-                            <TokensTab TokenRows="tokenRows" />
-                        </MudTabPanel>
-                    </MudTabs>
+    <div class="mt-1 dsl-workspace">
+        <MudSplitPanel Class="dsl-workspace-split"
+                       FirstPanelInitialSize="520"
+                       MinPanelSize="320"
+                       PanelGap="10">
+            <FirstPanel>
+                <div class="dsl-workspace-panel">
+                    <SourceInputPanel SelectedProvider="selectedProvider"
+                                      SelectedExampleId="@selectedExampleId"
+                                      SelectedExampleChanged="OnSelectedExampleChangedAsync"
+                                      SourceText="@SourceText"
+                                      SourceTextChanged="OnSourceTextChangedAsync"
+                                      SourceInputKeyDown="OnSourceInputKeyDownAsync"
+                                      ParseRequested="RunParseAsync"
+                                      IsParsing="isParsing"
+                                      IsParseDisabled="@IsParseDisabled"
+                                      InputStatusClass="@GetInputStatusClass()"
+                                      InputStatusText="@GetInputStatusText()"
+                                      SourceInputId="@SourceInputElementId" />
                 </div>
-            </section>
-        </div>
+            </FirstPanel>
+
+            <SecondPanel>
+                <div class="dsl-workspace-panel">
+                    <section class="card h-100 dsl-result-panel">
+                        <div class="card-header">Result</div>
+                        <div class="card-body d-flex flex-column dsl-result-body">
+                            @if (!string.IsNullOrWhiteSpace(loadErrorMessage))
+                            {
+                                <MudAlert Severity="Severity.Error" Class="mb-3">
+                                    @loadErrorMessage
+                                </MudAlert>
+                            }
+
+                            @if (isParsing)
+                            {
+                                <div class="alert alert-info d-flex align-items-center gap-2" role="status">
+                                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                    <span>Parsing in progress...</span>
+                                </div>
+                            }
+                            else if (!HasParseOutput && string.IsNullOrWhiteSpace(loadErrorMessage))
+                            {
+                                <div class="alert alert-light" role="status">
+                                    Enter source text and click Parse.
+                                </div>
+                            }
+
+                            <MudTabs Rounded="true" Elevation="0" Class="dsl-result-tabs">
+                                <MudTabPanel Text="AST">
+                                    <AstTab Root="activeAstTreeRoot"
+                                            State="activeAstTreeState"
+                                            SelectedNode="activeSelectedAstNode"
+                                            ShowTechnicalView="showAstTechnicalView"
+                                            ShowSemanticRequested="ShowAstSemanticView"
+                                            ShowTechnicalRequested="ShowAstTechnicalView"
+                                            ExpandAllRequested="ExpandActiveAstTree"
+                                            CollapseAllRequested="CollapseActiveAstTree"
+                                            ResetRequested="ResetActiveAstTreeState"
+                                            SelectedNodeChanged="OnActiveAstNodeSelectedAsync"
+                                            RevealInSourceRequested="RevealActiveAstNodeInSourceAsync" />
+                                </MudTabPanel>
+
+                                <MudTabPanel Text="Parse Tree">
+                                    <ParseTreeTab Root="parseTreeRoot"
+                                                  State="parseTreeState"
+                                                  ResetRequested="ResetParseTreeState" />
+                                </MudTabPanel>
+
+                                <MudTabPanel Text="Tokens">
+                                    <TokensTab TokenRows="tokenRows" />
+                                </MudTabPanel>
+                            </MudTabs>
+                        </div>
+                    </section>
+                </div>
+            </SecondPanel>
+        </MudSplitPanel>
     </div>
 </div>
