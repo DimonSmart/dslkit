@@ -39,7 +39,7 @@ namespace DSLKIT.Terminals
 
         public INonTerminal AddNonTerminal(INonTerminal nonTerminal)
         {
-            return _nonTerminals.GetOrAdd(nonTerminal.Name, i => nonTerminal);
+            return _nonTerminals.GetOrAdd(nonTerminal.DictionaryKey, i => nonTerminal);
         }
 
         public NonTerminalBindingBuilder NT(string nonTerminalName)
@@ -287,7 +287,7 @@ namespace DSLKIT.Terminals
 
         internal GrammarBuilder BindAst(INonTerminal nonTerminal, AstNodeBinding binding)
         {
-            var normalizedNonTerminal = GetOrAddNonTerminal(nonTerminal.Name);
+            var normalizedNonTerminal = AddNonTerminal(nonTerminal);
             _nonTerminalAstBindings[normalizedNonTerminal] = binding;
             return this;
         }

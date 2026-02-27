@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Text.Json;
 
 namespace DSLKIT.Test.Utils
@@ -55,8 +57,64 @@ namespace DSLKIT.Test.Utils
 
         private static string NormalizeJson(string json)
         {
-            var jsonDocument = JsonDocument.Parse(json);
-            return JsonSerializer.Serialize(jsonDocument, new JsonSerializerOptions { WriteIndented = false });
+            using var jsonDocument = JsonDocument.Parse(json);
+            using var stream = new MemoryStream();
+            using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = false });
+
+            WriteNormalized(jsonDocument.RootElement, writer);
+            writer.Flush();
+
+            return Encoding.UTF8.GetString(stream.ToArray());
+        }
+
+        private static void WriteNormalized(JsonElement element, Utf8JsonWriter writer)
+        {
+            switch (element.ValueKind)
+            {
+                case JsonValueKind.Object:
+                    writer.WriteStartObject();
+                    foreach (var property in element.EnumerateObject().OrderBy(p => p.Name, StringComparer.Ordinal))
+                    {
+                        writer.WritePropertyName(property.Name);
+                        WriteNormalized(property.Value, writer);
+                    }
+
+                    writer.WriteEndObject();
+                    return;
+
+                case JsonValueKind.Array:
+                    writer.WriteStartArray();
+                    foreach (var item in element.EnumerateArray())
+                    {
+                        WriteNormalized(item, writer);
+                    }
+
+                    writer.WriteEndArray();
+                    return;
+
+                case JsonValueKind.String:
+                    writer.WriteStringValue(element.GetString());
+                    return;
+
+                case JsonValueKind.Number:
+                    writer.WriteRawValue(element.GetRawText(), skipInputValidation: true);
+                    return;
+
+                case JsonValueKind.True:
+                    writer.WriteBooleanValue(true);
+                    return;
+
+                case JsonValueKind.False:
+                    writer.WriteBooleanValue(false);
+                    return;
+
+                case JsonValueKind.Null:
+                    writer.WriteNullValue();
+                    return;
+
+                default:
+                    throw new InvalidOperationException($"Unsupported JSON token kind: {element.ValueKind}");
+            }
         }
 
         private static string FindDifferences(string expected, string actual)

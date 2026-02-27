@@ -17,6 +17,7 @@
     <ProjectReference Include="..\DSLKIT\DSLKIT.csproj" />
     <ProjectReference Include="..\Examples\DSLKIT.GrammarExamples\DSLKIT.GrammarExamples.csproj" />
     <ProjectReference Include="..\Examples\DSLKIT.GrammarExamples.Ini\DSLKIT.GrammarExamples.Ini.csproj" />
+    <ProjectReference Include="..\Examples\DSLKIT.GrammarExamples.SJackson\DSLKIT.GrammarExamples.SJackson.csproj" />
   </ItemGroup>
 
 </Project>

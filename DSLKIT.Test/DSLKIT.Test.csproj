@@ -38,6 +38,7 @@
         <ProjectReference Include="..\DSLKIT.Visualizers\DSLKIT.Visualizers.csproj" />
         <ProjectReference Include="..\Examples\DSLKIT.GrammarExamples.MsSql\DSLKIT.GrammarExamples.MsSql.csproj" />
         <ProjectReference Include="..\Examples\DSLKIT.GrammarExamples.Ini\DSLKIT.GrammarExamples.Ini.csproj" />
+        <ProjectReference Include="..\Examples\DSLKIT.GrammarExamples.SJackson\DSLKIT.GrammarExamples.SJackson.csproj" />
     </ItemGroup>
 
     <ItemGroup>

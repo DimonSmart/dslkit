@@ -22,11 +22,6 @@ namespace DSLKIT.GrammarExamples.MsSql
 
         public static ParseResult ParseScript(string source)
         {
-            if (source == null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
-
             var grammar = BuildGrammar();
             var lexer = new Lexer.Lexer(CreateLexerSettings(grammar));
             var parser = new SyntaxParser(grammar);

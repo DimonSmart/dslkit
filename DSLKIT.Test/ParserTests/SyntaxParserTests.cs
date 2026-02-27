@@ -1,6 +1,7 @@
 using DSLKIT.Lexer;
 using DSLKIT.Parser;
 using DSLKIT.Terminals;
+using DSLKIT.GrammarExamples.SJackson;
 using DSLKIT.Test.Common;
 using FluentAssertions;
 using System.Linq;
@@ -65,42 +66,8 @@ namespace DSLKIT.Test.ParserTests
         [Fact]
         public void Parse_BinaryExpression_ShouldSucceed()
         {
-            // Arrange - Grammar from the tutorial: x = * x
-            var xTerminal = new KeywordTerminal("x");
-            var starTerminal = new KeywordTerminal("*");
-            var equalsTerminal = new KeywordTerminal("=");
-
-            // Create grammar using string notation first, then replace terminals
-            var grammar = new GrammarBuilder()
-                .WithGrammarName("sjackson")
-                .AddProductionFromString("<S> → <N>")
-                .AddProductionFromString("<N> → <V> = <E>")
-                .AddProductionFromString("<N> → <E>")
-                .AddProductionFromString("<E> → <V>")
-                .AddProductionFromString("<V> → x")
-                .AddProductionFromString("<V> → * <E>")
-                .BuildGrammar();
-
-            // Now we need to use the same terminal instances for lexer
-            // This is a known limitation - in a real parser, you'd manage terminal instances consistently
-            var grammarTerminals = grammar.Terminals.ToList();
-            var xFromGrammar = grammarTerminals.First(t => t.Name == "x");
-            var starFromGrammar = grammarTerminals.First(t => t.Name == "*");
-            var equalsFromGrammar = grammarTerminals.First(t => t.Name == "=");
-
-            var lexerSettings = new LexerSettings
-            {
-                xFromGrammar,
-                starFromGrammar,
-                equalsFromGrammar
-            };
-
-            var lexer = new Lexer.Lexer(lexerSettings);
-            var parser = new SyntaxParser(grammar);
-
             // Act
-            var tokens = lexer.GetTokens(new StringSourceStream("x=*x")).ToList();
-            var result = parser.Parse(tokens);
+            var result = SJacksonGrammarExample.ParseInput("x=*x");
 
             // Assert
             result.IsSuccess.Should().BeTrue($"parsing should succeed for valid input. Error: {result.Error?.Message}");

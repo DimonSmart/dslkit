@@ -14,6 +14,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddMudServices();
 builder.Services.AddSingleton<IDslGrammarProvider, ExpressionGrammarProvider>();
 builder.Services.AddSingleton<IDslGrammarProvider, IniGrammarProvider>();
+builder.Services.AddSingleton<IDslGrammarProvider, SJacksonGrammarProvider>();
 builder.Services.AddSingleton<IGrammarProviderCatalog, GrammarProviderCatalog>();
 builder.Services.AddSingleton<IGrammarProviderAssemblyLoader, GrammarProviderAssemblyLoader>();
 builder.Services.AddSingleton<IGrammarSnapshotMapper, GrammarSnapshotMapper>();

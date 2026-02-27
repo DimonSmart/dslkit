@@ -1,7 +1,10 @@
-﻿using DSLKIT.NonTerminals;
+using System.Linq;
+using DSLKIT.Lexer;
+using DSLKIT.NonTerminals;
 using DSLKIT.Parser;
 using DSLKIT.Terminals;
 using DSLKIT.Test.Common;
+using DSLKIT.Tokens;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -23,6 +26,32 @@ namespace DSLKIT.Test.ParserTests
         public void GrammarB_Create_Test()
         {
             ShowGrammar(GetGrammarB());
+        }
+
+        [Fact]
+        public void SameNameTerminals_WithDifferentDictionaryKeys_AreStoredSeparately()
+        {
+            const string dictionaryKeyA = "SameName[A]";
+            const string dictionaryKeyB = "SameName[B]";
+
+            var first = new SameNameTestTerminal(dictionaryKeyA);
+            var second = new SameNameTestTerminal(dictionaryKeyB);
+
+            var grammar = new GrammarBuilder()
+                .WithGrammarName("same-name-keys")
+                .AddProduction("Root")
+                .AddProductionDefinition(first)
+                .AddProduction("Root")
+                .AddProductionDefinition(second)
+                .BuildGrammar();
+
+            var sameNameTerminals = grammar.Terminals
+                .Where(t => t.Name == "SameName")
+                .ToList();
+
+            Assert.Equal(2, sameNameTerminals.Count);
+            Assert.Contains(sameNameTerminals, t => t.DictionaryKey == dictionaryKeyA);
+            Assert.Contains(sameNameTerminals, t => t.DictionaryKey == dictionaryKeyB);
         }
 
         private static Grammar GetGrammarA()
@@ -49,6 +78,21 @@ namespace DSLKIT.Test.ParserTests
                 .AddProduction("Division")
                 .AddProductionDefinition("DIV", "(", Constants.Integer, ",", Constants.Integer, ")")
                 .BuildGrammar();
+        }
+
+        private sealed class SameNameTestTerminal(string dictionaryKey) : ITerminal
+        {
+            public string Name => "SameName";
+            public string DictionaryKey => dictionaryKey;
+            public TermFlags Flags => TermFlags.None;
+            public TerminalPriority Priority => TerminalPriority.Low;
+            public bool CanStartWith(char c) => false;
+
+            public bool TryMatch(ISourceStream source, out IToken token)
+            {
+                token = null;
+                return false;
+            }
         }
     }
 }

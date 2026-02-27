@@ -65,9 +65,9 @@ namespace DSLKIT.Parser
                 return true;
             }
 
-            return LeftNonTerminal.Name == other.LeftNonTerminal.Name &&
-                   ProductionDefinition.Select(t => t.Name)
-                       .SequenceEqual(other.ProductionDefinition.Select(t => t.Name));
+            return LeftNonTerminal.DictionaryKey == other.LeftNonTerminal.DictionaryKey &&
+                   ProductionDefinition.Select(t => t.DictionaryKey)
+                       .SequenceEqual(other.ProductionDefinition.Select(t => t.DictionaryKey));
         }
 
         public override bool Equals(object? obj)
@@ -78,11 +78,11 @@ namespace DSLKIT.Parser
         public override int GetHashCode()
         {
             var hash = new HashCode();
-            hash.Add(LeftNonTerminal.Name);
+            hash.Add(LeftNonTerminal.DictionaryKey);
 
             foreach (var term in ProductionDefinition)
             {
-                hash.Add(term.Name);
+                hash.Add(term.DictionaryKey);
             }
 
             return hash.ToHashCode();

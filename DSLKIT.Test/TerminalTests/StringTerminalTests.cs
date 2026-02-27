@@ -58,6 +58,17 @@ namespace DSLKIT.Test.TerminalTests
             DoStringTest(@"$""Hello World""'_rest of string", 0, @"Hello World", @"$""", @"""");
         }
 
+        [Fact]
+        public void DictionaryKey_DifferentDelimiters_HaveDifferentKeys()
+        {
+            var doubleQuoted = new StringTerminal();
+            var bracketQuoted = new StringTerminal("[", "]");
+
+            Xunit.Assert.Equal("String", doubleQuoted.Name);
+            Xunit.Assert.Equal("String", bracketQuoted.Name);
+            Xunit.Assert.NotEqual(doubleQuoted.DictionaryKey, bracketQuoted.DictionaryKey);
+        }
+
         private void DoStringTest(string stringToTest, int startPosition, string expectedString, string start,
             string end)
         {

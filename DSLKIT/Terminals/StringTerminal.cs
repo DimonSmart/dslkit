@@ -99,7 +99,7 @@ namespace DSLKIT.Terminals
             return true;
         }
 
-        public string DictionaryKey => Name;
+        public string DictionaryKey => $"String[{_start.Length}:{_start}|{_end.Length}:{_end}]";
 
         public override string ToString()
         {

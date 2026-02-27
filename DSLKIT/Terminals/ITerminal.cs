@@ -10,9 +10,6 @@ namespace DSLKIT.Terminals
 
         TerminalPriority Priority { get; }
 
-        // Used to avoid creating duplicate terminals.
-        // Duplicate terminals must have equal dictionaryKeys
-        string DictionaryKey { get; }
         bool CanStartWith(char c);
         bool TryMatch(ISourceStream source, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out IToken? token);
     }
