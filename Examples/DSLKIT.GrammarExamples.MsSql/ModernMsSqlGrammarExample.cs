@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Text.RegularExpressions;
 using DSLKIT.Lexer;
 using DSLKIT.Parser;
 using DSLKIT.Terminals;
@@ -56,11 +55,7 @@ namespace DSLKIT.GrammarExamples.MsSql
 
         private static IGrammar BuildGrammarCore()
         {
-            var identifier = new RegExpTerminal(
-                "Identifier",
-                @"\G(?i)[a-z_][a-z0-9_$#]*",
-                previewChar: null,
-                flags: TermFlags.Identifier);
+            var identifier = new WordTerminal("Identifier", WordStyle.SqlIdentifier);
 
             var bracketIdentifier = new RegExpTerminal(
                 "BracketIdentifier",
@@ -86,17 +81,8 @@ namespace DSLKIT.GrammarExamples.MsSql
                 previewChar: '#',
                 flags: TermFlags.Identifier);
 
-            var number = new RegExpTerminal(
-                "Number",
-                @"\G(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?",
-                previewChar: null,
-                flags: TermFlags.Const);
-
-            var stringLiteral = new RegExpTerminal(
-                "String",
-                @"\G(?i)N?'(?:''|[^'])*'",
-                previewChar: null,
-                flags: TermFlags.Const);
+            var number = new NumberTerminal("Number", NumberStyle.SqlNumber);
+            var stringLiteral = new QuotedStringTerminal("String", StringStyle.SqlSingleQuoted);
 
             var gb = new GrammarBuilder()
                 .WithGrammarName("mssql-2022-query")
@@ -347,36 +333,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             return gb.BuildGrammar("Start");
         }
 
-        private static SqlKeywordTerminal Kw(string keyword)
+        private static KeywordTerminal Kw(string keyword)
         {
-            return new SqlKeywordTerminal(keyword);
-        }
-
-        private sealed class SqlKeywordTerminal : RegExpTerminalBase
-        {
-            private readonly string _keyword;
-
-            public SqlKeywordTerminal(string keyword)
-                : base(CreatePattern(keyword), previewChar: null)
-            {
-                if (string.IsNullOrWhiteSpace(keyword))
-                {
-                    throw new ArgumentException("Keyword must not be empty.", nameof(keyword));
-                }
-
-                _keyword = keyword.ToUpperInvariant();
-            }
-
-            public override string Name => _keyword;
-            public override TermFlags Flags => TermFlags.None;
-            public override TerminalPriority Priority => TerminalPriority.High;
-            public override string DictionaryKey => $"SqlKeyword[{_keyword}]";
-
-            private static string CreatePattern(string keyword)
-            {
-                var escaped = Regex.Escape(keyword);
-                return $@"\G(?i)\b{escaped}\b";
-            }
+            return new KeywordTerminal(keyword, wholeWord: true, ignoreCase: true);
         }
     }
 }

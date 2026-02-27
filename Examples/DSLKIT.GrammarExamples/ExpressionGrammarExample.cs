@@ -40,11 +40,7 @@ namespace DSLKIT.GrammarExamples
 
         public static IGrammar BuildGrammar()
         {
-            var number = new RegExpTerminal(
-                "Number",
-                @"\G(?:\d+(\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?",
-                previewChar: null,
-                flags: TermFlags.Const);
+            var number = new NumberTerminal("Number", NumberStyle.SqlNumber);
             var identifier = new IdentifierTerminal();
 
             var gb = new GrammarBuilder()

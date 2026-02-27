@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace DSLKIT.Terminals
@@ -17,26 +18,41 @@ namespace DSLKIT.Terminals
             { ">", TermFlags.CloseBrace }
         };
 
+        private readonly bool _wholeWord;
+        private readonly bool _ignoreCase;
 
-        public override TerminalPriority Priority => TerminalPriority.Normal;
-        public override string DictionaryKey => $"Keyword[{Keyword}]";
+        public KeywordTerminal(
+            string keyword,
+            TermFlags flags = TermFlags.None,
+            bool wholeWord = false,
+            bool ignoreCase = false,
+            string? name = null)
+            : base(CreatePattern(keyword, wholeWord, ignoreCase), CreatePreviewChar(keyword, ignoreCase))
+        {
+            Keyword = keyword;
+            Name = string.IsNullOrWhiteSpace(name) ? keyword : name;
+            Flags = GetFlag(keyword, flags);
+            _wholeWord = wholeWord;
+            _ignoreCase = ignoreCase;
+        }
 
         public override string Name { get; }
         public override TermFlags Flags { get; }
+        public override TerminalPriority Priority => TerminalPriority.Normal;
+        public override string DictionaryKey
+        {
+            get
+            {
+                if (!_wholeWord && !_ignoreCase && string.Equals(Name, Keyword, StringComparison.Ordinal))
+                {
+                    return $"Keyword[{Keyword}]";
+                }
+
+                return $"Keyword[{Keyword}|wholeWord:{_wholeWord}|ignoreCase:{_ignoreCase}|name:{Name}]";
+            }
+        }
+
         private string Keyword { get; }
-
-        private KeywordTerminal(string keyword) : base(@"\G" + Regex.Escape(keyword), keyword[0])
-        {
-            Keyword = keyword;
-            Flags = TermFlags.None;
-            Name = Keyword;
-        }
-
-        public KeywordTerminal(string keyword, TermFlags flags = TermFlags.None) : this(keyword)
-        {
-            Keyword = keyword;
-            Flags = GetFlag(keyword, flags);
-        }
 
         public static TermFlags GetFlag(string keyword, TermFlags flags = TermFlags.None)
         {
@@ -56,6 +72,36 @@ namespace DSLKIT.Terminals
         public override string ToString()
         {
             return string.IsNullOrEmpty(Keyword) ? "[Empty]" : Keyword;
+        }
+
+        private static string CreatePattern(string keyword, bool wholeWord, bool ignoreCase)
+        {
+            if (string.IsNullOrWhiteSpace(keyword))
+            {
+                throw new ArgumentException("Keyword must not be empty.", nameof(keyword));
+            }
+
+            var escapedKeyword = Regex.Escape(keyword);
+            var keywordPattern = wholeWord
+                ? $@"(?<!\w){escapedKeyword}(?!\w)"
+                : escapedKeyword;
+
+            if (ignoreCase)
+            {
+                keywordPattern = $"(?i:{keywordPattern})";
+            }
+
+            return $@"\G{keywordPattern}";
+        }
+
+        private static char? CreatePreviewChar(string keyword, bool ignoreCase)
+        {
+            if (ignoreCase || string.IsNullOrEmpty(keyword))
+            {
+                return null;
+            }
+
+            return keyword[0];
         }
     }
 }

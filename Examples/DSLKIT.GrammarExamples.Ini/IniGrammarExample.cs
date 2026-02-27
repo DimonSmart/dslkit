@@ -67,29 +67,10 @@ namespace DSLKIT.GrammarExamples.Ini
 
         private static IGrammar BuildGrammarCore()
         {
-            var word = new RegExpTerminal(
-                "Word",
-                @"\G[A-Za-z_][A-Za-z0-9_.-]*",
-                previewChar: null,
-                flags: TermFlags.Identifier);
-
-            var number = new RegExpTerminal(
-                "Number",
-                @"\G(?:0|[1-9]\d*)(?:\.\d+)?",
-                previewChar: null,
-                flags: TermFlags.Const);
-
-            var quotedString = new RegExpTerminal(
-                "QuotedString",
-                "\\G(?:\"(?:[^\"\\\\\\r\\n]|\\\\.)*\"|'(?:[^'\\\\\\r\\n]|\\\\.)*')",
-                previewChar: null,
-                flags: TermFlags.Const);
-
-            var newLine = new RegExpTerminal(
-                "NewLine",
-                @"\G(?:\r\n|\r|\n)+",
-                previewChar: null,
-                flags: TermFlags.None);
+            var word = new WordTerminal("Word", WordStyle.IniWord);
+            var number = new NumberTerminal("Number", NumberStyle.IniNumber);
+            var quotedString = new QuotedStringTerminal("QuotedString", StringStyle.IniQuoted);
+            var newLine = new NewLineTerminal();
 
             var gb = new GrammarBuilder()
                 .WithGrammarName("ini-hello-world")
