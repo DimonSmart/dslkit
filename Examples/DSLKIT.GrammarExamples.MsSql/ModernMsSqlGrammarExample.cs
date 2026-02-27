@@ -55,7 +55,7 @@ namespace DSLKIT.GrammarExamples.MsSql
 
         private static IGrammar BuildGrammarCore()
         {
-            var identifier = new WordTerminal("Identifier", WordStyle.SqlIdentifier);
+            var identifier = new IdentifierTerminal(allowDot: false);
 
             var bracketIdentifier = new RegExpTerminal(
                 "BracketIdentifier",

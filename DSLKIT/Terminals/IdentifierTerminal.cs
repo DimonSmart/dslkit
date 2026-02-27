@@ -2,19 +2,25 @@ namespace DSLKIT.Terminals
 {
     public class IdentifierTerminal : WordTerminal
     {
-        private static readonly WordOptions IdentifierOptions = new()
-        {
-            AllowDot = true,
-            CaseInsensitive = true,
-            UnicodeLetters = true,
-            StartRule = WordStartRule.LetterOrUnderscore
-        };
+        private readonly bool _allowDot;
 
-        public IdentifierTerminal()
-            : base(name: "Id", style: WordStyle.CLikeIdentifier, options: IdentifierOptions)
+        public IdentifierTerminal(bool allowDot = true)
+            : base(name: "Id", style: WordStyle.CLikeIdentifier, options: CreateOptions(allowDot))
         {
+            _allowDot = allowDot;
         }
 
-        public override string DictionaryKey => Name;
+        public override string DictionaryKey => _allowDot ? Name : $"{Name}|allowDot:false";
+
+        private static WordOptions CreateOptions(bool allowDot)
+        {
+            return new WordOptions
+            {
+                AllowDot = allowDot,
+                CaseInsensitive = true,
+                UnicodeLetters = true,
+                StartRule = WordStartRule.LetterOrUnderscore
+            };
+        }
     }
 }
