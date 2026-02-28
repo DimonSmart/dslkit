@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using DSLKIT.Ast;
@@ -14,19 +13,22 @@ namespace DSLKIT.Terminals
 {
     public class GrammarBuilder
     {
-        private readonly ConcurrentDictionary<string, INonTerminal> _nonTerminals =
-            new ConcurrentDictionary<string, INonTerminal>();
+        private readonly Dictionary<string, INonTerminal> _nonTerminals =
+            new Dictionary<string, INonTerminal>(64, StringComparer.Ordinal);
 
-        private readonly IList<Production> _productions = new List<Production>();
+        private readonly IList<Production> _productions = new List<Production>(128);
 
-        private readonly ConcurrentDictionary<string, ITerminal> _terminals =
-            new ConcurrentDictionary<string, ITerminal>();
+        private readonly Dictionary<string, ITerminal> _terminals =
+            new Dictionary<string, ITerminal>(256, StringComparer.Ordinal);
+
+        private readonly Dictionary<string, ITerminal> _keywordTerminals =
+            new Dictionary<string, ITerminal>(256, StringComparer.Ordinal);
 
         private readonly Dictionary<Production, AstNodeBinding> _productionAstBindings =
-            new Dictionary<Production, AstNodeBinding>();
+            new Dictionary<Production, AstNodeBinding>(64);
 
         private readonly Dictionary<INonTerminal, AstNodeBinding> _nonTerminalAstBindings =
-            new Dictionary<INonTerminal, AstNodeBinding>();
+            new Dictionary<INonTerminal, AstNodeBinding>(64);
 
         private IEofTerminal _eof = EofTerminal.Instance;
 
@@ -34,12 +36,25 @@ namespace DSLKIT.Terminals
 
         public INonTerminal GetOrAddNonTerminal(string nonTerminalName)
         {
-            return _nonTerminals.GetOrAdd(nonTerminalName, i => new NonTerminal(nonTerminalName));
+            if (_nonTerminals.TryGetValue(nonTerminalName, out var existingNonTerminal))
+            {
+                return existingNonTerminal;
+            }
+
+            var nonTerminal = new NonTerminal(nonTerminalName);
+            _nonTerminals[nonTerminalName] = nonTerminal;
+            return nonTerminal;
         }
 
         public INonTerminal AddNonTerminal(INonTerminal nonTerminal)
         {
-            return _nonTerminals.GetOrAdd(nonTerminal.DictionaryKey, i => nonTerminal);
+            if (_nonTerminals.TryGetValue(nonTerminal.DictionaryKey, out var existingNonTerminal))
+            {
+                return existingNonTerminal;
+            }
+
+            _nonTerminals[nonTerminal.DictionaryKey] = nonTerminal;
+            return nonTerminal;
         }
 
         public NonTerminalBindingBuilder NT(string nonTerminalName)
@@ -56,7 +71,11 @@ namespace DSLKIT.Terminals
 
         public ITerminal AddTerminalBody(ITerminal terminal)
         {
-            var newTerminal = _terminals.GetOrAdd(terminal.DictionaryKey, i => terminal);
+            if (!_terminals.TryGetValue(terminal.DictionaryKey, out var newTerminal))
+            {
+                _terminals[terminal.DictionaryKey] = terminal;
+                newTerminal = terminal;
+            }
 
             if (terminal.Flags != newTerminal.Flags)
             {
@@ -65,6 +84,18 @@ namespace DSLKIT.Terminals
             }
 
             return newTerminal;
+        }
+
+        internal ITerminal GetOrAddKeywordTerminal(string keyword)
+        {
+            if (_keywordTerminals.TryGetValue(keyword, out var terminal))
+            {
+                return terminal;
+            }
+
+            terminal = AddTerminalBody(new KeywordTerminal(keyword));
+            _keywordTerminals[keyword] = terminal;
+            return terminal;
         }
 
         public GrammarBuilder WithGrammarName(string name)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -65,9 +65,21 @@ namespace DSLKIT.Parser
                 return true;
             }
 
-            return LeftNonTerminal.DictionaryKey == other.LeftNonTerminal.DictionaryKey &&
-                   ProductionDefinition.Select(t => t.DictionaryKey)
-                       .SequenceEqual(other.ProductionDefinition.Select(t => t.DictionaryKey));
+            if (LeftNonTerminal.DictionaryKey != other.LeftNonTerminal.DictionaryKey ||
+                ProductionDefinition.Count != other.ProductionDefinition.Count)
+            {
+                return false;
+            }
+
+            for (var index = 0; index < ProductionDefinition.Count; index++)
+            {
+                if (ProductionDefinition[index].DictionaryKey != other.ProductionDefinition[index].DictionaryKey)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public override bool Equals(object? obj)

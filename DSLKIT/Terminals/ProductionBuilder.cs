@@ -107,14 +107,14 @@ namespace DSLKIT.Terminals
 
         private List<ITerm> BuildRuleDefinition(params object[] terms)
         {
-            var ruleDefinition = new List<ITerm>();
+            var ruleDefinition = new List<ITerm>(terms.Length);
 
             foreach (var term in terms)
             {
                 switch (term)
                 {
                     case string keyword:
-                        ruleDefinition.Add(_grammarBuilder.AddTerminalBody(new KeywordTerminal(keyword)));
+                        ruleDefinition.Add(_grammarBuilder.GetOrAddKeywordTerminal(keyword));
                         break;
                     case ITerminal terminal:
                         ruleDefinition.Add(_grammarBuilder.AddTerminalBody(terminal));

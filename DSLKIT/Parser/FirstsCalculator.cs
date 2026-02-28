@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using DSLKIT.Base;
@@ -10,7 +10,7 @@ namespace DSLKIT.Parser
     public class FirstsCalculator
     {
         private readonly IEnumerable<ExProduction> _exProductions;
-        private readonly Dictionary<IExNonTerminal, List<ITerm>> _firsts;
+        private readonly Dictionary<IExNonTerminal, HashSet<ITerm>> _firsts;
         private readonly HashSet<ExProduction> _searchStack;
 
         public FirstsCalculator(IEnumerable<ExProduction> exProductions)
@@ -26,7 +26,7 @@ namespace DSLKIT.Parser
             return new ReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>>(
                 _firsts.ToDictionary(
                     pair => pair.Key,
-                    pair => (IReadOnlyCollection<ITerm>)pair.Value.AsReadOnly()));
+                    pair => (IReadOnlyCollection<ITerm>)pair.Value.ToList()));
         }
 
         private void AddFirstSets(IExNonTerminal? startExNonTerminal = null)
@@ -87,16 +87,10 @@ namespace DSLKIT.Parser
         {
             if (_firsts.TryGetValue(nonTerminal, out var firsts))
             {
-                if (firsts.Contains(term))
-                {
-                    return false;
-                }
-
-                firsts.Add(term);
-                return true;
+                return firsts.Add(term);
             }
 
-            _firsts[nonTerminal] = new List<ITerm> { term };
+            _firsts[nonTerminal] = new HashSet<ITerm> { term };
             return true;
         }
     }

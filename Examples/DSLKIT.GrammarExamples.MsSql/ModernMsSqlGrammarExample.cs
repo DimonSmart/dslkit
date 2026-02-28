@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using DSLKIT.Lexer;
 using DSLKIT.Parser;
@@ -96,6 +97,19 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .AddTerminal(tempIdentifier)
                 .AddTerminal(number)
                 .AddTerminal(stringLiteral);
+            var keywordCache = new Dictionary<string, KeywordTerminal>(StringComparer.OrdinalIgnoreCase);
+
+            KeywordTerminal kw(string keyword)
+            {
+                if (keywordCache.TryGetValue(keyword, out var cachedKeyword))
+                {
+                    return cachedKeyword;
+                }
+
+                var newKeyword = new KeywordTerminal(keyword, wholeWord: true, ignoreCase: true);
+                keywordCache[keyword] = newKeyword;
+                return newKeyword;
+            }
 
             var script = gb.NT("Script");
             var statementList = gb.NT("StatementList");
@@ -155,19 +169,19 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("QueryStatement").Is(queryExpression);
             gb.Prod("QueryStatement").Is(withClause, queryExpression);
 
-            gb.Prod("WithClause").Is(Kw("WITH"), cteDefinitionList);
+            gb.Prod("WithClause").Is(kw("WITH"), cteDefinitionList);
             gb.Prod("CteDefinitionList").Is(cteDefinition);
             gb.Prod("CteDefinitionList").Is(cteDefinitionList, ",", cteDefinition);
-            gb.Prod("CteDefinition").Is(identifierTerm, Kw("AS"), "(", queryExpression, ")");
-            gb.Prod("CteDefinition").Is(identifierTerm, "(", identifierList, ")", Kw("AS"), "(", queryExpression, ")");
+            gb.Prod("CteDefinition").Is(identifierTerm, kw("AS"), "(", queryExpression, ")");
+            gb.Prod("CteDefinition").Is(identifierTerm, "(", identifierList, ")", kw("AS"), "(", queryExpression, ")");
 
             gb.Prod("QueryExpression").Is(queryPrimary);
             gb.Prod("QueryExpression").Is(queryExpression, setOperator, queryPrimary);
 
-            gb.Prod("SetOperator").Is(Kw("UNION"));
-            gb.Prod("SetOperator").Is(Kw("UNION"), Kw("ALL"));
-            gb.Prod("SetOperator").Is(Kw("INTERSECT"));
-            gb.Prod("SetOperator").Is(Kw("EXCEPT"));
+            gb.Prod("SetOperator").Is(kw("UNION"));
+            gb.Prod("SetOperator").Is(kw("UNION"), kw("ALL"));
+            gb.Prod("SetOperator").Is(kw("INTERSECT"));
+            gb.Prod("SetOperator").Is(kw("EXCEPT"));
 
             gb.Prod("QueryPrimary").Is(querySpecification);
             gb.Prod("QueryPrimary").Is(querySpecification, orderByClause);
@@ -176,25 +190,25 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("QueryPrimary").Is("(", queryExpression, ")", orderByClause);
             gb.Prod("QueryPrimary").Is("(", queryExpression, ")", orderByClause, offsetFetchClause);
 
-            gb.Prod("SelectCore").Is(Kw("SELECT"), selectList, Kw("FROM"), tableSourceList);
-            gb.Prod("SelectCore").Is(Kw("SELECT"), setQuantifier, selectList, Kw("FROM"), tableSourceList);
-            gb.Prod("SelectCore").Is(Kw("SELECT"), topClause, selectList, Kw("FROM"), tableSourceList);
-            gb.Prod("SelectCore").Is(Kw("SELECT"), setQuantifier, topClause, selectList, Kw("FROM"), tableSourceList);
+            gb.Prod("SelectCore").Is(kw("SELECT"), selectList, kw("FROM"), tableSourceList);
+            gb.Prod("SelectCore").Is(kw("SELECT"), setQuantifier, selectList, kw("FROM"), tableSourceList);
+            gb.Prod("SelectCore").Is(kw("SELECT"), topClause, selectList, kw("FROM"), tableSourceList);
+            gb.Prod("SelectCore").Is(kw("SELECT"), setQuantifier, topClause, selectList, kw("FROM"), tableSourceList);
 
             gb.Prod("QuerySpecification").Is(selectCore);
-            gb.Prod("QuerySpecification").Is(selectCore, Kw("WHERE"), searchCondition);
-            gb.Prod("QuerySpecification").Is(selectCore, Kw("GROUP"), Kw("BY"), expressionList);
-            gb.Prod("QuerySpecification").Is(selectCore, Kw("WHERE"), searchCondition, Kw("GROUP"), Kw("BY"), expressionList);
-            gb.Prod("QuerySpecification").Is(selectCore, Kw("GROUP"), Kw("BY"), expressionList, Kw("HAVING"), searchCondition);
-            gb.Prod("QuerySpecification").Is(selectCore, Kw("WHERE"), searchCondition, Kw("GROUP"), Kw("BY"), expressionList, Kw("HAVING"), searchCondition);
+            gb.Prod("QuerySpecification").Is(selectCore, kw("WHERE"), searchCondition);
+            gb.Prod("QuerySpecification").Is(selectCore, kw("GROUP"), kw("BY"), expressionList);
+            gb.Prod("QuerySpecification").Is(selectCore, kw("WHERE"), searchCondition, kw("GROUP"), kw("BY"), expressionList);
+            gb.Prod("QuerySpecification").Is(selectCore, kw("GROUP"), kw("BY"), expressionList, kw("HAVING"), searchCondition);
+            gb.Prod("QuerySpecification").Is(selectCore, kw("WHERE"), searchCondition, kw("GROUP"), kw("BY"), expressionList, kw("HAVING"), searchCondition);
 
-            gb.Prod("SetQuantifier").Is(Kw("ALL"));
-            gb.Prod("SetQuantifier").Is(Kw("DISTINCT"));
+            gb.Prod("SetQuantifier").Is(kw("ALL"));
+            gb.Prod("SetQuantifier").Is(kw("DISTINCT"));
 
-            gb.Prod("TopClause").Is(Kw("TOP"), topValue);
-            gb.Prod("TopClause").Is(Kw("TOP"), topValue, Kw("PERCENT"));
-            gb.Prod("TopClause").Is(Kw("TOP"), topValue, Kw("WITH"), Kw("TIES"));
-            gb.Prod("TopClause").Is(Kw("TOP"), topValue, Kw("PERCENT"), Kw("WITH"), Kw("TIES"));
+            gb.Prod("TopClause").Is(kw("TOP"), topValue);
+            gb.Prod("TopClause").Is(kw("TOP"), topValue, kw("PERCENT"));
+            gb.Prod("TopClause").Is(kw("TOP"), topValue, kw("WITH"), kw("TIES"));
+            gb.Prod("TopClause").Is(kw("TOP"), topValue, kw("PERCENT"), kw("WITH"), kw("TIES"));
             gb.Prod("TopValue").Is(number);
             gb.Prod("TopValue").Is("(", expression, ")");
 
@@ -202,7 +216,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("SelectItemList").Is(selectItem);
             gb.Prod("SelectItemList").Is(selectItemList, ",", selectItem);
             gb.Prod("SelectItem").Is("*");
-            gb.Prod("SelectItem").Is(expression, Kw("AS"), identifierTerm);
+            gb.Prod("SelectItem").Is(expression, kw("AS"), identifierTerm);
             gb.Prod("SelectItem").Is(qualifiedName, ".", "*");
 
             gb.Prod("TableSourceList").Is(tableSource);
@@ -210,40 +224,40 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("TableSource").Is(tableFactor);
             gb.Prod("TableSource").Is(tableSource, joinPart);
             gb.Prod("TableFactor").Is(qualifiedName);
-            gb.Prod("TableFactor").Is(qualifiedName, Kw("AS"), identifierTerm);
-            gb.Prod("TableFactor").Is(functionCall, Kw("AS"), identifierTerm);
-            gb.Prod("TableFactor").Is("(", queryExpression, ")", Kw("AS"), identifierTerm);
+            gb.Prod("TableFactor").Is(qualifiedName, kw("AS"), identifierTerm);
+            gb.Prod("TableFactor").Is(functionCall, kw("AS"), identifierTerm);
+            gb.Prod("TableFactor").Is("(", queryExpression, ")", kw("AS"), identifierTerm);
 
-            gb.Prod("JoinPart").Is(joinType, Kw("JOIN"), tableFactor, Kw("ON"), searchCondition);
-            gb.Prod("JoinPart").Is(Kw("CROSS"), Kw("JOIN"), tableFactor);
-            gb.Prod("JoinPart").Is(Kw("CROSS"), Kw("APPLY"), tableFactor);
-            gb.Prod("JoinPart").Is(Kw("OUTER"), Kw("APPLY"), tableFactor);
+            gb.Prod("JoinPart").Is(joinType, kw("JOIN"), tableFactor, kw("ON"), searchCondition);
+            gb.Prod("JoinPart").Is(kw("CROSS"), kw("JOIN"), tableFactor);
+            gb.Prod("JoinPart").Is(kw("CROSS"), kw("APPLY"), tableFactor);
+            gb.Prod("JoinPart").Is(kw("OUTER"), kw("APPLY"), tableFactor);
 
-            gb.Prod("JoinType").Is(Kw("INNER"));
-            gb.Prod("JoinType").Is(Kw("LEFT"));
-            gb.Prod("JoinType").Is(Kw("LEFT"), Kw("OUTER"));
-            gb.Prod("JoinType").Is(Kw("RIGHT"));
-            gb.Prod("JoinType").Is(Kw("RIGHT"), Kw("OUTER"));
-            gb.Prod("JoinType").Is(Kw("FULL"));
-            gb.Prod("JoinType").Is(Kw("FULL"), Kw("OUTER"));
+            gb.Prod("JoinType").Is(kw("INNER"));
+            gb.Prod("JoinType").Is(kw("LEFT"));
+            gb.Prod("JoinType").Is(kw("LEFT"), kw("OUTER"));
+            gb.Prod("JoinType").Is(kw("RIGHT"));
+            gb.Prod("JoinType").Is(kw("RIGHT"), kw("OUTER"));
+            gb.Prod("JoinType").Is(kw("FULL"));
+            gb.Prod("JoinType").Is(kw("FULL"), kw("OUTER"));
 
-            gb.Prod("OrderByClause").Is(Kw("ORDER"), Kw("BY"), orderItemList);
+            gb.Prod("OrderByClause").Is(kw("ORDER"), kw("BY"), orderItemList);
             gb.Prod("OrderItemList").Is(orderItem);
             gb.Prod("OrderItemList").Is(orderItemList, ",", orderItem);
             gb.Prod("OrderItem").Is(expression);
-            gb.Prod("OrderItem").Is(expression, Kw("ASC"));
-            gb.Prod("OrderItem").Is(expression, Kw("DESC"));
+            gb.Prod("OrderItem").Is(expression, kw("ASC"));
+            gb.Prod("OrderItem").Is(expression, kw("DESC"));
 
-            gb.Prod("OffsetFetchClause").Is(Kw("OFFSET"), expression, Kw("ROWS"));
+            gb.Prod("OffsetFetchClause").Is(kw("OFFSET"), expression, kw("ROWS"));
             gb.Prod("OffsetFetchClause").Is(
-                Kw("OFFSET"),
+                kw("OFFSET"),
                 expression,
-                Kw("ROWS"),
-                Kw("FETCH"),
-                Kw("NEXT"),
+                kw("ROWS"),
+                kw("FETCH"),
+                kw("NEXT"),
                 expression,
-                Kw("ROWS"),
-                Kw("ONLY"));
+                kw("ROWS"),
+                kw("ONLY"));
 
             gb.Prod("SearchCondition").Is(expression);
 
@@ -251,13 +265,13 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("Expression").Is(unaryOperator, expression);
             gb.Prod("Expression").Is(expression, binaryOperator, primaryExpression);
 
-            gb.Prod("UnaryOperator").Is(Kw("NOT"));
+            gb.Prod("UnaryOperator").Is(kw("NOT"));
             gb.Prod("UnaryOperator").Is("+");
             gb.Prod("UnaryOperator").Is("-");
             gb.Prod("UnaryOperator").Is("~");
 
-            gb.Prod("BinaryOperator").Is(Kw("OR"));
-            gb.Prod("BinaryOperator").Is(Kw("AND"));
+            gb.Prod("BinaryOperator").Is(kw("OR"));
+            gb.Prod("BinaryOperator").Is(kw("AND"));
             gb.Prod("BinaryOperator").Is("=");
             gb.Prod("BinaryOperator").Is("<>");
             gb.Prod("BinaryOperator").Is("!=");
@@ -265,9 +279,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("BinaryOperator").Is("<=");
             gb.Prod("BinaryOperator").Is(">");
             gb.Prod("BinaryOperator").Is(">=");
-            gb.Prod("BinaryOperator").Is(Kw("LIKE"));
-            gb.Prod("BinaryOperator").Is(Kw("IN"));
-            gb.Prod("BinaryOperator").Is(Kw("IS"));
+            gb.Prod("BinaryOperator").Is(kw("LIKE"));
+            gb.Prod("BinaryOperator").Is(kw("IN"));
+            gb.Prod("BinaryOperator").Is(kw("IS"));
             gb.Prod("BinaryOperator").Is("+");
             gb.Prod("BinaryOperator").Is("-");
             gb.Prod("BinaryOperator").Is("*");
@@ -282,7 +296,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("PrimaryExpression").Is("(", expression, ")");
             gb.Prod("PrimaryExpression").Is("(", expressionList, ")");
             gb.Prod("PrimaryExpression").Is("(", queryExpression, ")");
-            gb.Prod("PrimaryExpression").Is(Kw("EXISTS"), "(", queryExpression, ")");
+            gb.Prod("PrimaryExpression").Is(kw("EXISTS"), "(", queryExpression, ")");
             gb.Prod("PrimaryExpression").Is(caseExpression);
 
             gb.Prod("FunctionCall").Is(qualifiedName, "(", ")");
@@ -291,31 +305,31 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("FunctionArgumentList").Is(expression);
             gb.Prod("FunctionArgumentList").Is(functionArgumentList, ",", expression);
 
-            gb.Prod("OverClause").Is(Kw("OVER"), "(", overSpec, ")");
-            gb.Prod("OverSpec").Is(Kw("PARTITION"), Kw("BY"), expressionList, Kw("ORDER"), Kw("BY"), orderItemList);
-            gb.Prod("OverSpec").Is(Kw("PARTITION"), Kw("BY"), expressionList, Kw("ORDER"), Kw("BY"), orderItemList, Kw("ROWS"), frameClause);
+            gb.Prod("OverClause").Is(kw("OVER"), "(", overSpec, ")");
+            gb.Prod("OverSpec").Is(kw("PARTITION"), kw("BY"), expressionList, kw("ORDER"), kw("BY"), orderItemList);
+            gb.Prod("OverSpec").Is(kw("PARTITION"), kw("BY"), expressionList, kw("ORDER"), kw("BY"), orderItemList, kw("ROWS"), frameClause);
 
             gb.Prod("FrameClause").Is(frameBoundary);
-            gb.Prod("FrameClause").Is(Kw("BETWEEN"), frameBoundary, Kw("AND"), frameBoundary);
+            gb.Prod("FrameClause").Is(kw("BETWEEN"), frameBoundary, kw("AND"), frameBoundary);
 
-            gb.Prod("FrameBoundary").Is(Kw("UNBOUNDED"), Kw("PRECEDING"));
-            gb.Prod("FrameBoundary").Is(Kw("UNBOUNDED"), Kw("FOLLOWING"));
-            gb.Prod("FrameBoundary").Is(Kw("CURRENT"), Kw("ROW"));
-            gb.Prod("FrameBoundary").Is(number, Kw("PRECEDING"));
-            gb.Prod("FrameBoundary").Is(number, Kw("FOLLOWING"));
+            gb.Prod("FrameBoundary").Is(kw("UNBOUNDED"), kw("PRECEDING"));
+            gb.Prod("FrameBoundary").Is(kw("UNBOUNDED"), kw("FOLLOWING"));
+            gb.Prod("FrameBoundary").Is(kw("CURRENT"), kw("ROW"));
+            gb.Prod("FrameBoundary").Is(number, kw("PRECEDING"));
+            gb.Prod("FrameBoundary").Is(number, kw("FOLLOWING"));
 
             gb.Prod("Literal").Is(number);
             gb.Prod("Literal").Is(stringLiteral);
-            gb.Prod("Literal").Is(Kw("NULL"));
+            gb.Prod("Literal").Is(kw("NULL"));
             gb.Prod("VariableReference").Is(variable);
 
-            gb.Prod("CaseExpression").Is(Kw("CASE"), caseWhenList, Kw("END"));
-            gb.Prod("CaseExpression").Is(Kw("CASE"), caseWhenList, Kw("ELSE"), expression, Kw("END"));
-            gb.Prod("CaseExpression").Is(Kw("CASE"), expression, caseWhenList, Kw("END"));
-            gb.Prod("CaseExpression").Is(Kw("CASE"), expression, caseWhenList, Kw("ELSE"), expression, Kw("END"));
+            gb.Prod("CaseExpression").Is(kw("CASE"), caseWhenList, kw("END"));
+            gb.Prod("CaseExpression").Is(kw("CASE"), caseWhenList, kw("ELSE"), expression, kw("END"));
+            gb.Prod("CaseExpression").Is(kw("CASE"), expression, caseWhenList, kw("END"));
+            gb.Prod("CaseExpression").Is(kw("CASE"), expression, caseWhenList, kw("ELSE"), expression, kw("END"));
             gb.Prod("CaseWhenList").Is(caseWhen);
             gb.Prod("CaseWhenList").Is(caseWhenList, caseWhen);
-            gb.Prod("CaseWhen").Is(Kw("WHEN"), expression, Kw("THEN"), expression);
+            gb.Prod("CaseWhen").Is(kw("WHEN"), expression, kw("THEN"), expression);
 
             gb.Prod("ExpressionList").Is(expression);
             gb.Prod("ExpressionList").Is(expressionList, ",", expression);
@@ -332,10 +346,7 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             return gb.BuildGrammar("Start");
         }
-
-        private static KeywordTerminal Kw(string keyword)
-        {
-            return new KeywordTerminal(keyword, wholeWord: true, ignoreCase: true);
-        }
     }
 }
+
+

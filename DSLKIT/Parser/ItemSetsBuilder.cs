@@ -1,25 +1,39 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using DSLKIT.Base;
 using DSLKIT.NonTerminals;
 
 namespace DSLKIT.Parser
 {
     public class ItemSetsBuilder
     {
-        private readonly IEnumerable<Production> _productions;
+        private readonly IReadOnlyList<Production> _productions;
+        private readonly Dictionary<INonTerminal, IReadOnlyList<Production>> _productionsByLeft;
         private readonly INonTerminal _root;
-        private readonly IList<RuleSet> _sets = new List<RuleSet>();
+        private readonly List<RuleSet> _sets;
 
         public ItemSetsBuilder(IEnumerable<Production> productions, INonTerminal root)
         {
-            _productions = productions;
+            _productions = productions as IReadOnlyList<Production> ?? productions.ToList();
+            _productionsByLeft = BuildProductionsByLeft(_productions);
+            var estimatedSetCapacity = Math.Max(16, _productions.Count * 2);
+            _sets = new List<RuleSet>(estimatedSetCapacity);
             _root = root;
         }
 
         public ICollection<RuleSet> Build()
         {
-            var startProduction = _productions.FirstOrDefault(i => i.LeftNonTerminal == _root);
+            Production? startProduction = null;
+            foreach (var production in _productions)
+            {
+                if (production.LeftNonTerminal == _root)
+                {
+                    startProduction = production;
+                    break;
+                }
+            }
+
             if (startProduction is null)
             {
                 throw new InvalidOperationException($"No start production found for root non-terminal '{_root.Name}'.");
@@ -45,25 +59,46 @@ namespace DSLKIT.Parser
         {
             var anyChanges = false;
 
-            foreach (var set in _sets.ToList())
+            var setCount = _sets.Count;
+            for (var setIndex = 0; setIndex < setCount; setIndex++)
             {
-                foreach (var rule in set.Rules.Where(rule => !rule.IsFinished))
+                var set = _sets[setIndex];
+                var groupedByNextTerm = new Dictionary<ITerm, List<Rule>>(Math.Clamp(set.Rules.Count, 4, 32));
+
+                foreach (var rule in set.Rules)
                 {
-                    var newRules = set.Rules
-                        .Where(r => !r.IsFinished && r.NextTerm == rule.NextTerm)
-                        .Select(r => r.MoveDot())
-                        .ToList();
+                    if (rule.IsFinished)
+                    {
+                        continue;
+                    }
+
+                    if (!groupedByNextTerm.TryGetValue(rule.NextTerm, out var group))
+                    {
+                        group = [];
+                        groupedByNextTerm[rule.NextTerm] = group;
+                    }
+
+                    group.Add(rule);
+                }
+
+                foreach (var group in groupedByNextTerm)
+                {
+                    var newRules = new List<Rule>(group.Value.Count);
+                    foreach (var rule in group.Value)
+                    {
+                        newRules.Add(rule.MoveDot());
+                    }
 
                     var existsSet = GetSetBySetDefinitionRules(newRules);
                     if (existsSet != null)
                     {
-                        set.SetArrow(rule.NextTerm, existsSet);
+                        set.SetArrow(group.Key, existsSet);
                         continue;
                     }
 
                     var newRuleSet = new RuleSet(_sets.Count, newRules);
                     _sets.Add(newRuleSet);
-                    set.SetArrow(rule.NextTerm, newRuleSet);
+                    set.SetArrow(group.Key, newRuleSet);
 
                     anyChanges = true;
                 }
@@ -79,44 +114,44 @@ namespace DSLKIT.Parser
 
         private bool FillRuleSet(RuleSet set)
         {
-            bool changed;
             var anyChanges = false;
-            do
+            for (var ruleIndex = 0; ruleIndex < set.Rules.Count; ruleIndex++)
             {
-                changed = false;
-                foreach (var rule in set.Rules.Where(r => !r.IsFinished).ToList())
+                var rule = set.Rules[ruleIndex];
+                if (rule.IsFinished || rule.NextTerm is not INonTerminal nextNonTerminal)
                 {
-                    var nextTerm = rule.NextTerm;
-                    if (!(nextTerm is INonTerminal nextNonTerminal))
-                    {
-                        continue;
-                    }
+                    continue;
+                }
 
-                    var toAdd = _productions
-                        .Where(p => p.LeftNonTerminal == nextNonTerminal)
-                        .Select(i => new Rule(i))
-                        .ToList();
-                    if (!toAdd.Any())
-                    {
-                        throw new InvalidOperationException(
-                            $"No productions found for non-terminal '{nextNonTerminal.Name}'.");
-                    }
+                if (!_productionsByLeft.TryGetValue(nextNonTerminal, out var productions))
+                {
+                    throw new InvalidOperationException(
+                        $"No productions found for non-terminal '{nextNonTerminal.Name}'.");
+                }
 
-                    toAdd = toAdd.Except(set.Rules).ToList();
-                    if (toAdd.Any())
+                foreach (var production in productions)
+                {
+                    if (set.AddRule(new Rule(production)))
                     {
-                        foreach (var item in toAdd)
-                        {
-                            set.AddRule(item);
-                        }
-
-                        changed = true;
                         anyChanges = true;
                     }
                 }
-            } while (changed);
+            }
 
             return anyChanges;
         }
+
+        private static Dictionary<INonTerminal, IReadOnlyList<Production>> BuildProductionsByLeft(
+            IReadOnlyList<Production> productions)
+        {
+            var result = new Dictionary<INonTerminal, IReadOnlyList<Production>>(Math.Max(4, productions.Count));
+            foreach (var grouping in productions.GroupBy(production => production.LeftNonTerminal))
+            {
+                result[grouping.Key] = grouping.ToList();
+            }
+
+            return result;
+        }
     }
 }
+

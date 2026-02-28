@@ -27,13 +27,13 @@ namespace DSLKIT.Parser
         {
             Name = name;
             Root = root;
-            Terminals = terminals.ToList();
-            NonTerminals = nonTerminals.ToList();
-            Productions = productions.ToList();
-            ExProductions = exProductions.ToList();
+            Terminals = terminals as IReadOnlyCollection<ITerminal> ?? terminals.ToList();
+            NonTerminals = nonTerminals as IReadOnlyCollection<INonTerminal> ?? nonTerminals.ToList();
+            Productions = productions as IReadOnlyCollection<Production> ?? productions.ToList();
+            ExProductions = exProductions as IReadOnlyCollection<ExProduction> ?? exProductions.ToList();
             Firsts = firsts;
             Follows = follows;
-            RuleSets = ruleSets.ToList();
+            RuleSets = ruleSets as IReadOnlyCollection<RuleSet> ?? ruleSets.ToList();
             TranslationTable = translationTable;
             ActionAndGotoTable = actionAndGotoTable;
             Eof = eof ?? EofTerminal.Instance;

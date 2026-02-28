@@ -13,6 +13,7 @@ namespace DSLKIT.Parser
         private readonly IReadOnlyList<Rule> _rulesView;
         private readonly IReadOnlyDictionary<ITerm, RuleSet> _arrowsView;
         private readonly HashSet<Rule> _kernelRules;
+        private readonly HashSet<Rule> _ruleLookup;
 
         public RuleSet(int setNumber, IEnumerable<Rule> rules)
         {
@@ -26,6 +27,7 @@ namespace DSLKIT.Parser
             _rulesView = _rules.AsReadOnly();
             _arrowsView = new ReadOnlyDictionary<ITerm, RuleSet>(_arrows);
             _kernelRules = _rules.ToHashSet();
+            _ruleLookup = _rules.ToHashSet();
 
             SetNumber = setNumber;
             KernelRuleCount = _rules.Count;
@@ -36,14 +38,20 @@ namespace DSLKIT.Parser
         public int KernelRuleCount { get; }
         public int SetNumber { get; set; }
 
-        internal void AddRule(Rule rule)
+        internal bool AddRule(Rule rule)
         {
             if (rule is null)
             {
                 throw new ArgumentNullException(nameof(rule));
             }
 
+            if (!_ruleLookup.Add(rule))
+            {
+                return false;
+            }
+
             _rules.Add(rule);
+            return true;
         }
 
         internal void SetArrow(ITerm term, RuleSet target)

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using DSLKIT.Base;
 using DSLKIT.NonTerminals;
@@ -57,7 +57,7 @@ namespace DSLKIT.Parser
 
         private void ReductionsSubStep1()
         {
-            var rule2FollowSet = new Dictionary<ExProduction, IReadOnlyCollection<ITerm>>();
+            var rule2FollowSet = new Dictionary<ExProduction, IReadOnlyCollection<ITerm>>(_exProductions.Count);
             foreach (var exProduction in _exProductions)
             {
                 rule2FollowSet[exProduction] = _follows[exProduction.ExLeftNonTerminal];
@@ -65,7 +65,7 @@ namespace DSLKIT.Parser
 
             OnReductionStep0?.Invoke(rule2FollowSet);
 
-            _mergedRows = new List<MergedRow>();
+            _mergedRows = new List<MergedRow>(_exProductions.Count);
             var prods = new List<ExProduction>(_exProductions);
             do
             {
@@ -185,9 +185,8 @@ namespace DSLKIT.Parser
                     {
                         var key = new KeyValuePair<ITerm, RuleSet>(terminal, mergedRow.FinalSet);
 
-                        if (actionAndGotoTable.ActionTable.ContainsKey(key))
+                        if (actionAndGotoTable.ActionTable.TryGetValue(key, out var existingAction))
                         {
-                            var existingAction = actionAndGotoTable.ActionTable[key];
                             var conflictType = existingAction is ShiftAction ? "shift/reduce" : "reduce/reduce";
 
                             System.Diagnostics.Debug.WriteLine(

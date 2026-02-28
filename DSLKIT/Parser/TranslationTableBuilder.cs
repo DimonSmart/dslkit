@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using DSLKIT.Base;
 
@@ -9,7 +9,8 @@ namespace DSLKIT.Parser
         public static TranslationTable Build(IEnumerable<RuleSet> ruleSets)
         {
             var sets = ruleSets.ToList();
-            var dict = new Dictionary<KeyValuePair<ITerm, RuleSet>, RuleSet>();
+            var recordCapacity = sets.Sum(set => set.Arrows.Count);
+            var dict = new Dictionary<KeyValuePair<ITerm, RuleSet>, RuleSet>(recordCapacity);
             foreach (var set in sets)
             {
                 foreach (var arrow in set.Arrows)

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Linq;
 using DSLKIT.Base;
 
@@ -18,7 +17,7 @@ namespace DSLKIT.Parser
 
         public IReadOnlyDictionary<KeyValuePair<ITerm, RuleSet>, RuleSet> GetAllRecords()
         {
-            return new ReadOnlyDictionary<KeyValuePair<ITerm, RuleSet>, RuleSet>(_table);
+            return _table;
         }
 
         public bool TryGetValue(ITerm x, RuleSet y, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out RuleSet? result)

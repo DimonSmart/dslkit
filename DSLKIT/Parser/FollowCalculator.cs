@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -26,7 +26,7 @@ namespace DSLKIT.Parser
         private readonly IEnumerable<ExProduction> _exProductions;
         private readonly IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> _firsts;
 
-        private readonly Dictionary<IExNonTerminal, List<ITerm>> _follow =
+        private readonly Dictionary<IExNonTerminal, HashSet<ITerm>> _follow =
             [];
 
         private readonly INonTerminal _root;
@@ -45,7 +45,7 @@ namespace DSLKIT.Parser
         public IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> Calculate()
         {
             _follow.Add(_exProductions.Select(p => p.ExLeftNonTerminal)
-                .Single(p => p.NonTerminal == _root && p.To == null), new List<ITerm> { _eof });
+                .Single(p => p.NonTerminal == _root && p.To == null), new HashSet<ITerm> { _eof });
 
             bool updated;
             do
@@ -102,23 +102,17 @@ namespace DSLKIT.Parser
             return new ReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>>(
                 _follow.ToDictionary(
                     pair => pair.Key,
-                    pair => (IReadOnlyCollection<ITerm>)pair.Value.AsReadOnly()));
+                    pair => (IReadOnlyCollection<ITerm>)pair.Value.ToList()));
         }
 
         private bool AddFollow(IExNonTerminal exNonTerminal, ITerm term)
         {
             if (_follow.TryGetValue(exNonTerminal, out var follow))
             {
-                if (follow.Contains(term))
-                {
-                    return false;
-                }
-
-                follow.Add(term);
-                return true;
+                return follow.Add(term);
             }
 
-            _follow[exNonTerminal] = new List<ITerm> { term };
+            _follow[exNonTerminal] = new HashSet<ITerm> { term };
             return true;
         }
 

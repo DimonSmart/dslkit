@@ -1,4 +1,6 @@
-﻿using System.Text.RegularExpressions;
+using System;
+using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 using DSLKIT.Helpers;
 using DSLKIT.Lexer;
 using DSLKIT.Tokens;
@@ -7,13 +9,15 @@ namespace DSLKIT.Terminals
 {
     public abstract class RegExpTerminalBase : ITerminal
     {
+        private static readonly ConcurrentDictionary<(string Pattern, RegexOptions Options), Regex> RegexCache = [];
         private readonly char? _previewChar;
         private readonly Regex _regex;
 
         protected RegExpTerminalBase(string pattern, char? previewChar)
         {
             _previewChar = previewChar;
-            _regex = new Regex(pattern, RegexOptions.Compiled);
+            var options = GetRegexOptions();
+            _regex = RegexCache.GetOrAdd((pattern, options), key => new Regex(key.Pattern, key.Options));
         }
 
         public abstract string Name { get; }
@@ -63,5 +67,11 @@ namespace DSLKIT.Terminals
                 Value: value,
                 Terminal: this);
         }
+
+        private static RegexOptions GetRegexOptions()
+        {
+            return RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.Compiled;
+        }
     }
 }
+
