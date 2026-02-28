@@ -162,11 +162,20 @@ namespace DSLKIT.GrammarExamples.MsSql
             var insertStatement = gb.NT("InsertStatement");
             var insertColumnList = gb.NT("InsertColumnList");
             var insertValueList = gb.NT("InsertValueList");
+            var ifStatement = gb.NT("IfStatement");
+            var beginEndStatement = gb.NT("BeginEndStatement");
+            var setStatement = gb.NT("SetStatement");
+            var printStatement = gb.NT("PrintStatement");
+            var declareStatement = gb.NT("DeclareStatement");
+            var declareItemList = gb.NT("DeclareItemList");
+            var declareItem = gb.NT("DeclareItem");
+            var typeSpec = gb.NT("TypeSpec");
             var useStatement = gb.NT("UseStatement");
             var createProcStatement = gb.NT("CreateProcStatement");
             var createRoleStatement = gb.NT("CreateRoleStatement");
             var createSchemaStatement = gb.NT("CreateSchemaStatement");
             var schemaNameClause = gb.NT("SchemaNameClause");
+            var createViewStatement = gb.NT("CreateViewStatement");
             var createDatabaseStatement = gb.NT("CreateDatabaseStatement");
             var createDatabaseClauseList = gb.NT("CreateDatabaseClauseList");
             var createDatabaseClause = gb.NT("CreateDatabaseClause");
@@ -251,10 +260,16 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("Statement").Is(queryStatement);
             gb.Prod("Statement").Is(updateStatement);
             gb.Prod("Statement").Is(insertStatement);
+            gb.Prod("Statement").Is(ifStatement);
+            gb.Prod("Statement").Is(beginEndStatement);
+            gb.Prod("Statement").Is(setStatement);
+            gb.Prod("Statement").Is(printStatement);
+            gb.Prod("Statement").Is(declareStatement);
             gb.Prod("Statement").Is(useStatement);
             gb.Prod("Statement").Is(createProcStatement);
             gb.Prod("Statement").Is(createRoleStatement);
             gb.Prod("Statement").Is(createSchemaStatement);
+            gb.Prod("Statement").Is(createViewStatement);
             gb.Prod("Statement").Is(createDatabaseStatement);
 
             gb.Prod("QueryStatement").Is(queryExpression);
@@ -281,6 +296,28 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("InsertValueList").Is(expression);
             gb.Prod("InsertValueList").Is(insertValueList, ",", expression);
 
+            gb.Prod("IfStatement").Is(kw("IF"), searchCondition, statement);
+            gb.Prod("IfStatement").Is(kw("IF"), searchCondition, statement, kw("ELSE"), statement);
+            gb.Prod("BeginEndStatement").Is(kw("BEGIN"), statementList, kw("END"));
+            gb.Prod("BeginEndStatement").Is(kw("BEGIN"), statementList, statementSeparatorList, kw("END"));
+
+            gb.Prod("SetStatement").Is(kw("SET"), variableReference, "=", expression);
+            gb.Prod("SetStatement").Is(kw("SET"), identifierTerm, kw("ON"));
+            gb.Prod("SetStatement").Is(kw("SET"), identifierTerm, kw("OFF"));
+            gb.Prod("SetStatement").Is(kw("SET"), identifierTerm, "=", expression);
+            gb.Prod("SetStatement").Is(kw("SET"), identifierTerm, identifierTerm);
+
+            gb.Prod("PrintStatement").Is(kw("PRINT"), expression);
+
+            gb.Prod("DeclareStatement").Is(kw("DECLARE"), declareItemList);
+            gb.Prod("DeclareItemList").Is(declareItem);
+            gb.Prod("DeclareItemList").Is(declareItemList, ",", declareItem);
+            gb.Prod("DeclareItem").Is(variableReference, typeSpec);
+            gb.Prod("DeclareItem").Is(variableReference, typeSpec, "=", expression);
+            gb.Prod("TypeSpec").Is(qualifiedName);
+            gb.Prod("TypeSpec").Is(qualifiedName, "(", expression, ")");
+            gb.Prod("TypeSpec").Is(qualifiedName, "(", expression, ",", expression, ")");
+
             gb.Prod("UseStatement").Is(kw("USE"), identifierTerm);
 
             gb.Prod("CreateProcStatement").Is(kw("CREATE"), kw("PROC"), identifierTerm, kw("AS"), kw("BEGIN"), procStatementList, kw("END"));
@@ -295,6 +332,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("SchemaNameClause").Is(identifierTerm);
             gb.Prod("SchemaNameClause").Is(kw("AUTHORIZATION"), identifierTerm);
             gb.Prod("SchemaNameClause").Is(identifierTerm, kw("AUTHORIZATION"), identifierTerm);
+
+            gb.Prod("CreateViewStatement").Is(kw("CREATE"), kw("VIEW"), qualifiedName, kw("AS"), queryExpression);
 
             gb.Prod("CreateDatabaseStatement").Is(kw("CREATE"), kw("DATABASE"), identifierTerm);
             gb.Prod("CreateDatabaseStatement").Is(kw("CREATE"), kw("DATABASE"), identifierTerm, createDatabaseClauseList);

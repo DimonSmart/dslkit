@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using DSLKIT.GrammarExamples.MsSql;
 using Xunit;
 using Xunit.Abstractions;
@@ -19,7 +20,7 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
-        public void ParseAndFormat_ShouldProcessSqlServerSamples_AndWriteDetailedReport()
+        public void ParseSelectBatchesSplitByGo_ShouldProcessSqlServerSamples_AndWriteDetailedReport()
         {
             var repositoryRoot = ResolveRepositoryRoot();
             var sqlSamplesRoot = Path.Combine(repositoryRoot, "sql-server-samples");
@@ -30,60 +31,81 @@ namespace DSLKIT.Test.GrammarExamples
 
             var successful = new List<SqlScriptRunResult>();
             var failed = new List<SqlScriptRunResult>();
+            var totalBatchCount = 0;
+            var parsedSelectBatchCount = 0;
+            var skippedWithoutSelectCount = 0;
 
             foreach (var sqlFilePath in sqlFiles)
             {
                 var relativePath = Path.GetRelativePath(sqlSamplesRoot, sqlFilePath);
                 var script = File.ReadAllText(sqlFilePath);
+                var batches = SplitScriptByGo(script);
+                totalBatchCount += batches.Count;
 
-                try
+                foreach (var batch in batches)
                 {
-                    var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
-                    if (!parseResult.IsSuccess || parseResult.ParseTree == null)
+                    if (string.IsNullOrWhiteSpace(batch.Text))
                     {
-                        failed.Add(SqlScriptRunResult.CreateFailure(
-                            relativePath,
-                            script.Length,
-                            "Parse",
-                            NormalizeErrorMessage(
-                                $"Position: {parseResult.Error?.ErrorPosition}; Message: {parseResult.Error?.Message ?? "Parse failed."}")));
                         continue;
                     }
 
-                    var formatResult = ModernMsSqlFormatter.TryFormat(script);
-                    if (!formatResult.IsSuccess)
+                    if (!ContainsSelect(batch.Text))
                     {
-                        failed.Add(SqlScriptRunResult.CreateFailure(
-                            relativePath,
-                            script.Length,
-                            "Format",
-                            NormalizeErrorMessage(formatResult.ErrorMessage ?? "Formatting failed.")));
+                        skippedWithoutSelectCount++;
                         continue;
                     }
 
-                    successful.Add(SqlScriptRunResult.CreateSuccess(relativePath, script.Length));
-                }
-                catch (Exception exception)
-                {
-                    failed.Add(SqlScriptRunResult.CreateFailure(
-                        relativePath,
-                        script.Length,
-                        "Exception",
-                        NormalizeErrorMessage($"{exception.GetType().Name}: {exception.Message}")));
+                    parsedSelectBatchCount++;
+                    var batchPath = $"{relativePath} [batch {batch.Index}]";
+
+                    try
+                    {
+                        var parseResult = ModernMsSqlGrammarExample.ParseScript(batch.Text);
+                        if (!parseResult.IsSuccess || parseResult.ParseTree == null)
+                        {
+                            failed.Add(SqlScriptRunResult.CreateFailure(
+                                batchPath,
+                                batch.Text.Length,
+                                "Parse",
+                                NormalizeErrorMessage(
+                                    $"Position: {parseResult.Error?.ErrorPosition}; Message: {parseResult.Error?.Message ?? "Parse failed."}")));
+                            continue;
+                        }
+
+                        successful.Add(SqlScriptRunResult.CreateSuccess(batchPath, batch.Text.Length));
+                    }
+                    catch (Exception exception)
+                    {
+                        failed.Add(SqlScriptRunResult.CreateFailure(
+                            batchPath,
+                            batch.Text.Length,
+                            "Exception",
+                            NormalizeErrorMessage($"{exception.GetType().Name}: {exception.Message}")));
+                    }
                 }
             }
 
             var reportPath = Path.Combine(
                 repositoryRoot,
                 "test-results",
-                "mssql-formatter-sql-server-samples-report.txt");
+                "mssql-parser-select-batches-sql-server-samples-report.txt");
             Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
-            var report = BuildReport(sqlSamplesRoot, sqlFiles.Count, successful, failed);
+            var report = BuildReport(
+                sqlSamplesRoot,
+                sqlFiles.Count,
+                totalBatchCount,
+                parsedSelectBatchCount,
+                skippedWithoutSelectCount,
+                successful,
+                failed);
             File.WriteAllText(reportPath, report, Encoding.UTF8);
 
             testOutput.WriteLine($"Total files: {sqlFiles.Count}");
-            testOutput.WriteLine($"Successful: {successful.Count}");
-            testOutput.WriteLine($"Failed: {failed.Count}");
+            testOutput.WriteLine($"Total batches: {totalBatchCount}");
+            testOutput.WriteLine($"Parsed SELECT batches: {parsedSelectBatchCount}");
+            testOutput.WriteLine($"Skipped non-SELECT batches: {skippedWithoutSelectCount}");
+            testOutput.WriteLine($"Successful SELECT batches: {successful.Count}");
+            testOutput.WriteLine($"Failed SELECT batches: {failed.Count}");
             testOutput.WriteLine($"Detailed report: {reportPath}");
 
             var crashFailures = failed.Where(result => result.Stage == "Exception").ToList();
@@ -94,25 +116,31 @@ namespace DSLKIT.Test.GrammarExamples
 
         private static string BuildReport(
             string sqlSamplesRoot,
-            int totalCount,
+            int totalFileCount,
+            int totalBatchCount,
+            int parsedSelectBatchCount,
+            int skippedWithoutSelectCount,
             IReadOnlyCollection<SqlScriptRunResult> successful,
             IReadOnlyCollection<SqlScriptRunResult> failed)
         {
             var reportBuilder = new StringBuilder();
             reportBuilder.AppendLine($"Generated (UTC): {DateTimeOffset.UtcNow:O}");
             reportBuilder.AppendLine($"SQL samples root: {sqlSamplesRoot}");
-            reportBuilder.AppendLine($"Total files: {totalCount}");
-            reportBuilder.AppendLine($"Successful: {successful.Count}");
-            reportBuilder.AppendLine($"Failed: {failed.Count}");
+            reportBuilder.AppendLine($"Total files: {totalFileCount}");
+            reportBuilder.AppendLine($"Total batches (split by GO): {totalBatchCount}");
+            reportBuilder.AppendLine($"Parsed SELECT batches: {parsedSelectBatchCount}");
+            reportBuilder.AppendLine($"Skipped non-SELECT batches: {skippedWithoutSelectCount}");
+            reportBuilder.AppendLine($"Successful SELECT batches: {successful.Count}");
+            reportBuilder.AppendLine($"Failed SELECT batches: {failed.Count}");
             reportBuilder.AppendLine();
-            reportBuilder.AppendLine("Successful files:");
+            reportBuilder.AppendLine("Successful batches:");
             foreach (var success in successful)
             {
                 reportBuilder.AppendLine($"- {success.RelativePath} ({success.CharactersCount} chars)");
             }
 
             reportBuilder.AppendLine();
-            reportBuilder.AppendLine("Failed files:");
+            reportBuilder.AppendLine("Failed batches:");
             foreach (var failure in failed)
             {
                 reportBuilder.AppendLine(
@@ -152,6 +180,58 @@ namespace DSLKIT.Test.GrammarExamples
                 .Trim();
         }
 
+        private static IReadOnlyList<SqlBatch> SplitScriptByGo(string script)
+        {
+            var normalized = script.Replace("\r\n", "\n");
+            var lines = normalized.Split('\n');
+            var batches = new List<SqlBatch>();
+            var currentBatchBuilder = new StringBuilder();
+            var batchIndex = 1;
+
+            foreach (var line in lines)
+            {
+                if (IsGoSeparatorLine(line))
+                {
+                    var batchText = currentBatchBuilder.ToString().TrimEnd('\n');
+                    batches.Add(new SqlBatch(batchIndex, batchText));
+                    batchIndex++;
+                    currentBatchBuilder.Clear();
+                    continue;
+                }
+
+                currentBatchBuilder.Append(line);
+                currentBatchBuilder.Append('\n');
+            }
+
+            var lastBatchText = currentBatchBuilder.ToString().TrimEnd('\n');
+            batches.Add(new SqlBatch(batchIndex, lastBatchText));
+            return batches;
+        }
+
+        private static bool IsGoSeparatorLine(string line)
+        {
+            var trimmed = line.Trim();
+            if (!trimmed.StartsWith("GO", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (trimmed.Length == 2)
+            {
+                return true;
+            }
+
+            var tail = trimmed[2..].Trim();
+            return tail.Length == 0 ||
+                tail.StartsWith("--", StringComparison.Ordinal) ||
+                int.TryParse(tail, out _);
+        }
+
+        private static bool ContainsSelect(string sqlBatch)
+        {
+            return Regex.IsMatch(sqlBatch, @"\bSELECT\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        }
+
         private sealed class SqlScriptRunResult
         {
             private SqlScriptRunResult(string relativePath, int charactersCount, bool isSuccess, string stage, string errorMessage)
@@ -182,6 +262,19 @@ namespace DSLKIT.Test.GrammarExamples
             {
                 return new SqlScriptRunResult(relativePath, charactersCount, false, stage, errorMessage);
             }
+        }
+
+        private sealed class SqlBatch
+        {
+            public SqlBatch(int index, string text)
+            {
+                Index = index;
+                Text = text;
+            }
+
+            public int Index { get; }
+
+            public string Text { get; }
         }
     }
 }

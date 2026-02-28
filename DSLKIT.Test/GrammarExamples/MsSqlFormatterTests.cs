@@ -458,6 +458,30 @@ namespace DSLKIT.Test.GrammarExamples
                 "formatted CREATE SCHEMA should preserve significant SQL tokens.");
         }
 
+        [Fact]
+        public void TryFormat_ShouldFormatIfDeclareSetAndCreateView()
+        {
+            const string sourceSql = """
+                IF EXISTS (SELECT 1 FROM dbo.TestTable)
+                BEGIN
+                    DECLARE @counter INT = 1;
+                    SET @counter = @counter + 1;
+                    PRINT @counter;
+                    SELECT @counter;
+                END;
+                GO
+                CREATE VIEW dbo.vTest AS SELECT 1 AS A;
+                """;
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql);
+
+            result.IsSuccess.Should().BeTrue();
+            var formattedSql = NormalizeLineEndings(result.FormattedSql!);
+            NormalizeSql(formattedSql).Should().Be(
+                NormalizeSql(sourceSql),
+                "formatted output should preserve significant SQL tokens for IF/DECLARE/SET/CREATE VIEW.");
+        }
+
         public static IEnumerable<object[]> ValidFormattingScripts()
         {
             var scriptsRoot = ResolveScriptsRoot();

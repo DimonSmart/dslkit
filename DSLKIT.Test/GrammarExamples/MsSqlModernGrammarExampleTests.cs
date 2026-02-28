@@ -93,6 +93,27 @@ namespace DSLKIT.Test.GrammarExamples
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
 
+        [Fact]
+        public void ParseScript_ShouldParseIfDeclareSetAndCreateView()
+        {
+            const string script = """
+                IF EXISTS (SELECT 1 FROM dbo.TestTable)
+                BEGIN
+                    DECLARE @counter INT = 1;
+                    SET @counter = @counter + 1;
+                    PRINT @counter;
+                    SELECT @counter;
+                END;
+                GO
+                CREATE VIEW dbo.vTest AS SELECT 1 AS A;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
         public static IEnumerable<object[]> ValidSqlScripts()
         {
             var scriptsRoot = ResolveScriptsRoot();
