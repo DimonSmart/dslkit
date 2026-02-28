@@ -51,6 +51,9 @@
       <None Update="GrammarExamples\TestData\MsSql\Valid\**\*.sql">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="GrammarExamples\TestData\MsSql\Formatting\Valid\**\*.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
       <None Update="GrammarExamples\TestData\Ini\Valid\**\*.ini">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>

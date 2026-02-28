@@ -573,6 +573,73 @@ code {
     font-size: 0.82rem;
 }
 
+.dsl-sql-formatting-tab {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    gap: 0.65rem;
+}
+
+.dsl-sql-formatting-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.dsl-sql-options {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.35rem;
+    background: #f8fafc;
+}
+
+.dsl-sql-formatting-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.75rem;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.dsl-sql-pane {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.dsl-sql-pane-label {
+    margin-bottom: 0.35rem;
+    color: #475569;
+    font-weight: 600;
+}
+
+.dsl-sql-editor {
+    flex: 1 1 auto;
+    min-height: 24rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.4rem;
+    background: #fff;
+    color: #0f172a;
+    line-height: 1.45;
+    font-family: Consolas, "Cascadia Code", "Courier New", monospace;
+    font-size: 0.92rem;
+    resize: vertical;
+}
+
+.dsl-sql-output {
+    background: #f8fafc;
+}
+
+.dsl-sql-error {
+    margin-bottom: 0;
+}
+
 @media (max-width: 1199.98px) {
     .dsl-workspace {
         height: auto;
@@ -591,5 +658,13 @@ code {
 @media (max-width: 991.98px) {
     .dsl-ast-layout {
         grid-template-columns: 1fr;
+    }
+
+    .dsl-sql-formatting-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .dsl-sql-editor {
+        min-height: 14rem;
     }
 }

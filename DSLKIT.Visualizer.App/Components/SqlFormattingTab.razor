@@ -1,0 +1,110 @@
+@using DSLKIT.GrammarExamples.MsSql
+@using DSLKIT.GrammarExamples.MsSql.Formatting
+
+<section class="dsl-sql-formatting-tab">
+    <div class="dsl-sql-formatting-toolbar">
+        <div class="dsl-sql-options">
+            <label class="form-check-label d-flex align-items-center gap-2 mb-0" for="sql-uppercase-keywords">
+                <input id="sql-uppercase-keywords"
+                       class="form-check-input mt-0"
+                       type="checkbox"
+                       checked="@uppercaseKeywords"
+                       @onchange="OnUppercaseKeywordsChangedAsync" />
+                <span>Uppercase keywords</span>
+            </label>
+        </div>
+
+        <button class="btn btn-primary btn-sm"
+                @onclick="OnFormatRequestedAsync">
+            Format SQL
+        </button>
+    </div>
+
+    <div class="dsl-sql-formatting-layout">
+        <div class="dsl-sql-pane">
+            <label class="dsl-sql-pane-label" for="sql-source-input">Original SQL</label>
+            <textarea id="sql-source-input"
+                      class="form-control dsl-sql-editor"
+                      spellcheck="false"
+                      value="@sourceSql"
+                      @oninput="OnSourceSqlChangedAsync"></textarea>
+        </div>
+
+        <div class="dsl-sql-pane">
+            <label class="dsl-sql-pane-label" for="sql-formatted-output">Formatted SQL</label>
+
+            @if (!string.IsNullOrWhiteSpace(formattingError))
+            {
+                <div class="alert alert-danger dsl-sql-error" role="alert">
+                    @formattingError
+                </div>
+            }
+            else
+            {
+                <textarea id="sql-formatted-output"
+                          class="form-control dsl-sql-editor dsl-sql-output"
+                          readonly
+                          spellcheck="false"
+                          value="@formattedSql"></textarea>
+            }
+        </div>
+    </div>
+</section>
+
+@code {
+    private string sourceSql = "select c.CustomerId as CustomerId, c.Name as Name from dbo.Customers as c;";
+    private string formattedSql = string.Empty;
+    private string? formattingError;
+    private bool uppercaseKeywords = true;
+
+    private Task OnSourceSqlChangedAsync(ChangeEventArgs args)
+    {
+        sourceSql = args.Value?.ToString() ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task OnUppercaseKeywordsChangedAsync(ChangeEventArgs args)
+    {
+        if (args.Value is bool value)
+        {
+            uppercaseKeywords = value;
+            return Task.CompletedTask;
+        }
+
+        if (bool.TryParse(args.Value?.ToString(), out value))
+        {
+            uppercaseKeywords = value;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task OnFormatRequestedAsync()
+    {
+        try
+        {
+            var options = new SqlFormattingOptions
+            {
+                UppercaseKeywords = uppercaseKeywords
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            if (!result.IsSuccess)
+            {
+                formattedSql = string.Empty;
+                formattingError = result.ErrorMessage ?? "Parse failed.";
+                return Task.CompletedTask;
+            }
+
+            formattingError = null;
+            formattedSql = result.FormattedSql ?? string.Empty;
+        }
+        catch (Exception ex)
+        {
+            formattedSql = string.Empty;
+            formattingError = $"Unexpected formatter error: {ex.Message}";
+        }
+
+        return Task.CompletedTask;
+    }
+}
