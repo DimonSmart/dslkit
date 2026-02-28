@@ -416,6 +416,34 @@ namespace DSLKIT.Test.GrammarExamples
             formattedSql.Should().Contain("GO");
         }
 
+        [Fact]
+        public void TryFormat_ShouldFormatCreateRole_WithAuthorization()
+        {
+            const string sourceSql = "CREATE ROLE [Plains Sales] AUTHORIZATION [dbo];";
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql);
+
+            result.IsSuccess.Should().BeTrue();
+            var formattedSql = NormalizeLineEndings(result.FormattedSql!);
+            NormalizeSql(formattedSql).Should().Be(
+                NormalizeSql("CREATE ROLE [Plains Sales] AUTHORIZATION [dbo];"),
+                "formatted CREATE ROLE should preserve significant SQL tokens.");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldFormatUseStatement()
+        {
+            const string sourceSql = "USE [Clinic]; GO";
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql);
+
+            result.IsSuccess.Should().BeTrue();
+            var formattedSql = NormalizeLineEndings(result.FormattedSql!);
+            NormalizeSql(formattedSql).Should().Be(
+                NormalizeSql("USE [Clinic]; GO"),
+                "formatted USE should preserve significant SQL tokens.");
+        }
+
         public static IEnumerable<object[]> ValidFormattingScripts()
         {
             var scriptsRoot = ResolveScriptsRoot();

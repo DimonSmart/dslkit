@@ -162,7 +162,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             var insertStatement = gb.NT("InsertStatement");
             var insertColumnList = gb.NT("InsertColumnList");
             var insertValueList = gb.NT("InsertValueList");
+            var useStatement = gb.NT("UseStatement");
             var createProcStatement = gb.NT("CreateProcStatement");
+            var createRoleStatement = gb.NT("CreateRoleStatement");
             var createDatabaseStatement = gb.NT("CreateDatabaseStatement");
             var createDatabaseClauseList = gb.NT("CreateDatabaseClauseList");
             var createDatabaseClause = gb.NT("CreateDatabaseClause");
@@ -247,7 +249,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("Statement").Is(queryStatement);
             gb.Prod("Statement").Is(updateStatement);
             gb.Prod("Statement").Is(insertStatement);
+            gb.Prod("Statement").Is(useStatement);
             gb.Prod("Statement").Is(createProcStatement);
+            gb.Prod("Statement").Is(createRoleStatement);
             gb.Prod("Statement").Is(createDatabaseStatement);
 
             gb.Prod("QueryStatement").Is(queryExpression);
@@ -274,10 +278,15 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("InsertValueList").Is(expression);
             gb.Prod("InsertValueList").Is(insertValueList, ",", expression);
 
+            gb.Prod("UseStatement").Is(kw("USE"), identifierTerm);
+
             gb.Prod("CreateProcStatement").Is(kw("CREATE"), kw("PROC"), identifierTerm, kw("AS"), kw("BEGIN"), procStatementList, kw("END"));
             gb.Prod("CreateProcStatement").Is(kw("CREATE"), kw("PROCEDURE"), identifierTerm, kw("AS"), kw("BEGIN"), procStatementList, kw("END"));
             gb.Prod("ProcStatementList").Is(statement);
             gb.Prod("ProcStatementList").Is(procStatementList, ";", statement);
+
+            gb.Prod("CreateRoleStatement").Is(kw("CREATE"), kw("ROLE"), identifierTerm);
+            gb.Prod("CreateRoleStatement").Is(kw("CREATE"), kw("ROLE"), identifierTerm, kw("AUTHORIZATION"), identifierTerm);
 
             gb.Prod("CreateDatabaseStatement").Is(kw("CREATE"), kw("DATABASE"), identifierTerm);
             gb.Prod("CreateDatabaseStatement").Is(kw("CREATE"), kw("DATABASE"), identifierTerm, createDatabaseClauseList);

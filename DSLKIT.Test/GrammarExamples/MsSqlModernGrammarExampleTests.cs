@@ -60,6 +60,28 @@ namespace DSLKIT.Test.GrammarExamples
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
 
+        [Fact]
+        public void ParseScript_ShouldParseCreateRole_WithAuthorization()
+        {
+            const string script = "CREATE ROLE [Plains Sales] AUTHORIZATION [dbo];";
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseUseStatement()
+        {
+            const string script = "USE [Clinic]; GO";
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
         public static IEnumerable<object[]> ValidSqlScripts()
         {
             var scriptsRoot = ResolveScriptsRoot();
