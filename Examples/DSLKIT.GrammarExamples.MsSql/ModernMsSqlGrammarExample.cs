@@ -309,6 +309,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("TableFactor").Is(functionCall, kw("AS"), identifierTerm);
             gb.Prod("TableFactor").Is("(", queryExpression, ")", kw("AS"), identifierTerm);
 
+            gb.Prod("JoinPart").Is(kw("JOIN"), tableFactor, kw("ON"), searchCondition);
             gb.Prod("JoinPart").Is(joinType, kw("JOIN"), tableFactor, kw("ON"), searchCondition);
             gb.Prod("JoinPart").Is(kw("CROSS"), kw("JOIN"), tableFactor);
             gb.Prod("JoinPart").Is(kw("CROSS"), kw("APPLY"), tableFactor);
