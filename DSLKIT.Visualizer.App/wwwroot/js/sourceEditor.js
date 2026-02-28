@@ -28,3 +28,29 @@ window.dslkitSourceEditor = {
         this.revealSelection(element, start, end);
     }
 };
+
+window.dslkitSqlEditor = {
+    autoSizeTextAreaById(elementId, minHeight) {
+        if (typeof elementId !== "string" || !elementId) {
+            return;
+        }
+
+        const element = document.getElementById(elementId);
+        if (!element || element.tagName !== "TEXTAREA") {
+            return;
+        }
+
+        const safeMinHeight = Math.max(0, Number(minHeight) || 0);
+
+        element.style.overflowY = "hidden";
+        element.style.height = "auto";
+
+        const nextHeight = Math.max(safeMinHeight, element.scrollHeight);
+        element.style.height = `${nextHeight}px`;
+    },
+
+    autoSizeEditors(sourceInputId, formattedOutputId, minHeight) {
+        this.autoSizeTextAreaById(sourceInputId, minHeight);
+        this.autoSizeTextAreaById(formattedOutputId, minHeight);
+    }
+};

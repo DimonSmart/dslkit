@@ -1,5 +1,6 @@
 @using DSLKIT.GrammarExamples.MsSql
 @using DSLKIT.GrammarExamples.MsSql.Formatting
+@using Microsoft.JSInterop
 
 <section class="dsl-sql-formatting-tab">
     <div class="dsl-sql-header-row">
@@ -26,7 +27,7 @@
                    PanelGap="10">
         <FirstPanel>
             <div class="dsl-sql-workspace-panel">
-                <section class="card h-100 dsl-sql-controls-panel">
+                <section class="card dsl-sql-controls-panel">
                     <div class="card-header dsl-sql-controls-header">
                         <span>Controls</span>
 
@@ -282,7 +283,7 @@
 
         <SecondPanel>
             <div class="dsl-sql-workspace-panel">
-                <section class="card h-100 dsl-sql-output-panel">
+                <section class="card dsl-sql-output-panel">
                     <div class="card-header dsl-sql-output-header">
                         <span>Formatted SQL</span>
                         <span class="text-muted small">Always visible</span>
@@ -311,6 +312,9 @@
 </section>
 
 @code {
+    [Inject]
+    private IJSRuntime JsRuntime { get; set; } = null!;
+
     private enum LeftPaneTab
     {
         Options,
@@ -354,10 +358,26 @@
     private int indentSize = 4;
     private int selectCompactMaxItems = 4;
     private int selectCompactMaxLineLength = 220;
+    private bool resizeEditorsPending = true;
 
     protected override void OnInitialized()
     {
         FormatCurrentSql();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender && !resizeEditorsPending)
+        {
+            return;
+        }
+
+        resizeEditorsPending = false;
+        await JsRuntime.InvokeVoidAsync(
+            "dslkitSqlEditor.autoSizeEditors",
+            "sql-source-input",
+            "sql-formatted-output",
+            170);
     }
 
     private string GetPaneTabClass(LeftPaneTab tab) =>
@@ -380,6 +400,7 @@
     private void SetLeftPaneTab(LeftPaneTab tab)
     {
         activeLeftPaneTab = tab;
+        resizeEditorsPending = true;
     }
 
     private Task OnSourceInputAsync(ChangeEventArgs args)
@@ -388,6 +409,10 @@
         if (autoFormat)
         {
             FormatCurrentSql();
+        }
+        else
+        {
+            resizeEditorsPending = true;
         }
 
         return Task.CompletedTask;
@@ -523,6 +548,10 @@
         {
             formattedSql = string.Empty;
             formattingError = $"Unexpected formatter error: {ex.Message}";
+        }
+        finally
+        {
+            resizeEditorsPending = true;
         }
     }
 }

@@ -606,14 +606,14 @@ code {
 }
 
 .dsl-sql-workspace-split {
-    flex: 1 1 auto;
-    min-height: 36rem;
+    flex: 0 0 auto;
+    min-height: 0;
 }
 
 .dsl-sql-workspace-panel {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: auto;
     min-height: 0;
 }
 
@@ -739,8 +739,8 @@ code {
 }
 
 .dsl-sql-editor {
-    flex: 1 1 auto;
-    min-height: 16rem;
+    flex: 0 0 auto;
+    min-height: 10rem;
     border: 1px solid #cbd5e1;
     border-radius: 0.4rem;
     background: #fff;
@@ -748,12 +748,13 @@ code {
     line-height: 1.45;
     font-family: Consolas, "Cascadia Code", "Courier New", monospace;
     font-size: 0.92rem;
+    overflow-y: hidden;
     resize: vertical;
 }
 
 .dsl-sql-output {
     background: #f8fafc;
-    resize: none;
+    resize: vertical;
 }
 
 .dsl-sql-error {
@@ -762,6 +763,7 @@ code {
 
 .dsl-sql-output-body {
     min-height: 0;
+    overflow: visible;
 }
 
 @media (max-width: 1199.98px) {
@@ -788,7 +790,4 @@ code {
         min-height: 14rem;
     }
 
-    .dsl-sql-workspace-split {
-        min-height: 30rem;
-    }
 }
