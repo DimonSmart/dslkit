@@ -581,7 +581,7 @@ code {
     gap: 0.65rem;
 }
 
-.dsl-sql-formatting-toolbar {
+.dsl-sql-header-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -589,68 +589,158 @@ code {
     flex-wrap: wrap;
 }
 
-.dsl-sql-options {
+.dsl-sql-header-actions {
     display: flex;
-    align-items: stretch;
-    flex: 1 1 100%;
-    min-width: min(100%, 32rem);
-    padding: 0.3rem 0.5rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.35rem;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+}
+
+.dsl-sql-autoformat-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+    color: #475569;
+    font-size: 0.82rem;
+}
+
+.dsl-sql-workspace-split {
+    flex: 1 1 auto;
+    min-height: 36rem;
+}
+
+.dsl-sql-workspace-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.dsl-sql-controls-panel,
+.dsl-sql-output-panel {
+    border: 1px solid #e5e7eb;
+}
+
+.dsl-sql-controls-header,
+.dsl-sql-output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
     background: #f8fafc;
 }
 
-.dsl-sql-options-grid {
-    display: grid;
-    width: 100%;
-    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-    gap: 0.45rem 0.65rem;
+.dsl-sql-pane-tabs {
+    display: flex;
+    gap: 0.35rem;
 }
 
-.dsl-sql-option-item {
+.dsl-sql-pane-tab {
+    min-width: 5.5rem;
+}
+
+.dsl-sql-controls-body {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
-    min-width: 0;
-    font-size: 0.8rem;
+    min-height: 0;
+    padding: 0.75rem;
 }
 
-.dsl-sql-option-label {
-    color: #475569;
-    font-size: 0.72rem;
+.dsl-sql-search {
+    margin-bottom: 0.65rem;
+}
+
+.dsl-sql-option-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 0.2rem;
+}
+
+.dsl-sql-option-section {
+    border: 1px solid #e2e8f0;
+    border-radius: 0.42rem;
+    background: #f8fafc;
+}
+
+.dsl-sql-option-section > summary {
+    padding: 0.45rem 0.65rem;
+    cursor: pointer;
+    font-size: 0.82rem;
     font-weight: 600;
+    color: #334155;
+    user-select: none;
 }
 
-.dsl-sql-option-item--check {
-    flex-direction: row;
-    align-items: center;
+.dsl-sql-option-section[open] > summary {
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.dsl-sql-property-grid {
+    display: flex;
+    flex-direction: column;
     gap: 0.4rem;
-    margin-top: 1.25rem;
+    padding: 0.5rem 0.6rem;
 }
 
-.dsl-sql-formatting-layout {
+.dsl-sql-property-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 0.75rem;
+    grid-template-columns: minmax(0, 1fr) 9.5rem;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+    font-size: 0.82rem;
+}
+
+.dsl-sql-property-row label {
+    margin: 0;
+    color: #1f2937;
+    line-height: 1.32;
+}
+
+.dsl-sql-property-row .form-select,
+.dsl-sql-property-row .form-control {
+    font-size: 0.82rem;
+    padding-top: 0.16rem;
+    padding-bottom: 0.16rem;
+}
+
+.dsl-sql-property-row--check {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.dsl-sql-property-row--check .form-check-input {
+    margin-top: 0;
+}
+
+.dsl-sql-input-tab {
+    display: flex;
+    flex-direction: column;
     flex: 1 1 auto;
     min-height: 0;
+    gap: 0.6rem;
 }
 
-.dsl-sql-pane {
+.dsl-sql-input-actions {
     display: flex;
-    flex-direction: column;
-    min-height: 0;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .dsl-sql-pane-label {
-    margin-bottom: 0.35rem;
+    margin-bottom: 0;
     color: #475569;
     font-weight: 600;
+    font-size: 0.84rem;
 }
 
 .dsl-sql-editor {
     flex: 1 1 auto;
-    min-height: 24rem;
+    min-height: 16rem;
     border: 1px solid #cbd5e1;
     border-radius: 0.4rem;
     background: #fff;
@@ -663,10 +753,15 @@ code {
 
 .dsl-sql-output {
     background: #f8fafc;
+    resize: none;
 }
 
 .dsl-sql-error {
     margin-bottom: 0;
+}
+
+.dsl-sql-output-body {
+    min-height: 0;
 }
 
 @media (max-width: 1199.98px) {
@@ -689,11 +784,11 @@ code {
         grid-template-columns: 1fr;
     }
 
-    .dsl-sql-formatting-layout {
-        grid-template-columns: 1fr;
-    }
-
     .dsl-sql-editor {
         min-height: 14rem;
+    }
+
+    .dsl-sql-workspace-split {
+        min-height: 30rem;
     }
 }

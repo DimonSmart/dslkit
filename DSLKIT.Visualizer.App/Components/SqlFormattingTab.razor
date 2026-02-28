@@ -2,183 +2,17 @@
 @using DSLKIT.GrammarExamples.MsSql.Formatting
 
 <section class="dsl-sql-formatting-tab">
-    <div class="dsl-sql-formatting-toolbar">
-        <div class="dsl-sql-options dsl-sql-options-grid" @onchange="OnOptionsChangedAsync">
-            <label class="dsl-sql-option-item" for="sql-keyword-case">
-                <span class="dsl-sql-option-label">keywordCase</span>
-                <select id="sql-keyword-case" class="form-select form-select-sm" @bind="keywordCase">
-                    <option value="@SqlKeywordCase.Upper">Upper</option>
-                    <option value="@SqlKeywordCase.Lower">Lower</option>
-                    <option value="@SqlKeywordCase.Preserve">Preserve</option>
-                </select>
-            </label>
-
-            <label class="dsl-sql-option-item" for="sql-inside-parentheses">
-                <span class="dsl-sql-option-label">spaces.insideParentheses</span>
-                <select id="sql-inside-parentheses" class="form-select form-select-sm" @bind="insideParentheses">
-                    <option value="@SqlParenthesesSpacing.Never">Never</option>
-                    <option value="@SqlParenthesesSpacing.Always">Always</option>
-                    <option value="@SqlParenthesesSpacing.Smart">Smart</option>
-                </select>
-            </label>
-
-            <label class="dsl-sql-option-item" for="sql-statement-semicolon">
-                <span class="dsl-sql-option-label">statement.terminateWithSemicolon</span>
-                <select id="sql-statement-semicolon" class="form-select form-select-sm" @bind="terminateWithSemicolon">
-                    <option value="@SqlStatementTerminationMode.Never">Never</option>
-                    <option value="@SqlStatementTerminationMode.ExistingOnly">ExistingOnly</option>
-                    <option value="@SqlStatementTerminationMode.Always">Always</option>
-                </select>
-            </label>
-
-            <label class="dsl-sql-option-item" for="sql-indent-size">
-                <span class="dsl-sql-option-label">layout.indentSize</span>
-                <input id="sql-indent-size"
-                       class="form-control form-control-sm"
-                       type="number"
-                       min="1"
-                       step="1"
-                       @bind="indentSize" />
-            </label>
-
-            <label class="dsl-sql-option-item" for="sql-blank-line-between-clauses">
-                <span class="dsl-sql-option-label">layout.blankLineBetweenClauses</span>
-                <select id="sql-blank-line-between-clauses"
-                        class="form-select form-select-sm"
-                        @bind="blankLineBetweenClauses">
-                    <option value="@SqlBlankLineBetweenClausesMode.None">None</option>
-                    <option value="@SqlBlankLineBetweenClausesMode.BetweenMajorClauses">BetweenMajorClauses</option>
-                </select>
-            </label>
-
-            <label class="dsl-sql-option-item" for="sql-comma-style">
-                <span class="dsl-sql-option-label">lists.commaStyle</span>
-                <select id="sql-comma-style" class="form-select form-select-sm" @bind="commaStyle">
-                    <option value="@SqlCommaStyle.Trailing">Trailing</option>
-                    <option value="@SqlCommaStyle.Leading">Leading</option>
-                </select>
-            </label>
-
-            <label class="dsl-sql-option-item" for="sql-select-items-style">
-                <span class="dsl-sql-option-label">lists.selectItems</span>
-                <select id="sql-select-items-style" class="form-select form-select-sm" @bind="selectItemsStyle">
-                    <option value="@SqlListLayoutStyle.OnePerLine">OnePerLine</option>
-                    <option value="@SqlListLayoutStyle.WrapByWidth">WrapByWidth</option>
-                </select>
-            </label>
-
-            <label class="dsl-sql-option-item" for="sql-group-by-items-style">
-                <span class="dsl-sql-option-label">lists.groupByItems</span>
-                <select id="sql-group-by-items-style" class="form-select form-select-sm" @bind="groupByItemsStyle">
-                    <option value="@SqlListLayoutStyle.OnePerLine">OnePerLine</option>
-                    <option value="@SqlListLayoutStyle.WrapByWidth">WrapByWidth</option>
-                </select>
-            </label>
-
-            <label class="dsl-sql-option-item" for="sql-order-by-items-style">
-                <span class="dsl-sql-option-label">lists.orderByItems</span>
-                <select id="sql-order-by-items-style" class="form-select form-select-sm" @bind="orderByItemsStyle">
-                    <option value="@SqlListLayoutStyle.OnePerLine">OnePerLine</option>
-                    <option value="@SqlListLayoutStyle.WrapByWidth">WrapByWidth</option>
-                </select>
-            </label>
-
-            <label class="dsl-sql-option-item" for="sql-select-compact-max-items">
-                <span class="dsl-sql-option-label">lists.selectCompactThreshold.maxItems</span>
-                <input id="sql-select-compact-max-items"
-                       class="form-control form-control-sm"
-                       type="number"
-                       min="0"
-                       step="1"
-                       @bind="selectCompactMaxItems" />
-            </label>
-
-            <label class="dsl-sql-option-item" for="sql-select-compact-max-line-length">
-                <span class="dsl-sql-option-label">lists.selectCompactThreshold.maxLineLength</span>
-                <input id="sql-select-compact-max-line-length"
-                       class="form-control form-control-sm"
-                       type="number"
-                       min="10"
-                       step="1"
-                       @bind="selectCompactMaxLineLength" />
-            </label>
-
-            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-spaces-after-comma">
-                <input id="sql-spaces-after-comma" class="form-check-input mt-0" type="checkbox" @bind="spacesAfterComma" />
-                <span>spaces.afterComma</span>
-            </label>
-
-            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-spaces-around-binary-operators">
-                <input id="sql-spaces-around-binary-operators" class="form-check-input mt-0" type="checkbox" @bind="spacesAroundBinaryOperators" />
-                <span>spaces.aroundBinaryOperators</span>
-            </label>
-
-            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-spaces-before-semicolon">
-                <input id="sql-spaces-before-semicolon" class="form-check-input mt-0" type="checkbox" @bind="spacesBeforeSemicolon" />
-                <span>spaces.beforeSemicolon</span>
-            </label>
-
-            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-eof-newline">
-                <input id="sql-eof-newline" class="form-check-input mt-0" type="checkbox" @bind="eofNewline" />
-                <span>eof.newline</span>
-            </label>
-
-            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-align-select-aliases">
-                <input id="sql-align-select-aliases" class="form-check-input mt-0" type="checkbox" @bind="alignSelectAliases" />
-                <span>align.selectAliases</span>
-            </label>
-
-            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-select-compact-allow-expressions">
-                <input id="sql-select-compact-allow-expressions" class="form-check-input mt-0" type="checkbox" @bind="selectCompactAllowExpressions" />
-                <span>lists.selectCompactThreshold.allowExpressions</span>
-            </label>
-
-            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-newline-with">
-                <input id="sql-newline-with" class="form-check-input mt-0" type="checkbox" @bind="newlineBeforeWith" />
-                <span>layout.newlineBeforeClause.WITH</span>
-            </label>
-
-            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-newline-select">
-                <input id="sql-newline-select" class="form-check-input mt-0" type="checkbox" @bind="newlineBeforeSelect" />
-                <span>layout.newlineBeforeClause.SELECT</span>
-            </label>
-
-            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-newline-from">
-                <input id="sql-newline-from" class="form-check-input mt-0" type="checkbox" @bind="newlineBeforeFrom" />
-                <span>layout.newlineBeforeClause.FROM</span>
-            </label>
-
-            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-newline-where">
-                <input id="sql-newline-where" class="form-check-input mt-0" type="checkbox" @bind="newlineBeforeWhere" />
-                <span>layout.newlineBeforeClause.WHERE</span>
-            </label>
-
-            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-newline-group-by">
-                <input id="sql-newline-group-by" class="form-check-input mt-0" type="checkbox" @bind="newlineBeforeGroupBy" />
-                <span>layout.newlineBeforeClause.GROUP BY</span>
-            </label>
-
-            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-newline-having">
-                <input id="sql-newline-having" class="form-check-input mt-0" type="checkbox" @bind="newlineBeforeHaving" />
-                <span>layout.newlineBeforeClause.HAVING</span>
-            </label>
-
-            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-newline-order-by">
-                <input id="sql-newline-order-by" class="form-check-input mt-0" type="checkbox" @bind="newlineBeforeOrderBy" />
-                <span>layout.newlineBeforeClause.ORDER BY</span>
-            </label>
-
-            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-newline-option">
-                <input id="sql-newline-option" class="form-check-input mt-0" type="checkbox" @bind="newlineBeforeOption" />
-                <span>layout.newlineBeforeClause.OPTION</span>
-            </label>
+    <div class="dsl-sql-header-row">
+        <div class="text-muted small">
+            Keep the formatted result visible while you tune options or source input.
         </div>
 
-        <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-outline-secondary btn-sm"
-                    @onclick="OnLoadDemoRequestedAsync">
-                Load Demo SQL
-            </button>
+        <div class="dsl-sql-header-actions">
+            <label class="dsl-sql-autoformat-toggle" for="sql-auto-format">
+                <input id="sql-auto-format" class="form-check-input mt-0" type="checkbox" @bind="autoFormat" />
+                <span>Auto-format input</span>
+            </label>
+
             <button class="btn btn-primary btn-sm"
                     @onclick="OnFormatRequestedAsync">
                 Format SQL
@@ -186,47 +20,311 @@
         </div>
     </div>
 
-    <div class="text-muted small">
-        Переключение опций форматирует output автоматически. Кнопка `Load Demo SQL` загружает пример, где разница от опций заметна.
-    </div>
+    <MudSplitPanel Class="dsl-sql-workspace-split"
+                   FirstPanelInitialSize="420"
+                   MinPanelSize="290"
+                   PanelGap="10">
+        <FirstPanel>
+            <div class="dsl-sql-workspace-panel">
+                <section class="card h-100 dsl-sql-controls-panel">
+                    <div class="card-header dsl-sql-controls-header">
+                        <span>Controls</span>
 
-    <div class="dsl-sql-formatting-layout">
-        <div class="dsl-sql-pane">
-            <label class="dsl-sql-pane-label" for="sql-source-input">Original SQL</label>
-            <textarea id="sql-source-input"
-                      class="form-control dsl-sql-editor"
-                      spellcheck="false"
-                      @bind="sourceSql"
-                      @bind:event="oninput"></textarea>
-        </div>
+                        <div class="dsl-sql-pane-tabs">
+                            <button type="button"
+                                    class="btn btn-sm dsl-sql-pane-tab @GetPaneTabClass(LeftPaneTab.Options)"
+                                    @onclick="() => SetLeftPaneTab(LeftPaneTab.Options)">
+                                Options
+                            </button>
+                            <button type="button"
+                                    class="btn btn-sm dsl-sql-pane-tab @GetPaneTabClass(LeftPaneTab.Input)"
+                                    @onclick="() => SetLeftPaneTab(LeftPaneTab.Input)">
+                                Input
+                            </button>
+                        </div>
+                    </div>
 
-        <div class="dsl-sql-pane">
-            <label class="dsl-sql-pane-label" for="sql-formatted-output">Formatted SQL</label>
+                    <div class="card-body dsl-sql-controls-body">
+                        @if (activeLeftPaneTab == LeftPaneTab.Options)
+                        {
+                            <div class="dsl-sql-search">
+                                <input id="sql-option-search"
+                                       type="search"
+                                       class="form-control form-control-sm"
+                                       placeholder="Search option..."
+                                       @bind="optionSearch"
+                                       @bind:event="oninput" />
+                            </div>
 
-            @if (!string.IsNullOrWhiteSpace(formattingError))
-            {
-                <div class="alert alert-danger dsl-sql-error" role="alert">
-                    @formattingError
-                </div>
-            }
-            else
-            {
-                <textarea id="sql-formatted-output"
-                          class="form-control dsl-sql-editor dsl-sql-output"
-                          readonly
-                          spellcheck="false"
-                          value="@formattedSql"></textarea>
-            }
-        </div>
-    </div>
+                            <div class="dsl-sql-option-sections" @onchange="OnOptionsChangedAsync">
+                                <details class="dsl-sql-option-section" open>
+                                    <summary>Text</summary>
+                                    <div class="dsl-sql-property-grid">
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("keyword keyword case uppercase lowercase preserve")'>
+                                            <label for="sql-keyword-case">Keyword case</label>
+                                            <select id="sql-keyword-case" class="form-select form-select-sm" @bind="keywordCase">
+                                                <option value="@SqlKeywordCase.Upper">Upper</option>
+                                                <option value="@SqlKeywordCase.Lower">Lower</option>
+                                                <option value="@SqlKeywordCase.Preserve">Preserve</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("statement semicolon terminate with semicolon")'>
+                                            <label for="sql-statement-semicolon">Terminate with semicolon</label>
+                                            <select id="sql-statement-semicolon" class="form-select form-select-sm" @bind="terminateWithSemicolon">
+                                                <option value="@SqlStatementTerminationMode.Never">Never</option>
+                                                <option value="@SqlStatementTerminationMode.ExistingOnly">ExistingOnly</option>
+                                                <option value="@SqlStatementTerminationMode.Always">Always</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("end of file eof newline new line")'>
+                                            <label for="sql-eof-newline">EOF newline</label>
+                                            <input id="sql-eof-newline" class="form-check-input" type="checkbox" @bind="eofNewline" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("align select aliases")'>
+                                            <label for="sql-align-select-aliases">Align select aliases</label>
+                                            <input id="sql-align-select-aliases" class="form-check-input" type="checkbox" @bind="alignSelectAliases" />
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <details class="dsl-sql-option-section" open>
+                                    <summary>Layout</summary>
+                                    <div class="dsl-sql-property-grid">
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("layout indent indent size")'>
+                                            <label for="sql-indent-size">Indent size</label>
+                                            <input id="sql-indent-size"
+                                                   class="form-control form-control-sm"
+                                                   type="number"
+                                                   min="1"
+                                                   step="1"
+                                                   @bind="indentSize" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("layout blank line between clauses")'>
+                                            <label for="sql-blank-line-between-clauses">Blank line between clauses</label>
+                                            <select id="sql-blank-line-between-clauses"
+                                                    class="form-select form-select-sm"
+                                                    @bind="blankLineBetweenClauses">
+                                                <option value="@SqlBlankLineBetweenClausesMode.None">None</option>
+                                                <option value="@SqlBlankLineBetweenClausesMode.BetweenMajorClauses">BetweenMajorClauses</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout newline with")'>
+                                            <label for="sql-newline-with">New line before WITH</label>
+                                            <input id="sql-newline-with" class="form-check-input" type="checkbox" @bind="newlineBeforeWith" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout newline select")'>
+                                            <label for="sql-newline-select">New line before SELECT</label>
+                                            <input id="sql-newline-select" class="form-check-input" type="checkbox" @bind="newlineBeforeSelect" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout newline from")'>
+                                            <label for="sql-newline-from">New line before FROM</label>
+                                            <input id="sql-newline-from" class="form-check-input" type="checkbox" @bind="newlineBeforeFrom" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout newline where")'>
+                                            <label for="sql-newline-where">New line before WHERE</label>
+                                            <input id="sql-newline-where" class="form-check-input" type="checkbox" @bind="newlineBeforeWhere" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout newline group by")'>
+                                            <label for="sql-newline-group-by">New line before GROUP BY</label>
+                                            <input id="sql-newline-group-by" class="form-check-input" type="checkbox" @bind="newlineBeforeGroupBy" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout newline having")'>
+                                            <label for="sql-newline-having">New line before HAVING</label>
+                                            <input id="sql-newline-having" class="form-check-input" type="checkbox" @bind="newlineBeforeHaving" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout newline order by")'>
+                                            <label for="sql-newline-order-by">New line before ORDER BY</label>
+                                            <input id="sql-newline-order-by" class="form-check-input" type="checkbox" @bind="newlineBeforeOrderBy" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout newline option")'>
+                                            <label for="sql-newline-option">New line before OPTION</label>
+                                            <input id="sql-newline-option" class="form-check-input" type="checkbox" @bind="newlineBeforeOption" />
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <details class="dsl-sql-option-section" open>
+                                    <summary>Lists</summary>
+                                    <div class="dsl-sql-property-grid">
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("lists comma style trailing leading")'>
+                                            <label for="sql-comma-style">Comma style</label>
+                                            <select id="sql-comma-style" class="form-select form-select-sm" @bind="commaStyle">
+                                                <option value="@SqlCommaStyle.Trailing">Trailing</option>
+                                                <option value="@SqlCommaStyle.Leading">Leading</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("lists select items style")'>
+                                            <label for="sql-select-items-style">SELECT items</label>
+                                            <select id="sql-select-items-style" class="form-select form-select-sm" @bind="selectItemsStyle">
+                                                <option value="@SqlListLayoutStyle.OnePerLine">OnePerLine</option>
+                                                <option value="@SqlListLayoutStyle.WrapByWidth">WrapByWidth</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("lists group by items style")'>
+                                            <label for="sql-group-by-items-style">GROUP BY items</label>
+                                            <select id="sql-group-by-items-style" class="form-select form-select-sm" @bind="groupByItemsStyle">
+                                                <option value="@SqlListLayoutStyle.OnePerLine">OnePerLine</option>
+                                                <option value="@SqlListLayoutStyle.WrapByWidth">WrapByWidth</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("lists order by items style")'>
+                                            <label for="sql-order-by-items-style">ORDER BY items</label>
+                                            <select id="sql-order-by-items-style" class="form-select form-select-sm" @bind="orderByItemsStyle">
+                                                <option value="@SqlListLayoutStyle.OnePerLine">OnePerLine</option>
+                                                <option value="@SqlListLayoutStyle.WrapByWidth">WrapByWidth</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("lists select compact threshold max items")'>
+                                            <label for="sql-select-compact-max-items">Compact max items</label>
+                                            <input id="sql-select-compact-max-items"
+                                                   class="form-control form-control-sm"
+                                                   type="number"
+                                                   min="0"
+                                                   step="1"
+                                                   @bind="selectCompactMaxItems" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("lists select compact threshold max line length")'>
+                                            <label for="sql-select-compact-max-line-length">Compact max line length</label>
+                                            <input id="sql-select-compact-max-line-length"
+                                                   class="form-control form-control-sm"
+                                                   type="number"
+                                                   min="10"
+                                                   step="1"
+                                                   @bind="selectCompactMaxLineLength" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("lists compact threshold allow expressions")'>
+                                            <label for="sql-select-compact-allow-expressions">Compact allow expressions</label>
+                                            <input id="sql-select-compact-allow-expressions" class="form-check-input" type="checkbox" @bind="selectCompactAllowExpressions" />
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <details class="dsl-sql-option-section" open>
+                                    <summary>Spacing</summary>
+                                    <div class="dsl-sql-property-grid">
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("spaces inside parentheses smart always never")'>
+                                            <label for="sql-inside-parentheses">Inside parentheses</label>
+                                            <select id="sql-inside-parentheses" class="form-select form-select-sm" @bind="insideParentheses">
+                                                <option value="@SqlParenthesesSpacing.Never">Never</option>
+                                                <option value="@SqlParenthesesSpacing.Always">Always</option>
+                                                <option value="@SqlParenthesesSpacing.Smart">Smart</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("spaces after comma")'>
+                                            <label for="sql-spaces-after-comma">Spaces after comma</label>
+                                            <input id="sql-spaces-after-comma" class="form-check-input" type="checkbox" @bind="spacesAfterComma" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("spaces around binary operators")'>
+                                            <label for="sql-spaces-around-binary-operators">Spaces around binary operators</label>
+                                            <input id="sql-spaces-around-binary-operators" class="form-check-input" type="checkbox" @bind="spacesAroundBinaryOperators" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("spaces before semicolon")'>
+                                            <label for="sql-spaces-before-semicolon">Spaces before semicolon</label>
+                                            <input id="sql-spaces-before-semicolon" class="form-check-input" type="checkbox" @bind="spacesBeforeSemicolon" />
+                                        </div>
+                                    </div>
+                                </details>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="dsl-sql-input-tab">
+                                <label class="dsl-sql-pane-label" for="sql-source-input">Original SQL</label>
+                                <textarea id="sql-source-input"
+                                          class="form-control dsl-sql-editor"
+                                          spellcheck="false"
+                                          value="@sourceSql"
+                                          @oninput="OnSourceInputAsync"></textarea>
+
+                                <div class="dsl-sql-input-actions">
+                                    <button class="btn btn-outline-secondary btn-sm"
+                                            @onclick="OnLoadDemoRequestedAsync">
+                                        Load Demo SQL
+                                    </button>
+
+                                    <button class="btn btn-outline-secondary btn-sm"
+                                            @onclick="OnResetOptionsRequestedAsync">
+                                        Reset Options
+                                    </button>
+
+                                    <button class="btn btn-primary btn-sm"
+                                            @onclick="OnFormatRequestedAsync">
+                                        Format SQL
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+            </div>
+        </FirstPanel>
+
+        <SecondPanel>
+            <div class="dsl-sql-workspace-panel">
+                <section class="card h-100 dsl-sql-output-panel">
+                    <div class="card-header dsl-sql-output-header">
+                        <span>Formatted SQL</span>
+                        <span class="text-muted small">Always visible</span>
+                    </div>
+                    <div class="card-body d-flex flex-column dsl-sql-output-body">
+                        @if (!string.IsNullOrWhiteSpace(formattingError))
+                        {
+                            <div class="alert alert-danger dsl-sql-error" role="alert">
+                                @formattingError
+                            </div>
+                        }
+                        else
+                        {
+                            <textarea id="sql-formatted-output"
+                                      class="form-control dsl-sql-editor dsl-sql-output"
+                                      readonly
+                                      wrap="off"
+                                      spellcheck="false"
+                                      value="@formattedSql"></textarea>
+                        }
+                    </div>
+                </section>
+            </div>
+        </SecondPanel>
+    </MudSplitPanel>
 </section>
 
 @code {
+    private enum LeftPaneTab
+    {
+        Options,
+        Input
+    }
+
     private const string DemoSql = "with recent as (select top(10) o.CustomerId as CustomerId,o.Region as Region,o.TotalAmount as TotalAmount from dbo.Orders as o where o.TotalAmount>=50) select r.CustomerId as customer_id,r.Region as region,sum(r.TotalAmount) as total_amount,count(*) as orders_count from recent as r inner join dbo.Customers as c on c.CustomerId=r.CustomerId and c.IsActive=1 where (r.Region='EU' or r.Region='US') and r.TotalAmount>=100 group by r.CustomerId,r.Region having count(*)>1 order by r.CustomerId desc,r.Region;";
 
     private string sourceSql = DemoSql;
     private string formattedSql = string.Empty;
     private string? formattingError;
+    private string optionSearch = string.Empty;
+    private bool autoFormat = true;
+    private LeftPaneTab activeLeftPaneTab = LeftPaneTab.Options;
 
     private SqlKeywordCase keywordCase = SqlKeywordCase.Upper;
     private SqlParenthesesSpacing insideParentheses = SqlParenthesesSpacing.Never;
@@ -262,6 +360,39 @@
         FormatCurrentSql();
     }
 
+    private string GetPaneTabClass(LeftPaneTab tab) =>
+        activeLeftPaneTab == tab
+            ? "btn-primary"
+            : "btn-outline-secondary";
+
+    private bool HideOption(string searchTokens) => !MatchesOptionSearch(searchTokens);
+
+    private bool MatchesOptionSearch(string searchTokens)
+    {
+        if (string.IsNullOrWhiteSpace(optionSearch))
+        {
+            return true;
+        }
+
+        return searchTokens.Contains(optionSearch.Trim(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void SetLeftPaneTab(LeftPaneTab tab)
+    {
+        activeLeftPaneTab = tab;
+    }
+
+    private Task OnSourceInputAsync(ChangeEventArgs args)
+    {
+        sourceSql = args.Value?.ToString() ?? string.Empty;
+        if (autoFormat)
+        {
+            FormatCurrentSql();
+        }
+
+        return Task.CompletedTask;
+    }
+
     private Task OnOptionsChangedAsync(ChangeEventArgs _)
     {
         FormatCurrentSql();
@@ -279,6 +410,45 @@
     {
         FormatCurrentSql();
         return Task.CompletedTask;
+    }
+
+    private Task OnResetOptionsRequestedAsync()
+    {
+        ApplyDefaultOptions();
+        FormatCurrentSql();
+        return Task.CompletedTask;
+    }
+
+    private void ApplyDefaultOptions()
+    {
+        keywordCase = SqlKeywordCase.Upper;
+        insideParentheses = SqlParenthesesSpacing.Never;
+        terminateWithSemicolon = SqlStatementTerminationMode.ExistingOnly;
+        blankLineBetweenClauses = SqlBlankLineBetweenClausesMode.None;
+        commaStyle = SqlCommaStyle.Trailing;
+        selectItemsStyle = SqlListLayoutStyle.OnePerLine;
+        groupByItemsStyle = SqlListLayoutStyle.OnePerLine;
+        orderByItemsStyle = SqlListLayoutStyle.OnePerLine;
+
+        spacesAfterComma = true;
+        spacesAroundBinaryOperators = true;
+        spacesBeforeSemicolon = false;
+        eofNewline = false;
+        alignSelectAliases = false;
+        selectCompactAllowExpressions = false;
+
+        newlineBeforeWith = true;
+        newlineBeforeSelect = true;
+        newlineBeforeFrom = true;
+        newlineBeforeWhere = true;
+        newlineBeforeGroupBy = true;
+        newlineBeforeHaving = true;
+        newlineBeforeOrderBy = true;
+        newlineBeforeOption = true;
+
+        indentSize = 4;
+        selectCompactMaxItems = 4;
+        selectCompactMaxLineLength = 220;
     }
 
     private void FormatCurrentSql()
@@ -356,3 +526,4 @@
         }
     }
 }
+
