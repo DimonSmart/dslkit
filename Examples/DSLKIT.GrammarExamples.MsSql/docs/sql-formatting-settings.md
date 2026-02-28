@@ -4,8 +4,7 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
 
 ## Implementation Status
 
-- Implemented now: Stage 1, Stage 2, Stage 3, Stage 4, Stage 5.
-- Planned (not implemented yet): Stage 6-8.
+- Implemented now: Stage 1, Stage 2, Stage 3, Stage 4, Stage 5, Stage 6, Stage 7, Stage 8.
 
 `[HEURISTIC]` marks options that use thresholds/conditions.
 
@@ -56,7 +55,7 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
 - `[HEURISTIC] predicates.parenthesizeMixedAndOr`:
   - `mode = None | Minimal | AlwaysForOrGroups`
 
-## Stage 6. CASE/Expressions/Subqueries/IN Lists (planned)
+## Stage 6. CASE/Expressions/Subqueries/IN Lists
 
 - `expressions.caseStyle`: `Multiline | CompactWhenShort`
 - `[HEURISTIC] expressions.compactCaseThreshold`:
@@ -74,13 +73,13 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
   - `maxLineLength`
   - `forContexts`
 
-## Stage 7. DML/DDL (planned)
+## Stage 7. DML/DDL
 
 - `dml.updateSetStyle`: `OnePerLine | WrapByWidth`
 - `dml.insertColumnsStyle`: `OnePerLine | WrapByWidth`
 - `ddl.createProcLayout`: `Expanded | Compact`
 
-## Stage 8. Comments And Semantic Safety (planned)
+## Stage 8. Comments And Semantic Safety
 
 - `comments.preserveAttachment`: `true` (default)
 - `comments.formatting`: `Keep | ReflowSafeOnly`

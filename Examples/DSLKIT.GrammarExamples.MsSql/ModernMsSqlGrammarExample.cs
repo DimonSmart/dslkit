@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DSLKIT.Formatting;
 using DSLKIT.Lexer;
 using DSLKIT.Parser;
 using DSLKIT.Terminals;
+using DSLKIT.Tokens;
 
 namespace DSLKIT.GrammarExamples.MsSql
 {
@@ -26,9 +28,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             var lexer = new Lexer.Lexer(CreateLexerSettings(grammar));
             var parser = new SyntaxParser(grammar);
 
-            var tokens = lexer.GetTokens(new StringSourceStream(source))
-                .Where(token => token.Terminal.Flags != TermFlags.Space && token.Terminal.Flags != TermFlags.Comment)
-                .ToList();
+            var rawTokens = lexer.GetTokens(new StringSourceStream(source)).ToList();
+            var tokens = BuildSignificantTokensWithTrivia(rawTokens);
 
             return parser.Parse(tokens);
         }
@@ -52,6 +53,44 @@ namespace DSLKIT.GrammarExamples.MsSql
             }
 
             return settings;
+        }
+
+        private static IReadOnlyList<IToken> BuildSignificantTokensWithTrivia(IReadOnlyList<IToken> rawTokens)
+        {
+            var significantTokens = new List<IToken>(rawTokens.Count);
+            var pendingTrivia = new List<IToken>();
+
+            foreach (var token in rawTokens)
+            {
+                var isTriviaToken = token.Terminal.Flags == TermFlags.Space ||
+                    token.Terminal.Flags == TermFlags.Comment;
+                if (isTriviaToken)
+                {
+                    pendingTrivia.Add(token);
+                    continue;
+                }
+
+                if (pendingTrivia.Count == 0)
+                {
+                    significantTokens.Add(token);
+                    continue;
+                }
+
+                var tokenWithLeadingTrivia = token.WithTrivia(new FormattingTrivia(pendingTrivia.ToList(), []));
+                significantTokens.Add(tokenWithLeadingTrivia);
+                pendingTrivia.Clear();
+            }
+
+            if (pendingTrivia.Count == 0 || significantTokens.Count == 0)
+            {
+                return significantTokens;
+            }
+
+            var lastToken = significantTokens[^1];
+            var trivia = lastToken.Trivia;
+            var tokenWithTrailingTrivia = lastToken.WithTrivia(new FormattingTrivia(trivia.LeadingTrivia, pendingTrivia.ToList()));
+            significantTokens[^1] = tokenWithTrailingTrivia;
+            return significantTokens;
         }
 
         private static IGrammar BuildGrammarCore()
@@ -115,6 +154,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             var statementList = gb.NT("StatementList");
             var statement = gb.NT("Statement");
             var queryStatement = gb.NT("QueryStatement");
+            var updateStatement = gb.NT("UpdateStatement");
+            var updateSetList = gb.NT("UpdateSetList");
+            var updateSetItem = gb.NT("UpdateSetItem");
+            var insertStatement = gb.NT("InsertStatement");
+            var insertColumnList = gb.NT("InsertColumnList");
+            var insertValueList = gb.NT("InsertValueList");
+            var createProcStatement = gb.NT("CreateProcStatement");
+            var procStatementList = gb.NT("ProcStatementList");
             var withClause = gb.NT("WithClause");
             var cteDefinitionList = gb.NT("CteDefinitionList");
             var cteDefinition = gb.NT("CteDefinition");
@@ -165,9 +212,38 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("StatementList").Is(statement);
             gb.Prod("StatementList").Is(statementList, ";", statement);
             gb.Prod("Statement").Is(queryStatement);
+            gb.Prod("Statement").Is(updateStatement);
+            gb.Prod("Statement").Is(insertStatement);
+            gb.Prod("Statement").Is(createProcStatement);
 
             gb.Prod("QueryStatement").Is(queryExpression);
             gb.Prod("QueryStatement").Is(withClause, queryExpression);
+            gb.Prod("UpdateStatement").Is(kw("UPDATE"), tableFactor, kw("SET"), updateSetList);
+            gb.Prod("UpdateStatement").Is(kw("UPDATE"), tableFactor, kw("SET"), updateSetList, kw("WHERE"), searchCondition);
+            gb.Prod("UpdateSetList").Is(updateSetItem);
+            gb.Prod("UpdateSetList").Is(updateSetList, ",", updateSetItem);
+            gb.Prod("UpdateSetItem").Is(qualifiedName, "=", expression);
+
+            gb.Prod("InsertStatement").Is(
+                kw("INSERT"),
+                kw("INTO"),
+                qualifiedName,
+                "(",
+                insertColumnList,
+                ")",
+                kw("VALUES"),
+                "(",
+                insertValueList,
+                ")");
+            gb.Prod("InsertColumnList").Is(identifierTerm);
+            gb.Prod("InsertColumnList").Is(insertColumnList, ",", identifierTerm);
+            gb.Prod("InsertValueList").Is(expression);
+            gb.Prod("InsertValueList").Is(insertValueList, ",", expression);
+
+            gb.Prod("CreateProcStatement").Is(kw("CREATE"), kw("PROC"), identifierTerm, kw("AS"), kw("BEGIN"), procStatementList, kw("END"));
+            gb.Prod("CreateProcStatement").Is(kw("CREATE"), kw("PROCEDURE"), identifierTerm, kw("AS"), kw("BEGIN"), procStatementList, kw("END"));
+            gb.Prod("ProcStatementList").Is(statement);
+            gb.Prod("ProcStatementList").Is(procStatementList, ";", statement);
 
             gb.Prod("WithClause").Is(kw("WITH"), cteDefinitionList);
             gb.Prod("CteDefinitionList").Is(cteDefinition);
@@ -194,6 +270,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("SelectCore").Is(kw("SELECT"), setQuantifier, selectList, kw("FROM"), tableSourceList);
             gb.Prod("SelectCore").Is(kw("SELECT"), topClause, selectList, kw("FROM"), tableSourceList);
             gb.Prod("SelectCore").Is(kw("SELECT"), setQuantifier, topClause, selectList, kw("FROM"), tableSourceList);
+            gb.Prod("SelectCore").Is(kw("SELECT"), selectList);
+            gb.Prod("SelectCore").Is(kw("SELECT"), setQuantifier, selectList);
+            gb.Prod("SelectCore").Is(kw("SELECT"), topClause, selectList);
+            gb.Prod("SelectCore").Is(kw("SELECT"), setQuantifier, topClause, selectList);
 
             gb.Prod("QuerySpecification").Is(selectCore);
             gb.Prod("QuerySpecification").Is(selectCore, kw("WHERE"), searchCondition);
@@ -217,6 +297,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("SelectItemList").Is(selectItemList, ",", selectItem);
             gb.Prod("SelectItem").Is("*");
             gb.Prod("SelectItem").Is(expression, kw("AS"), identifierTerm);
+            gb.Prod("SelectItem").Is(expression);
             gb.Prod("SelectItem").Is(qualifiedName, ".", "*");
 
             gb.Prod("TableSourceList").Is(tableSource);

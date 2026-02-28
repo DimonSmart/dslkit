@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using DSLKIT.Parser;
+using DSLKIT.Terminals;
 using DSLKIT.Tokens;
 
 namespace DSLKIT.GrammarExamples.MsSql.Formatting
@@ -86,6 +88,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         private readonly IndentedSqlTextWriter _writer;
 
         private string? _previousToken;
+        private string? _tokenBeforePrevious;
         private bool _previousTokenWasKeyword;
         private ClauseKind _currentClause = ClauseKind.None;
         private ClauseKind? _lastMajorClause;
@@ -119,6 +122,31 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         protected override void VisitNonTerminal(NonTerminalNode node)
         {
             var nonTerminalName = node.NonTerminal.Name;
+            if (TryWriteCreateProcStatement(node, nonTerminalName))
+            {
+                return;
+            }
+
+            if (TryWriteUpdateStatement(node, nonTerminalName))
+            {
+                return;
+            }
+
+            if (TryWriteInsertStatement(node, nonTerminalName))
+            {
+                return;
+            }
+
+            if (TryWriteSubqueryQueryPrimary(node, nonTerminalName))
+            {
+                return;
+            }
+
+            if (TryWriteCaseExpression(node, nonTerminalName))
+            {
+                return;
+            }
+
             if (TryWriteStructuredList(node, nonTerminalName))
             {
                 return;
@@ -144,6 +172,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             var tokenForRules = isKeyword
                 ? rawToken.ToUpperInvariant()
                 : rawToken;
+            WriteTriviaComments(node.Token.Trivia.LeadingTrivia);
 
             if (string.Equals(tokenForRules, ";", StringComparison.Ordinal) &&
                 _options.Statement.TerminateWithSemicolon == SqlStatementTerminationMode.Never)
@@ -175,6 +204,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             }
 
             _writer.WriteToken(FormatToken(rawToken, tokenForRules, isKeyword));
+            WriteTriviaComments(node.Token.Trivia.TrailingTrivia);
 
             if (string.Equals(tokenForRules, ";", StringComparison.Ordinal))
             {
@@ -192,6 +222,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 _currentClause = clauseKind;
             }
 
+            _tokenBeforePrevious = _previousToken;
             _previousToken = tokenForRules;
             _previousTokenWasKeyword = isKeyword;
         }
@@ -218,7 +249,508 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 return true;
             }
 
+            if (string.Equals(nonTerminalName, "ExpressionList", StringComparison.Ordinal) &&
+                string.Equals(_previousToken, "(", StringComparison.Ordinal) &&
+                string.Equals(_tokenBeforePrevious, "IN", StringComparison.Ordinal))
+            {
+                WriteInListExpressionList(node);
+                return true;
+            }
+
+            if (string.Equals(nonTerminalName, "UpdateSetList", StringComparison.Ordinal))
+            {
+                WriteUpdateSetList(node);
+                return true;
+            }
+
+            if (string.Equals(nonTerminalName, "InsertColumnList", StringComparison.Ordinal))
+            {
+                WriteInsertColumnList(node);
+                return true;
+            }
+
+            if (string.Equals(nonTerminalName, "InsertValueList", StringComparison.Ordinal))
+            {
+                WriteInsertValueList(node);
+                return true;
+            }
+
             return false;
+        }
+
+        private bool TryWriteCreateProcStatement(NonTerminalNode node, string nonTerminalName)
+        {
+            if (!string.Equals(nonTerminalName, "CreateProcStatement", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            if (_options.Ddl.CreateProcLayout == SqlCreateProcLayout.Compact)
+            {
+                if (_writer.HasContent && !_writer.IsLineStart)
+                {
+                    _writer.WriteSpace();
+                }
+
+                _writer.WriteToken(RenderNodeInline(node));
+                UpdatePreviousTokenFromNode(node);
+                return true;
+            }
+
+            if (node.Children.Count < 7)
+            {
+                return false;
+            }
+
+            var createText = RenderNodeInline(node.Children[0]);
+            var procKeywordText = RenderNodeInline(node.Children[1]);
+            var procNameText = RenderNodeInline(node.Children[2]);
+            var asKeywordText = RenderNodeInline(node.Children[3]);
+            var beginKeywordText = RenderNodeInline(node.Children[4]);
+            var procStatementsNode = node.Children[5];
+            var endKeywordText = RenderNodeInline(node.Children[6]);
+
+            if (_writer.HasContent && !_writer.IsLineStart)
+            {
+                _writer.WriteSpace();
+            }
+
+            _writer.WriteToken($"{createText} {procKeywordText} {procNameText}");
+            _writer.WriteLine();
+            _writer.WriteToken(asKeywordText);
+            _writer.WriteLine();
+            _writer.WriteToken(beginKeywordText);
+            _writer.WriteLine();
+
+            using (_writer.PushIndent())
+            {
+                Visit(procStatementsNode);
+            }
+
+            if (!_writer.IsLineStart)
+            {
+                _writer.WriteLine();
+            }
+
+            _writer.WriteToken(endKeywordText);
+            UpdatePreviousTokenFromNode(node);
+            return true;
+        }
+
+        private bool TryWriteUpdateStatement(NonTerminalNode node, string nonTerminalName)
+        {
+            if (!string.Equals(nonTerminalName, "UpdateStatement", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            if (node.Children.Count < 4)
+            {
+                return false;
+            }
+
+            if (_writer.HasContent && !_writer.IsLineStart)
+            {
+                _writer.WriteLine();
+            }
+
+            var updateKeyword = FormatToken("UPDATE", "UPDATE", isKeyword: true);
+            var setKeyword = FormatToken("SET", "SET", isKeyword: true);
+            var tableText = RenderNodeInline(node.Children[1]);
+            var setListNode = node.Children[3];
+
+            _writer.WriteToken($"{updateKeyword} {tableText}");
+            _writer.WriteLine();
+            _writer.WriteToken(setKeyword);
+            UpdatePreviousToken(CreateKeywordToken("SET"));
+            Visit(setListNode);
+
+            if (node.Children.Count >= 6)
+            {
+                var whereKeyword = FormatToken("WHERE", "WHERE", isKeyword: true);
+                _writer.WriteLine();
+                _writer.WriteToken(whereKeyword);
+                UpdatePreviousToken(CreateKeywordToken("WHERE"));
+                Visit(node.Children[5]);
+            }
+
+            UpdatePreviousTokenFromNode(node);
+            return true;
+        }
+
+        private bool TryWriteInsertStatement(NonTerminalNode node, string nonTerminalName)
+        {
+            if (!string.Equals(nonTerminalName, "InsertStatement", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            if (node.Children.Count < 10 ||
+                node.Children[4] is not NonTerminalNode columnListNode ||
+                node.Children[8] is not NonTerminalNode valueListNode)
+            {
+                return false;
+            }
+
+            if (_writer.HasContent && !_writer.IsLineStart)
+            {
+                _writer.WriteLine();
+            }
+
+            var insertKeyword = FormatToken("INSERT", "INSERT", isKeyword: true);
+            var intoKeyword = FormatToken("INTO", "INTO", isKeyword: true);
+            var valuesKeyword = FormatToken("VALUES", "VALUES", isKeyword: true);
+            var targetText = RenderNodeInline(node.Children[2]);
+
+            var columnItemNodes = ExtractDelimitedListItems(columnListNode, "InsertColumnList");
+            var columnItemTexts = columnItemNodes.Select(RenderNodeInline).ToList();
+            var valueItemNodes = ExtractDelimitedListItems(valueListNode, "InsertValueList");
+            var valueItemTexts = valueItemNodes.Select(RenderNodeInline).ToList();
+            var multilineColumns = ShouldUseMultilineDmlList(_options.Dml.InsertColumnsStyle, columnItemTexts, "(".Length);
+            var multilineValues = ShouldUseMultilineDmlList(_options.Dml.InsertColumnsStyle, valueItemTexts, "(".Length);
+
+            _writer.WriteToken($"{insertKeyword} {intoKeyword} {targetText}");
+            WriteParenthesizedList(columnListNode, multilineColumns);
+
+            if (multilineColumns || multilineValues)
+            {
+                _writer.WriteLine();
+            }
+            else
+            {
+                _writer.WriteSpace();
+            }
+
+            _writer.WriteToken(valuesKeyword);
+            WriteParenthesizedList(valueListNode, multilineValues);
+
+            UpdatePreviousTokenFromNode(node);
+            return true;
+        }
+
+        private void WriteParenthesizedList(NonTerminalNode listNode, bool multiline)
+        {
+            _writer.WriteSpace();
+            _writer.WriteToken("(");
+            UpdatePreviousToken(CreateSymbolToken("("));
+            Visit(listNode);
+            if (multiline && !_writer.IsLineStart)
+            {
+                _writer.WriteLine();
+            }
+
+            _writer.WriteToken(")");
+            UpdatePreviousToken(CreateSymbolToken(")"));
+        }
+
+        private bool TryWriteSubqueryQueryPrimary(NonTerminalNode node, string nonTerminalName)
+        {
+            var isSupportedNode = string.Equals(nonTerminalName, "QueryPrimary", StringComparison.Ordinal) ||
+                string.Equals(nonTerminalName, "PrimaryExpression", StringComparison.Ordinal) ||
+                string.Equals(nonTerminalName, "TableFactor", StringComparison.Ordinal);
+            if (!isSupportedNode)
+            {
+                return false;
+            }
+
+            if (node.Children.Count < 3 ||
+                node.Children[0] is not TerminalNode openTerminal ||
+                !string.Equals(openTerminal.Token.OriginalString, "(", StringComparison.Ordinal) ||
+                node.Children[1] is not NonTerminalNode queryExpressionNode ||
+                !string.Equals(queryExpressionNode.NonTerminal.Name, "QueryExpression", StringComparison.Ordinal) ||
+                node.Children[2] is not TerminalNode closeTerminal ||
+                !string.Equals(closeTerminal.Token.OriginalString, ")", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            if (_writer.HasContent && !_writer.IsLineStart && ShouldWriteSpaceBefore("("))
+            {
+                _writer.WriteSpace();
+            }
+
+            _writer.WriteToken("(");
+            _writer.WriteLine();
+            using (_writer.PushIndent())
+            {
+                Visit(queryExpressionNode);
+            }
+
+            if (!_writer.IsLineStart)
+            {
+                _writer.WriteLine();
+            }
+
+            _writer.WriteToken(")");
+            UpdatePreviousToken(CreateSymbolToken(")"));
+
+            for (var childIndex = 3; childIndex < node.Children.Count; childIndex++)
+            {
+                Visit(node.Children[childIndex]);
+            }
+
+            return true;
+        }
+
+        private bool TryWriteCaseExpression(NonTerminalNode node, string nonTerminalName)
+        {
+            if (!string.Equals(nonTerminalName, "CaseExpression", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            var tokenInfos = CollectTokenInfos(node);
+            var inlineCaseText = RenderTokensInline(tokenInfos);
+            var whenCount = CountCaseWhenClauses(node);
+            if (ShouldUseCompactCaseLayout(whenCount, tokenInfos.Count, inlineCaseText.Length))
+            {
+                _writer.WriteToken(inlineCaseText);
+                UpdatePreviousToken(tokenInfos[^1]);
+                return true;
+            }
+
+            WriteCaseExpressionMultiline(node);
+            return true;
+        }
+
+        private bool ShouldUseCompactCaseLayout(int whenCount, int tokenCount, int lineLength)
+        {
+            if (_options.Expressions.CaseStyle == SqlCaseStyle.Multiline)
+            {
+                return false;
+            }
+
+            var threshold = _options.Expressions.CompactCaseThreshold;
+            if (threshold.MaxWhenClauses > 0 && whenCount > threshold.MaxWhenClauses)
+            {
+                return false;
+            }
+
+            if (threshold.MaxTokens > 0 && tokenCount > threshold.MaxTokens)
+            {
+                return false;
+            }
+
+            return lineLength <= Math.Max(1, threshold.MaxLineLength);
+        }
+
+        private static int CountCaseWhenClauses(NonTerminalNode caseExpressionNode)
+        {
+            var caseWhenListNode = caseExpressionNode.Children
+                .OfType<NonTerminalNode>()
+                .FirstOrDefault(nonTerminalNode =>
+                    string.Equals(nonTerminalNode.NonTerminal.Name, "CaseWhenList", StringComparison.Ordinal));
+            if (caseWhenListNode == null)
+            {
+                return 0;
+            }
+
+            return ExtractCaseWhenNodes(caseWhenListNode).Count;
+        }
+
+        private static IReadOnlyList<NonTerminalNode> ExtractCaseWhenNodes(NonTerminalNode caseWhenListNode)
+        {
+            var nodes = new List<NonTerminalNode>();
+            CollectCaseWhenNodes(caseWhenListNode, nodes);
+            return nodes;
+        }
+
+        private static void CollectCaseWhenNodes(ParseTreeNode node, List<NonTerminalNode> output)
+        {
+            if (node is not NonTerminalNode nonTerminalNode)
+            {
+                return;
+            }
+
+            if (string.Equals(nonTerminalNode.NonTerminal.Name, "CaseWhen", StringComparison.Ordinal))
+            {
+                output.Add(nonTerminalNode);
+                return;
+            }
+
+            if (!string.Equals(nonTerminalNode.NonTerminal.Name, "CaseWhenList", StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            foreach (var child in nonTerminalNode.Children)
+            {
+                CollectCaseWhenNodes(child, output);
+            }
+        }
+
+        private void WriteCaseExpressionMultiline(NonTerminalNode caseExpressionNode)
+        {
+            if (!TryExtractCaseComponents(caseExpressionNode, out var inputExpressionNode, out var caseWhenListNode, out var elseExpressionNode))
+            {
+                _writer.WriteToken(RenderNodeInline(caseExpressionNode));
+                UpdatePreviousTokenFromNode(caseExpressionNode);
+                return;
+            }
+
+            var caseKeyword = FormatToken("CASE", "CASE", isKeyword: true);
+            var endKeyword = FormatToken("END", "END", isKeyword: true);
+
+            if (_writer.HasContent && !_writer.IsLineStart)
+            {
+                _writer.WriteSpace();
+            }
+
+            _writer.WriteToken(caseKeyword);
+            if (inputExpressionNode != null)
+            {
+                _writer.WriteSpace();
+                _writer.WriteToken(RenderNodeInline(inputExpressionNode));
+            }
+
+            var caseWhenNodes = ExtractCaseWhenNodes(caseWhenListNode);
+            if (caseWhenNodes.Count == 0)
+            {
+                _writer.WriteSpace();
+                _writer.WriteToken(endKeyword);
+                UpdatePreviousTokenFromNode(caseExpressionNode);
+                return;
+            }
+
+            _writer.WriteLine();
+            using (_writer.PushIndent())
+            {
+                for (var whenIndex = 0; whenIndex < caseWhenNodes.Count; whenIndex++)
+                {
+                    WriteCaseWhenLine(caseWhenNodes[whenIndex]);
+                    if (whenIndex < caseWhenNodes.Count - 1 || elseExpressionNode != null)
+                    {
+                        _writer.WriteLine();
+                    }
+                }
+
+                if (elseExpressionNode != null)
+                {
+                    var elseKeyword = FormatToken("ELSE", "ELSE", isKeyword: true);
+                    _writer.WriteToken($"{elseKeyword} {RenderNodeInline(elseExpressionNode)}");
+                }
+            }
+
+            if (!_writer.IsLineStart)
+            {
+                _writer.WriteLine();
+            }
+
+            _writer.WriteToken(endKeyword);
+            UpdatePreviousTokenFromNode(caseExpressionNode);
+        }
+
+        private static bool TryExtractCaseComponents(
+            NonTerminalNode caseExpressionNode,
+            out ParseTreeNode? inputExpressionNode,
+            out NonTerminalNode caseWhenListNode,
+            out ParseTreeNode? elseExpressionNode)
+        {
+            inputExpressionNode = null;
+            elseExpressionNode = null;
+            caseWhenListNode = null!;
+
+            if (caseExpressionNode.Children.Count < 3)
+            {
+                return false;
+            }
+
+            var caseWhenListIndex = -1;
+            for (var childIndex = 0; childIndex < caseExpressionNode.Children.Count; childIndex++)
+            {
+                if (caseExpressionNode.Children[childIndex] is NonTerminalNode candidate &&
+                    string.Equals(candidate.NonTerminal.Name, "CaseWhenList", StringComparison.Ordinal))
+                {
+                    caseWhenListNode = candidate;
+                    caseWhenListIndex = childIndex;
+                    break;
+                }
+            }
+
+            if (caseWhenListIndex < 0)
+            {
+                return false;
+            }
+
+            if (caseWhenListIndex > 1)
+            {
+                inputExpressionNode = caseExpressionNode.Children[1];
+            }
+
+            if (caseWhenListIndex + 2 < caseExpressionNode.Children.Count &&
+                caseExpressionNode.Children[caseWhenListIndex + 1] is TerminalNode elseTerminal &&
+                string.Equals(elseTerminal.Token.OriginalString, "ELSE", StringComparison.OrdinalIgnoreCase))
+            {
+                elseExpressionNode = caseExpressionNode.Children[caseWhenListIndex + 2];
+            }
+
+            return true;
+        }
+
+        private void WriteCaseWhenLine(NonTerminalNode caseWhenNode)
+        {
+            if (caseWhenNode.Children.Count < 4)
+            {
+                _writer.WriteToken(RenderNodeInline(caseWhenNode));
+                return;
+            }
+
+            var whenKeyword = FormatToken("WHEN", "WHEN", isKeyword: true);
+            var thenKeyword = FormatToken("THEN", "THEN", isKeyword: true);
+            var whenConditionText = RenderNodeInline(caseWhenNode.Children[1]);
+            var whenResultText = RenderNodeInline(caseWhenNode.Children[3]);
+            _writer.WriteToken($"{whenKeyword} {whenConditionText} {thenKeyword} {whenResultText}");
+        }
+
+        private bool ShouldInlineShortExpression(ParseTreeNode expressionNode, SqlInlineExpressionContext context, int clausePrefixLength)
+        {
+            var inlineOptions = _options.Expressions.InlineShortExpression;
+            if (inlineOptions.MaxTokens <= 0 || !ShouldInlineShortExpressionContextEnabled(context, inlineOptions))
+            {
+                return false;
+            }
+
+            var tokenInfos = CollectTokenInfos(expressionNode);
+            if (tokenInfos.Count == 0 || tokenInfos.Count > inlineOptions.MaxTokens)
+            {
+                return false;
+            }
+
+            if (inlineOptions.MaxDepth > 0 && CalculateNodeDepth(expressionNode) > inlineOptions.MaxDepth)
+            {
+                return false;
+            }
+
+            var inlineLength = clausePrefixLength + RenderTokensInline(tokenInfos).Length;
+            return inlineLength <= Math.Max(1, inlineOptions.MaxLineLength);
+        }
+
+        private static bool ShouldInlineShortExpressionContextEnabled(
+            SqlInlineExpressionContext context,
+            SqlInlineShortExpressionOptions inlineOptions)
+        {
+            if (inlineOptions.ForContexts.Count == 0)
+            {
+                return false;
+            }
+
+            return inlineOptions.ForContexts.Contains(context);
+        }
+
+        private static int CalculateNodeDepth(ParseTreeNode node)
+        {
+            if (node.Children.Count == 0)
+            {
+                return 1;
+            }
+
+            var maxChildDepth = 0;
+            foreach (var child in node.Children)
+            {
+                maxChildDepth = Math.Max(maxChildDepth, CalculateNodeDepth(child));
+            }
+
+            return maxChildDepth + 1;
         }
 
         private bool TryWriteSearchCondition(NonTerminalNode node, string nonTerminalName)
@@ -242,6 +774,11 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 return false;
             }
 
+            if (ShouldDeferSearchConditionFormattingToChildNodes(node))
+            {
+                return false;
+            }
+
             var tokenInfos = CollectTokenInfos(node);
             if (tokenInfos.Count == 0)
             {
@@ -251,21 +788,69 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             if (isWhereOrHavingAnchor)
             {
                 tokenInfos = ApplyParenthesizeMixedAndOr(tokenInfos);
-                WriteWhereOrHavingPredicate(anchorKeyword, tokenInfos);
+                var forceInlineByShortExpression = ShouldInlineShortExpression(
+                    node,
+                    SqlInlineExpressionContext.Where,
+                    anchorKeyword.Length + 1);
+                WriteWhereOrHavingPredicate(anchorKeyword, tokenInfos, forceInlineByShortExpression);
             }
             else
             {
-                WriteOnPredicate(tokenInfos);
+                var forceInlineByShortExpression = ShouldInlineShortExpression(
+                    node,
+                    SqlInlineExpressionContext.On,
+                    "ON ".Length);
+                WriteOnPredicate(tokenInfos, forceInlineByShortExpression);
             }
 
             UpdatePreviousToken(tokenInfos[^1]);
             return true;
         }
 
-        private void WriteWhereOrHavingPredicate(string anchorKeyword, IReadOnlyList<SqlTokenInfo> tokenInfos)
+        private bool ShouldDeferSearchConditionFormattingToChildNodes(ParseTreeNode searchConditionNode)
+        {
+            if (!ContainsInPredicateList(searchConditionNode))
+            {
+                return false;
+            }
+
+            if (_options.Lists.InListItems != SqlInListItemsStyle.Inline)
+            {
+                return true;
+            }
+
+            return _options.Lists.InlineInListThreshold.MaxItemsInline > 0;
+        }
+
+        private bool ContainsInPredicateList(ParseTreeNode searchConditionNode)
+        {
+            var tokenInfos = CollectTokenInfos(searchConditionNode);
+            for (var tokenIndex = 0; tokenIndex < tokenInfos.Count - 1; tokenIndex++)
+            {
+                var currentToken = tokenInfos[tokenIndex];
+                var nextToken = tokenInfos[tokenIndex + 1];
+                if (string.Equals(currentToken.TokenForRules, "IN", StringComparison.Ordinal) &&
+                    string.Equals(nextToken.TokenForRules, "(", StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void WriteWhereOrHavingPredicate(
+            string anchorKeyword,
+            IReadOnlyList<SqlTokenInfo> tokenInfos,
+            bool forceInlineByShortExpression)
         {
             var shouldMultiline = _options.Predicates.MultilineWhere;
             if (shouldMultiline && ShouldInlineSimplePredicate(anchorKeyword, tokenInfos))
+            {
+                shouldMultiline = false;
+            }
+
+            if (forceInlineByShortExpression)
             {
                 shouldMultiline = false;
             }
@@ -291,7 +876,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             }
         }
 
-        private void WriteOnPredicate(IReadOnlyList<SqlTokenInfo> tokenInfos)
+        private void WriteOnPredicate(IReadOnlyList<SqlTokenInfo> tokenInfos, bool forceInlineByShortExpression)
         {
             var threshold = _options.Joins.MultilineOnThreshold;
             var breakOperators = threshold.BreakOn == SqlJoinMultilineBreakOnMode.AndOnly
@@ -302,6 +887,10 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             var shouldUseMultiline = threshold.MaxTokensSingleLine > 0 &&
                 CountSignificantTokens(tokenInfos) > threshold.MaxTokensSingleLine &&
                 split.Operators.Count > 0;
+            if (forceInlineByShortExpression)
+            {
+                shouldUseMultiline = false;
+            }
 
             if (!shouldUseMultiline)
             {
@@ -506,6 +1095,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         private static int CountSignificantTokens(IReadOnlyList<SqlTokenInfo> tokenInfos)
         {
             return tokenInfos.Count(tokenInfo =>
+                !tokenInfo.IsComment &&
                 !string.Equals(tokenInfo.TokenForRules, "(", StringComparison.Ordinal) &&
                 !string.Equals(tokenInfo.TokenForRules, ")", StringComparison.Ordinal));
         }
@@ -515,6 +1105,10 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             var itemNodes = ExtractDelimitedListItems(node, "SelectItemList");
             var itemTexts = itemNodes.Select(RenderNodeInline).ToList();
             var useMultiline = ShouldUseMultilineSelectLayout(itemNodes, itemTexts);
+            if (useMultiline && ShouldForceInlineSelectList(itemNodes, itemTexts))
+            {
+                useMultiline = false;
+            }
 
             if (useMultiline && _options.Align.SelectAliases)
             {
@@ -542,6 +1136,93 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             var useMultiline = ShouldUseMultilineLayout(_options.Lists.OrderByItems, itemTexts, "ORDER BY ".Length);
 
             WriteList(itemTexts, useMultiline);
+            UpdatePreviousTokenFromNode(node);
+        }
+
+        private void WriteInListExpressionList(NonTerminalNode node)
+        {
+            var itemNodes = ExtractDelimitedListItems(node, "ExpressionList");
+            var itemTexts = itemNodes.Select(RenderNodeInline).ToList();
+            var listStyle = _options.Lists.InListItems;
+
+            var useMultiline = listStyle switch
+            {
+                SqlInListItemsStyle.OnePerLine => true,
+                SqlInListItemsStyle.WrapByWidth => "IN (".Length + string.Join(GetInlineCommaSeparator(), itemTexts).Length + 1 > WrapByWidthLineLength,
+                _ => false
+            };
+
+            var inlineThreshold = _options.Lists.InlineInListThreshold;
+            if (useMultiline &&
+                inlineThreshold.MaxItemsInline > 0 &&
+                itemTexts.Count <= inlineThreshold.MaxItemsInline)
+            {
+                var inlineLength = "IN (".Length + string.Join(GetInlineCommaSeparator(), itemTexts).Length + 1;
+                if (inlineLength <= Math.Max(1, inlineThreshold.MaxLineLength))
+                {
+                    useMultiline = false;
+                }
+            }
+
+            if (useMultiline)
+            {
+                WriteList(itemTexts, multiline: true);
+                if (!_writer.IsLineStart)
+                {
+                    _writer.WriteLine();
+                }
+            }
+            else
+            {
+                _writer.WriteToken(string.Join(GetInlineCommaSeparator(), itemTexts));
+            }
+
+            UpdatePreviousTokenFromNode(node);
+        }
+
+        private void WriteUpdateSetList(NonTerminalNode node)
+        {
+            var itemNodes = ExtractDelimitedListItems(node, "UpdateSetList");
+            var itemTexts = itemNodes.Select(RenderNodeInline).ToList();
+            var useMultiline = ShouldUseMultilineDmlList(_options.Dml.UpdateSetStyle, itemTexts, "SET ".Length);
+
+            WriteList(itemTexts, useMultiline);
+            UpdatePreviousTokenFromNode(node);
+        }
+
+        private void WriteInsertColumnList(NonTerminalNode node)
+        {
+            var itemNodes = ExtractDelimitedListItems(node, "InsertColumnList");
+            var itemTexts = itemNodes.Select(RenderNodeInline).ToList();
+            var useMultiline = ShouldUseMultilineDmlList(_options.Dml.InsertColumnsStyle, itemTexts, "(".Length);
+
+            if (useMultiline)
+            {
+                WriteList(itemTexts, multiline: true);
+            }
+            else
+            {
+                _writer.WriteToken(string.Join(GetInlineCommaSeparator(), itemTexts));
+            }
+
+            UpdatePreviousTokenFromNode(node);
+        }
+
+        private void WriteInsertValueList(NonTerminalNode node)
+        {
+            var itemNodes = ExtractDelimitedListItems(node, "InsertValueList");
+            var itemTexts = itemNodes.Select(RenderNodeInline).ToList();
+            var useMultiline = ShouldUseMultilineDmlList(_options.Dml.InsertColumnsStyle, itemTexts, "(".Length);
+
+            if (useMultiline)
+            {
+                WriteList(itemTexts, multiline: true);
+            }
+            else
+            {
+                _writer.WriteToken(string.Join(GetInlineCommaSeparator(), itemTexts));
+            }
+
             UpdatePreviousTokenFromNode(node);
         }
 
@@ -620,9 +1301,37 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             return inlineLineLength > Math.Max(1, threshold.MaxLineLength);
         }
 
+        private bool ShouldForceInlineSelectList(IReadOnlyList<ParseTreeNode> itemNodes, IReadOnlyList<string> itemTexts)
+        {
+            if (itemNodes.Count == 0)
+            {
+                return false;
+            }
+
+            if (!itemNodes.All(itemNode => ShouldInlineShortExpression(itemNode, SqlInlineExpressionContext.SelectItem, "SELECT ".Length)))
+            {
+                return false;
+            }
+
+            var inlineLength = "SELECT ".Length + string.Join(GetInlineCommaSeparator(), itemTexts).Length;
+            var maxLineLength = Math.Max(1, _options.Expressions.InlineShortExpression.MaxLineLength);
+            return inlineLength <= maxLineLength;
+        }
+
         private bool ShouldUseMultilineLayout(SqlListLayoutStyle listLayoutStyle, IReadOnlyList<string> itemTexts, int clausePrefixLength)
         {
             if (listLayoutStyle == SqlListLayoutStyle.OnePerLine)
+            {
+                return true;
+            }
+
+            var inlineLength = clausePrefixLength + string.Join(GetInlineCommaSeparator(), itemTexts).Length;
+            return inlineLength > WrapByWidthLineLength;
+        }
+
+        private bool ShouldUseMultilineDmlList(SqlDmlListStyle listStyle, IReadOnlyList<string> itemTexts, int clausePrefixLength)
+        {
+            if (listStyle == SqlDmlListStyle.OnePerLine)
             {
                 return true;
             }
@@ -785,7 +1494,15 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                     builder.Append(' ');
                 }
 
-                builder.Append(FormatToken(tokenInfo.Raw, tokenInfo.TokenForRules, tokenInfo.IsKeyword));
+                if (tokenInfo.IsComment)
+                {
+                    builder.Append(FormatCommentText(tokenInfo.Raw));
+                }
+                else
+                {
+                    builder.Append(FormatToken(tokenInfo.Raw, tokenInfo.TokenForRules, tokenInfo.IsKeyword));
+                }
+
                 previousToken = tokenInfo.TokenForRules;
                 previousTokenWasKeyword = tokenInfo.IsKeyword;
             }
@@ -793,12 +1510,14 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             return builder.ToString();
         }
 
-        private static List<SqlTokenInfo> CollectTokenInfos(ParseTreeNode node)
+        private List<SqlTokenInfo> CollectTokenInfos(ParseTreeNode node)
         {
             var terminalNodes = CollectTerminalNodes(node);
             var tokenInfos = new List<SqlTokenInfo>(terminalNodes.Count);
             foreach (var terminalNode in terminalNodes)
             {
+                AppendCommentTriviaTokenInfos(terminalNode.Token.Trivia.LeadingTrivia, tokenInfos);
+
                 var rawToken = terminalNode.Token.OriginalString;
                 if (string.IsNullOrEmpty(rawToken))
                 {
@@ -808,9 +1527,33 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 var isKeyword = terminalNode.Token is KeywordToken;
                 var tokenForRules = isKeyword ? rawToken.ToUpperInvariant() : rawToken;
                 tokenInfos.Add(new SqlTokenInfo(rawToken, tokenForRules, isKeyword));
+
+                AppendCommentTriviaTokenInfos(terminalNode.Token.Trivia.TrailingTrivia, tokenInfos);
             }
 
             return tokenInfos;
+        }
+
+        private static void AppendCommentTriviaTokenInfos(IReadOnlyList<IToken> triviaTokens, List<SqlTokenInfo> output)
+        {
+            if (triviaTokens.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var triviaToken in triviaTokens)
+            {
+                if (triviaToken.Terminal.Flags != TermFlags.Comment || string.IsNullOrWhiteSpace(triviaToken.OriginalString))
+                {
+                    continue;
+                }
+
+                output.Add(new SqlTokenInfo(
+                    triviaToken.OriginalString,
+                    triviaToken.OriginalString,
+                    IsKeyword: false,
+                    IsComment: true));
+            }
         }
 
         private void UpdatePreviousTokenFromNode(ParseTreeNode node)
@@ -829,12 +1572,14 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             }
 
             var isKeyword = lastTerminalNode.Token is KeywordToken;
+            _tokenBeforePrevious = _previousToken;
             _previousToken = isKeyword ? rawToken.ToUpperInvariant() : rawToken;
             _previousTokenWasKeyword = isKeyword;
         }
 
         private void UpdatePreviousToken(SqlTokenInfo tokenInfo)
         {
+            _tokenBeforePrevious = _previousToken;
             _previousToken = tokenInfo.TokenForRules;
             _previousTokenWasKeyword = tokenInfo.IsKeyword;
         }
@@ -858,6 +1603,91 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             {
                 CollectTerminalNodes(child, output);
             }
+        }
+
+        private void WriteTriviaComments(IReadOnlyList<IToken> triviaTokens)
+        {
+            if (triviaTokens.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var triviaToken in triviaTokens)
+            {
+                if (triviaToken.Terminal.Flags != TermFlags.Comment)
+                {
+                    continue;
+                }
+
+                var commentText = FormatCommentText(triviaToken.OriginalString);
+                if (string.IsNullOrWhiteSpace(commentText))
+                {
+                    continue;
+                }
+
+                var isSingleLineComment = commentText.StartsWith("--", StringComparison.Ordinal);
+                var hasLineBreak = commentText.Contains('\n') || commentText.Contains('\r');
+
+                if (!_options.Comments.PreserveAttachment)
+                {
+                    if (!_writer.IsLineStart)
+                    {
+                        _writer.WriteLine();
+                    }
+
+                    _writer.WriteToken(commentText);
+                    _writer.WriteLine();
+                    continue;
+                }
+
+                if (!_writer.IsLineStart)
+                {
+                    _writer.WriteSpace();
+                }
+
+                _writer.WriteToken(commentText);
+                if (isSingleLineComment || hasLineBreak)
+                {
+                    _writer.WriteLine();
+                }
+            }
+        }
+
+        private string FormatCommentText(string rawCommentText)
+        {
+            if (_options.Comments.Formatting == SqlCommentsFormattingMode.Keep)
+            {
+                return rawCommentText;
+            }
+
+            if (rawCommentText.StartsWith("--", StringComparison.Ordinal))
+            {
+                var commentBody = rawCommentText.Length > 2
+                    ? rawCommentText[2..]
+                    : string.Empty;
+                var normalizedBody = Regex.Replace(commentBody, @"\s+", " ").Trim();
+                return string.IsNullOrEmpty(normalizedBody)
+                    ? "--"
+                    : $"-- {normalizedBody}";
+            }
+
+            if (rawCommentText.StartsWith("/*", StringComparison.Ordinal) &&
+                rawCommentText.EndsWith("*/", StringComparison.Ordinal))
+            {
+                var commentBody = rawCommentText[2..^2];
+                var hasLineBreak = commentBody.Contains('\n') || commentBody.Contains('\r');
+                if (hasLineBreak)
+                {
+                    return rawCommentText;
+                }
+
+                var normalizedBody = Regex.Replace(commentBody, @"\s+", " ").Trim();
+                return string.IsNullOrEmpty(normalizedBody)
+                    ? "/* */"
+                    : $"/* {normalizedBody} */";
+            }
+
+            return rawCommentText;
         }
 
         private string GetInlineCommaSeparator()
@@ -1084,6 +1914,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
             _currentClause = ClauseKind.None;
             _lastMajorClause = null;
+            _tokenBeforePrevious = null;
             _previousToken = null;
             _previousTokenWasKeyword = false;
         }
@@ -1102,6 +1933,6 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             List<List<SqlTokenInfo>> Segments,
             List<SqlTokenInfo> Operators);
 
-        private readonly record struct SqlTokenInfo(string Raw, string TokenForRules, bool IsKeyword);
+        private readonly record struct SqlTokenInfo(string Raw, string TokenForRules, bool IsKeyword, bool IsComment = false);
     }
 }

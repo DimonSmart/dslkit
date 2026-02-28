@@ -242,6 +242,142 @@ namespace DSLKIT.Test.GrammarExamples
             formattedSql.Should().Contain("WHERE A = 1");
         }
 
+        [Fact]
+        public void TryFormat_ShouldApplyStage6CaseLayoutSettings()
+        {
+            const string sourceSql = "SELECT CASE WHEN x=1 THEN 'A' ELSE 'B' END AS v FROM dbo.t AS t";
+            var options = new SqlFormattingOptions
+            {
+                Expressions = new SqlExpressionsFormattingOptions
+                {
+                    CaseStyle = SqlCaseStyle.CompactWhenShort,
+                    CompactCaseThreshold = new SqlCompactCaseThresholdOptions
+                    {
+                        MaxWhenClauses = 1,
+                        MaxTokens = 20,
+                        MaxLineLength = 120
+                    }
+                },
+                Lists = new SqlListsFormattingOptions
+                {
+                    SelectItems = SqlListLayoutStyle.OnePerLine
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+
+            result.IsSuccess.Should().BeTrue();
+            formattedSql.Should().Contain("CASE WHEN X = 1 THEN 'A' ELSE 'B' END AS V");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldApplyStage6InListSettings()
+        {
+            const string sourceSql = "SELECT a AS A FROM dbo.t AS t WHERE a IN (1,2,3,4)";
+            var options = new SqlFormattingOptions
+            {
+                Lists = new SqlListsFormattingOptions
+                {
+                    InListItems = SqlInListItemsStyle.OnePerLine,
+                    InlineInListThreshold = new SqlInlineInListThresholdOptions
+                    {
+                        MaxItemsInline = 0,
+                        MaxLineLength = 120
+                    }
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+
+            result.IsSuccess.Should().BeTrue();
+            formattedSql.Should().Contain("IN (\n");
+            formattedSql.Should().Contain("\n    1,\n");
+            formattedSql.Should().Contain("\n    4\n");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldInlineShortSelectExpression_WhenStage6HeuristicAllowsIt()
+        {
+            const string sourceSql = "SELECT a+b+c+d AS s FROM dbo.t AS t";
+            var options = new SqlFormattingOptions
+            {
+                Lists = new SqlListsFormattingOptions
+                {
+                    SelectItems = SqlListLayoutStyle.OnePerLine
+                },
+                Expressions = new SqlExpressionsFormattingOptions
+                {
+                    InlineShortExpression = new SqlInlineShortExpressionOptions
+                    {
+                        MaxTokens = 16,
+                        MaxDepth = 0,
+                        MaxLineLength = 120,
+                        ForContexts = [SqlInlineExpressionContext.SelectItem]
+                    }
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+
+            result.IsSuccess.Should().BeTrue();
+            formattedSql.Should().Contain("SELECT A + B + C + D AS S");
+            formattedSql.Should().Contain("\nFROM DBO.T AS T");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldApplyStage7DmlDdlSettings()
+        {
+            const string sourceSql = "UPDATE dbo.t SET a=1,b=2 WHERE id=@id; CREATE PROC p AS BEGIN SELECT 1 END";
+            var options = new SqlFormattingOptions
+            {
+                Dml = new SqlDmlFormattingOptions
+                {
+                    UpdateSetStyle = SqlDmlListStyle.OnePerLine,
+                    InsertColumnsStyle = SqlDmlListStyle.OnePerLine
+                },
+                Ddl = new SqlDdlFormattingOptions
+                {
+                    CreateProcLayout = SqlCreateProcLayout.Expanded
+                },
+                Statement = new SqlStatementFormattingOptions
+                {
+                    TerminateWithSemicolon = SqlStatementTerminationMode.Always
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+
+            result.IsSuccess.Should().BeTrue();
+            formattedSql.Should().Contain("UPDATE DBO.T\nSET\n");
+            formattedSql.Should().Contain("\n    A = 1,\n");
+            formattedSql.Should().Contain("\nWHERE ID = @ID;\n");
+            formattedSql.Should().Contain("CREATE PROC P\nAS\nBEGIN\n");
+            formattedSql.Should().Contain("\n    SELECT\n        1\nEND");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldApplyStage8CommentFormatting()
+        {
+            const string sourceSql = "SELECT a /*  keep   spacing */ AS b FROM dbo.t AS t";
+            var options = new SqlFormattingOptions
+            {
+                Comments = new SqlCommentsFormattingOptions
+                {
+                    PreserveAttachment = true,
+                    Formatting = SqlCommentsFormattingMode.ReflowSafeOnly
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+
+            result.IsSuccess.Should().BeTrue();
+            result.FormattedSql.Should().Contain("/* keep spacing */");
+        }
+
         public static IEnumerable<object[]> ValidFormattingScripts()
         {
             var scriptsRoot = ResolveScriptsRoot();

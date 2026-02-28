@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace DSLKIT.GrammarExamples.MsSql.Formatting
 {
     public enum SqlKeywordCase
@@ -39,6 +41,49 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         WrapByWidth
     }
 
+    public enum SqlCaseStyle
+    {
+        Multiline,
+        CompactWhenShort
+    }
+
+    public enum SqlSubqueryIndentStyle
+    {
+        Indented
+    }
+
+    public enum SqlInListItemsStyle
+    {
+        Inline,
+        OnePerLine,
+        WrapByWidth
+    }
+
+    public enum SqlInlineExpressionContext
+    {
+        SelectItem,
+        On,
+        Where
+    }
+
+    public enum SqlDmlListStyle
+    {
+        OnePerLine,
+        WrapByWidth
+    }
+
+    public enum SqlCreateProcLayout
+    {
+        Expanded,
+        Compact
+    }
+
+    public enum SqlCommentsFormattingMode
+    {
+        Keep,
+        ReflowSafeOnly
+    }
+
     public enum SqlJoinMultilineBreakOnMode
     {
         AndOnly,
@@ -77,6 +122,18 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         public SqlJoinsFormattingOptions Joins { get; init; } = new();
 
         public SqlPredicatesFormattingOptions Predicates { get; init; } = new();
+
+        public SqlExpressionsFormattingOptions Expressions { get; init; } = new();
+
+        public SqlSubqueriesFormattingOptions Subqueries { get; init; } = new();
+
+        public SqlDmlFormattingOptions Dml { get; init; } = new();
+
+        public SqlDdlFormattingOptions Ddl { get; init; } = new();
+
+        public SqlCommentsFormattingOptions Comments { get; init; } = new();
+
+        public SqlPreserveFormattingOptions Preserve { get; init; } = new();
     }
 
     public sealed record SqlSpacesFormattingOptions
@@ -139,6 +196,10 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         public SqlListLayoutStyle OrderByItems { get; init; } = SqlListLayoutStyle.OnePerLine;
 
         public SqlSelectCompactThresholdOptions SelectCompactThreshold { get; init; } = new();
+
+        public SqlInListItemsStyle InListItems { get; init; } = SqlInListItemsStyle.Inline;
+
+        public SqlInlineInListThresholdOptions InlineInListThreshold { get; init; } = new();
     }
 
     public sealed record SqlSelectCompactThresholdOptions
@@ -148,6 +209,13 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         public int MaxLineLength { get; init; } = 80;
 
         public bool AllowExpressions { get; init; } = false;
+    }
+
+    public sealed record SqlInlineInListThresholdOptions
+    {
+        public int MaxItemsInline { get; init; } = 0;
+
+        public int MaxLineLength { get; init; } = 120;
     }
 
     public sealed record SqlAlignFormattingOptions
@@ -194,5 +262,63 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
     public sealed record SqlParenthesizeMixedAndOrOptions
     {
         public SqlParenthesizeMixedAndOrMode Mode { get; init; } = SqlParenthesizeMixedAndOrMode.None;
+    }
+
+    public sealed record SqlExpressionsFormattingOptions
+    {
+        public SqlCaseStyle CaseStyle { get; init; } = SqlCaseStyle.Multiline;
+
+        public SqlCompactCaseThresholdOptions CompactCaseThreshold { get; init; } = new();
+
+        public SqlInlineShortExpressionOptions InlineShortExpression { get; init; } = new();
+    }
+
+    public sealed record SqlCompactCaseThresholdOptions
+    {
+        public int MaxWhenClauses { get; init; } = 0;
+
+        public int MaxTokens { get; init; } = 0;
+
+        public int MaxLineLength { get; init; } = 120;
+    }
+
+    public sealed record SqlInlineShortExpressionOptions
+    {
+        public int MaxTokens { get; init; } = 0;
+
+        public int MaxDepth { get; init; } = 0;
+
+        public int MaxLineLength { get; init; } = 120;
+
+        public IReadOnlyCollection<SqlInlineExpressionContext> ForContexts { get; init; } = [];
+    }
+
+    public sealed record SqlSubqueriesFormattingOptions
+    {
+        public SqlSubqueryIndentStyle IndentStyle { get; init; } = SqlSubqueryIndentStyle.Indented;
+    }
+
+    public sealed record SqlDmlFormattingOptions
+    {
+        public SqlDmlListStyle UpdateSetStyle { get; init; } = SqlDmlListStyle.OnePerLine;
+
+        public SqlDmlListStyle InsertColumnsStyle { get; init; } = SqlDmlListStyle.OnePerLine;
+    }
+
+    public sealed record SqlDdlFormattingOptions
+    {
+        public SqlCreateProcLayout CreateProcLayout { get; init; } = SqlCreateProcLayout.Expanded;
+    }
+
+    public sealed record SqlCommentsFormattingOptions
+    {
+        public bool PreserveAttachment { get; init; } = true;
+
+        public SqlCommentsFormattingMode Formatting { get; init; } = SqlCommentsFormattingMode.Keep;
+    }
+
+    public sealed record SqlPreserveFormattingOptions
+    {
+        public bool StringLiterals { get; init; } = true;
     }
 }

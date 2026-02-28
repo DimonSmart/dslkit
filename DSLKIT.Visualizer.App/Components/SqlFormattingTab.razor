@@ -248,6 +248,110 @@
                                 </details>
 
                                 <details class="dsl-sql-option-section" open>
+                                    <summary>Expressions</summary>
+                                    <div class="dsl-sql-property-grid">
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("expressions case style multiline compact when short")'>
+                                            <label for="sql-expressions-case-style">CASE style</label>
+                                            <select id="sql-expressions-case-style"
+                                                    class="form-select form-select-sm"
+                                                    @bind="expressionsCaseStyle">
+                                                <option value="@SqlCaseStyle.Multiline">Multiline</option>
+                                                <option value="@SqlCaseStyle.CompactWhenShort">CompactWhenShort</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("expressions compact case threshold max when clauses")'>
+                                            <label for="sql-case-threshold-max-when">CASE max WHEN clauses</label>
+                                            <input id="sql-case-threshold-max-when"
+                                                   class="form-control form-control-sm"
+                                                   type="number"
+                                                   min="0"
+                                                   step="1"
+                                                   @bind="compactCaseMaxWhenClauses" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("expressions compact case threshold max tokens")'>
+                                            <label for="sql-case-threshold-max-tokens">CASE max tokens</label>
+                                            <input id="sql-case-threshold-max-tokens"
+                                                   class="form-control form-control-sm"
+                                                   type="number"
+                                                   min="0"
+                                                   step="1"
+                                                   @bind="compactCaseMaxTokens" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("expressions compact case threshold max line length")'>
+                                            <label for="sql-case-threshold-max-line">CASE max line length</label>
+                                            <input id="sql-case-threshold-max-line"
+                                                   class="form-control form-control-sm"
+                                                   type="number"
+                                                   min="10"
+                                                   step="1"
+                                                   @bind="compactCaseMaxLineLength" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("expressions inline short expression max tokens")'>
+                                            <label for="sql-inline-short-max-tokens">Inline short max tokens</label>
+                                            <input id="sql-inline-short-max-tokens"
+                                                   class="form-control form-control-sm"
+                                                   type="number"
+                                                   min="0"
+                                                   step="1"
+                                                   @bind="inlineShortExpressionMaxTokens" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("expressions inline short expression max depth")'>
+                                            <label for="sql-inline-short-max-depth">Inline short max depth</label>
+                                            <input id="sql-inline-short-max-depth"
+                                                   class="form-control form-control-sm"
+                                                   type="number"
+                                                   min="0"
+                                                   step="1"
+                                                   @bind="inlineShortExpressionMaxDepth" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("expressions inline short expression max line length")'>
+                                            <label for="sql-inline-short-max-line">Inline short max line</label>
+                                            <input id="sql-inline-short-max-line"
+                                                   class="form-control form-control-sm"
+                                                   type="number"
+                                                   min="10"
+                                                   step="1"
+                                                   @bind="inlineShortExpressionMaxLineLength" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("expressions inline short expression context select item")'>
+                                            <label for="sql-inline-short-select-item">Inline in SELECT items</label>
+                                            <input id="sql-inline-short-select-item" class="form-check-input" type="checkbox" @bind="inlineShortContextSelectItem" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("expressions inline short expression context on")'>
+                                            <label for="sql-inline-short-on">Inline in ON</label>
+                                            <input id="sql-inline-short-on" class="form-check-input" type="checkbox" @bind="inlineShortContextOn" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("expressions inline short expression context where")'>
+                                            <label for="sql-inline-short-where">Inline in WHERE</label>
+                                            <input id="sql-inline-short-where" class="form-check-input" type="checkbox" @bind="inlineShortContextWhere" />
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <details class="dsl-sql-option-section" open>
+                                    <summary>Subqueries</summary>
+                                    <div class="dsl-sql-property-grid">
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("subqueries indent style")'>
+                                            <label for="sql-subqueries-indent-style">Subquery indent style</label>
+                                            <select id="sql-subqueries-indent-style"
+                                                    class="form-select form-select-sm"
+                                                    @bind="subqueriesIndentStyle">
+                                                <option value="@SqlSubqueryIndentStyle.Indented">Indented</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <details class="dsl-sql-option-section" open>
                                     <summary>Lists</summary>
                                     <div class="dsl-sql-property-grid">
                                         <div class="dsl-sql-property-row" hidden='@HideOption("lists comma style trailing leading")'>
@@ -305,6 +409,91 @@
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("lists compact threshold allow expressions")'>
                                             <label for="sql-select-compact-allow-expressions">Compact allow expressions</label>
                                             <input id="sql-select-compact-allow-expressions" class="form-check-input" type="checkbox" @bind="selectCompactAllowExpressions" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("lists in list items style inline one per line wrap by width")'>
+                                            <label for="sql-in-list-items-style">IN list items</label>
+                                            <select id="sql-in-list-items-style" class="form-select form-select-sm" @bind="inListItemsStyle">
+                                                <option value="@SqlInListItemsStyle.Inline">Inline</option>
+                                                <option value="@SqlInListItemsStyle.OnePerLine">OnePerLine</option>
+                                                <option value="@SqlInListItemsStyle.WrapByWidth">WrapByWidth</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("lists inline in list threshold max items inline")'>
+                                            <label for="sql-inline-in-list-max-items">Inline IN max items</label>
+                                            <input id="sql-inline-in-list-max-items"
+                                                   class="form-control form-control-sm"
+                                                   type="number"
+                                                   min="0"
+                                                   step="1"
+                                                   @bind="inlineInListMaxItems" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("lists inline in list threshold max line length")'>
+                                            <label for="sql-inline-in-list-max-line">Inline IN max line</label>
+                                            <input id="sql-inline-in-list-max-line"
+                                                   class="form-control form-control-sm"
+                                                   type="number"
+                                                   min="10"
+                                                   step="1"
+                                                   @bind="inlineInListMaxLineLength" />
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <details class="dsl-sql-option-section" open>
+                                    <summary>DML/DDL</summary>
+                                    <div class="dsl-sql-property-grid">
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("dml update set style one per line wrap by width")'>
+                                            <label for="sql-update-set-style">UPDATE SET style</label>
+                                            <select id="sql-update-set-style" class="form-select form-select-sm" @bind="updateSetStyle">
+                                                <option value="@SqlDmlListStyle.OnePerLine">OnePerLine</option>
+                                                <option value="@SqlDmlListStyle.WrapByWidth">WrapByWidth</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("dml insert columns style one per line wrap by width")'>
+                                            <label for="sql-insert-columns-style">INSERT columns style</label>
+                                            <select id="sql-insert-columns-style" class="form-select form-select-sm" @bind="insertColumnsStyle">
+                                                <option value="@SqlDmlListStyle.OnePerLine">OnePerLine</option>
+                                                <option value="@SqlDmlListStyle.WrapByWidth">WrapByWidth</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("ddl create proc layout expanded compact")'>
+                                            <label for="sql-create-proc-layout">CREATE PROC layout</label>
+                                            <select id="sql-create-proc-layout" class="form-select form-select-sm" @bind="createProcLayout">
+                                                <option value="@SqlCreateProcLayout.Expanded">Expanded</option>
+                                                <option value="@SqlCreateProcLayout.Compact">Compact</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <details class="dsl-sql-option-section" open>
+                                    <summary>Comments</summary>
+                                    <div class="dsl-sql-property-grid">
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("comments preserve attachment")'>
+                                            <label for="sql-comments-preserve-attachment">Preserve attachment</label>
+                                            <input id="sql-comments-preserve-attachment" class="form-check-input" type="checkbox" @bind="commentsPreserveAttachment" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("comments formatting keep reflow safe only")'>
+                                            <label for="sql-comments-formatting">Comment formatting</label>
+                                            <select id="sql-comments-formatting" class="form-select form-select-sm" @bind="commentsFormatting">
+                                                <option value="@SqlCommentsFormattingMode.Keep">Keep</option>
+                                                <option value="@SqlCommentsFormattingMode.ReflowSafeOnly">ReflowSafeOnly</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("preserve string literals")'>
+                                            <label for="sql-preserve-string-literals">Preserve string literals</label>
+                                            <input id="sql-preserve-string-literals"
+                                                   class="form-check-input"
+                                                   type="checkbox"
+                                                   @bind="preserveStringLiterals"
+                                                   disabled />
                                         </div>
                                     </div>
                                 </details>
@@ -412,7 +601,17 @@
         Input
     }
 
-    private const string DemoSql = "with recent as (select top(10) o.CustomerId as CustomerId,o.Region as Region,o.TotalAmount as TotalAmount from dbo.Orders as o where o.TotalAmount>=50) select r.CustomerId as customer_id,r.Region as region,sum(r.TotalAmount) as total_amount,count(*) as orders_count from recent as r inner join dbo.Customers as c on c.CustomerId=r.CustomerId and c.IsActive=1 where (r.Region='EU' or r.Region='US') and r.TotalAmount>=100 group by r.CustomerId,r.Region having count(*)>1 order by r.CustomerId desc,r.Region;";
+    private const string DemoSql = @"with recent as (
+select top(3) o.CustomerId,o.Region,o.TotalAmount from dbo.Orders as o where o.TotalAmount>=50
+)
+select case when r.TotalAmount>=200 then 'vip' else 'std' end as segment,r.CustomerId /*  keep   spacing */ as customer_id,r.Region
+from recent as r inner join dbo.Customers as c on c.CustomerId=r.CustomerId and c.IsActive=1 and c.Region in('EU','US','APAC')
+where (r.Region='EU' or r.Region='US') and r.TotalAmount>=100 and r.CustomerId in(1,2,3,4)
+group by r.CustomerId,r.Region,r.TotalAmount
+order by r.CustomerId desc,r.Region;
+update dbo.Customers set Region='EU',IsActive=1 where CustomerId=@customerId;
+insert into dbo.AuditLog(CustomerId,Region,Amount) values(@customerId,'EU',100);
+create proc p as begin select case when @flag=1 then 'Y' else 'N' end as v end;";
 
     private string sourceSql = DemoSql;
     private string formattedSql = string.Empty;
@@ -429,6 +628,7 @@
     private SqlListLayoutStyle selectItemsStyle = SqlListLayoutStyle.OnePerLine;
     private SqlListLayoutStyle groupByItemsStyle = SqlListLayoutStyle.OnePerLine;
     private SqlListLayoutStyle orderByItemsStyle = SqlListLayoutStyle.OnePerLine;
+    private SqlInListItemsStyle inListItemsStyle = SqlInListItemsStyle.Inline;
 
     private bool spacesAfterComma = true;
     private bool spacesAroundBinaryOperators = true;
@@ -446,6 +646,23 @@
     private int predicatesInlineSimpleMaxLineLength = 120;
     private bool predicatesInlineSimpleAllowOnlyAnd = true;
     private SqlParenthesizeMixedAndOrMode predicatesParenthesizeMixedAndOrMode = SqlParenthesizeMixedAndOrMode.None;
+    private SqlCaseStyle expressionsCaseStyle = SqlCaseStyle.Multiline;
+    private int compactCaseMaxWhenClauses;
+    private int compactCaseMaxTokens;
+    private int compactCaseMaxLineLength = 120;
+    private int inlineShortExpressionMaxTokens;
+    private int inlineShortExpressionMaxDepth;
+    private int inlineShortExpressionMaxLineLength = 120;
+    private bool inlineShortContextSelectItem;
+    private bool inlineShortContextOn;
+    private bool inlineShortContextWhere;
+    private SqlSubqueryIndentStyle subqueriesIndentStyle = SqlSubqueryIndentStyle.Indented;
+    private SqlDmlListStyle updateSetStyle = SqlDmlListStyle.OnePerLine;
+    private SqlDmlListStyle insertColumnsStyle = SqlDmlListStyle.OnePerLine;
+    private SqlCreateProcLayout createProcLayout = SqlCreateProcLayout.Expanded;
+    private bool commentsPreserveAttachment = true;
+    private SqlCommentsFormattingMode commentsFormatting = SqlCommentsFormattingMode.Keep;
+    private bool preserveStringLiterals = true;
 
     private bool newlineBeforeWith = true;
     private bool newlineBeforeSelect = true;
@@ -459,6 +676,8 @@
     private int indentSize = 4;
     private int selectCompactMaxItems = 4;
     private int selectCompactMaxLineLength = 220;
+    private int inlineInListMaxItems;
+    private int inlineInListMaxLineLength = 120;
     private bool resizeEditorsPending = true;
 
     protected override void OnInitialized()
@@ -572,6 +791,26 @@
         predicatesInlineSimpleMaxLineLength = 120;
         predicatesInlineSimpleAllowOnlyAnd = true;
         predicatesParenthesizeMixedAndOrMode = SqlParenthesizeMixedAndOrMode.None;
+        expressionsCaseStyle = SqlCaseStyle.Multiline;
+        compactCaseMaxWhenClauses = 0;
+        compactCaseMaxTokens = 0;
+        compactCaseMaxLineLength = 120;
+        inlineShortExpressionMaxTokens = 0;
+        inlineShortExpressionMaxDepth = 0;
+        inlineShortExpressionMaxLineLength = 120;
+        inlineShortContextSelectItem = false;
+        inlineShortContextOn = false;
+        inlineShortContextWhere = false;
+        subqueriesIndentStyle = SqlSubqueryIndentStyle.Indented;
+        inListItemsStyle = SqlInListItemsStyle.Inline;
+        inlineInListMaxItems = 0;
+        inlineInListMaxLineLength = 120;
+        updateSetStyle = SqlDmlListStyle.OnePerLine;
+        insertColumnsStyle = SqlDmlListStyle.OnePerLine;
+        createProcLayout = SqlCreateProcLayout.Expanded;
+        commentsPreserveAttachment = true;
+        commentsFormatting = SqlCommentsFormattingMode.Keep;
+        preserveStringLiterals = true;
 
         newlineBeforeWith = true;
         newlineBeforeSelect = true;
@@ -631,11 +870,17 @@
                     SelectItems = selectItemsStyle,
                     GroupByItems = groupByItemsStyle,
                     OrderByItems = orderByItemsStyle,
+                    InListItems = inListItemsStyle,
                     SelectCompactThreshold = new SqlSelectCompactThresholdOptions
                     {
                         MaxItems = Math.Max(0, selectCompactMaxItems),
                         MaxLineLength = Math.Max(10, selectCompactMaxLineLength),
                         AllowExpressions = selectCompactAllowExpressions
+                    },
+                    InlineInListThreshold = new SqlInlineInListThresholdOptions
+                    {
+                        MaxItemsInline = Math.Max(0, inlineInListMaxItems),
+                        MaxLineLength = Math.Max(10, inlineInListMaxLineLength)
                     }
                 },
                 Align = new SqlAlignFormattingOptions
@@ -666,6 +911,45 @@
                     {
                         Mode = predicatesParenthesizeMixedAndOrMode
                     }
+                },
+                Expressions = new SqlExpressionsFormattingOptions
+                {
+                    CaseStyle = expressionsCaseStyle,
+                    CompactCaseThreshold = new SqlCompactCaseThresholdOptions
+                    {
+                        MaxWhenClauses = Math.Max(0, compactCaseMaxWhenClauses),
+                        MaxTokens = Math.Max(0, compactCaseMaxTokens),
+                        MaxLineLength = Math.Max(10, compactCaseMaxLineLength)
+                    },
+                    InlineShortExpression = new SqlInlineShortExpressionOptions
+                    {
+                        MaxTokens = Math.Max(0, inlineShortExpressionMaxTokens),
+                        MaxDepth = Math.Max(0, inlineShortExpressionMaxDepth),
+                        MaxLineLength = Math.Max(10, inlineShortExpressionMaxLineLength),
+                        ForContexts = BuildInlineShortExpressionContexts()
+                    }
+                },
+                Subqueries = new SqlSubqueriesFormattingOptions
+                {
+                    IndentStyle = subqueriesIndentStyle
+                },
+                Dml = new SqlDmlFormattingOptions
+                {
+                    UpdateSetStyle = updateSetStyle,
+                    InsertColumnsStyle = insertColumnsStyle
+                },
+                Ddl = new SqlDdlFormattingOptions
+                {
+                    CreateProcLayout = createProcLayout
+                },
+                Comments = new SqlCommentsFormattingOptions
+                {
+                    PreserveAttachment = commentsPreserveAttachment,
+                    Formatting = commentsFormatting
+                },
+                Preserve = new SqlPreserveFormattingOptions
+                {
+                    StringLiterals = preserveStringLiterals
                 }
             };
 
@@ -689,6 +973,27 @@
         {
             resizeEditorsPending = true;
         }
+    }
+
+    private IReadOnlyCollection<SqlInlineExpressionContext> BuildInlineShortExpressionContexts()
+    {
+        var contexts = new List<SqlInlineExpressionContext>();
+        if (inlineShortContextSelectItem)
+        {
+            contexts.Add(SqlInlineExpressionContext.SelectItem);
+        }
+
+        if (inlineShortContextOn)
+        {
+            contexts.Add(SqlInlineExpressionContext.On);
+        }
+
+        if (inlineShortContextWhere)
+        {
+            contexts.Add(SqlInlineExpressionContext.Where);
+        }
+
+        return contexts;
     }
 }
 
