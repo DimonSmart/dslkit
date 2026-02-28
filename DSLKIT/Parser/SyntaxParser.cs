@@ -29,12 +29,21 @@ namespace DSLKIT.Parser
             {
                 var currentState = stateStack.Peek();
                 var currentToken = GetCurrentToken(tokenList, inputPosition);
-
-                if (!_grammar.ActionAndGotoTable.TryGetActionValue(currentToken.Terminal, currentState, out var action))
+                if (currentToken.Terminal == null)
                 {
                     return new ParseResult
                     {
-                        Error = new ParseErrorDescription($"No action found for terminal '{currentToken.Terminal.Name}' in state {currentState.SetNumber}", currentToken.Position),
+                        Error = new ParseErrorDescription("Token terminal is null.", currentToken.Position),
+                        Productions = output.ToArray()
+                    };
+                }
+
+                if (!_grammar.ActionAndGotoTable.TryGetActionValue(currentToken.Terminal, currentState, out var action))
+                {
+                    var terminalName = currentToken.Terminal.Name;
+                    return new ParseResult
+                    {
+                        Error = new ParseErrorDescription($"No action found for terminal '{terminalName}' in state {currentState.SetNumber}", currentToken.Position),
                         Productions = output.ToArray()
                     };
                 }

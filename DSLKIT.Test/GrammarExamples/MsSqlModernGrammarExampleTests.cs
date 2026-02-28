@@ -114,6 +114,43 @@ namespace DSLKIT.Test.GrammarExamples
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
 
+        [Fact]
+        public void ParseScript_ShouldParseExecuteStatement_Variants()
+        {
+            const string script = """
+                DECLARE @policy_id INT
+                EXEC msdb.dbo.sp_syspolicy_add_policy @name=N'Policy', @enabled=True, @policy_id=@policy_id OUTPUT
+                SELECT @policy_id;
+
+                EXECUTE @return_code = dbo.usp_DoWork @arg1 = DEFAULT, @arg2 = @policy_id OUT WITH RECOMPILE;
+                EXECUTE ('SELECT 1' + N' AS Value') AS USER = 'dbo';
+                EXECUTE (N'SELECT * FROM dbo.T WHERE Id = ?', @policy_id OUTPUT) AT DATA_SOURCE [RemoteSource];
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseInsertExec_Variants()
+        {
+            const string script = """
+                INSERT INTO dbo.TargetTable EXEC dbo.usp_FillTarget;
+                INSERT dbo.TargetTable (A, B) EXECUTE dbo.usp_FillTargetByParams @a = 1, @b = DEFAULT;
+                INSERT INTO [dbo].[models]
+                EXEC sp_execute_external_script
+                    @language = N'R',
+                    @script = N'SELECT 1';
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
         public static IEnumerable<object[]> ValidSqlScripts()
         {
             var scriptsRoot = ResolveScriptsRoot();

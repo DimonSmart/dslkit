@@ -482,6 +482,49 @@ namespace DSLKIT.Test.GrammarExamples
                 "formatted output should preserve significant SQL tokens for IF/DECLARE/SET/CREATE VIEW.");
         }
 
+        [Fact]
+        public void TryFormat_ShouldFormatExecuteStatement_Variants()
+        {
+            const string sourceSql = """
+                DECLARE @policy_id INT
+                EXEC msdb.dbo.sp_syspolicy_add_policy @name=N'Policy', @enabled=True, @policy_id=@policy_id OUTPUT
+                SELECT @policy_id;
+
+                EXECUTE @return_code = dbo.usp_DoWork @arg1 = DEFAULT, @arg2 = @policy_id OUT WITH RECOMPILE;
+                EXECUTE ('SELECT 1' + N' AS Value') AS USER = 'dbo';
+                EXECUTE (N'SELECT * FROM dbo.T WHERE Id = ?', @policy_id OUTPUT) AT DATA_SOURCE [RemoteSource];
+                """;
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql);
+
+            result.IsSuccess.Should().BeTrue();
+            var formattedSql = NormalizeLineEndings(result.FormattedSql!);
+            NormalizeSql(formattedSql).Should().Be(
+                NormalizeSql(sourceSql),
+                "formatted EXEC/EXECUTE variants should preserve significant SQL tokens.");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldFormatInsertExec_Variants()
+        {
+            const string sourceSql = """
+                INSERT INTO dbo.TargetTable EXEC dbo.usp_FillTarget;
+                INSERT dbo.TargetTable (A, B) EXECUTE dbo.usp_FillTargetByParams @a = 1, @b = DEFAULT;
+                INSERT INTO [dbo].[models]
+                EXEC sp_execute_external_script
+                    @language = N'R',
+                    @script = N'SELECT 1';
+                """;
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql);
+
+            result.IsSuccess.Should().BeTrue();
+            var formattedSql = NormalizeLineEndings(result.FormattedSql!);
+            NormalizeSql(formattedSql).Should().Be(
+                NormalizeSql(sourceSql),
+                "formatted INSERT EXEC variants should preserve significant SQL tokens.");
+        }
+
         public static IEnumerable<object[]> ValidFormattingScripts()
         {
             var scriptsRoot = ResolveScriptsRoot();

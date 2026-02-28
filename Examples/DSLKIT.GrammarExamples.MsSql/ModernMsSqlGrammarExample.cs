@@ -29,6 +29,17 @@ namespace DSLKIT.GrammarExamples.MsSql
             var parser = new SyntaxParser(grammar);
 
             var rawTokens = lexer.GetTokens(new StringSourceStream(source)).ToList();
+            var lexerError = rawTokens.OfType<ErrorToken>().FirstOrDefault();
+            if (lexerError != null)
+            {
+                return new ParseResult
+                {
+                    Error = new ParseErrorDescription(
+                        $"Lexer error: {lexerError.ErrorMessage}",
+                        lexerError.Position)
+                };
+            }
+
             var tokens = BuildSignificantTokensWithTrivia(rawTokens);
 
             return parser.Parse(tokens);
@@ -62,8 +73,9 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             foreach (var token in rawTokens)
             {
-                var isTriviaToken = token.Terminal.Flags == TermFlags.Space ||
-                    token.Terminal.Flags == TermFlags.Comment;
+                var terminalFlags = token.Terminal?.Flags;
+                var isTriviaToken = terminalFlags == TermFlags.Space ||
+                    terminalFlags == TermFlags.Comment;
                 if (isTriviaToken)
                 {
                     pendingTrivia.Add(token);
@@ -160,6 +172,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var updateSetList = gb.NT("UpdateSetList");
             var updateSetItem = gb.NT("UpdateSetItem");
             var insertStatement = gb.NT("InsertStatement");
+            var insertTarget = gb.NT("InsertTarget");
             var insertColumnList = gb.NT("InsertColumnList");
             var insertValueList = gb.NT("InsertValueList");
             var ifStatement = gb.NT("IfStatement");
@@ -170,6 +183,28 @@ namespace DSLKIT.GrammarExamples.MsSql
             var declareItemList = gb.NT("DeclareItemList");
             var declareItem = gb.NT("DeclareItem");
             var typeSpec = gb.NT("TypeSpec");
+            var executeStatement = gb.NT("ExecuteStatement");
+            var executeModuleCall = gb.NT("ExecuteModuleCall");
+            var executeModuleCallCore = gb.NT("ExecuteModuleCallCore");
+            var executeReturnAssignment = gb.NT("ExecuteReturnAssignment");
+            var executeModuleTarget = gb.NT("ExecuteModuleTarget");
+            var executeArgList = gb.NT("ExecuteArgList");
+            var executeArg = gb.NT("ExecuteArg");
+            var executeArgNamePrefix = gb.NT("ExecuteArgNamePrefix");
+            var executeArgValue = gb.NT("ExecuteArgValue");
+            var executeWithOptions = gb.NT("ExecuteWithOptions");
+            var executeOptionList = gb.NT("ExecuteOptionList");
+            var executeOption = gb.NT("ExecuteOption");
+            var executeResultSetsDefList = gb.NT("ExecuteResultSetsDefList");
+            var executeResultSetsDef = gb.NT("ExecuteResultSetsDef");
+            var executeColumnDefList = gb.NT("ExecuteColumnDefList");
+            var executeColumnDef = gb.NT("ExecuteColumnDef");
+            var executeNullability = gb.NT("ExecuteNullability");
+            var executeDynamicCall = gb.NT("ExecuteDynamicCall");
+            var executeLinkedArgList = gb.NT("ExecuteLinkedArgList");
+            var executeLinkedArg = gb.NT("ExecuteLinkedArg");
+            var executeAsContext = gb.NT("ExecuteAsContext");
+            var executeAtClause = gb.NT("ExecuteAtClause");
             var useStatement = gb.NT("UseStatement");
             var createProcStatement = gb.NT("CreateProcStatement");
             var createRoleStatement = gb.NT("CreateRoleStatement");
@@ -239,6 +274,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var functionCall = gb.NT("FunctionCall");
             var functionArgumentList = gb.NT("FunctionArgumentList");
             var literal = gb.NT("Literal");
+            var unicodeStringLiteral = gb.NT("UnicodeStringLiteral");
             var caseExpression = gb.NT("CaseExpression");
             var caseWhenList = gb.NT("CaseWhenList");
             var caseWhen = gb.NT("CaseWhen");
@@ -253,6 +289,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("Script").Is(statementList, statementSeparatorList);
             gb.Prod("StatementList").Is(statement);
             gb.Prod("StatementList").Is(statementList, statementSeparatorList, statement);
+            gb.Prod("StatementList").Is(statementList, statement);
             gb.Prod("StatementSeparatorList").Is(statementSeparator);
             gb.Prod("StatementSeparatorList").Is(statementSeparatorList, statementSeparator);
             gb.Prod("StatementSeparator").Is(";");
@@ -265,6 +302,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("Statement").Is(setStatement);
             gb.Prod("Statement").Is(printStatement);
             gb.Prod("Statement").Is(declareStatement);
+            gb.Prod("Statement").Is(executeStatement);
             gb.Prod("Statement").Is(useStatement);
             gb.Prod("Statement").Is(createProcStatement);
             gb.Prod("Statement").Is(createRoleStatement);
@@ -280,17 +318,12 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("UpdateSetList").Is(updateSetList, ",", updateSetItem);
             gb.Prod("UpdateSetItem").Is(qualifiedName, "=", expression);
 
-            gb.Prod("InsertStatement").Is(
-                kw("INSERT"),
-                kw("INTO"),
-                qualifiedName,
-                "(",
-                insertColumnList,
-                ")",
-                kw("VALUES"),
-                "(",
-                insertValueList,
-                ")");
+            gb.Prod("InsertStatement").Is(kw("INSERT"), insertTarget, kw("VALUES"), "(", insertValueList, ")");
+            gb.Prod("InsertStatement").Is(kw("INSERT"), insertTarget, executeStatement);
+            gb.Prod("InsertTarget").Is(kw("INTO"), qualifiedName);
+            gb.Prod("InsertTarget").Is(qualifiedName);
+            gb.Prod("InsertTarget").Is(kw("INTO"), qualifiedName, "(", insertColumnList, ")");
+            gb.Prod("InsertTarget").Is(qualifiedName, "(", insertColumnList, ")");
             gb.Prod("InsertColumnList").Is(identifierTerm);
             gb.Prod("InsertColumnList").Is(insertColumnList, ",", identifierTerm);
             gb.Prod("InsertValueList").Is(expression);
@@ -318,12 +351,82 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("TypeSpec").Is(qualifiedName, "(", expression, ")");
             gb.Prod("TypeSpec").Is(qualifiedName, "(", expression, ",", expression, ")");
 
+            gb.Prod("ExecuteStatement").Is(kw("EXEC"), executeModuleCall);
+            gb.Prod("ExecuteStatement").Is(kw("EXECUTE"), executeModuleCall);
+            gb.Prod("ExecuteStatement").Is(kw("EXEC"), executeDynamicCall);
+            gb.Prod("ExecuteStatement").Is(kw("EXECUTE"), executeDynamicCall);
+
+            gb.Prod("ExecuteModuleCall").Is(executeModuleCallCore);
+            gb.Prod("ExecuteModuleCall").Is(executeModuleCallCore, executeWithOptions);
+            gb.Prod("ExecuteModuleCallCore").Is(executeModuleTarget);
+            gb.Prod("ExecuteModuleCallCore").Is(executeReturnAssignment, executeModuleTarget);
+            gb.Prod("ExecuteModuleCallCore").Is(executeModuleTarget, executeArgList);
+            gb.Prod("ExecuteModuleCallCore").Is(executeReturnAssignment, executeModuleTarget, executeArgList);
+            gb.Prod("ExecuteReturnAssignment").Is(variableReference, "=");
+            gb.Prod("ExecuteModuleTarget").Is(qualifiedName);
+            gb.Prod("ExecuteModuleTarget").Is(variableReference);
+
+            gb.Prod("ExecuteArgList").Is(executeArg);
+            gb.Prod("ExecuteArgList").Is(executeArgList, ",", executeArg);
+            gb.Prod("ExecuteArg").Is(executeArgValue);
+            gb.Prod("ExecuteArg").Is(executeArgNamePrefix, executeArgValue);
+            gb.Prod("ExecuteArgNamePrefix").Is(variableReference, "=");
+            gb.Prod("ExecuteArgValue").Is(expression);
+            gb.Prod("ExecuteArgValue").Is(variableReference, kw("OUTPUT"));
+            gb.Prod("ExecuteArgValue").Is(variableReference, kw("OUT"));
+            gb.Prod("ExecuteArgValue").Is(kw("DEFAULT"));
+
+            gb.Prod("ExecuteWithOptions").Is(kw("WITH"), executeOptionList);
+            gb.Prod("ExecuteOptionList").Is(executeOption);
+            gb.Prod("ExecuteOptionList").Is(executeOptionList, ",", executeOption);
+            gb.Prod("ExecuteOption").Is(kw("RECOMPILE"));
+            gb.Prod("ExecuteOption").Is(kw("RESULT"), kw("SETS"), kw("UNDEFINED"));
+            gb.Prod("ExecuteOption").Is(kw("RESULT"), kw("SETS"), kw("NONE"));
+            gb.Prod("ExecuteOption").Is(kw("RESULT"), kw("SETS"), "(", executeResultSetsDefList, ")");
+            gb.Prod("ExecuteResultSetsDefList").Is(executeResultSetsDef);
+            gb.Prod("ExecuteResultSetsDefList").Is(executeResultSetsDefList, ",", executeResultSetsDef);
+            gb.Prod("ExecuteResultSetsDef").Is("(", executeColumnDefList, ")");
+            gb.Prod("ExecuteResultSetsDef").Is(kw("AS"), kw("OBJECT"), qualifiedName);
+            gb.Prod("ExecuteResultSetsDef").Is(kw("AS"), kw("TYPE"), qualifiedName);
+            gb.Prod("ExecuteResultSetsDef").Is(kw("AS"), kw("FOR"), kw("XML"));
+            gb.Prod("ExecuteColumnDefList").Is(executeColumnDef);
+            gb.Prod("ExecuteColumnDefList").Is(executeColumnDefList, ",", executeColumnDef);
+            gb.Prod("ExecuteColumnDef").Is(identifierTerm, typeSpec);
+            gb.Prod("ExecuteColumnDef").Is(identifierTerm, typeSpec, kw("COLLATE"), identifierTerm);
+            gb.Prod("ExecuteColumnDef").Is(identifierTerm, typeSpec, executeNullability);
+            gb.Prod("ExecuteColumnDef").Is(identifierTerm, typeSpec, kw("COLLATE"), identifierTerm, executeNullability);
+            gb.Prod("ExecuteNullability").Is(kw("NULL"));
+            gb.Prod("ExecuteNullability").Is(kw("NOT"), kw("NULL"));
+
+            gb.Prod("ExecuteDynamicCall").Is("(", expression, ")");
+            gb.Prod("ExecuteDynamicCall").Is("(", expression, ")", executeAsContext);
+            gb.Prod("ExecuteDynamicCall").Is("(", expression, ")", executeAtClause);
+            gb.Prod("ExecuteDynamicCall").Is("(", expression, ")", executeAsContext, executeAtClause);
+            gb.Prod("ExecuteDynamicCall").Is("(", expression, executeLinkedArgList, ")");
+            gb.Prod("ExecuteDynamicCall").Is("(", expression, executeLinkedArgList, ")", executeAsContext);
+            gb.Prod("ExecuteDynamicCall").Is("(", expression, executeLinkedArgList, ")", executeAtClause);
+            gb.Prod("ExecuteDynamicCall").Is("(", expression, executeLinkedArgList, ")", executeAsContext, executeAtClause);
+            gb.Prod("ExecuteLinkedArgList").Is(",", executeLinkedArg);
+            gb.Prod("ExecuteLinkedArgList").Is(executeLinkedArgList, ",", executeLinkedArg);
+            gb.Prod("ExecuteLinkedArg").Is(expression);
+            gb.Prod("ExecuteLinkedArg").Is(variableReference, kw("OUTPUT"));
+            gb.Prod("ExecuteLinkedArg").Is(variableReference, kw("OUT"));
+            gb.Prod("ExecuteAsContext").Is(kw("AS"), kw("LOGIN"), "=", stringLiteral);
+            gb.Prod("ExecuteAsContext").Is(kw("AS"), kw("USER"), "=", stringLiteral);
+            gb.Prod("ExecuteAsContext").Is(kw("AS"), kw("LOGIN"), "=", unicodeStringLiteral);
+            gb.Prod("ExecuteAsContext").Is(kw("AS"), kw("USER"), "=", unicodeStringLiteral);
+            gb.Prod("ExecuteAsContext").Is(kw("AS"), kw("LOGIN"), "=", identifierTerm);
+            gb.Prod("ExecuteAsContext").Is(kw("AS"), kw("USER"), "=", identifierTerm);
+            gb.Prod("ExecuteAtClause").Is(kw("AT"), identifierTerm);
+            gb.Prod("ExecuteAtClause").Is(kw("AT"), kw("DATA_SOURCE"), identifierTerm);
+
             gb.Prod("UseStatement").Is(kw("USE"), identifierTerm);
 
             gb.Prod("CreateProcStatement").Is(kw("CREATE"), kw("PROC"), identifierTerm, kw("AS"), kw("BEGIN"), procStatementList, kw("END"));
             gb.Prod("CreateProcStatement").Is(kw("CREATE"), kw("PROCEDURE"), identifierTerm, kw("AS"), kw("BEGIN"), procStatementList, kw("END"));
             gb.Prod("ProcStatementList").Is(statement);
             gb.Prod("ProcStatementList").Is(procStatementList, ";", statement);
+            gb.Prod("ProcStatementList").Is(procStatementList, statement);
 
             gb.Prod("CreateRoleStatement").Is(kw("CREATE"), kw("ROLE"), identifierTerm);
             gb.Prod("CreateRoleStatement").Is(kw("CREATE"), kw("ROLE"), identifierTerm, kw("AUTHORIZATION"), identifierTerm);
@@ -585,6 +688,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("BinaryOperator").Is("%");
 
             gb.Prod("PrimaryExpression").Is(literal);
+            gb.Prod("PrimaryExpression").Is(unicodeStringLiteral);
             gb.Prod("PrimaryExpression").Is(variableReference);
             gb.Prod("PrimaryExpression").Is(qualifiedName);
             gb.Prod("PrimaryExpression").Is(functionCall);
@@ -617,6 +721,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("Literal").Is(number);
             gb.Prod("Literal").Is(stringLiteral);
             gb.Prod("Literal").Is(kw("NULL"));
+            gb.Prod("UnicodeStringLiteral").Is(kw("N"), stringLiteral);
             gb.Prod("VariableReference").Is(variable);
 
             gb.Prod("CaseExpression").Is(kw("CASE"), caseWhenList, kw("END"));
