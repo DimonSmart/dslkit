@@ -444,6 +444,20 @@ namespace DSLKIT.Test.GrammarExamples
                 "formatted USE should preserve significant SQL tokens.");
         }
 
+        [Fact]
+        public void TryFormat_ShouldFormatCreateSchema_BasicAndAuthorization()
+        {
+            const string sourceSql = "CREATE SCHEMA ext; GO CREATE SCHEMA [sales] AUTHORIZATION [dbo];";
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql);
+
+            result.IsSuccess.Should().BeTrue();
+            var formattedSql = NormalizeLineEndings(result.FormattedSql!);
+            NormalizeSql(formattedSql).Should().Be(
+                NormalizeSql("CREATE SCHEMA ext; GO CREATE SCHEMA [sales] AUTHORIZATION [dbo];"),
+                "formatted CREATE SCHEMA should preserve significant SQL tokens.");
+        }
+
         public static IEnumerable<object[]> ValidFormattingScripts()
         {
             var scriptsRoot = ResolveScriptsRoot();

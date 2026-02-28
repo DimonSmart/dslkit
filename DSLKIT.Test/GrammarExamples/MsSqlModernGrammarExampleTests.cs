@@ -82,6 +82,17 @@ namespace DSLKIT.Test.GrammarExamples
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
 
+        [Fact]
+        public void ParseScript_ShouldParseCreateSchema_BasicAndAuthorization()
+        {
+            const string script = "CREATE SCHEMA ext; GO CREATE SCHEMA [sales] AUTHORIZATION [dbo];";
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
         public static IEnumerable<object[]> ValidSqlScripts()
         {
             var scriptsRoot = ResolveScriptsRoot();
