@@ -378,6 +378,44 @@ namespace DSLKIT.Test.GrammarExamples
             result.FormattedSql.Should().Contain("/* keep spacing */");
         }
 
+        [Fact]
+        public void TryFormat_ShouldFormatCreateDatabase_WithPopularOptions()
+        {
+            const string sourceSql = """
+                CREATE DATABASE Sales
+                CONTAINMENT = NONE
+                ON PRIMARY
+                (
+                    NAME = SalesData,
+                    FILENAME = 'C:\data\sales.mdf',
+                    SIZE = 64MB,
+                    MAXSIZE = 512MB,
+                    FILEGROWTH = 64MB
+                ),
+                LOG ON
+                (
+                    NAME = SalesLog,
+                    FILENAME = 'C:\data\sales.ldf',
+                    FILEGROWTH = 10%
+                )
+                WITH
+                FILESTREAM ( DIRECTORY_NAME = 'salesfs', NON_TRANSACTED_ACCESS = FULL ),
+                DEFAULT_FULLTEXT_LANGUAGE = 1033,
+                DB_CHAINING ON,
+                LEDGER = OFF;
+                GO
+                """;
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql);
+
+            result.IsSuccess.Should().BeTrue();
+            var formattedSql = NormalizeLineEndings(result.FormattedSql!);
+            formattedSql.Should().Contain("CREATE DATABASE SALES");
+            formattedSql.Should().Contain("FILESTREAM (DIRECTORY_NAME = 'salesfs', NON_TRANSACTED_ACCESS =");
+            formattedSql.Should().Contain("FULL");
+            formattedSql.Should().Contain("GO");
+        }
+
         public static IEnumerable<object[]> ValidFormattingScripts()
         {
             var scriptsRoot = ResolveScriptsRoot();

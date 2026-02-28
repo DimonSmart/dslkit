@@ -152,6 +152,8 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             var script = gb.NT("Script");
             var statementList = gb.NT("StatementList");
+            var statementSeparator = gb.NT("StatementSeparator");
+            var statementSeparatorList = gb.NT("StatementSeparatorList");
             var statement = gb.NT("Statement");
             var queryStatement = gb.NT("QueryStatement");
             var updateStatement = gb.NT("UpdateStatement");
@@ -161,6 +163,33 @@ namespace DSLKIT.GrammarExamples.MsSql
             var insertColumnList = gb.NT("InsertColumnList");
             var insertValueList = gb.NT("InsertValueList");
             var createProcStatement = gb.NT("CreateProcStatement");
+            var createDatabaseStatement = gb.NT("CreateDatabaseStatement");
+            var createDatabaseClauseList = gb.NT("CreateDatabaseClauseList");
+            var createDatabaseClause = gb.NT("CreateDatabaseClause");
+            var createDatabaseContainmentClause = gb.NT("CreateDatabaseContainmentClause");
+            var createDatabaseOnClause = gb.NT("CreateDatabaseOnClause");
+            var createDatabaseOnItemList = gb.NT("CreateDatabaseOnItemList");
+            var createDatabaseOnItem = gb.NT("CreateDatabaseOnItem");
+            var createDatabaseFilespecList = gb.NT("CreateDatabaseFilespecList");
+            var createDatabaseFilegroup = gb.NT("CreateDatabaseFilegroup");
+            var createDatabaseCollateClause = gb.NT("CreateDatabaseCollateClause");
+            var createDatabaseWithClause = gb.NT("CreateDatabaseWithClause");
+            var createDatabaseOptionList = gb.NT("CreateDatabaseOptionList");
+            var createDatabaseOption = gb.NT("CreateDatabaseOption");
+            var createDatabaseOptionValue = gb.NT("CreateDatabaseOptionValue");
+            var createDatabaseOnOffValue = gb.NT("CreateDatabaseOnOffValue");
+            var createDatabaseFilespec = gb.NT("CreateDatabaseFilespec");
+            var createDatabaseFileName = gb.NT("CreateDatabaseFileName");
+            var createDatabaseFilespecOptionList = gb.NT("CreateDatabaseFilespecOptionList");
+            var createDatabaseFilespecOption = gb.NT("CreateDatabaseFilespecOption");
+            var createDatabaseSizeSpec = gb.NT("CreateDatabaseSizeSpec");
+            var createDatabaseMaxSizeSpec = gb.NT("CreateDatabaseMaxSizeSpec");
+            var createDatabaseGrowthSpec = gb.NT("CreateDatabaseGrowthSpec");
+            var createDatabaseSizeUnit = gb.NT("CreateDatabaseSizeUnit");
+            var createDatabaseGrowthUnit = gb.NT("CreateDatabaseGrowthUnit");
+            var createDatabaseFilestreamOptionList = gb.NT("CreateDatabaseFilestreamOptionList");
+            var createDatabaseFilestreamOption = gb.NT("CreateDatabaseFilestreamOption");
+            var createDatabaseNonTransactedAccessValue = gb.NT("CreateDatabaseNonTransactedAccessValue");
             var procStatementList = gb.NT("ProcStatementList");
             var withClause = gb.NT("WithClause");
             var cteDefinitionList = gb.NT("CteDefinitionList");
@@ -208,13 +237,18 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod("Start").Is(script);
             gb.Prod("Script").Is(statementList);
-            gb.Prod("Script").Is(statementList, ";");
+            gb.Prod("Script").Is(statementList, statementSeparatorList);
             gb.Prod("StatementList").Is(statement);
-            gb.Prod("StatementList").Is(statementList, ";", statement);
+            gb.Prod("StatementList").Is(statementList, statementSeparatorList, statement);
+            gb.Prod("StatementSeparatorList").Is(statementSeparator);
+            gb.Prod("StatementSeparatorList").Is(statementSeparatorList, statementSeparator);
+            gb.Prod("StatementSeparator").Is(";");
+            gb.Prod("StatementSeparator").Is(kw("GO"));
             gb.Prod("Statement").Is(queryStatement);
             gb.Prod("Statement").Is(updateStatement);
             gb.Prod("Statement").Is(insertStatement);
             gb.Prod("Statement").Is(createProcStatement);
+            gb.Prod("Statement").Is(createDatabaseStatement);
 
             gb.Prod("QueryStatement").Is(queryExpression);
             gb.Prod("QueryStatement").Is(withClause, queryExpression);
@@ -244,6 +278,130 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateProcStatement").Is(kw("CREATE"), kw("PROCEDURE"), identifierTerm, kw("AS"), kw("BEGIN"), procStatementList, kw("END"));
             gb.Prod("ProcStatementList").Is(statement);
             gb.Prod("ProcStatementList").Is(procStatementList, ";", statement);
+
+            gb.Prod("CreateDatabaseStatement").Is(kw("CREATE"), kw("DATABASE"), identifierTerm);
+            gb.Prod("CreateDatabaseStatement").Is(kw("CREATE"), kw("DATABASE"), identifierTerm, createDatabaseClauseList);
+
+            gb.Prod("CreateDatabaseClauseList").Is(createDatabaseClause);
+            gb.Prod("CreateDatabaseClauseList").Is(createDatabaseClauseList, createDatabaseClause);
+            gb.Prod("CreateDatabaseClause").Is(createDatabaseContainmentClause);
+            gb.Prod("CreateDatabaseClause").Is(createDatabaseOnClause);
+            gb.Prod("CreateDatabaseClause").Is(createDatabaseCollateClause);
+            gb.Prod("CreateDatabaseClause").Is(createDatabaseWithClause);
+
+            gb.Prod("CreateDatabaseContainmentClause").Is(kw("CONTAINMENT"), "=", kw("NONE"));
+            gb.Prod("CreateDatabaseContainmentClause").Is(kw("CONTAINMENT"), "=", kw("PARTIAL"));
+
+            gb.Prod("CreateDatabaseOnClause").Is(kw("ON"), createDatabaseOnItemList);
+            gb.Prod("CreateDatabaseOnItemList").Is(createDatabaseOnItem);
+            gb.Prod("CreateDatabaseOnItemList").Is(createDatabaseOnItemList, ",", createDatabaseOnItem);
+            gb.Prod("CreateDatabaseOnItem").Is(createDatabaseFilespecList);
+            gb.Prod("CreateDatabaseOnItem").Is(kw("PRIMARY"), createDatabaseFilespecList);
+            gb.Prod("CreateDatabaseOnItem").Is(createDatabaseFilegroup);
+            gb.Prod("CreateDatabaseOnItem").Is(kw("LOG"), kw("ON"), createDatabaseFilespecList);
+
+            gb.Prod("CreateDatabaseFilespecList").Is(createDatabaseFilespec);
+
+            gb.Prod("CreateDatabaseFilegroup").Is(kw("FILEGROUP"), identifierTerm, createDatabaseFilespecList);
+            gb.Prod("CreateDatabaseFilegroup").Is(kw("FILEGROUP"), identifierTerm, kw("DEFAULT"), createDatabaseFilespecList);
+            gb.Prod("CreateDatabaseFilegroup").Is(kw("FILEGROUP"), identifierTerm, kw("CONTAINS"), kw("FILESTREAM"), createDatabaseFilespecList);
+            gb.Prod("CreateDatabaseFilegroup").Is(kw("FILEGROUP"), identifierTerm, kw("CONTAINS"), kw("FILESTREAM"), kw("DEFAULT"), createDatabaseFilespecList);
+            gb.Prod("CreateDatabaseFilegroup").Is(kw("FILEGROUP"), identifierTerm, kw("CONTAINS"), kw("MEMORY_OPTIMIZED_DATA"), createDatabaseFilespecList);
+
+            gb.Prod("CreateDatabaseCollateClause").Is(kw("COLLATE"), identifierTerm);
+
+            gb.Prod("CreateDatabaseWithClause").Is(kw("WITH"), createDatabaseOptionList);
+            gb.Prod("CreateDatabaseOptionList").Is(createDatabaseOption);
+            gb.Prod("CreateDatabaseOptionList").Is(createDatabaseOptionList, ",", createDatabaseOption);
+
+            gb.Prod("CreateDatabaseOption").Is(kw("FILESTREAM"), "(", createDatabaseFilestreamOptionList, ")");
+            gb.Prod("CreateDatabaseOption").Is(kw("DEFAULT_FULLTEXT_LANGUAGE"), "=", createDatabaseOptionValue);
+            gb.Prod("CreateDatabaseOption").Is(kw("DEFAULT_LANGUAGE"), "=", createDatabaseOptionValue);
+            gb.Prod("CreateDatabaseOption").Is(kw("NESTED_TRIGGERS"), "=", createDatabaseOnOffValue);
+            gb.Prod("CreateDatabaseOption").Is(kw("TRANSFORM_NOISE_WORDS"), "=", createDatabaseOnOffValue);
+            gb.Prod("CreateDatabaseOption").Is(kw("TWO_DIGIT_YEAR_CUTOFF"), "=", number);
+            gb.Prod("CreateDatabaseOption").Is(kw("DB_CHAINING"), createDatabaseOnOffValue);
+            gb.Prod("CreateDatabaseOption").Is(kw("DB_CHAINING"), "=", createDatabaseOnOffValue);
+            gb.Prod("CreateDatabaseOption").Is(kw("TRUSTWORTHY"), createDatabaseOnOffValue);
+            gb.Prod("CreateDatabaseOption").Is(kw("TRUSTWORTHY"), "=", createDatabaseOnOffValue);
+            gb.Prod("CreateDatabaseOption").Is(kw("LEDGER"), "=", createDatabaseOnOffValue);
+            gb.Prod("CreateDatabaseOption").Is(
+                kw("PERSISTENT_LOG_BUFFER"),
+                "=",
+                kw("ON"),
+                "(",
+                kw("DIRECTORY_NAME"),
+                "=",
+                stringLiteral,
+                ")");
+
+            gb.Prod("CreateDatabaseOptionValue").Is(number);
+            gb.Prod("CreateDatabaseOptionValue").Is(identifierTerm);
+            gb.Prod("CreateDatabaseOptionValue").Is(stringLiteral);
+
+            gb.Prod("CreateDatabaseOnOffValue").Is(kw("ON"));
+            gb.Prod("CreateDatabaseOnOffValue").Is(kw("OFF"));
+
+            gb.Prod("CreateDatabaseFilestreamOptionList").Is(createDatabaseFilestreamOption);
+            gb.Prod("CreateDatabaseFilestreamOptionList").Is(createDatabaseFilestreamOptionList, ",", createDatabaseFilestreamOption);
+            gb.Prod("CreateDatabaseFilestreamOption").Is(kw("NON_TRANSACTED_ACCESS"), "=", createDatabaseNonTransactedAccessValue);
+            gb.Prod("CreateDatabaseFilestreamOption").Is(kw("DIRECTORY_NAME"), "=", stringLiteral);
+            gb.Prod("CreateDatabaseNonTransactedAccessValue").Is(kw("OFF"));
+            gb.Prod("CreateDatabaseNonTransactedAccessValue").Is(kw("READ_ONLY"));
+            gb.Prod("CreateDatabaseNonTransactedAccessValue").Is(kw("FULL"));
+
+            gb.Prod("CreateDatabaseFilespec").Is(
+                "(",
+                identifierTerm,
+                "=",
+                createDatabaseFileName,
+                ",",
+                identifierTerm,
+                "=",
+                stringLiteral,
+                ")");
+            gb.Prod("CreateDatabaseFilespec").Is(
+                "(",
+                identifierTerm,
+                "=",
+                createDatabaseFileName,
+                ",",
+                identifierTerm,
+                "=",
+                stringLiteral,
+                ",",
+                createDatabaseFilespecOptionList,
+                ")");
+
+            gb.Prod("CreateDatabaseFileName").Is(identifierTerm);
+            gb.Prod("CreateDatabaseFileName").Is(stringLiteral);
+
+            gb.Prod("CreateDatabaseFilespecOptionList").Is(createDatabaseFilespecOption);
+            gb.Prod("CreateDatabaseFilespecOptionList").Is(createDatabaseFilespecOptionList, ",", createDatabaseFilespecOption);
+            gb.Prod("CreateDatabaseFilespecOption").Is(kw("SIZE"), "=", createDatabaseSizeSpec);
+            gb.Prod("CreateDatabaseFilespecOption").Is(kw("MAXSIZE"), "=", createDatabaseMaxSizeSpec);
+            gb.Prod("CreateDatabaseFilespecOption").Is(kw("FILEGROWTH"), "=", createDatabaseGrowthSpec);
+
+            gb.Prod("CreateDatabaseSizeSpec").Is(number);
+            gb.Prod("CreateDatabaseSizeSpec").Is(number, createDatabaseSizeUnit);
+            gb.Prod("CreateDatabaseSizeSpec").Is(number, identifierTerm);
+
+            gb.Prod("CreateDatabaseMaxSizeSpec").Is(kw("UNLIMITED"));
+            gb.Prod("CreateDatabaseMaxSizeSpec").Is(number);
+            gb.Prod("CreateDatabaseMaxSizeSpec").Is(number, createDatabaseSizeUnit);
+            gb.Prod("CreateDatabaseMaxSizeSpec").Is(number, identifierTerm);
+
+            gb.Prod("CreateDatabaseGrowthSpec").Is(number);
+            gb.Prod("CreateDatabaseGrowthSpec").Is(number, createDatabaseGrowthUnit);
+            gb.Prod("CreateDatabaseGrowthSpec").Is(number, identifierTerm);
+
+            gb.Prod("CreateDatabaseSizeUnit").Is(kw("KB"));
+            gb.Prod("CreateDatabaseSizeUnit").Is(kw("MB"));
+            gb.Prod("CreateDatabaseSizeUnit").Is(kw("GB"));
+            gb.Prod("CreateDatabaseSizeUnit").Is(kw("TB"));
+
+            gb.Prod("CreateDatabaseGrowthUnit").Is(createDatabaseSizeUnit);
+            gb.Prod("CreateDatabaseGrowthUnit").Is("%");
 
             gb.Prod("WithClause").Is(kw("WITH"), cteDefinitionList);
             gb.Prod("CteDefinitionList").Is(cteDefinition);

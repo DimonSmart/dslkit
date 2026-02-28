@@ -20,6 +20,46 @@ namespace DSLKIT.Test.GrammarExamples
                 $"script '{scriptName}' should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
 
+        [Fact]
+        public void ParseScript_ShouldParseCreateDatabase_WithPopularOptions()
+        {
+            const string script = """
+                CREATE DATABASE Sales
+                CONTAINMENT = NONE
+                ON PRIMARY
+                (
+                    NAME = SalesData,
+                    FILENAME = 'C:\data\sales.mdf',
+                    SIZE = 64MB,
+                    MAXSIZE = 512MB,
+                    FILEGROWTH = 64MB
+                ),
+                FILEGROUP FG_Archive CONTAINS FILESTREAM DEFAULT
+                (
+                    NAME = ArchiveFs,
+                    FILENAME = 'C:\data\archive'
+                ),
+                LOG ON
+                (
+                    NAME = SalesLog,
+                    FILENAME = 'C:\data\sales.ldf',
+                    FILEGROWTH = 10%
+                )
+                COLLATE Latin1_General_100_CI_AS
+                WITH
+                DEFAULT_LANGUAGE = us_english,
+                NESTED_TRIGGERS = ON,
+                TRUSTWORTHY OFF,
+                LEDGER = OFF;
+                GO
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
         public static IEnumerable<object[]> ValidSqlScripts()
         {
             var scriptsRoot = ResolveScriptsRoot();

@@ -174,6 +174,19 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 : rawToken;
             WriteTriviaComments(node.Token.Trivia.LeadingTrivia);
 
+            if (string.Equals(tokenForRules, "GO", StringComparison.Ordinal))
+            {
+                if (_writer.HasContent && !_writer.IsLineStart)
+                {
+                    _writer.WriteLine();
+                }
+
+                _writer.WriteToken(FormatToken(rawToken, tokenForRules, isKeyword));
+                WriteTriviaComments(node.Token.Trivia.TrailingTrivia);
+                HandleStatementBoundary();
+                return;
+            }
+
             if (string.Equals(tokenForRules, ";", StringComparison.Ordinal) &&
                 _options.Statement.TerminateWithSemicolon == SqlStatementTerminationMode.Never)
             {
