@@ -198,10 +198,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("TopValue").Is(number);
             gb.Prod("TopValue").Is("(", expression, ")");
 
-            gb.Prod("SelectList").Is("*");
             gb.Prod("SelectList").Is(selectItemList);
             gb.Prod("SelectItemList").Is(selectItem);
             gb.Prod("SelectItemList").Is(selectItemList, ",", selectItem);
+            gb.Prod("SelectItem").Is("*");
             gb.Prod("SelectItem").Is(expression, Kw("AS"), identifierTerm);
             gb.Prod("SelectItem").Is(qualifiedName, ".", "*");
 
