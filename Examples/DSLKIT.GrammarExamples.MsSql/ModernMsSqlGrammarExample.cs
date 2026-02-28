@@ -623,8 +623,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("TableSource").Is(tableSource, joinPart);
             gb.Prod("TableFactor").Is(qualifiedName);
             gb.Prod("TableFactor").Is(qualifiedName, kw("AS"), identifierTerm);
+            gb.Prod("TableFactor").Is(qualifiedName, identifierTerm);
             gb.Prod("TableFactor").Is(functionCall, kw("AS"), identifierTerm);
+            gb.Prod("TableFactor").Is(functionCall, identifierTerm);
             gb.Prod("TableFactor").Is("(", queryExpression, ")", kw("AS"), identifierTerm);
+            gb.Prod("TableFactor").Is("(", queryExpression, ")", identifierTerm);
 
             gb.Prod("JoinPart").Is(kw("JOIN"), tableFactor, kw("ON"), searchCondition);
             gb.Prod("JoinPart").Is(joinType, kw("JOIN"), tableFactor, kw("ON"), searchCondition);
