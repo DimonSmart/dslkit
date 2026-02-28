@@ -31,8 +31,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             "CROSS",
             "OUTER",
             "JOIN",
-            "APPLY",
-            "ON"
+            "APPLY"
         };
 
         private static readonly HashSet<string> JoinPrefixKeywords = new(StringComparer.Ordinal)
@@ -73,6 +72,12 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             "LIKE",
             "IN",
             "IS"
+        };
+
+        private static readonly HashSet<string> AllLogicalOperators = new(StringComparer.Ordinal)
+        {
+            "AND",
+            "OR"
         };
 
         private const int WrapByWidthLineLength = 120;
@@ -119,6 +124,11 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 return;
             }
 
+            if (TryWriteSearchCondition(node, nonTerminalName))
+            {
+                return;
+            }
+
             VisitChildren(node);
         }
 
@@ -150,6 +160,13 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 {
                     _writer.WriteLine();
                 }
+            }
+
+            if (string.Equals(tokenForRules, "ON", StringComparison.Ordinal) &&
+                _options.Joins.OnNewLine &&
+                _writer.IsLineStart)
+            {
+                _writer.SetNextLineIndentOffset(1);
             }
 
             if (ShouldWriteSpaceBefore(tokenForRules))
@@ -202,6 +219,295 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             }
 
             return false;
+        }
+
+        private bool TryWriteSearchCondition(NonTerminalNode node, string nonTerminalName)
+        {
+            if (!string.Equals(nonTerminalName, "SearchCondition", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            if (_previousToken == null)
+            {
+                return false;
+            }
+
+            var anchorKeyword = _previousToken;
+            var isOnAnchor = string.Equals(anchorKeyword, "ON", StringComparison.Ordinal);
+            var isWhereOrHavingAnchor = string.Equals(anchorKeyword, "WHERE", StringComparison.Ordinal) ||
+                string.Equals(anchorKeyword, "HAVING", StringComparison.Ordinal);
+            if (!isOnAnchor && !isWhereOrHavingAnchor)
+            {
+                return false;
+            }
+
+            var tokenInfos = CollectTokenInfos(node);
+            if (tokenInfos.Count == 0)
+            {
+                return true;
+            }
+
+            if (isWhereOrHavingAnchor)
+            {
+                tokenInfos = ApplyParenthesizeMixedAndOr(tokenInfos);
+                WriteWhereOrHavingPredicate(anchorKeyword, tokenInfos);
+            }
+            else
+            {
+                WriteOnPredicate(tokenInfos);
+            }
+
+            UpdatePreviousToken(tokenInfos[^1]);
+            return true;
+        }
+
+        private void WriteWhereOrHavingPredicate(string anchorKeyword, IReadOnlyList<SqlTokenInfo> tokenInfos)
+        {
+            var shouldMultiline = _options.Predicates.MultilineWhere;
+            if (shouldMultiline && ShouldInlineSimplePredicate(anchorKeyword, tokenInfos))
+            {
+                shouldMultiline = false;
+            }
+
+            if (!shouldMultiline)
+            {
+                _writer.WriteSpace();
+                _writer.WriteToken(RenderTokensInline(tokenInfos));
+                return;
+            }
+
+            var split = SplitByTopLevelLogicalOperators(tokenInfos, AllLogicalOperators);
+            _writer.WriteLine();
+            using (_writer.PushIndent())
+            {
+                if (split.Operators.Count == 0)
+                {
+                    _writer.WriteToken(RenderTokensInline(tokenInfos));
+                    return;
+                }
+
+                WriteLogicalPredicateLines(split, _options.Predicates.LogicalOperatorLineBreak);
+            }
+        }
+
+        private void WriteOnPredicate(IReadOnlyList<SqlTokenInfo> tokenInfos)
+        {
+            var threshold = _options.Joins.MultilineOnThreshold;
+            var breakOperators = threshold.BreakOn == SqlJoinMultilineBreakOnMode.AndOnly
+                ? new HashSet<string>(StringComparer.Ordinal) { "AND" }
+                : new HashSet<string>(StringComparer.Ordinal) { "AND", "OR" };
+
+            var split = SplitByTopLevelLogicalOperators(tokenInfos, breakOperators);
+            var shouldUseMultiline = threshold.MaxTokensSingleLine > 0 &&
+                CountSignificantTokens(tokenInfos) > threshold.MaxTokensSingleLine &&
+                split.Operators.Count > 0;
+
+            if (!shouldUseMultiline)
+            {
+                _writer.WriteSpace();
+                _writer.WriteToken(RenderTokensInline(tokenInfos));
+                return;
+            }
+
+            _writer.WriteSpace();
+            _writer.WriteToken(RenderTokensInline(split.Segments[0]));
+            using (_writer.PushIndent())
+            {
+                for (var splitIndex = 0; splitIndex < split.Operators.Count; splitIndex++)
+                {
+                    _writer.WriteLine();
+                    var logicalOperator = split.Operators[splitIndex];
+                    var operatorText = FormatToken(logicalOperator.Raw, logicalOperator.TokenForRules, logicalOperator.IsKeyword);
+                    var rightSegmentText = RenderTokensInline(split.Segments[splitIndex + 1]);
+                    _writer.WriteToken($"{operatorText} {rightSegmentText}");
+                }
+            }
+        }
+
+        private void WriteLogicalPredicateLines(LogicalSplitResult split, SqlLogicalOperatorLineBreakMode lineBreakMode)
+        {
+            if (lineBreakMode == SqlLogicalOperatorLineBreakMode.AfterOperator)
+            {
+                for (var splitIndex = 0; splitIndex < split.Operators.Count; splitIndex++)
+                {
+                    var leftSegmentText = RenderTokensInline(split.Segments[splitIndex]);
+                    var logicalOperator = split.Operators[splitIndex];
+                    var operatorText = FormatToken(logicalOperator.Raw, logicalOperator.TokenForRules, logicalOperator.IsKeyword);
+                    _writer.WriteToken($"{leftSegmentText} {operatorText}");
+                    _writer.WriteLine();
+                }
+
+                _writer.WriteToken(RenderTokensInline(split.Segments[^1]));
+                return;
+            }
+
+            _writer.WriteToken(RenderTokensInline(split.Segments[0]));
+            for (var splitIndex = 0; splitIndex < split.Operators.Count; splitIndex++)
+            {
+                _writer.WriteLine();
+                var logicalOperator = split.Operators[splitIndex];
+                var operatorText = FormatToken(logicalOperator.Raw, logicalOperator.TokenForRules, logicalOperator.IsKeyword);
+                var rightSegmentText = RenderTokensInline(split.Segments[splitIndex + 1]);
+                _writer.WriteToken($"{operatorText} {rightSegmentText}");
+            }
+        }
+
+        private bool ShouldInlineSimplePredicate(string anchorKeyword, IReadOnlyList<SqlTokenInfo> tokenInfos)
+        {
+            var inlineOptions = _options.Predicates.InlineSimplePredicate;
+            if (inlineOptions.MaxConditions <= 0)
+            {
+                return false;
+            }
+
+            var split = SplitByTopLevelLogicalOperators(tokenInfos, AllLogicalOperators);
+            if (split.Segments.Count > inlineOptions.MaxConditions)
+            {
+                return false;
+            }
+
+            if (inlineOptions.AllowOnlyAnd &&
+                split.Operators.Any(logicalOperator =>
+                    !string.Equals(logicalOperator.TokenForRules, "AND", StringComparison.Ordinal)))
+            {
+                return false;
+            }
+
+            var predicateText = RenderTokensInline(tokenInfos);
+            var maxLineLength = Math.Max(1, inlineOptions.MaxLineLength);
+            return anchorKeyword.Length + 1 + predicateText.Length <= maxLineLength;
+        }
+
+        private List<SqlTokenInfo> ApplyParenthesizeMixedAndOr(IReadOnlyList<SqlTokenInfo> tokenInfos)
+        {
+            var mode = _options.Predicates.ParenthesizeMixedAndOr.Mode;
+            if (mode == SqlParenthesizeMixedAndOrMode.None)
+            {
+                return tokenInfos.ToList();
+            }
+
+            var split = SplitByTopLevelLogicalOperators(tokenInfos, AllLogicalOperators);
+            var hasAnd = split.Operators.Any(logicalOperator => string.Equals(logicalOperator.TokenForRules, "AND", StringComparison.Ordinal));
+            var hasOr = split.Operators.Any(logicalOperator => string.Equals(logicalOperator.TokenForRules, "OR", StringComparison.Ordinal));
+            if (!hasAnd || !hasOr)
+            {
+                return tokenInfos.ToList();
+            }
+
+            var groupedSegments = new List<(List<List<SqlTokenInfo>> Segments, bool HasOr)>();
+            var currentGroup = new List<List<SqlTokenInfo>> { split.Segments[0] };
+            var currentGroupHasOr = false;
+
+            for (var splitIndex = 0; splitIndex < split.Operators.Count; splitIndex++)
+            {
+                var logicalOperator = split.Operators[splitIndex];
+                var rightSegment = split.Segments[splitIndex + 1];
+
+                if (string.Equals(logicalOperator.TokenForRules, "OR", StringComparison.Ordinal))
+                {
+                    currentGroupHasOr = true;
+                    currentGroup.Add(rightSegment);
+                    continue;
+                }
+
+                groupedSegments.Add((currentGroup, currentGroupHasOr));
+                currentGroup = new List<List<SqlTokenInfo>> { rightSegment };
+                currentGroupHasOr = false;
+            }
+
+            groupedSegments.Add((currentGroup, currentGroupHasOr));
+
+            var rebuilt = new List<SqlTokenInfo>();
+            for (var groupIndex = 0; groupIndex < groupedSegments.Count; groupIndex++)
+            {
+                var groupedSegment = groupedSegments[groupIndex];
+                var groupTokens = JoinSegmentsWithLogicalOperator(groupedSegment.Segments, "OR");
+
+                var shouldWrapGroup = groupedSegment.HasOr &&
+                    mode is SqlParenthesizeMixedAndOrMode.Minimal or SqlParenthesizeMixedAndOrMode.AlwaysForOrGroups;
+                if (shouldWrapGroup)
+                {
+                    groupTokens.Insert(0, CreateSymbolToken("("));
+                    groupTokens.Add(CreateSymbolToken(")"));
+                }
+
+                if (groupIndex > 0)
+                {
+                    rebuilt.Add(CreateKeywordToken("AND"));
+                }
+
+                rebuilt.AddRange(groupTokens);
+            }
+
+            return rebuilt;
+        }
+
+        private static List<SqlTokenInfo> JoinSegmentsWithLogicalOperator(IReadOnlyList<List<SqlTokenInfo>> segments, string logicalOperator)
+        {
+            var joined = new List<SqlTokenInfo>();
+            for (var segmentIndex = 0; segmentIndex < segments.Count; segmentIndex++)
+            {
+                if (segmentIndex > 0)
+                {
+                    joined.Add(CreateKeywordToken(logicalOperator));
+                }
+
+                joined.AddRange(segments[segmentIndex]);
+            }
+
+            return joined;
+        }
+
+        private static LogicalSplitResult SplitByTopLevelLogicalOperators(IReadOnlyList<SqlTokenInfo> tokenInfos, HashSet<string> breakOperators)
+        {
+            var segments = new List<List<SqlTokenInfo>> { new List<SqlTokenInfo>() };
+            var operators = new List<SqlTokenInfo>();
+            var parenthesisDepth = 0;
+
+            foreach (var tokenInfo in tokenInfos)
+            {
+                if (string.Equals(tokenInfo.TokenForRules, "(", StringComparison.Ordinal))
+                {
+                    parenthesisDepth++;
+                    segments[^1].Add(tokenInfo);
+                    continue;
+                }
+
+                if (string.Equals(tokenInfo.TokenForRules, ")", StringComparison.Ordinal))
+                {
+                    parenthesisDepth = Math.Max(0, parenthesisDepth - 1);
+                    segments[^1].Add(tokenInfo);
+                    continue;
+                }
+
+                var canSplitByOperator = parenthesisDepth == 0 &&
+                    breakOperators.Contains(tokenInfo.TokenForRules) &&
+                    segments[^1].Count > 0;
+                if (!canSplitByOperator)
+                {
+                    segments[^1].Add(tokenInfo);
+                    continue;
+                }
+
+                operators.Add(tokenInfo);
+                segments.Add(new List<SqlTokenInfo>());
+            }
+
+            if (segments.Count > 1 && segments[^1].Count == 0)
+            {
+                segments.RemoveAt(segments.Count - 1);
+                operators.RemoveAt(operators.Count - 1);
+            }
+
+            return new LogicalSplitResult(segments, operators);
+        }
+
+        private static int CountSignificantTokens(IReadOnlyList<SqlTokenInfo> tokenInfos)
+        {
+            return tokenInfos.Count(tokenInfo =>
+                !string.Equals(tokenInfo.TokenForRules, "(", StringComparison.Ordinal) &&
+                !string.Equals(tokenInfo.TokenForRules, ")", StringComparison.Ordinal));
         }
 
         private void WriteSelectItemList(NonTerminalNode node)
@@ -462,11 +768,36 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
         private string RenderNodeInline(ParseTreeNode node)
         {
+            var tokenInfos = CollectTokenInfos(node);
+            return RenderTokensInline(tokenInfos);
+        }
+
+        private string RenderTokensInline(IReadOnlyList<SqlTokenInfo> tokenInfos)
+        {
             var builder = new StringBuilder();
             string? previousToken = null;
             var previousTokenWasKeyword = false;
 
-            foreach (var terminalNode in CollectTerminalNodes(node))
+            foreach (var tokenInfo in tokenInfos)
+            {
+                if (ShouldWriteSpaceBeforeToken(previousToken, previousTokenWasKeyword, tokenInfo.TokenForRules))
+                {
+                    builder.Append(' ');
+                }
+
+                builder.Append(FormatToken(tokenInfo.Raw, tokenInfo.TokenForRules, tokenInfo.IsKeyword));
+                previousToken = tokenInfo.TokenForRules;
+                previousTokenWasKeyword = tokenInfo.IsKeyword;
+            }
+
+            return builder.ToString();
+        }
+
+        private static List<SqlTokenInfo> CollectTokenInfos(ParseTreeNode node)
+        {
+            var terminalNodes = CollectTerminalNodes(node);
+            var tokenInfos = new List<SqlTokenInfo>(terminalNodes.Count);
+            foreach (var terminalNode in terminalNodes)
             {
                 var rawToken = terminalNode.Token.OriginalString;
                 if (string.IsNullOrEmpty(rawToken))
@@ -476,17 +807,10 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
                 var isKeyword = terminalNode.Token is KeywordToken;
                 var tokenForRules = isKeyword ? rawToken.ToUpperInvariant() : rawToken;
-                if (ShouldWriteSpaceBeforeToken(previousToken, previousTokenWasKeyword, tokenForRules))
-                {
-                    builder.Append(' ');
-                }
-
-                builder.Append(FormatToken(rawToken, tokenForRules, isKeyword));
-                previousToken = tokenForRules;
-                previousTokenWasKeyword = isKeyword;
+                tokenInfos.Add(new SqlTokenInfo(rawToken, tokenForRules, isKeyword));
             }
 
-            return builder.ToString();
+            return tokenInfos;
         }
 
         private void UpdatePreviousTokenFromNode(ParseTreeNode node)
@@ -507,6 +831,12 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             var isKeyword = lastTerminalNode.Token is KeywordToken;
             _previousToken = isKeyword ? rawToken.ToUpperInvariant() : rawToken;
             _previousTokenWasKeyword = isKeyword;
+        }
+
+        private void UpdatePreviousToken(SqlTokenInfo tokenInfo)
+        {
+            _previousToken = tokenInfo.TokenForRules;
+            _previousTokenWasKeyword = tokenInfo.IsKeyword;
         }
 
         private static List<TerminalNode> CollectTerminalNodes(ParseTreeNode node)
@@ -574,6 +904,13 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 return false;
             }
 
+            if (string.Equals(token, "APPLY", StringComparison.Ordinal) &&
+                (string.Equals(_previousToken, "CROSS", StringComparison.Ordinal) ||
+                 string.Equals(_previousToken, "OUTER", StringComparison.Ordinal)))
+            {
+                return false;
+            }
+
             if (JoinPrefixKeywords.Contains(token) && JoinPrefixKeywords.Contains(_previousToken))
             {
                 return false;
@@ -584,7 +921,12 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 return IsClauseNewlineEnabled(clauseKind);
             }
 
-            return JoinStartKeywords.Contains(token);
+            if (string.Equals(token, "ON", StringComparison.Ordinal))
+            {
+                return _options.Joins.OnNewLine;
+            }
+
+            return JoinStartKeywords.Contains(token) && _options.Joins.NewlinePerJoin;
         }
 
         private bool ShouldInsertBlankLine(ClauseKind clauseKind)
@@ -614,11 +956,6 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
         private bool ShouldWriteSpaceBeforeToken(string? previousToken, bool previousTokenWasKeyword, string token)
         {
-            if (!_writer.HasContent && previousToken == null)
-            {
-                return false;
-            }
-
             if (previousToken == null)
             {
                 return false;
@@ -750,5 +1087,21 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             _previousToken = null;
             _previousTokenWasKeyword = false;
         }
+
+        private static SqlTokenInfo CreateKeywordToken(string keyword)
+        {
+            return new SqlTokenInfo(keyword, keyword.ToUpperInvariant(), IsKeyword: true);
+        }
+
+        private static SqlTokenInfo CreateSymbolToken(string symbol)
+        {
+            return new SqlTokenInfo(symbol, symbol, IsKeyword: false);
+        }
+
+        private sealed record LogicalSplitResult(
+            List<List<SqlTokenInfo>> Segments,
+            List<SqlTokenInfo> Operators);
+
+        private readonly record struct SqlTokenInfo(string Raw, string TokenForRules, bool IsKeyword);
     }
 }

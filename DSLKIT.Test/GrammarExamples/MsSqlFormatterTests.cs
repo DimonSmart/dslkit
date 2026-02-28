@@ -159,6 +159,89 @@ namespace DSLKIT.Test.GrammarExamples
             formattedSql.Should().Contain("SELECT A AS A, B AS B");
         }
 
+        [Fact]
+        public void TryFormat_ShouldApplyStage4JoinSettings()
+        {
+            const string sourceSql = "SELECT a AS A FROM dbo.A AS a INNER JOIN dbo.B AS b ON a.Id=b.Id AND a.Type=b.Type AND a.IsActive=1";
+            var options = new SqlFormattingOptions
+            {
+                Joins = new SqlJoinsFormattingOptions
+                {
+                    NewlinePerJoin = true,
+                    OnNewLine = true,
+                    MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
+                    {
+                        MaxTokensSingleLine = 5,
+                        BreakOn = SqlJoinMultilineBreakOnMode.AndOnly
+                    }
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+
+            result.IsSuccess.Should().BeTrue();
+            formattedSql.Should().Contain("INNER JOIN DBO.B AS B");
+            formattedSql.Should().MatchRegex("\\n\\s+ON\\s+A\\.ID\\s*=\\s*B\\.ID");
+            formattedSql.Should().MatchRegex("\\n\\s+AND\\s+A\\.TYPE\\s*=\\s*B\\.TYPE");
+            formattedSql.Should().MatchRegex("\\n\\s+AND\\s+A\\.ISACTIVE\\s*=\\s*1");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldApplyStage5PredicateSettings()
+        {
+            const string sourceSql = "SELECT a AS A FROM dbo.t AS t WHERE a = 1 AND b = 2 OR c = 3";
+            var options = new SqlFormattingOptions
+            {
+                Predicates = new SqlPredicatesFormattingOptions
+                {
+                    MultilineWhere = true,
+                    LogicalOperatorLineBreak = SqlLogicalOperatorLineBreakMode.BeforeOperator,
+                    InlineSimplePredicate = new SqlInlineSimplePredicateOptions
+                    {
+                        MaxConditions = 0,
+                        MaxLineLength = 120,
+                        AllowOnlyAnd = true
+                    },
+                    ParenthesizeMixedAndOr = new SqlParenthesizeMixedAndOrOptions
+                    {
+                        Mode = SqlParenthesizeMixedAndOrMode.AlwaysForOrGroups
+                    }
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+
+            result.IsSuccess.Should().BeTrue();
+            formattedSql.Should().MatchRegex("WHERE\\n\\s+A\\s*=\\s*1\\n\\s+AND\\s+\\(B\\s*=\\s*2\\s+OR\\s+C\\s*=\\s*3\\)");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldInlineSimplePredicate_WhenHeuristicAllowsIt()
+        {
+            const string sourceSql = "SELECT a AS A FROM dbo.t AS t WHERE a = 1";
+            var options = new SqlFormattingOptions
+            {
+                Predicates = new SqlPredicatesFormattingOptions
+                {
+                    MultilineWhere = true,
+                    InlineSimplePredicate = new SqlInlineSimplePredicateOptions
+                    {
+                        MaxConditions = 1,
+                        MaxLineLength = 120,
+                        AllowOnlyAnd = true
+                    }
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+
+            result.IsSuccess.Should().BeTrue();
+            formattedSql.Should().Contain("WHERE A = 1");
+        }
+
         public static IEnumerable<object[]> ValidFormattingScripts()
         {
             var scriptsRoot = ResolveScriptsRoot();

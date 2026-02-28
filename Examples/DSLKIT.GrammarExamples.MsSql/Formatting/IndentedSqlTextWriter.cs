@@ -8,6 +8,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         private readonly StringBuilder _builder;
         private readonly string _indentUnit;
         private int _indentLevel;
+        private int _nextLineIndentOffset;
         private bool _isLineStart = true;
 
         public IndentedSqlTextWriter(StringBuilder builder, string indentUnit = "    ")
@@ -24,6 +25,16 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         {
             _indentLevel++;
             return new IndentScope(this);
+        }
+
+        public void SetNextLineIndentOffset(int indentOffset)
+        {
+            if (indentOffset <= 0)
+            {
+                return;
+            }
+
+            _nextLineIndentOffset = Math.Max(_nextLineIndentOffset, indentOffset);
         }
 
         public void WriteToken(string text)
@@ -90,11 +101,13 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 return;
             }
 
-            for (var i = 0; i < _indentLevel; i++)
+            var effectiveIndent = _indentLevel + _nextLineIndentOffset;
+            for (var i = 0; i < effectiveIndent; i++)
             {
                 _builder.Append(_indentUnit);
             }
 
+            _nextLineIndentOffset = 0;
             _isLineStart = false;
         }
 

@@ -39,6 +39,25 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         WrapByWidth
     }
 
+    public enum SqlJoinMultilineBreakOnMode
+    {
+        AndOnly,
+        AndOr
+    }
+
+    public enum SqlLogicalOperatorLineBreakMode
+    {
+        BeforeOperator,
+        AfterOperator
+    }
+
+    public enum SqlParenthesizeMixedAndOrMode
+    {
+        None,
+        Minimal,
+        AlwaysForOrGroups
+    }
+
     public sealed record SqlFormattingOptions
     {
         public SqlKeywordCase KeywordCase { get; init; } = SqlKeywordCase.Upper;
@@ -54,6 +73,10 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         public SqlListsFormattingOptions Lists { get; init; } = new();
 
         public SqlAlignFormattingOptions Align { get; init; } = new();
+
+        public SqlJoinsFormattingOptions Joins { get; init; } = new();
+
+        public SqlPredicatesFormattingOptions Predicates { get; init; } = new();
     }
 
     public sealed record SqlSpacesFormattingOptions
@@ -130,5 +153,46 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
     public sealed record SqlAlignFormattingOptions
     {
         public bool SelectAliases { get; init; } = false;
+    }
+
+    public sealed record SqlJoinsFormattingOptions
+    {
+        public bool NewlinePerJoin { get; init; } = true;
+
+        public bool OnNewLine { get; init; } = true;
+
+        public SqlJoinMultilineOnThresholdOptions MultilineOnThreshold { get; init; } = new();
+    }
+
+    public sealed record SqlJoinMultilineOnThresholdOptions
+    {
+        public int MaxTokensSingleLine { get; init; } = 0;
+
+        public SqlJoinMultilineBreakOnMode BreakOn { get; init; } = SqlJoinMultilineBreakOnMode.AndOnly;
+    }
+
+    public sealed record SqlPredicatesFormattingOptions
+    {
+        public bool MultilineWhere { get; init; } = false;
+
+        public SqlLogicalOperatorLineBreakMode LogicalOperatorLineBreak { get; init; } = SqlLogicalOperatorLineBreakMode.BeforeOperator;
+
+        public SqlInlineSimplePredicateOptions InlineSimplePredicate { get; init; } = new();
+
+        public SqlParenthesizeMixedAndOrOptions ParenthesizeMixedAndOr { get; init; } = new();
+    }
+
+    public sealed record SqlInlineSimplePredicateOptions
+    {
+        public int MaxConditions { get; init; } = 0;
+
+        public int MaxLineLength { get; init; } = 120;
+
+        public bool AllowOnlyAnd { get; init; } = true;
+    }
+
+    public sealed record SqlParenthesizeMixedAndOrOptions
+    {
+        public SqlParenthesizeMixedAndOrMode Mode { get; init; } = SqlParenthesizeMixedAndOrMode.None;
     }
 }

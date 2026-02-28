@@ -4,8 +4,8 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
 
 ## Implementation Status
 
-- Implemented now: Stage 1, Stage 2, Stage 3.
-- Planned (not implemented yet): Stage 4-8.
+- Implemented now: Stage 1, Stage 2, Stage 3, Stage 4, Stage 5.
+- Planned (not implemented yet): Stage 6-8.
 
 `[HEURISTIC]` marks options that use thresholds/conditions.
 
@@ -37,7 +37,7 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
   - `allowExpressions`
 - `align.selectAliases`: `true | false`
 
-## Stage 4. FROM/JOIN/APPLY And ON Conditions (planned)
+## Stage 4. FROM/JOIN/APPLY And ON Conditions
 
 - `joins.newlinePerJoin`: `true | false`
 - `joins.onNewLine`: `true | false`
@@ -45,7 +45,7 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
   - `maxTokensSingleLine`
   - `breakOn = AndOnly | AndOr`
 
-## Stage 5. WHERE/HAVING Boolean Logic (planned)
+## Stage 5. WHERE/HAVING Boolean Logic
 
 - `predicates.multilineWhere`: `true | false`
 - `predicates.logicalOperatorLineBreak`: `BeforeOperator | AfterOperator`

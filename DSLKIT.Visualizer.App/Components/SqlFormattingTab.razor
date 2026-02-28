@@ -157,6 +157,97 @@
                                 </details>
 
                                 <details class="dsl-sql-option-section" open>
+                                    <summary>Joins</summary>
+                                    <div class="dsl-sql-property-grid">
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("joins newline per join")'>
+                                            <label for="sql-joins-newline-per-join">New line per JOIN</label>
+                                            <input id="sql-joins-newline-per-join" class="form-check-input" type="checkbox" @bind="joinsNewlinePerJoin" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("joins on new line")'>
+                                            <label for="sql-joins-on-new-line">ON on new line</label>
+                                            <input id="sql-joins-on-new-line" class="form-check-input" type="checkbox" @bind="joinsOnNewLine" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("joins multiline on threshold max tokens single line")'>
+                                            <label for="sql-joins-multiline-threshold">ON max tokens single line</label>
+                                            <input id="sql-joins-multiline-threshold"
+                                                   class="form-control form-control-sm"
+                                                   type="number"
+                                                   min="0"
+                                                   step="1"
+                                                   @bind="joinsMultilineOnMaxTokensSingleLine" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("joins multiline on threshold break on and only and or")'>
+                                            <label for="sql-joins-break-on">ON break on</label>
+                                            <select id="sql-joins-break-on"
+                                                    class="form-select form-select-sm"
+                                                    @bind="joinsMultilineOnBreakOn">
+                                                <option value="@SqlJoinMultilineBreakOnMode.AndOnly">AndOnly</option>
+                                                <option value="@SqlJoinMultilineBreakOnMode.AndOr">AndOr</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <details class="dsl-sql-option-section" open>
+                                    <summary>Predicates</summary>
+                                    <div class="dsl-sql-property-grid">
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("predicates multiline where having")'>
+                                            <label for="sql-predicates-multiline-where">Multiline WHERE/HAVING</label>
+                                            <input id="sql-predicates-multiline-where" class="form-check-input" type="checkbox" @bind="predicatesMultilineWhere" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("predicates logical operator line break before after")'>
+                                            <label for="sql-predicates-logical-break">Logical operator break</label>
+                                            <select id="sql-predicates-logical-break"
+                                                    class="form-select form-select-sm"
+                                                    @bind="predicatesLogicalOperatorLineBreak">
+                                                <option value="@SqlLogicalOperatorLineBreakMode.BeforeOperator">BeforeOperator</option>
+                                                <option value="@SqlLogicalOperatorLineBreakMode.AfterOperator">AfterOperator</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("predicates inline simple predicate max conditions")'>
+                                            <label for="sql-predicates-inline-max-conditions">Inline max conditions</label>
+                                            <input id="sql-predicates-inline-max-conditions"
+                                                   class="form-control form-control-sm"
+                                                   type="number"
+                                                   min="0"
+                                                   step="1"
+                                                   @bind="predicatesInlineSimpleMaxConditions" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("predicates inline simple predicate max line length")'>
+                                            <label for="sql-predicates-inline-max-line-length">Inline max line length</label>
+                                            <input id="sql-predicates-inline-max-line-length"
+                                                   class="form-control form-control-sm"
+                                                   type="number"
+                                                   min="10"
+                                                   step="1"
+                                                   @bind="predicatesInlineSimpleMaxLineLength" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("predicates inline simple predicate allow only and")'>
+                                            <label for="sql-predicates-inline-allow-only-and">Inline allow only AND</label>
+                                            <input id="sql-predicates-inline-allow-only-and" class="form-check-input" type="checkbox" @bind="predicatesInlineSimpleAllowOnlyAnd" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("predicates parenthesize mixed and or mode")'>
+                                            <label for="sql-predicates-parenthesize-mode">Parenthesize mixed AND/OR</label>
+                                            <select id="sql-predicates-parenthesize-mode"
+                                                    class="form-select form-select-sm"
+                                                    @bind="predicatesParenthesizeMixedAndOrMode">
+                                                <option value="@SqlParenthesizeMixedAndOrMode.None">None</option>
+                                                <option value="@SqlParenthesizeMixedAndOrMode.Minimal">Minimal</option>
+                                                <option value="@SqlParenthesizeMixedAndOrMode.AlwaysForOrGroups">AlwaysForOrGroups</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <details class="dsl-sql-option-section" open>
                                     <summary>Lists</summary>
                                     <div class="dsl-sql-property-grid">
                                         <div class="dsl-sql-property-row" hidden='@HideOption("lists comma style trailing leading")'>
@@ -345,6 +436,16 @@
     private bool eofNewline;
     private bool alignSelectAliases;
     private bool selectCompactAllowExpressions;
+    private bool joinsNewlinePerJoin = true;
+    private bool joinsOnNewLine = true;
+    private SqlJoinMultilineBreakOnMode joinsMultilineOnBreakOn = SqlJoinMultilineBreakOnMode.AndOnly;
+    private int joinsMultilineOnMaxTokensSingleLine;
+    private bool predicatesMultilineWhere;
+    private SqlLogicalOperatorLineBreakMode predicatesLogicalOperatorLineBreak = SqlLogicalOperatorLineBreakMode.BeforeOperator;
+    private int predicatesInlineSimpleMaxConditions;
+    private int predicatesInlineSimpleMaxLineLength = 120;
+    private bool predicatesInlineSimpleAllowOnlyAnd = true;
+    private SqlParenthesizeMixedAndOrMode predicatesParenthesizeMixedAndOrMode = SqlParenthesizeMixedAndOrMode.None;
 
     private bool newlineBeforeWith = true;
     private bool newlineBeforeSelect = true;
@@ -461,6 +562,16 @@
         eofNewline = false;
         alignSelectAliases = false;
         selectCompactAllowExpressions = false;
+        joinsNewlinePerJoin = true;
+        joinsOnNewLine = true;
+        joinsMultilineOnBreakOn = SqlJoinMultilineBreakOnMode.AndOnly;
+        joinsMultilineOnMaxTokensSingleLine = 0;
+        predicatesMultilineWhere = false;
+        predicatesLogicalOperatorLineBreak = SqlLogicalOperatorLineBreakMode.BeforeOperator;
+        predicatesInlineSimpleMaxConditions = 0;
+        predicatesInlineSimpleMaxLineLength = 120;
+        predicatesInlineSimpleAllowOnlyAnd = true;
+        predicatesParenthesizeMixedAndOrMode = SqlParenthesizeMixedAndOrMode.None;
 
         newlineBeforeWith = true;
         newlineBeforeSelect = true;
@@ -530,6 +641,31 @@
                 Align = new SqlAlignFormattingOptions
                 {
                     SelectAliases = alignSelectAliases
+                },
+                Joins = new SqlJoinsFormattingOptions
+                {
+                    NewlinePerJoin = joinsNewlinePerJoin,
+                    OnNewLine = joinsOnNewLine,
+                    MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
+                    {
+                        MaxTokensSingleLine = Math.Max(0, joinsMultilineOnMaxTokensSingleLine),
+                        BreakOn = joinsMultilineOnBreakOn
+                    }
+                },
+                Predicates = new SqlPredicatesFormattingOptions
+                {
+                    MultilineWhere = predicatesMultilineWhere,
+                    LogicalOperatorLineBreak = predicatesLogicalOperatorLineBreak,
+                    InlineSimplePredicate = new SqlInlineSimplePredicateOptions
+                    {
+                        MaxConditions = Math.Max(0, predicatesInlineSimpleMaxConditions),
+                        MaxLineLength = Math.Max(10, predicatesInlineSimpleMaxLineLength),
+                        AllowOnlyAnd = predicatesInlineSimpleAllowOnlyAnd
+                    },
+                    ParenthesizeMixedAndOr = new SqlParenthesizeMixedAndOrOptions
+                    {
+                        Mode = predicatesParenthesizeMixedAndOrMode
+                    }
                 }
             };
 
