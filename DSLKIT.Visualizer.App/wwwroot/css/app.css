@@ -590,13 +590,42 @@ code {
 }
 
 .dsl-sql-options {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
+    display: flex;
+    align-items: stretch;
+    flex: 1 1 100%;
+    min-width: min(100%, 32rem);
     padding: 0.3rem 0.5rem;
     border: 1px solid #e2e8f0;
     border-radius: 0.35rem;
     background: #f8fafc;
+}
+
+.dsl-sql-options-grid {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    gap: 0.45rem 0.65rem;
+}
+
+.dsl-sql-option-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+    font-size: 0.8rem;
+}
+
+.dsl-sql-option-label {
+    color: #475569;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.dsl-sql-option-item--check {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 1.25rem;
 }
 
 .dsl-sql-formatting-layout {

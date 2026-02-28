@@ -13,7 +13,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         public IndentedSqlTextWriter(StringBuilder builder, string indentUnit = "    ")
         {
             _builder = builder ?? throw new ArgumentNullException(nameof(builder));
-            _indentUnit = string.IsNullOrWhiteSpace(indentUnit) ? "    " : indentUnit;
+            _indentUnit = string.IsNullOrEmpty(indentUnit) ? "    " : indentUnit;
         }
 
         public bool HasContent => _builder.Length > 0;

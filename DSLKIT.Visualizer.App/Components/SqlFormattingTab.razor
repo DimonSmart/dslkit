@@ -3,21 +3,191 @@
 
 <section class="dsl-sql-formatting-tab">
     <div class="dsl-sql-formatting-toolbar">
-        <div class="dsl-sql-options">
-            <label class="form-check-label d-flex align-items-center gap-2 mb-0" for="sql-uppercase-keywords">
-                <input id="sql-uppercase-keywords"
-                       class="form-check-input mt-0"
-                       type="checkbox"
-                       checked="@uppercaseKeywords"
-                       @onchange="OnUppercaseKeywordsChangedAsync" />
-                <span>Uppercase keywords</span>
+        <div class="dsl-sql-options dsl-sql-options-grid" @onchange="OnOptionsChangedAsync">
+            <label class="dsl-sql-option-item" for="sql-keyword-case">
+                <span class="dsl-sql-option-label">keywordCase</span>
+                <select id="sql-keyword-case" class="form-select form-select-sm" @bind="keywordCase">
+                    <option value="@SqlKeywordCase.Upper">Upper</option>
+                    <option value="@SqlKeywordCase.Lower">Lower</option>
+                    <option value="@SqlKeywordCase.Preserve">Preserve</option>
+                </select>
+            </label>
+
+            <label class="dsl-sql-option-item" for="sql-inside-parentheses">
+                <span class="dsl-sql-option-label">spaces.insideParentheses</span>
+                <select id="sql-inside-parentheses" class="form-select form-select-sm" @bind="insideParentheses">
+                    <option value="@SqlParenthesesSpacing.Never">Never</option>
+                    <option value="@SqlParenthesesSpacing.Always">Always</option>
+                    <option value="@SqlParenthesesSpacing.Smart">Smart</option>
+                </select>
+            </label>
+
+            <label class="dsl-sql-option-item" for="sql-statement-semicolon">
+                <span class="dsl-sql-option-label">statement.terminateWithSemicolon</span>
+                <select id="sql-statement-semicolon" class="form-select form-select-sm" @bind="terminateWithSemicolon">
+                    <option value="@SqlStatementTerminationMode.Never">Never</option>
+                    <option value="@SqlStatementTerminationMode.ExistingOnly">ExistingOnly</option>
+                    <option value="@SqlStatementTerminationMode.Always">Always</option>
+                </select>
+            </label>
+
+            <label class="dsl-sql-option-item" for="sql-indent-size">
+                <span class="dsl-sql-option-label">layout.indentSize</span>
+                <input id="sql-indent-size"
+                       class="form-control form-control-sm"
+                       type="number"
+                       min="1"
+                       step="1"
+                       @bind="indentSize" />
+            </label>
+
+            <label class="dsl-sql-option-item" for="sql-blank-line-between-clauses">
+                <span class="dsl-sql-option-label">layout.blankLineBetweenClauses</span>
+                <select id="sql-blank-line-between-clauses"
+                        class="form-select form-select-sm"
+                        @bind="blankLineBetweenClauses">
+                    <option value="@SqlBlankLineBetweenClausesMode.None">None</option>
+                    <option value="@SqlBlankLineBetweenClausesMode.BetweenMajorClauses">BetweenMajorClauses</option>
+                </select>
+            </label>
+
+            <label class="dsl-sql-option-item" for="sql-comma-style">
+                <span class="dsl-sql-option-label">lists.commaStyle</span>
+                <select id="sql-comma-style" class="form-select form-select-sm" @bind="commaStyle">
+                    <option value="@SqlCommaStyle.Trailing">Trailing</option>
+                    <option value="@SqlCommaStyle.Leading">Leading</option>
+                </select>
+            </label>
+
+            <label class="dsl-sql-option-item" for="sql-select-items-style">
+                <span class="dsl-sql-option-label">lists.selectItems</span>
+                <select id="sql-select-items-style" class="form-select form-select-sm" @bind="selectItemsStyle">
+                    <option value="@SqlListLayoutStyle.OnePerLine">OnePerLine</option>
+                    <option value="@SqlListLayoutStyle.WrapByWidth">WrapByWidth</option>
+                </select>
+            </label>
+
+            <label class="dsl-sql-option-item" for="sql-group-by-items-style">
+                <span class="dsl-sql-option-label">lists.groupByItems</span>
+                <select id="sql-group-by-items-style" class="form-select form-select-sm" @bind="groupByItemsStyle">
+                    <option value="@SqlListLayoutStyle.OnePerLine">OnePerLine</option>
+                    <option value="@SqlListLayoutStyle.WrapByWidth">WrapByWidth</option>
+                </select>
+            </label>
+
+            <label class="dsl-sql-option-item" for="sql-order-by-items-style">
+                <span class="dsl-sql-option-label">lists.orderByItems</span>
+                <select id="sql-order-by-items-style" class="form-select form-select-sm" @bind="orderByItemsStyle">
+                    <option value="@SqlListLayoutStyle.OnePerLine">OnePerLine</option>
+                    <option value="@SqlListLayoutStyle.WrapByWidth">WrapByWidth</option>
+                </select>
+            </label>
+
+            <label class="dsl-sql-option-item" for="sql-select-compact-max-items">
+                <span class="dsl-sql-option-label">lists.selectCompactThreshold.maxItems</span>
+                <input id="sql-select-compact-max-items"
+                       class="form-control form-control-sm"
+                       type="number"
+                       min="0"
+                       step="1"
+                       @bind="selectCompactMaxItems" />
+            </label>
+
+            <label class="dsl-sql-option-item" for="sql-select-compact-max-line-length">
+                <span class="dsl-sql-option-label">lists.selectCompactThreshold.maxLineLength</span>
+                <input id="sql-select-compact-max-line-length"
+                       class="form-control form-control-sm"
+                       type="number"
+                       min="10"
+                       step="1"
+                       @bind="selectCompactMaxLineLength" />
+            </label>
+
+            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-spaces-after-comma">
+                <input id="sql-spaces-after-comma" class="form-check-input mt-0" type="checkbox" @bind="spacesAfterComma" />
+                <span>spaces.afterComma</span>
+            </label>
+
+            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-spaces-around-binary-operators">
+                <input id="sql-spaces-around-binary-operators" class="form-check-input mt-0" type="checkbox" @bind="spacesAroundBinaryOperators" />
+                <span>spaces.aroundBinaryOperators</span>
+            </label>
+
+            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-spaces-before-semicolon">
+                <input id="sql-spaces-before-semicolon" class="form-check-input mt-0" type="checkbox" @bind="spacesBeforeSemicolon" />
+                <span>spaces.beforeSemicolon</span>
+            </label>
+
+            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-eof-newline">
+                <input id="sql-eof-newline" class="form-check-input mt-0" type="checkbox" @bind="eofNewline" />
+                <span>eof.newline</span>
+            </label>
+
+            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-align-select-aliases">
+                <input id="sql-align-select-aliases" class="form-check-input mt-0" type="checkbox" @bind="alignSelectAliases" />
+                <span>align.selectAliases</span>
+            </label>
+
+            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-select-compact-allow-expressions">
+                <input id="sql-select-compact-allow-expressions" class="form-check-input mt-0" type="checkbox" @bind="selectCompactAllowExpressions" />
+                <span>lists.selectCompactThreshold.allowExpressions</span>
+            </label>
+
+            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-newline-with">
+                <input id="sql-newline-with" class="form-check-input mt-0" type="checkbox" @bind="newlineBeforeWith" />
+                <span>layout.newlineBeforeClause.WITH</span>
+            </label>
+
+            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-newline-select">
+                <input id="sql-newline-select" class="form-check-input mt-0" type="checkbox" @bind="newlineBeforeSelect" />
+                <span>layout.newlineBeforeClause.SELECT</span>
+            </label>
+
+            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-newline-from">
+                <input id="sql-newline-from" class="form-check-input mt-0" type="checkbox" @bind="newlineBeforeFrom" />
+                <span>layout.newlineBeforeClause.FROM</span>
+            </label>
+
+            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-newline-where">
+                <input id="sql-newline-where" class="form-check-input mt-0" type="checkbox" @bind="newlineBeforeWhere" />
+                <span>layout.newlineBeforeClause.WHERE</span>
+            </label>
+
+            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-newline-group-by">
+                <input id="sql-newline-group-by" class="form-check-input mt-0" type="checkbox" @bind="newlineBeforeGroupBy" />
+                <span>layout.newlineBeforeClause.GROUP BY</span>
+            </label>
+
+            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-newline-having">
+                <input id="sql-newline-having" class="form-check-input mt-0" type="checkbox" @bind="newlineBeforeHaving" />
+                <span>layout.newlineBeforeClause.HAVING</span>
+            </label>
+
+            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-newline-order-by">
+                <input id="sql-newline-order-by" class="form-check-input mt-0" type="checkbox" @bind="newlineBeforeOrderBy" />
+                <span>layout.newlineBeforeClause.ORDER BY</span>
+            </label>
+
+            <label class="dsl-sql-option-item dsl-sql-option-item--check" for="sql-newline-option">
+                <input id="sql-newline-option" class="form-check-input mt-0" type="checkbox" @bind="newlineBeforeOption" />
+                <span>layout.newlineBeforeClause.OPTION</span>
             </label>
         </div>
 
-        <button class="btn btn-primary btn-sm"
-                @onclick="OnFormatRequestedAsync">
-            Format SQL
-        </button>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary btn-sm"
+                    @onclick="OnLoadDemoRequestedAsync">
+                Load Demo SQL
+            </button>
+            <button class="btn btn-primary btn-sm"
+                    @onclick="OnFormatRequestedAsync">
+                Format SQL
+            </button>
+        </div>
+    </div>
+
+    <div class="text-muted small">
+        Переключение опций форматирует output автоматически. Кнопка `Load Demo SQL` загружает пример, где разница от опций заметна.
     </div>
 
     <div class="dsl-sql-formatting-layout">
@@ -26,8 +196,8 @@
             <textarea id="sql-source-input"
                       class="form-control dsl-sql-editor"
                       spellcheck="false"
-                      value="@sourceSql"
-                      @oninput="OnSourceSqlChangedAsync"></textarea>
+                      @bind="sourceSql"
+                      @bind:event="oninput"></textarea>
         </div>
 
         <div class="dsl-sql-pane">
@@ -52,40 +222,120 @@
 </section>
 
 @code {
-    private string sourceSql = "select c.CustomerId as CustomerId, c.Name as Name from dbo.Customers as c;";
+    private const string DemoSql = "with recent as (select top(10) o.CustomerId as CustomerId,o.Region as Region,o.TotalAmount as TotalAmount from dbo.Orders as o where o.TotalAmount>=50) select r.CustomerId as customer_id,r.Region as region,sum(r.TotalAmount) as total_amount,count(*) as orders_count from recent as r inner join dbo.Customers as c on c.CustomerId=r.CustomerId and c.IsActive=1 where (r.Region='EU' or r.Region='US') and r.TotalAmount>=100 group by r.CustomerId,r.Region having count(*)>1 order by r.CustomerId desc,r.Region;";
+
+    private string sourceSql = DemoSql;
     private string formattedSql = string.Empty;
     private string? formattingError;
-    private bool uppercaseKeywords = true;
 
-    private Task OnSourceSqlChangedAsync(ChangeEventArgs args)
+    private SqlKeywordCase keywordCase = SqlKeywordCase.Upper;
+    private SqlParenthesesSpacing insideParentheses = SqlParenthesesSpacing.Never;
+    private SqlStatementTerminationMode terminateWithSemicolon = SqlStatementTerminationMode.ExistingOnly;
+    private SqlBlankLineBetweenClausesMode blankLineBetweenClauses = SqlBlankLineBetweenClausesMode.None;
+    private SqlCommaStyle commaStyle = SqlCommaStyle.Trailing;
+    private SqlListLayoutStyle selectItemsStyle = SqlListLayoutStyle.OnePerLine;
+    private SqlListLayoutStyle groupByItemsStyle = SqlListLayoutStyle.OnePerLine;
+    private SqlListLayoutStyle orderByItemsStyle = SqlListLayoutStyle.OnePerLine;
+
+    private bool spacesAfterComma = true;
+    private bool spacesAroundBinaryOperators = true;
+    private bool spacesBeforeSemicolon = false;
+    private bool eofNewline;
+    private bool alignSelectAliases;
+    private bool selectCompactAllowExpressions;
+
+    private bool newlineBeforeWith = true;
+    private bool newlineBeforeSelect = true;
+    private bool newlineBeforeFrom = true;
+    private bool newlineBeforeWhere = true;
+    private bool newlineBeforeGroupBy = true;
+    private bool newlineBeforeHaving = true;
+    private bool newlineBeforeOrderBy = true;
+    private bool newlineBeforeOption = true;
+
+    private int indentSize = 4;
+    private int selectCompactMaxItems = 4;
+    private int selectCompactMaxLineLength = 220;
+
+    protected override void OnInitialized()
     {
-        sourceSql = args.Value?.ToString() ?? string.Empty;
+        FormatCurrentSql();
+    }
+
+    private Task OnOptionsChangedAsync(ChangeEventArgs _)
+    {
+        FormatCurrentSql();
         return Task.CompletedTask;
     }
 
-    private Task OnUppercaseKeywordsChangedAsync(ChangeEventArgs args)
+    private Task OnLoadDemoRequestedAsync()
     {
-        if (args.Value is bool value)
-        {
-            uppercaseKeywords = value;
-            return Task.CompletedTask;
-        }
-
-        if (bool.TryParse(args.Value?.ToString(), out value))
-        {
-            uppercaseKeywords = value;
-        }
-
+        sourceSql = DemoSql;
+        FormatCurrentSql();
         return Task.CompletedTask;
     }
 
     private Task OnFormatRequestedAsync()
     {
+        FormatCurrentSql();
+        return Task.CompletedTask;
+    }
+
+    private void FormatCurrentSql()
+    {
         try
         {
             var options = new SqlFormattingOptions
             {
-                UppercaseKeywords = uppercaseKeywords
+                KeywordCase = keywordCase,
+                Spaces = new SqlSpacesFormattingOptions
+                {
+                    AfterComma = spacesAfterComma,
+                    AroundBinaryOperators = spacesAroundBinaryOperators,
+                    InsideParentheses = insideParentheses,
+                    BeforeSemicolon = spacesBeforeSemicolon
+                },
+                Statement = new SqlStatementFormattingOptions
+                {
+                    TerminateWithSemicolon = terminateWithSemicolon
+                },
+                Eof = new SqlEndOfFileFormattingOptions
+                {
+                    Newline = eofNewline
+                },
+                Layout = new SqlLayoutFormattingOptions
+                {
+                    IndentSize = Math.Max(1, indentSize),
+                    NewlineBeforeClause = new SqlClauseNewlineOptions
+                    {
+                        With = newlineBeforeWith,
+                        Select = newlineBeforeSelect,
+                        From = newlineBeforeFrom,
+                        Where = newlineBeforeWhere,
+                        GroupBy = newlineBeforeGroupBy,
+                        Having = newlineBeforeHaving,
+                        OrderBy = newlineBeforeOrderBy,
+                        Option = newlineBeforeOption
+                    },
+                    BlankLineBetweenClauses = blankLineBetweenClauses
+                },
+                Lists = new SqlListsFormattingOptions
+                {
+                    CommaStyle = commaStyle,
+                    SelectItems = selectItemsStyle,
+                    GroupByItems = groupByItemsStyle,
+                    OrderByItems = orderByItemsStyle,
+                    SelectCompactThreshold = new SqlSelectCompactThresholdOptions
+                    {
+                        MaxItems = Math.Max(0, selectCompactMaxItems),
+                        MaxLineLength = Math.Max(10, selectCompactMaxLineLength),
+                        AllowExpressions = selectCompactAllowExpressions
+                    }
+                },
+                Align = new SqlAlignFormattingOptions
+                {
+                    SelectAliases = alignSelectAliases
+                }
             };
 
             var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
@@ -93,7 +343,7 @@
             {
                 formattedSql = string.Empty;
                 formattingError = result.ErrorMessage ?? "Parse failed.";
-                return Task.CompletedTask;
+                return;
             }
 
             formattingError = null;
@@ -104,7 +354,5 @@
             formattedSql = string.Empty;
             formattingError = $"Unexpected formatter error: {ex.Message}";
         }
-
-        return Task.CompletedTask;
     }
 }

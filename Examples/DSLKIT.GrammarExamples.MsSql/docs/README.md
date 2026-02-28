@@ -40,3 +40,8 @@ This keeps formatting logic separated from grammar construction and parser inter
 
 - `SqlFormattingOptions` is the place for new options (line wrapping, alignment, heuristics).
 - `SqlFormattingVisitor` is the place for grammar-aware formatting rules per node/token pattern.
+
+## SQL Formatting Settings
+
+- Full settings catalog and staging plan: [sql-formatting-settings.md](sql-formatting-settings.md)
+- Current implementation in this repository covers Stage 1-3.
