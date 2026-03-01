@@ -115,6 +115,24 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseCreateOrAlterViewAndAlterProcedure()
+        {
+            const string script = """
+                CREATE OR ALTER VIEW dbo.vTest AS SELECT 1 AS A;
+                ALTER VIEW dbo.vTest AS SELECT 2 AS A;
+                ALTER PROCEDURE dbo.usp_Test AS
+                BEGIN
+                    RETURN 1;
+                END;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseIfExistsWithDropProcedureAndHexBitmask()
         {
             const string script = """

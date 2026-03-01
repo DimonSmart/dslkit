@@ -253,6 +253,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var createRoleStatement = gb.NT("CreateRoleStatement");
             var createSchemaStatement = gb.NT("CreateSchemaStatement");
             var schemaNameClause = gb.NT("SchemaNameClause");
+            var createViewHead = gb.NT("CreateViewHead");
             var createViewStatement = gb.NT("CreateViewStatement");
             var createDatabaseStatement = gb.NT("CreateDatabaseStatement");
             var createDatabaseClauseList = gb.NT("CreateDatabaseClauseList");
@@ -508,6 +509,7 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod("CreateProcHead").Is(kw("CREATE"), createProcKeyword);
             gb.Prod("CreateProcHead").Is(kw("CREATE"), kw("OR"), kw("ALTER"), createProcKeyword);
+            gb.Prod("CreateProcHead").Is(kw("ALTER"), createProcKeyword);
 
             gb.Prod("CreateProcName").Is(qualifiedName);
             gb.Prod("CreateProcName").Is(qualifiedName, ";", number);
@@ -632,7 +634,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("SchemaNameClause").Is(kw("AUTHORIZATION"), identifierTerm);
             gb.Prod("SchemaNameClause").Is(identifierTerm, kw("AUTHORIZATION"), identifierTerm);
 
-            gb.Prod("CreateViewStatement").Is(kw("CREATE"), kw("VIEW"), qualifiedName, kw("AS"), queryExpression);
+            gb.Prod("CreateViewHead").Is(kw("CREATE"), kw("VIEW"));
+            gb.Prod("CreateViewHead").Is(kw("CREATE"), kw("OR"), kw("ALTER"), kw("VIEW"));
+            gb.Prod("CreateViewHead").Is(kw("ALTER"), kw("VIEW"));
+            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, kw("AS"), queryExpression);
 
             gb.Prod("CreateDatabaseStatement").Is(kw("CREATE"), kw("DATABASE"), identifierTerm);
             gb.Prod("CreateDatabaseStatement").Is(kw("CREATE"), kw("DATABASE"), identifierTerm, createDatabaseClauseList);
