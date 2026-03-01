@@ -165,6 +165,59 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseCreateAlterTableAndIndex_Variants()
+        {
+            const string script = """
+                CREATE TABLE dbo.Company
+                (
+                    CompanyId INT NOT NULL PRIMARY KEY,
+                    Email NVARCHAR(320) NULL,
+                    Phone NVARCHAR(32) NULL,
+                    Price DECIMAL(10,2) NOT NULL DEFAULT (0),
+                    ValidFrom DATETIME2(0) NOT NULL,
+                    ValidTo DATETIME2(0) NOT NULL,
+                    CONSTRAINT CK_Company_Price CHECK (Price >= 0),
+                    INDEX IX_Company_Email NONCLUSTERED (Email) WITH (FILLFACTOR = 90)
+                ) WITH (MEMORY_OPTIMIZED = ON, DURABILITY = SCHEMA_AND_DATA);
+
+                ALTER TABLE Company
+                ALTER COLUMN Email ADD MASKED WITH (FUNCTION = 'email()');
+
+                ALTER TABLE Company
+                ALTER COLUMN Phone ADD MASKED WITH (FUNCTION = 'partial(5,"XXXXXXX",2)');
+
+                ALTER TABLE Company
+                ADD CONSTRAINT CK_Company_Phone CHECK (Phone IS NOT NULL);
+
+                CREATE UNIQUE NONCLUSTERED INDEX IX_Company_Email2
+                ON dbo.Company (Email ASC, CompanyId DESC)
+                INCLUDE (Price, ValidFrom)
+                WHERE CompanyId > 0
+                WITH (
+                    PAD_INDEX = OFF,
+                    FILLFACTOR = 90,
+                    ONLINE = ON (WAIT_AT_LOW_PRIORITY (MAX_DURATION = 5 MINUTES, ABORT_AFTER_WAIT = BLOCKERS)),
+                    DATA_COMPRESSION = PAGE ON PARTITIONS (1 TO 3),
+                    XML_COMPRESSION = ON ON PARTITIONS (4)
+                )
+                ON [PRIMARY]
+                FILESTREAM_ON [PRIMARY];
+
+                ALTER INDEX ALL ON dbo.Company REBUILD;
+                ALTER INDEX IX_Company_Email2 ON dbo.Company REORGANIZE WITH (COMPRESS_ALL_ROW_GROUPS = ON);
+                ALTER INDEX IX_Company_Email2 ON dbo.Company SET (COMPRESSION_DELAY = 30, OPTIMIZE_FOR_SEQUENTIAL_KEY = ON);
+                ALTER INDEX IX_Company_Email2 ON dbo.Company RESUME WITH (MAXDOP = 2, MAX_DURATION = 60 MINUTES);
+                ALTER INDEX IX_Company_Email2 ON dbo.Company PAUSE;
+                ALTER INDEX IX_Company_Email2 ON dbo.Company ABORT;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseCreateProcedure_WithOptionsAndParameters()
         {
             const string script = """
