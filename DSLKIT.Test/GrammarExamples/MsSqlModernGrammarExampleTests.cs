@@ -147,6 +147,56 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseCreateProcedure_WithOptionsAndParameters()
+        {
+            const string script = """
+                CREATE OR ALTER PROCEDURE [dbo].[usp_ProcessOrder]
+                    @order_id INT = 0,
+                    @message NVARCHAR(200) OUTPUT READONLY
+                WITH ENCRYPTION, RECOMPILE, EXECUTE AS OWNER
+                FOR REPLICATION
+                AS
+                BEGIN
+                    DECLARE @counter INT = 0;
+                    WHILE @counter < 2
+                    BEGIN
+                        SET @counter = @counter + 1;
+                    END;
+                    RETURN @counter;
+                END;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseCreateProcedure_ClrAndNativeVariants()
+        {
+            const string script = """
+                CREATE PROCEDURE dbo.usp_ClrProc
+                    @id INT = 1 OUTPUT
+                WITH EXECUTE AS OWNER
+                AS EXTERNAL NAME MyAssembly.MyNamespace.MyType.MyMethod;
+
+                CREATE PROCEDURE dbo.usp_NativeProc
+                    @id INT
+                WITH NATIVE_COMPILATION, SCHEMABINDING, EXECUTE AS OWNER
+                AS
+                BEGIN ATOMIC WITH (LANGUAGE = N'us_english', TRANSACTION ISOLATION LEVEL = SNAPSHOT)
+                    RETURN @id;
+                END;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseExecuteStatement_Variants()
         {
             const string script = """

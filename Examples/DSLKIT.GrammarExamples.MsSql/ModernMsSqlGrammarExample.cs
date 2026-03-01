@@ -223,6 +223,33 @@ namespace DSLKIT.GrammarExamples.MsSql
             var dropFileStreamTarget = gb.NT("DropFileStreamTarget");
             var dropStatisticsTargetList = gb.NT("DropStatisticsTargetList");
             var dropStatisticsTarget = gb.NT("DropStatisticsTarget");
+            var createProcHead = gb.NT("CreateProcHead");
+            var createProcKeyword = gb.NT("CreateProcKeyword");
+            var createProcName = gb.NT("CreateProcName");
+            var createProcSignature = gb.NT("CreateProcSignature");
+            var createProcParameterList = gb.NT("CreateProcParameterList");
+            var createProcParameter = gb.NT("CreateProcParameter");
+            var createProcParameterOptionList = gb.NT("CreateProcParameterOptionList");
+            var createProcParameterOption = gb.NT("CreateProcParameterOption");
+            var createProcWithClause = gb.NT("CreateProcWithClause");
+            var createProcOptionList = gb.NT("CreateProcOptionList");
+            var createProcOption = gb.NT("CreateProcOption");
+            var createProcExecuteAsClause = gb.NT("CreateProcExecuteAsClause");
+            var createProcForReplicationClause = gb.NT("CreateProcForReplicationClause");
+            var createProcBody = gb.NT("CreateProcBody");
+            var createProcBodyBlock = gb.NT("CreateProcBodyBlock");
+            var createProcExternalName = gb.NT("CreateProcExternalName");
+            var createProcNativeWithClause = gb.NT("CreateProcNativeWithClause");
+            var createProcNativeAtomicOptionList = gb.NT("CreateProcNativeAtomicOptionList");
+            var createProcNativeAtomicOption = gb.NT("CreateProcNativeAtomicOption");
+            var whileStatement = gb.NT("WhileStatement");
+            var returnStatement = gb.NT("ReturnStatement");
+            var transactionStatement = gb.NT("TransactionStatement");
+            var raiserrorStatement = gb.NT("RaiserrorStatement");
+            var raiserrorArgList = gb.NT("RaiserrorArgList");
+            var raiserrorWithOptionList = gb.NT("RaiserrorWithOptionList");
+            var throwStatement = gb.NT("ThrowStatement");
+            var loopControlStatement = gb.NT("LoopControlStatement");
             var createRoleStatement = gb.NT("CreateRoleStatement");
             var createSchemaStatement = gb.NT("CreateSchemaStatement");
             var schemaNameClause = gb.NT("SchemaNameClause");
@@ -315,9 +342,15 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("Statement").Is(insertStatement);
             gb.Prod("Statement").Is(ifStatement);
             gb.Prod("Statement").Is(beginEndStatement);
+            gb.Prod("Statement").Is(whileStatement);
             gb.Prod("Statement").Is(setStatement);
             gb.Prod("Statement").Is(printStatement);
             gb.Prod("Statement").Is(declareStatement);
+            gb.Prod("Statement").Is(returnStatement);
+            gb.Prod("Statement").Is(transactionStatement);
+            gb.Prod("Statement").Is(raiserrorStatement);
+            gb.Prod("Statement").Is(throwStatement);
+            gb.Prod("Statement").Is(loopControlStatement);
             gb.Prod("Statement").Is(executeStatement);
             gb.Prod("Statement").Is(useStatement);
             gb.Prod("Statement").Is(createProcStatement);
@@ -354,6 +387,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("IfStatement").Is(kw("IF"), searchCondition, statement, kw("ELSE"), statement);
             gb.Prod("BeginEndStatement").Is(kw("BEGIN"), statementList, kw("END"));
             gb.Prod("BeginEndStatement").Is(kw("BEGIN"), statementList, statementSeparatorList, kw("END"));
+            gb.Prod("WhileStatement").Is(kw("WHILE"), searchCondition, statement);
 
             gb.Prod("SetStatement").Is(kw("SET"), variableReference, "=", expression);
             gb.Prod("SetStatement").Is(kw("SET"), identifierTerm, kw("ON"));
@@ -362,6 +396,32 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("SetStatement").Is(kw("SET"), identifierTerm, identifierTerm);
 
             gb.Prod("PrintStatement").Is(kw("PRINT"), expression);
+
+            gb.Prod("ReturnStatement").Is(kw("RETURN"));
+            gb.Prod("ReturnStatement").Is(kw("RETURN"), expression);
+
+            gb.Prod("TransactionStatement").Is(kw("BEGIN"), kw("TRAN"));
+            gb.Prod("TransactionStatement").Is(kw("BEGIN"), kw("TRANSACTION"));
+            gb.Prod("TransactionStatement").Is(kw("BEGIN"), kw("TRAN"), identifierTerm);
+            gb.Prod("TransactionStatement").Is(kw("BEGIN"), kw("TRANSACTION"), identifierTerm);
+            gb.Prod("TransactionStatement").Is(kw("COMMIT"));
+            gb.Prod("TransactionStatement").Is(kw("COMMIT"), kw("TRAN"));
+            gb.Prod("TransactionStatement").Is(kw("COMMIT"), kw("TRANSACTION"));
+            gb.Prod("TransactionStatement").Is(kw("ROLLBACK"));
+            gb.Prod("TransactionStatement").Is(kw("ROLLBACK"), kw("TRAN"));
+            gb.Prod("TransactionStatement").Is(kw("ROLLBACK"), kw("TRANSACTION"));
+
+            gb.Prod("RaiserrorStatement").Is(kw("RAISERROR"), "(", raiserrorArgList, ")");
+            gb.Prod("RaiserrorStatement").Is(kw("RAISERROR"), "(", raiserrorArgList, ")", kw("WITH"), raiserrorWithOptionList);
+            gb.Prod("RaiserrorArgList").Is(expression);
+            gb.Prod("RaiserrorArgList").Is(raiserrorArgList, ",", expression);
+            gb.Prod("RaiserrorWithOptionList").Is(identifierTerm);
+            gb.Prod("RaiserrorWithOptionList").Is(raiserrorWithOptionList, ",", identifierTerm);
+
+            gb.Prod("ThrowStatement").Is(kw("THROW"));
+            gb.Prod("ThrowStatement").Is(kw("THROW"), expression, ",", expression, ",", expression);
+            gb.Prod("LoopControlStatement").Is(kw("BREAK"));
+            gb.Prod("LoopControlStatement").Is(kw("CONTINUE"));
 
             gb.Prod("DeclareStatement").Is(kw("DECLARE"), declareItemList);
             gb.Prod("DeclareItemList").Is(declareItem);
@@ -443,8 +503,82 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod("UseStatement").Is(kw("USE"), identifierTerm);
 
-            gb.Prod("CreateProcStatement").Is(kw("CREATE"), kw("PROC"), identifierTerm, kw("AS"), kw("BEGIN"), procStatementList, kw("END"));
-            gb.Prod("CreateProcStatement").Is(kw("CREATE"), kw("PROCEDURE"), identifierTerm, kw("AS"), kw("BEGIN"), procStatementList, kw("END"));
+            gb.Prod("CreateProcKeyword").Is(kw("PROC"));
+            gb.Prod("CreateProcKeyword").Is(kw("PROCEDURE"));
+
+            gb.Prod("CreateProcHead").Is(kw("CREATE"), createProcKeyword);
+            gb.Prod("CreateProcHead").Is(kw("CREATE"), kw("OR"), kw("ALTER"), createProcKeyword);
+
+            gb.Prod("CreateProcName").Is(qualifiedName);
+            gb.Prod("CreateProcName").Is(qualifiedName, ";", number);
+
+            gb.Prod("CreateProcSignature").Is(createProcName);
+            gb.Prod("CreateProcSignature").Is(createProcName, createProcParameterList);
+            gb.Prod("CreateProcSignature").Is(createProcName, createProcWithClause);
+            gb.Prod("CreateProcSignature").Is(createProcName, createProcForReplicationClause);
+            gb.Prod("CreateProcSignature").Is(createProcName, createProcParameterList, createProcWithClause);
+            gb.Prod("CreateProcSignature").Is(createProcName, createProcParameterList, createProcForReplicationClause);
+            gb.Prod("CreateProcSignature").Is(createProcName, createProcWithClause, createProcForReplicationClause);
+            gb.Prod("CreateProcSignature").Is(createProcName, createProcParameterList, createProcWithClause, createProcForReplicationClause);
+
+            gb.Prod("CreateProcParameterList").Is(createProcParameter);
+            gb.Prod("CreateProcParameterList").Is(createProcParameterList, ",", createProcParameter);
+            gb.Prod("CreateProcParameter").Is(variableReference, typeSpec);
+            gb.Prod("CreateProcParameter").Is(variableReference, typeSpec, createProcParameterOptionList);
+            gb.Prod("CreateProcParameterOptionList").Is(createProcParameterOption);
+            gb.Prod("CreateProcParameterOptionList").Is(createProcParameterOptionList, createProcParameterOption);
+            gb.Prod("CreateProcParameterOption").Is(kw("VARYING"));
+            gb.Prod("CreateProcParameterOption").Is(kw("NULL"));
+            gb.Prod("CreateProcParameterOption").Is("=", expression);
+            gb.Prod("CreateProcParameterOption").Is(kw("OUT"));
+            gb.Prod("CreateProcParameterOption").Is(kw("OUTPUT"));
+            gb.Prod("CreateProcParameterOption").Is(kw("READONLY"));
+
+            gb.Prod("CreateProcWithClause").Is(kw("WITH"), createProcOptionList);
+            gb.Prod("CreateProcOptionList").Is(createProcOption);
+            gb.Prod("CreateProcOptionList").Is(createProcOptionList, ",", createProcOption);
+            gb.Prod("CreateProcOption").Is(kw("ENCRYPTION"));
+            gb.Prod("CreateProcOption").Is(kw("RECOMPILE"));
+            gb.Prod("CreateProcOption").Is(kw("NATIVE_COMPILATION"));
+            gb.Prod("CreateProcOption").Is(kw("SCHEMABINDING"));
+            gb.Prod("CreateProcOption").Is(createProcExecuteAsClause);
+
+            gb.Prod("CreateProcExecuteAsClause").Is(kw("EXECUTE"), kw("AS"), kw("CALLER"));
+            gb.Prod("CreateProcExecuteAsClause").Is(kw("EXECUTE"), kw("AS"), kw("SELF"));
+            gb.Prod("CreateProcExecuteAsClause").Is(kw("EXECUTE"), kw("AS"), kw("OWNER"));
+            gb.Prod("CreateProcExecuteAsClause").Is(kw("EXECUTE"), kw("AS"), stringLiteral);
+            gb.Prod("CreateProcExecuteAsClause").Is(kw("EXECUTE"), kw("AS"), unicodeStringLiteral);
+            gb.Prod("CreateProcExecuteAsClause").Is(kw("EXECUTE"), kw("AS"), identifierTerm);
+
+            gb.Prod("CreateProcForReplicationClause").Is(kw("FOR"), kw("REPLICATION"));
+
+            gb.Prod("CreateProcBody").Is(kw("AS"), createProcBodyBlock);
+            gb.Prod("CreateProcBody").Is(kw("AS"), kw("EXTERNAL"), identifierTerm, createProcExternalName);
+            gb.Prod("CreateProcBody").Is(createProcNativeWithClause, kw("AS"), kw("BEGIN"), kw("ATOMIC"), kw("WITH"), "(", createProcNativeAtomicOptionList, ")", procStatementList, kw("END"));
+            gb.Prod("CreateProcBody").Is(createProcNativeWithClause, kw("AS"), kw("BEGIN"), kw("ATOMIC"), kw("WITH"), "(", createProcNativeAtomicOptionList, ")", procStatementList, statementSeparatorList, kw("END"));
+
+            gb.Prod("CreateProcNativeWithClause").Is(kw("WITH"), kw("NATIVE_COMPILATION"), ",", kw("SCHEMABINDING"));
+            gb.Prod("CreateProcNativeWithClause").Is(kw("WITH"), kw("NATIVE_COMPILATION"), ",", kw("SCHEMABINDING"), ",", createProcExecuteAsClause);
+
+            gb.Prod("CreateProcNativeAtomicOptionList").Is(createProcNativeAtomicOption);
+            gb.Prod("CreateProcNativeAtomicOptionList").Is(createProcNativeAtomicOptionList, ",", createProcNativeAtomicOption);
+            gb.Prod("CreateProcNativeAtomicOption").Is(identifierTerm, "=", expression);
+            gb.Prod("CreateProcNativeAtomicOption").Is(qualifiedName, "=", expression);
+            gb.Prod("CreateProcNativeAtomicOption").Is(identifierTerm, identifierTerm, "=", expression);
+            gb.Prod("CreateProcNativeAtomicOption").Is(identifierTerm, identifierTerm, identifierTerm, "=", expression);
+            gb.Prod("CreateProcNativeAtomicOption").Is(kw("TRANSACTION"), identifierTerm, identifierTerm, "=", expression);
+
+            gb.Prod("CreateProcExternalName").Is(qualifiedName);
+
+            gb.Prod("CreateProcBodyBlock").Is(procStatementList);
+            gb.Prod("CreateProcBodyBlock").Is(procStatementList, statementSeparatorList);
+            gb.Prod("CreateProcBodyBlock").Is(kw("BEGIN"), procStatementList, kw("END"));
+            gb.Prod("CreateProcBodyBlock").Is(kw("BEGIN"), procStatementList, statementSeparatorList, kw("END"));
+            gb.Prod("CreateProcBodyBlock").Is(kw("BEGIN"), kw("ATOMIC"), kw("WITH"), "(", createProcNativeAtomicOptionList, ")", procStatementList, kw("END"));
+            gb.Prod("CreateProcBodyBlock").Is(kw("BEGIN"), kw("ATOMIC"), kw("WITH"), "(", createProcNativeAtomicOptionList, ")", procStatementList, statementSeparatorList, kw("END"));
+
+            gb.Prod("CreateProcStatement").Is(createProcHead, createProcSignature, createProcBody);
+
             gb.Prod("DropProcStatement").Is(kw("DROP"), kw("PROC"), qualifiedName);
             gb.Prod("DropProcStatement").Is(kw("DROP"), kw("PROCEDURE"), qualifiedName);
             gb.Prod("DropProcStatement").Is(kw("DROP"), kw("PROC"), dropIfExistsClause, qualifiedName);
