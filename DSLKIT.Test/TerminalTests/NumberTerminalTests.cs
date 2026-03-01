@@ -43,5 +43,31 @@ namespace DSLKIT.Test.TerminalTests
             Assert.NotNull(token);
             Assert.Equal(".5e-2", token.OriginalString);
         }
+
+        [Fact]
+        public void SqlNumberProfile_ShouldMatchHexWhenEnabled()
+        {
+            var source = new StringSourceStream("0xf");
+            var terminal = new NumberTerminal(style: NumberStyle.SqlNumber, options: new NumberOptions { AllowHex = true });
+
+            var matched = terminal.TryMatch(source, out var token);
+
+            Assert.True(matched);
+            Assert.NotNull(token);
+            Assert.Equal("0xf", token.OriginalString);
+        }
+
+        [Fact]
+        public void SqlNumberProfile_ShouldKeepDefaultBehaviorWithoutHexOption()
+        {
+            var source = new StringSourceStream("0xf");
+            var terminal = new NumberTerminal(style: NumberStyle.SqlNumber);
+
+            var matched = terminal.TryMatch(source, out var token);
+
+            Assert.True(matched);
+            Assert.NotNull(token);
+            Assert.Equal("0", token.OriginalString);
+        }
     }
 }

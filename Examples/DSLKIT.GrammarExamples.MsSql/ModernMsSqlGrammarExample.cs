@@ -133,7 +133,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 previewChar: '#',
                 flags: TermFlags.Identifier);
 
-            var number = new NumberTerminal("Number", NumberStyle.SqlNumber);
+            var number = new NumberTerminal("Number", NumberStyle.SqlNumber, new NumberOptions { AllowHex = true });
             var stringLiteral = new QuotedStringTerminal("String", StringStyle.SqlSingleQuoted);
 
             var gb = new GrammarBuilder()
@@ -207,6 +207,22 @@ namespace DSLKIT.GrammarExamples.MsSql
             var executeAtClause = gb.NT("ExecuteAtClause");
             var useStatement = gb.NT("UseStatement");
             var createProcStatement = gb.NT("CreateProcStatement");
+            var dropProcStatement = gb.NT("DropProcStatement");
+            var dropTableStatement = gb.NT("DropTableStatement");
+            var dropViewStatement = gb.NT("DropViewStatement");
+            var dropIndexStatement = gb.NT("DropIndexStatement");
+            var dropStatisticsStatement = gb.NT("DropStatisticsStatement");
+            var dropIfExistsClause = gb.NT("DropIfExistsClause");
+            var dropTableTargetList = gb.NT("DropTableTargetList");
+            var dropViewTargetList = gb.NT("DropViewTargetList");
+            var dropIndexSpecList = gb.NT("DropIndexSpecList");
+            var dropIndexSpec = gb.NT("DropIndexSpec");
+            var dropIndexOptionList = gb.NT("DropIndexOptionList");
+            var dropIndexOption = gb.NT("DropIndexOption");
+            var dropMoveToTarget = gb.NT("DropMoveToTarget");
+            var dropFileStreamTarget = gb.NT("DropFileStreamTarget");
+            var dropStatisticsTargetList = gb.NT("DropStatisticsTargetList");
+            var dropStatisticsTarget = gb.NT("DropStatisticsTarget");
             var createRoleStatement = gb.NT("CreateRoleStatement");
             var createSchemaStatement = gb.NT("CreateSchemaStatement");
             var schemaNameClause = gb.NT("SchemaNameClause");
@@ -305,6 +321,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("Statement").Is(executeStatement);
             gb.Prod("Statement").Is(useStatement);
             gb.Prod("Statement").Is(createProcStatement);
+            gb.Prod("Statement").Is(dropProcStatement);
+            gb.Prod("Statement").Is(dropTableStatement);
+            gb.Prod("Statement").Is(dropViewStatement);
+            gb.Prod("Statement").Is(dropIndexStatement);
+            gb.Prod("Statement").Is(dropStatisticsStatement);
             gb.Prod("Statement").Is(createRoleStatement);
             gb.Prod("Statement").Is(createSchemaStatement);
             gb.Prod("Statement").Is(createViewStatement);
@@ -424,6 +445,47 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod("CreateProcStatement").Is(kw("CREATE"), kw("PROC"), identifierTerm, kw("AS"), kw("BEGIN"), procStatementList, kw("END"));
             gb.Prod("CreateProcStatement").Is(kw("CREATE"), kw("PROCEDURE"), identifierTerm, kw("AS"), kw("BEGIN"), procStatementList, kw("END"));
+            gb.Prod("DropProcStatement").Is(kw("DROP"), kw("PROC"), qualifiedName);
+            gb.Prod("DropProcStatement").Is(kw("DROP"), kw("PROCEDURE"), qualifiedName);
+            gb.Prod("DropProcStatement").Is(kw("DROP"), kw("PROC"), dropIfExistsClause, qualifiedName);
+            gb.Prod("DropProcStatement").Is(kw("DROP"), kw("PROCEDURE"), dropIfExistsClause, qualifiedName);
+            gb.Prod("DropIfExistsClause").Is(kw("IF"), kw("EXISTS"));
+
+            gb.Prod("DropTableStatement").Is(kw("DROP"), kw("TABLE"), dropTableTargetList);
+            gb.Prod("DropTableStatement").Is(kw("DROP"), kw("TABLE"), dropIfExistsClause, dropTableTargetList);
+            gb.Prod("DropTableTargetList").Is(qualifiedName);
+            gb.Prod("DropTableTargetList").Is(dropTableTargetList, ",", qualifiedName);
+
+            gb.Prod("DropViewStatement").Is(kw("DROP"), kw("VIEW"), dropViewTargetList);
+            gb.Prod("DropViewStatement").Is(kw("DROP"), kw("VIEW"), dropIfExistsClause, dropViewTargetList);
+            gb.Prod("DropViewTargetList").Is(qualifiedName);
+            gb.Prod("DropViewTargetList").Is(dropViewTargetList, ",", qualifiedName);
+
+            gb.Prod("DropIndexStatement").Is(kw("DROP"), kw("INDEX"), dropIndexSpecList);
+            gb.Prod("DropIndexStatement").Is(kw("DROP"), kw("INDEX"), dropIfExistsClause, dropIndexSpecList);
+            gb.Prod("DropIndexSpecList").Is(dropIndexSpec);
+            gb.Prod("DropIndexSpecList").Is(dropIndexSpecList, ",", dropIndexSpec);
+            gb.Prod("DropIndexSpec").Is(qualifiedName, kw("ON"), qualifiedName);
+            gb.Prod("DropIndexSpec").Is(qualifiedName, kw("ON"), qualifiedName, kw("WITH"), "(", dropIndexOptionList, ")");
+            gb.Prod("DropIndexSpec").Is(qualifiedName, ".", identifierTerm);
+            gb.Prod("DropIndexOptionList").Is(dropIndexOption);
+            gb.Prod("DropIndexOptionList").Is(dropIndexOptionList, ",", dropIndexOption);
+            gb.Prod("DropIndexOption").Is(kw("MAXDOP"), "=", expression);
+            gb.Prod("DropIndexOption").Is(kw("ONLINE"), "=", kw("ON"));
+            gb.Prod("DropIndexOption").Is(kw("ONLINE"), "=", kw("OFF"));
+            gb.Prod("DropIndexOption").Is(kw("MOVE"), kw("TO"), dropMoveToTarget);
+            gb.Prod("DropIndexOption").Is(kw("MOVE"), kw("TO"), dropMoveToTarget, kw("FILESTREAM_ON"), dropFileStreamTarget);
+            gb.Prod("DropIndexOption").Is(kw("FILESTREAM_ON"), dropFileStreamTarget);
+            gb.Prod("DropMoveToTarget").Is(qualifiedName);
+            gb.Prod("DropMoveToTarget").Is(kw("DEFAULT"));
+            gb.Prod("DropMoveToTarget").Is(qualifiedName, "(", identifierTerm, ")");
+            gb.Prod("DropFileStreamTarget").Is(qualifiedName);
+            gb.Prod("DropFileStreamTarget").Is(kw("DEFAULT"));
+
+            gb.Prod("DropStatisticsStatement").Is(kw("DROP"), kw("STATISTICS"), dropStatisticsTargetList);
+            gb.Prod("DropStatisticsTargetList").Is(dropStatisticsTarget);
+            gb.Prod("DropStatisticsTargetList").Is(dropStatisticsTargetList, ",", dropStatisticsTarget);
+            gb.Prod("DropStatisticsTarget").Is(qualifiedName, ".", identifierTerm);
             gb.Prod("ProcStatementList").Is(statement);
             gb.Prod("ProcStatementList").Is(procStatementList, ";", statement);
             gb.Prod("ProcStatementList").Is(procStatementList, statement);
@@ -689,6 +751,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("BinaryOperator").Is("*");
             gb.Prod("BinaryOperator").Is("/");
             gb.Prod("BinaryOperator").Is("%");
+            gb.Prod("BinaryOperator").Is("&");
 
             gb.Prod("PrimaryExpression").Is(literal);
             gb.Prod("PrimaryExpression").Is(unicodeStringLiteral);
@@ -744,6 +807,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("IdentifierTerm").Is(bracketIdentifier);
             gb.Prod("IdentifierTerm").Is(quotedIdentifier);
             gb.Prod("IdentifierTerm").Is(tempIdentifier);
+            gb.Prod("IdentifierTerm").Is(kw("TYPE"));
 
             gb.Prod("QualifiedName").Is(identifierTerm);
             gb.Prod("QualifiedName").Is(qualifiedName, ".", identifierTerm);

@@ -22,6 +22,7 @@ namespace DSLKIT.Terminals
         public bool? AllowExponent { get; init; }
         public bool? AllowLeadingDot { get; init; }
         public bool? AllowSign { get; init; }
+        public bool? AllowHex { get; init; }
         public LeadingZeroPolicy? LeadingZeroPolicy { get; init; }
     }
 
@@ -54,7 +55,7 @@ namespace DSLKIT.Terminals
         public override TerminalPriority Priority => TerminalPriority.Normal;
 
         public override string DictionaryKey =>
-            $"Number[{Name}|{_configuration.Style}|fraction:{_configuration.AllowFraction}|exp:{_configuration.AllowExponent}|leadingDot:{_configuration.AllowLeadingDot}|sign:{_configuration.AllowSign}|leadingZero:{_configuration.LeadingZeroPolicy}]";
+            $"Number[{Name}|{_configuration.Style}|fraction:{_configuration.AllowFraction}|exp:{_configuration.AllowExponent}|leadingDot:{_configuration.AllowLeadingDot}|sign:{_configuration.AllowSign}|hex:{_configuration.AllowHex}|leadingZero:{_configuration.LeadingZeroPolicy}]";
 
         private static Configuration BuildConfiguration(NumberStyle style, NumberOptions? options)
         {
@@ -69,6 +70,7 @@ namespace DSLKIT.Terminals
                 AllowExponent: resolved.AllowExponent,
                 AllowLeadingDot: resolved.AllowLeadingDot,
                 AllowSign: resolved.AllowSign,
+                AllowHex: resolved.AllowHex,
                 LeadingZeroPolicy: resolved.LeadingZeroPolicy);
         }
 
@@ -81,6 +83,7 @@ namespace DSLKIT.Terminals
                     AllowExponent: false,
                     AllowLeadingDot: false,
                     AllowSign: false,
+                    AllowHex: false,
                     LeadingZeroPolicy: LeadingZeroPolicy.DisallowExceptZero,
                     RequireFractionDigits: true),
                 NumberStyle.SqlNumber => new ResolvedOptions(
@@ -88,6 +91,7 @@ namespace DSLKIT.Terminals
                     AllowExponent: true,
                     AllowLeadingDot: true,
                     AllowSign: false,
+                    AllowHex: false,
                     LeadingZeroPolicy: LeadingZeroPolicy.Allow,
                     RequireFractionDigits: false),
                 NumberStyle.IntegerOnly => new ResolvedOptions(
@@ -95,6 +99,7 @@ namespace DSLKIT.Terminals
                     AllowExponent: false,
                     AllowLeadingDot: false,
                     AllowSign: false,
+                    AllowHex: false,
                     LeadingZeroPolicy: LeadingZeroPolicy.Allow,
                     RequireFractionDigits: false),
                 _ => new ResolvedOptions(
@@ -102,6 +107,7 @@ namespace DSLKIT.Terminals
                     AllowExponent: true,
                     AllowLeadingDot: false,
                     AllowSign: false,
+                    AllowHex: false,
                     LeadingZeroPolicy: LeadingZeroPolicy.Allow,
                     RequireFractionDigits: false)
             };
@@ -119,6 +125,7 @@ namespace DSLKIT.Terminals
                 AllowExponent: options.AllowExponent ?? defaults.AllowExponent,
                 AllowLeadingDot: options.AllowLeadingDot ?? defaults.AllowLeadingDot,
                 AllowSign: options.AllowSign ?? defaults.AllowSign,
+                AllowHex: options.AllowHex ?? defaults.AllowHex,
                 LeadingZeroPolicy: options.LeadingZeroPolicy ?? defaults.LeadingZeroPolicy,
                 RequireFractionDigits: defaults.RequireFractionDigits);
         }
@@ -132,7 +139,7 @@ namespace DSLKIT.Terminals
                 _ => throw new InvalidOperationException($"Unsupported leading zero policy '{options.LeadingZeroPolicy}'.")
             };
 
-            string core;
+            string decimalCore;
             if (options.AllowFraction)
             {
                 var fractionPart = options.RequireFractionDigits ? @"\.\d+" : @"\.\d*";
@@ -140,22 +147,26 @@ namespace DSLKIT.Terminals
 
                 if (options.AllowLeadingDot)
                 {
-                    core = $@"(?:{integerWithOptionalFraction}|\.\d+)";
+                    decimalCore = $@"(?:{integerWithOptionalFraction}|\.\d+)";
                 }
                 else
                 {
-                    core = integerWithOptionalFraction;
+                    decimalCore = integerWithOptionalFraction;
                 }
             }
             else
             {
-                core = integerPart;
+                decimalCore = integerPart;
             }
 
             if (options.AllowExponent)
             {
-                core += @"(?:[eE][+-]?\d+)?";
+                decimalCore += @"(?:[eE][+-]?\d+)?";
             }
+
+            var core = options.AllowHex
+                ? $@"(?:0[xX][0-9A-Fa-f]+|{decimalCore})"
+                : decimalCore;
 
             if (options.AllowSign)
             {
@@ -172,6 +183,7 @@ namespace DSLKIT.Terminals
             bool AllowExponent,
             bool AllowLeadingDot,
             bool AllowSign,
+            bool AllowHex,
             LeadingZeroPolicy LeadingZeroPolicy);
 
         private sealed record ResolvedOptions(
@@ -179,6 +191,7 @@ namespace DSLKIT.Terminals
             bool AllowExponent,
             bool AllowLeadingDot,
             bool AllowSign,
+            bool AllowHex,
             LeadingZeroPolicy LeadingZeroPolicy,
             bool RequireFractionDigits);
     }

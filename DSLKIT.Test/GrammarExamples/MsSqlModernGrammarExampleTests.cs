@@ -115,6 +115,38 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseIfExistsWithDropProcedureAndHexBitmask()
+        {
+            const string script = """
+                if exists (select * from sysobjects where id = object_id('dbo.SalesByCategory') and sysstat & 0xf = 4)
+                	drop procedure "dbo"."SalesByCategory"
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseDropStatements_TableViewIndexStatistics()
+        {
+            const string script = """
+                DROP TABLE IF EXISTS dbo.TempA, [dbo].[TempB];
+                DROP VIEW IF EXISTS dbo.V1, [dbo].[V2];
+                DROP INDEX IF EXISTS IX_OrderDate ON dbo.Orders;
+                DROP INDEX IF EXISTS dbo.Orders.IX_Old;
+                DROP INDEX IF EXISTS IX_Clustered ON dbo.Orders WITH (MAXDOP = 2, ONLINE = ON, MOVE TO [PRIMARY], FILESTREAM_ON [PRIMARY]);
+                DROP STATISTICS dbo.Orders.Stat_OrderDate, [dbo].[Orders].[_WA_Sys_00000001];
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseExecuteStatement_Variants()
         {
             const string script = """
