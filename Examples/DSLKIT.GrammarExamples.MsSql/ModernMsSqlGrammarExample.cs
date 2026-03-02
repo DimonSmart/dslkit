@@ -689,6 +689,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("DeclareItemList").Is(declareItemList, ",", declareItem);
             gb.Prod("DeclareItem").Is(variableReference, typeSpec);
             gb.Prod("DeclareItem").Is(variableReference, typeSpec, "=", expression);
+            gb.Prod("DeclareItem").Is(variableReference, kw("AS"), typeSpec);
+            gb.Prod("DeclareItem").Is(variableReference, kw("AS"), typeSpec, "=", expression);
             gb.Prod("DeclareTableVariable").Is(variableReference, tableTypeDefinition);
             gb.Prod("DeclareTableVariable").Is(variableReference, kw("AS"), tableTypeDefinition);
             gb.Prod("TableTypeDefinition").Is(kw("TABLE"), "(", createTableElementList, ")");
@@ -1497,7 +1499,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("SelectItemList").Is(selectItemList, ",", selectItem);
             gb.Prod("SelectItem").Is("*");
             gb.Prod("SelectItem").Is(expression, kw("AS"), identifierTerm);
+            gb.Prod("SelectItem").Is(expression, kw("AS"), stringLiteral);
             gb.Prod("SelectItem").Is(expression, identifierTerm);
+            gb.Prod("SelectItem").Is(expression, stringLiteral);
             gb.Prod("SelectItem").Is(expression);
             gb.Prod("SelectItem").Is(qualifiedName, ".", "*");
 
@@ -1523,10 +1527,17 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("JoinPart").Is(kw("OUTER"), kw("APPLY"), tableFactor);
 
             gb.Prod("JoinType").Is(kw("INNER"));
+            gb.Prod("JoinType").Is(kw("INNER"), kw("HASH"));
+            gb.Prod("JoinType").Is(kw("INNER"), kw("LOOP"));
+            gb.Prod("JoinType").Is(kw("INNER"), kw("MERGE"));
             gb.Prod("JoinType").Is(kw("LEFT"));
             gb.Prod("JoinType").Is(kw("LEFT"), kw("OUTER"));
+            gb.Prod("JoinType").Is(kw("LEFT"), kw("HASH"));
+            gb.Prod("JoinType").Is(kw("LEFT"), kw("OUTER"), kw("HASH"));
             gb.Prod("JoinType").Is(kw("RIGHT"));
             gb.Prod("JoinType").Is(kw("RIGHT"), kw("OUTER"));
+            gb.Prod("JoinType").Is(kw("RIGHT"), kw("HASH"));
+            gb.Prod("JoinType").Is(kw("RIGHT"), kw("OUTER"), kw("HASH"));
             gb.Prod("JoinType").Is(kw("FULL"));
             gb.Prod("JoinType").Is(kw("FULL"), kw("OUTER"));
 
@@ -1596,6 +1607,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("FunctionCall").Is(qualifiedName, "(", ")");
             gb.Prod("FunctionCall").Is(qualifiedName, "(", "*", ")");
             gb.Prod("FunctionCall").Is(qualifiedName, "(", functionArgumentList, ")");
+            gb.Prod("FunctionCall").Is(kw("LEFT"), "(", functionArgumentList, ")");
+            gb.Prod("FunctionCall").Is(kw("RIGHT"), "(", functionArgumentList, ")");
+            gb.Prod("FunctionCall").Is(kw("COALESCE"), "(", functionArgumentList, ")");
+            gb.Prod("FunctionCall").Is(kw("NULLIF"), "(", functionArgumentList, ")");
+            gb.Prod("FunctionCall").Is(kw("IIF"), "(", functionArgumentList, ")");
             gb.Prod("FunctionArgumentList").Is(expression);
             gb.Prod("FunctionArgumentList").Is(functionArgumentList, ",", expression);
 
@@ -1635,6 +1651,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("IdentifierTerm").Is(bracketIdentifier);
             gb.Prod("IdentifierTerm").Is(quotedIdentifier);
             gb.Prod("IdentifierTerm").Is(tempIdentifier);
+            // contextual keywords used as identifiers in SQL Server
             gb.Prod("IdentifierTerm").Is(kw("TYPE"));
             gb.Prod("IdentifierTerm").Is(kw("OPENQUERY"));
             gb.Prod("IdentifierTerm").Is(kw("OPENROWSET"));
@@ -1643,6 +1660,23 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("IdentifierTerm").Is(kw("JSON"));
             gb.Prod("IdentifierTerm").Is(kw("AUTO"));
             gb.Prod("IdentifierTerm").Is(kw("PATH"));
+            gb.Prod("IdentifierTerm").Is(kw("SIZE"));
+            gb.Prod("IdentifierTerm").Is(kw("STATISTICS"));
+            gb.Prod("IdentifierTerm").Is(kw("AT"));
+            gb.Prod("IdentifierTerm").Is(kw("NEXT"));
+            gb.Prod("IdentifierTerm").Is(kw("ROWS"));
+            gb.Prod("IdentifierTerm").Is(kw("OBJECT"));
+            gb.Prod("IdentifierTerm").Is(kw("SCHEMA"));
+            gb.Prod("IdentifierTerm").Is(kw("FUNCTION"));
+            gb.Prod("IdentifierTerm").Is(kw("LOGIN"));
+            gb.Prod("IdentifierTerm").Is(kw("DEFAULT"));
+            gb.Prod("IdentifierTerm").Is(kw("PARTITION"));
+            gb.Prod("IdentifierTerm").Is(kw("COLUMN"));
+            gb.Prod("IdentifierTerm").Is(kw("CONSTRAINT"));
+            gb.Prod("IdentifierTerm").Is(kw("HASH"));
+            gb.Prod("IdentifierTerm").Is(kw("USER"));
+            gb.Prod("IdentifierTerm").Is(kw("ROLE"));
+            gb.Prod("IdentifierTerm").Is(kw("MERGE"));
 
             gb.Prod("QualifiedName").Is(identifierTerm);
             gb.Prod("QualifiedName").Is(qualifiedName, ".", identifierTerm);
