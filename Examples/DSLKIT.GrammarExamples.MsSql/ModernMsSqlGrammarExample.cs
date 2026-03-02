@@ -4,6 +4,7 @@ using System.Linq;
 using DSLKIT.Formatting;
 using DSLKIT.Lexer;
 using DSLKIT.Parser;
+using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
 using DSLKIT.Tokens;
 
@@ -176,7 +177,24 @@ namespace DSLKIT.GrammarExamples.MsSql
             var insertColumnList = gb.NT("InsertColumnList");
             var insertValueList = gb.NT("InsertValueList");
             var deleteStatement = gb.NT("DeleteStatement");
+            var deleteTopClause = gb.NT("DeleteTopClause");
             var deleteTarget = gb.NT("DeleteTarget");
+            var deleteTargetSimple = gb.NT("DeleteTargetSimple");
+            var deleteTargetRowset = gb.NT("DeleteTargetRowset");
+            var rowsetFunctionLimited = gb.NT("RowsetFunctionLimited");
+            var tableHintLimitedList = gb.NT("TableHintLimitedList");
+            var tableHintLimited = gb.NT("TableHintLimited");
+            var tableHintLimitedName = gb.NT("TableHintLimitedName");
+            var deleteStatementTail = gb.NT("DeleteStatementTail");
+            var deleteOutputClause = gb.NT("DeleteOutputClause");
+            var deleteOutputTarget = gb.NT("DeleteOutputTarget");
+            var deleteOutputIntoColumnListOpt = gb.NT("DeleteOutputIntoColumnListOpt");
+            var deleteSourceFromClause = gb.NT("DeleteSourceFromClause");
+            var deleteWhereClause = gb.NT("DeleteWhereClause");
+            var deleteOptionClause = gb.NT("DeleteOptionClause");
+            var deleteQueryHintList = gb.NT("DeleteQueryHintList");
+            var deleteQueryHint = gb.NT("DeleteQueryHint");
+            var deleteQueryHintName = gb.NT("DeleteQueryHintName");
             var ifStatement = gb.NT("IfStatement");
             var beginEndStatement = gb.NT("BeginEndStatement");
             var setStatement = gb.NT("SetStatement");
@@ -504,17 +522,100 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("InsertValueList").Is(expression);
             gb.Prod("InsertValueList").Is(insertValueList, ",", expression);
 
-            gb.Prod("DeleteStatement").Is(kw("DELETE"), deleteTarget);
-            gb.Prod("DeleteStatement").Is(kw("DELETE"), kw("FROM"), deleteTarget);
-            gb.Prod("DeleteStatement").Is(kw("DELETE"), deleteTarget, kw("WHERE"), searchCondition);
-            gb.Prod("DeleteStatement").Is(kw("DELETE"), kw("FROM"), deleteTarget, kw("WHERE"), searchCondition);
-            gb.Prod("DeleteStatement").Is(kw("DELETE"), deleteTarget, kw("FROM"), tableSourceList);
-            gb.Prod("DeleteStatement").Is(kw("DELETE"), kw("FROM"), deleteTarget, kw("FROM"), tableSourceList);
-            gb.Prod("DeleteStatement").Is(kw("DELETE"), deleteTarget, kw("FROM"), tableSourceList, kw("WHERE"), searchCondition);
-            gb.Prod("DeleteStatement").Is(kw("DELETE"), kw("FROM"), deleteTarget, kw("FROM"), tableSourceList, kw("WHERE"), searchCondition);
-            gb.Prod("DeleteTarget").Is(identifierTerm);
-            gb.Prod("DeleteTarget").Is(qualifiedName);
-            gb.Prod("DeleteTarget").Is(variableReference);
+            gb.Prod("DeleteStatement").Is(
+                kw("DELETE"),
+                deleteTarget,
+                deleteStatementTail);
+            gb.Prod("DeleteStatement").Is(
+                kw("DELETE"),
+                kw("FROM"),
+                deleteTarget,
+                deleteStatementTail);
+            gb.Prod("DeleteStatement").Is(
+                kw("DELETE"),
+                deleteTopClause,
+                deleteTarget,
+                deleteStatementTail);
+            gb.Prod("DeleteStatement").Is(
+                kw("DELETE"),
+                deleteTopClause,
+                kw("FROM"),
+                deleteTarget,
+                deleteStatementTail);
+
+            gb.Prod("DeleteTopClause").Is(kw("TOP"), "(", expression, ")");
+            gb.Prod("DeleteTopClause").Is(kw("TOP"), "(", expression, ")", kw("PERCENT"));
+
+            gb.Prod("DeleteTarget").Is(deleteTargetSimple);
+            gb.Prod("DeleteTarget").Is(deleteTargetRowset);
+
+            gb.Prod("DeleteTargetSimple").Is(identifierTerm);
+            gb.Prod("DeleteTargetSimple").Is(qualifiedName);
+            gb.Prod("DeleteTargetSimple").Is(variableReference);
+
+            gb.Prod("DeleteTargetRowset").Is(rowsetFunctionLimited);
+            gb.Prod("DeleteTargetRowset").Is(rowsetFunctionLimited, kw("WITH"), "(", tableHintLimitedList, ")");
+            gb.Prod("RowsetFunctionLimited").Is(kw("OPENQUERY"), "(", expressionList, ")");
+            gb.Prod("RowsetFunctionLimited").Is(kw("OPENROWSET"), "(", expressionList, ")");
+
+            gb.Prod("TableHintLimitedList").Is(tableHintLimited);
+            gb.Prod("TableHintLimitedList").Is(tableHintLimitedList, ",", tableHintLimited);
+            gb.Prod("TableHintLimited").Is(tableHintLimitedName);
+            gb.Prod("TableHintLimited").Is(tableHintLimitedName, "=", expression);
+            gb.Prod("TableHintLimited").Is(tableHintLimitedName, "(", expressionList, ")");
+            gb.Prod("TableHintLimited").Is(qualifiedName);
+            gb.Prod("TableHintLimited").Is(qualifiedName, "=", expression);
+            gb.Prod("TableHintLimited").Is(qualifiedName, "(", expressionList, ")");
+            gb.Prod("TableHintLimitedName").Is(identifierTerm);
+            gb.Prod("TableHintLimitedName").Is(kw("INDEX"));
+
+            gb.Prod("DeleteStatementTail").Is(EmptyTerm.Empty);
+            gb.Prod("DeleteStatementTail").Is(deleteOutputClause);
+            gb.Prod("DeleteStatementTail").Is(deleteSourceFromClause);
+            gb.Prod("DeleteStatementTail").Is(deleteWhereClause);
+            gb.Prod("DeleteStatementTail").Is(deleteOptionClause);
+            gb.Prod("DeleteStatementTail").Is(deleteOutputClause, deleteSourceFromClause);
+            gb.Prod("DeleteStatementTail").Is(deleteOutputClause, deleteWhereClause);
+            gb.Prod("DeleteStatementTail").Is(deleteOutputClause, deleteOptionClause);
+            gb.Prod("DeleteStatementTail").Is(deleteSourceFromClause, deleteWhereClause);
+            gb.Prod("DeleteStatementTail").Is(deleteSourceFromClause, deleteOptionClause);
+            gb.Prod("DeleteStatementTail").Is(deleteWhereClause, deleteOptionClause);
+            gb.Prod("DeleteStatementTail").Is(deleteOutputClause, deleteSourceFromClause, deleteWhereClause);
+            gb.Prod("DeleteStatementTail").Is(deleteOutputClause, deleteSourceFromClause, deleteOptionClause);
+            gb.Prod("DeleteStatementTail").Is(deleteOutputClause, deleteWhereClause, deleteOptionClause);
+            gb.Prod("DeleteStatementTail").Is(deleteSourceFromClause, deleteWhereClause, deleteOptionClause);
+            gb.Prod("DeleteStatementTail").Is(deleteOutputClause, deleteSourceFromClause, deleteWhereClause, deleteOptionClause);
+
+            gb.Prod("DeleteOutputClause").Is(kw("OUTPUT"), selectItemList);
+            gb.Prod("DeleteOutputClause").Is(kw("OUTPUT"), selectItemList, kw("INTO"), deleteOutputTarget, deleteOutputIntoColumnListOpt);
+            gb.Prod("DeleteOutputTarget").Is(qualifiedName);
+            gb.Prod("DeleteOutputTarget").Is(variableReference);
+            gb.Prod("DeleteOutputIntoColumnListOpt").Is("(", identifierList, ")");
+            gb.Prod("DeleteOutputIntoColumnListOpt").Is(EmptyTerm.Empty);
+
+            gb.Prod("DeleteSourceFromClause").Is(kw("FROM"), tableSourceList);
+
+            gb.Prod("DeleteWhereClause").Is(kw("WHERE"), searchCondition);
+            gb.Prod("DeleteWhereClause").Is(kw("WHERE"), kw("CURRENT"), kw("OF"), identifierTerm);
+            gb.Prod("DeleteWhereClause").Is(kw("WHERE"), kw("CURRENT"), kw("OF"), variableReference);
+            gb.Prod("DeleteWhereClause").Is(kw("WHERE"), kw("CURRENT"), kw("OF"), kw("GLOBAL"), identifierTerm);
+            gb.Prod("DeleteWhereClause").Is(kw("WHERE"), kw("CURRENT"), kw("OF"), kw("GLOBAL"), variableReference);
+
+            gb.Prod("DeleteOptionClause").Is(kw("OPTION"), "(", deleteQueryHintList, ")");
+            gb.Prod("DeleteQueryHintList").Is(deleteQueryHint);
+            gb.Prod("DeleteQueryHintList").Is(deleteQueryHintList, ",", deleteQueryHint);
+            gb.Prod("DeleteQueryHint").Is(deleteQueryHintName);
+            gb.Prod("DeleteQueryHint").Is(deleteQueryHintName, expression);
+            gb.Prod("DeleteQueryHint").Is(deleteQueryHintName, "=", expression);
+            gb.Prod("DeleteQueryHint").Is(deleteQueryHintName, "(", expressionList, ")");
+            gb.Prod("DeleteQueryHint").Is(deleteQueryHintName, deleteQueryHintName);
+            gb.Prod("DeleteQueryHint").Is(deleteQueryHintName, deleteQueryHintName, "(", expressionList, ")");
+            gb.Prod("DeleteQueryHint").Is(qualifiedName);
+            gb.Prod("DeleteQueryHint").Is(qualifiedName, "(", expressionList, ")");
+            gb.Prod("DeleteQueryHintName").Is(identifierTerm);
+            gb.Prod("DeleteQueryHintName").Is(kw("RECOMPILE"));
+            gb.Prod("DeleteQueryHintName").Is(kw("MAXDOP"));
+            gb.Prod("DeleteQueryHintName").Is(kw("USE"));
 
             gb.Prod("IfStatement").Is(kw("IF"), searchCondition, statement);
             gb.Prod("IfStatement").Is(kw("IF"), searchCondition, statement, kw("ELSE"), statement);
@@ -1462,6 +1563,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("IdentifierTerm").Is(quotedIdentifier);
             gb.Prod("IdentifierTerm").Is(tempIdentifier);
             gb.Prod("IdentifierTerm").Is(kw("TYPE"));
+            gb.Prod("IdentifierTerm").Is(kw("OPENQUERY"));
+            gb.Prod("IdentifierTerm").Is(kw("OPENROWSET"));
 
             gb.Prod("QualifiedName").Is(identifierTerm);
             gb.Prod("QualifiedName").Is(qualifiedName, ".", identifierTerm);

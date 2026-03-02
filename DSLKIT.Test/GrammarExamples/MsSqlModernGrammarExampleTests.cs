@@ -234,6 +234,37 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseDelete_WithTopOutputOptionAndRowsetHints()
+        {
+            const string script = """
+                DECLARE @DeletedRows TABLE
+                (
+                    CityId INT NOT NULL
+                );
+
+                DELETE TOP (10) PERCENT FROM c
+                OUTPUT deleted.CityId INTO @DeletedRows (CityId)
+                FROM Dimension.City AS c
+                INNER JOIN Integration.City_Staging AS s
+                        ON c.CityId = s.CityId
+                WHERE s.IsDeleted = 1
+                OPTION (RECOMPILE, MAXDOP 1);
+
+                DELETE FROM OPENROWSET(
+                    'SQLOLEDB',
+                    'Server=(local);Trusted_Connection=yes;',
+                    'SELECT CityId FROM dbo.City')
+                WITH (HOLDLOCK, INDEX(1))
+                WHERE CURRENT OF GLOBAL CurDelete;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseCreateOrAlterViewAndAlterProcedure()
         {
             const string script = """
