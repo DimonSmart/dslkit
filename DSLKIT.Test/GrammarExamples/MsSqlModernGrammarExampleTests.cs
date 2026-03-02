@@ -554,6 +554,31 @@ namespace DSLKIT.Test.GrammarExamples
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
 
+        [Fact]
+        public void ParseScript_ShouldParseMultiRowValues_InInsertAndTableConstructor()
+        {
+            const string script = """
+                INSERT INTO dbo.Colors (Name, Hex) VALUES
+                    (N'Red',   N'#FF0000'),
+                    (N'Green', N'#00FF00'),
+                    (N'Blue',  N'#0000FF');
+
+                INSERT dbo.Numbers VALUES (1), (2), (3), (4), (5);
+
+                SELECT TOP(1) Quantity
+                FROM (VALUES (0), (0), (0), (1)) AS q(Quantity)
+                ORDER BY NEWID();
+
+                WITH a AS (SELECT * FROM (VALUES (1),(2),(3)) AS a(a))
+                SELECT a.a FROM a;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
         public static IEnumerable<object[]> ValidSqlScripts()
         {
             var scriptsRoot = ResolveScriptsRoot();

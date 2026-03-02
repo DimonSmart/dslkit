@@ -187,6 +187,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             var insertTarget = gb.NT("InsertTarget");
             var insertColumnList = gb.NT("InsertColumnList");
             var insertValueList = gb.NT("InsertValueList");
+            var rowValue = gb.NT("RowValue");
+            var rowValueList = gb.NT("RowValueList");
             var deleteStatement = gb.NT("DeleteStatement");
             var deleteTopClause = gb.NT("DeleteTopClause");
             var deleteTarget = gb.NT("DeleteTarget");
@@ -552,7 +554,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CompoundAssignOp").Is("|=");
             gb.Prod("CompoundAssignOp").Is("^=");
 
-            gb.Prod("InsertStatement").Is(kw("INSERT"), insertTarget, kw("VALUES"), "(", insertValueList, ")");
+            gb.Prod("InsertStatement").Is(kw("INSERT"), insertTarget, kw("VALUES"), rowValueList);
             gb.Prod("InsertStatement").Is(kw("INSERT"), insertTarget, executeStatement);
             gb.Prod("InsertStatement").Is(kw("INSERT"), insertTarget, queryExpression);
             gb.Prod("InsertTarget").Is(kw("INTO"), qualifiedName);
@@ -567,6 +569,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("InsertColumnList").Is(insertColumnList, ",", identifierTerm);
             gb.Prod("InsertValueList").Is(expression);
             gb.Prod("InsertValueList").Is(insertValueList, ",", expression);
+            gb.Prod("RowValue").Is("(", insertValueList, ")");
+            gb.Prod("RowValueList").Is(rowValue);
+            gb.Prod("RowValueList").Is(rowValueList, ",", rowValue);
 
             gb.Prod("DeleteStatement").Is(
                 kw("DELETE"),
@@ -1591,6 +1596,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("TableFactor").Is(functionCall, openJsonWithClause, identifierTerm);
             gb.Prod("TableFactor").Is("(", queryExpression, ")", kw("AS"), identifierTerm);
             gb.Prod("TableFactor").Is("(", queryExpression, ")", identifierTerm);
+            gb.Prod("TableFactor").Is("(", kw("VALUES"), rowValueList, ")", kw("AS"), identifierTerm);
+            gb.Prod("TableFactor").Is("(", kw("VALUES"), rowValueList, ")", identifierTerm);
+            gb.Prod("TableFactor").Is("(", kw("VALUES"), rowValueList, ")", kw("AS"), identifierTerm, "(", insertColumnList, ")");
+            gb.Prod("TableFactor").Is("(", kw("VALUES"), rowValueList, ")", identifierTerm, "(", insertColumnList, ")");
 
             gb.Prod("OpenJsonWithClause").Is(kw("WITH"), "(", openJsonColumnList, ")");
             gb.Prod("OpenJsonColumnList").Is(openJsonColumnDef);
