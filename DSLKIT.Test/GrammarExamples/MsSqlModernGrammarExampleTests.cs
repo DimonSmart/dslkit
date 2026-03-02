@@ -536,6 +536,24 @@ namespace DSLKIT.Test.GrammarExamples
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
 
+        [Fact]
+        public void ParseScript_ShouldParseSqlcmdVariables_AsIdentifiersAndExpressions()
+        {
+            const string script = """
+                IF EXISTS (SELECT [name] FROM [master].[sys].[databases] WHERE [name] = N'$(DatabaseName)')
+                    DROP DATABASE $(DatabaseName);
+                CREATE DATABASE $(DatabaseName);
+                USE $(DatabaseName);
+                SELECT $(SQLCMDSERVER) AS ServerName, $(SQLCMDDBNAME) AS DbName;
+                IF NOT EXISTS (SELECT 1 FROM dbo.Info) INSERT dbo.Info VALUES ($(DefaultDataPath));
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
         public static IEnumerable<object[]> ValidSqlScripts()
         {
             var scriptsRoot = ResolveScriptsRoot();

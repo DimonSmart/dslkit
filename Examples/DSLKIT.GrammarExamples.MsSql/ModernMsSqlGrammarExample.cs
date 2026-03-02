@@ -134,6 +134,15 @@ namespace DSLKIT.GrammarExamples.MsSql
                 previewChar: '#',
                 flags: TermFlags.Identifier);
 
+            // SQLCMD/SSDT substitution variables: $(DatabaseName), $(SQLCMDSERVER), etc.
+            // Treated as preprocessor placeholders — recognised as identifiers so the
+            // formatter can round-trip scripts that contain them unchanged.
+            var sqlcmdVariable = new RegExpTerminal(
+                "SqlcmdVariable",
+                @"\G\$\([a-zA-Z_][a-zA-Z0-9_]*\)",
+                previewChar: '$',
+                flags: TermFlags.Identifier);
+
             var number = new NumberTerminal("Number", NumberStyle.SqlNumber, new NumberOptions { AllowHex = true });
             var stringLiteral = new QuotedStringTerminal("String", StringStyle.SqlSingleQuoted);
 
@@ -148,7 +157,8 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .AddTerminal(variable)
                 .AddTerminal(tempIdentifier)
                 .AddTerminal(number)
-                .AddTerminal(stringLiteral);
+                .AddTerminal(stringLiteral)
+                .AddTerminal(sqlcmdVariable);
             var keywordCache = new Dictionary<string, KeywordTerminal>(StringComparer.OrdinalIgnoreCase);
 
             KeywordTerminal kw(string keyword)
@@ -1659,6 +1669,7 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod("PrimaryExpression").Is(literal);
             gb.Prod("PrimaryExpression").Is(unicodeStringLiteral);
+            gb.Prod("PrimaryExpression").Is(sqlcmdVariable);
             gb.Prod("PrimaryExpression").Is(variableReference);
             gb.Prod("PrimaryExpression").Is(qualifiedName);
             gb.Prod("PrimaryExpression").Is(functionCall);
@@ -1717,6 +1728,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("IdentifierTerm").Is(bracketIdentifier);
             gb.Prod("IdentifierTerm").Is(quotedIdentifier);
             gb.Prod("IdentifierTerm").Is(tempIdentifier);
+            gb.Prod("IdentifierTerm").Is(sqlcmdVariable);
             // contextual keywords used as identifiers in SQL Server
             gb.Prod("IdentifierTerm").Is(kw("TYPE"));
             gb.Prod("IdentifierTerm").Is(kw("OPENQUERY"));
