@@ -1614,6 +1614,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("IdentifierTerm").Is(kw("OPENQUERY"));
             gb.Prod("IdentifierTerm").Is(kw("OPENROWSET"));
             gb.Prod("IdentifierTerm").Is(kw("BINARY"));
+            gb.Prod("IdentifierTerm").Is(kw("XML"));
+            gb.Prod("IdentifierTerm").Is(kw("JSON"));
+            gb.Prod("IdentifierTerm").Is(kw("AUTO"));
+            gb.Prod("IdentifierTerm").Is(kw("PATH"));
 
             gb.Prod("QualifiedName").Is(identifierTerm);
             gb.Prod("QualifiedName").Is(qualifiedName, ".", identifierTerm);
