@@ -182,6 +182,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             var declareStatement = gb.NT("DeclareStatement");
             var declareItemList = gb.NT("DeclareItemList");
             var declareItem = gb.NT("DeclareItem");
+            var declareTableVariable = gb.NT("DeclareTableVariable");
+            var tableTypeDefinition = gb.NT("TableTypeDefinition");
             var typeSpec = gb.NT("TypeSpec");
             var executeStatement = gb.NT("ExecuteStatement");
             var executeModuleCall = gb.NT("ExecuteModuleCall");
@@ -480,10 +482,15 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod("InsertStatement").Is(kw("INSERT"), insertTarget, kw("VALUES"), "(", insertValueList, ")");
             gb.Prod("InsertStatement").Is(kw("INSERT"), insertTarget, executeStatement);
+            gb.Prod("InsertStatement").Is(kw("INSERT"), insertTarget, queryExpression);
             gb.Prod("InsertTarget").Is(kw("INTO"), qualifiedName);
             gb.Prod("InsertTarget").Is(qualifiedName);
             gb.Prod("InsertTarget").Is(kw("INTO"), qualifiedName, "(", insertColumnList, ")");
             gb.Prod("InsertTarget").Is(qualifiedName, "(", insertColumnList, ")");
+            gb.Prod("InsertTarget").Is(kw("INTO"), variableReference);
+            gb.Prod("InsertTarget").Is(variableReference);
+            gb.Prod("InsertTarget").Is(kw("INTO"), variableReference, "(", insertColumnList, ")");
+            gb.Prod("InsertTarget").Is(variableReference, "(", insertColumnList, ")");
             gb.Prod("InsertColumnList").Is(identifierTerm);
             gb.Prod("InsertColumnList").Is(insertColumnList, ",", identifierTerm);
             gb.Prod("InsertValueList").Is(expression);
@@ -530,10 +537,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("LoopControlStatement").Is(kw("CONTINUE"));
 
             gb.Prod("DeclareStatement").Is(kw("DECLARE"), declareItemList);
+            gb.Prod("DeclareStatement").Is(kw("DECLARE"), declareTableVariable);
             gb.Prod("DeclareItemList").Is(declareItem);
             gb.Prod("DeclareItemList").Is(declareItemList, ",", declareItem);
             gb.Prod("DeclareItem").Is(variableReference, typeSpec);
             gb.Prod("DeclareItem").Is(variableReference, typeSpec, "=", expression);
+            gb.Prod("DeclareTableVariable").Is(variableReference, tableTypeDefinition);
+            gb.Prod("DeclareTableVariable").Is(variableReference, kw("AS"), tableTypeDefinition);
+            gb.Prod("TableTypeDefinition").Is(kw("TABLE"), "(", createTableElementList, ")");
             gb.Prod("TypeSpec").Is(qualifiedName);
             gb.Prod("TypeSpec").Is(qualifiedName, "(", expression, ")");
             gb.Prod("TypeSpec").Is(qualifiedName, "(", expression, ",", expression, ")");
@@ -1303,6 +1314,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("TableFactor").Is(qualifiedName);
             gb.Prod("TableFactor").Is(qualifiedName, kw("AS"), identifierTerm);
             gb.Prod("TableFactor").Is(qualifiedName, identifierTerm);
+            gb.Prod("TableFactor").Is(variableReference);
+            gb.Prod("TableFactor").Is(variableReference, kw("AS"), identifierTerm);
+            gb.Prod("TableFactor").Is(variableReference, identifierTerm);
             gb.Prod("TableFactor").Is(functionCall, kw("AS"), identifierTerm);
             gb.Prod("TableFactor").Is(functionCall, identifierTerm);
             gb.Prod("TableFactor").Is("(", queryExpression, ")", kw("AS"), identifierTerm);

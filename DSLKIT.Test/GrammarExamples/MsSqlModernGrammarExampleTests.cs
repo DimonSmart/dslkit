@@ -115,6 +115,39 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseDeclareTableVariable_WithAndWithoutAs()
+        {
+            const string script = """
+                DECLARE @OrdersToProcess TABLE
+                (
+                    OrderId INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                    CustomerId INT NOT NULL,
+                    Payload NVARCHAR(100) NULL,
+                    CreatedAt DATETIME2(0) NOT NULL DEFAULT (SYSUTCDATETIME())
+                );
+
+                DECLARE @Processed AS TABLE
+                (
+                    ProcessedId INT NOT NULL,
+                    Status NVARCHAR(20) NULL,
+                    INDEX IX_Processed_Status NONCLUSTERED (Status)
+                );
+
+                INSERT INTO @OrdersToProcess (CustomerId, Payload, CreatedAt)
+                VALUES (101, N'pending', SYSUTCDATETIME());
+
+                INSERT @Processed (ProcessedId, Status)
+                SELECT OrderId, N'done'
+                FROM @OrdersToProcess;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseCreateOrAlterViewAndAlterProcedure()
         {
             const string script = """
