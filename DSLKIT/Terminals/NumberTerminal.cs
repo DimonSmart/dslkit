@@ -29,6 +29,7 @@ namespace DSLKIT.Terminals
     public class NumberTerminal : RegExpTerminalBase
     {
         private readonly Configuration _configuration;
+        private readonly string _dictionaryKey;
 
         public NumberTerminal(
             string name = "Number",
@@ -48,14 +49,15 @@ namespace DSLKIT.Terminals
 
             Name = name;
             _configuration = configuration;
+            _dictionaryKey =
+                $"Number[{Name}|{_configuration.Style}|fraction:{_configuration.AllowFraction}|exp:{_configuration.AllowExponent}|leadingDot:{_configuration.AllowLeadingDot}|sign:{_configuration.AllowSign}|hex:{_configuration.AllowHex}|leadingZero:{_configuration.LeadingZeroPolicy}]";
         }
 
         public override string Name { get; }
         public override TermFlags Flags => TermFlags.Const;
         public override TerminalPriority Priority => TerminalPriority.Normal;
 
-        public override string DictionaryKey =>
-            $"Number[{Name}|{_configuration.Style}|fraction:{_configuration.AllowFraction}|exp:{_configuration.AllowExponent}|leadingDot:{_configuration.AllowLeadingDot}|sign:{_configuration.AllowSign}|hex:{_configuration.AllowHex}|leadingZero:{_configuration.LeadingZeroPolicy}]";
+        public override string DictionaryKey => _dictionaryKey;
 
         private static Configuration BuildConfiguration(NumberStyle style, NumberOptions? options)
         {

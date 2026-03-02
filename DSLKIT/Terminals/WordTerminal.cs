@@ -33,6 +33,7 @@ namespace DSLKIT.Terminals
     public class WordTerminal : RegExpTerminalBase
     {
         private readonly Configuration _configuration;
+        private readonly string _dictionaryKey;
 
         public WordTerminal(
             string name = "Word",
@@ -52,14 +53,15 @@ namespace DSLKIT.Terminals
 
             Name = name;
             _configuration = configuration;
+            _dictionaryKey =
+                $"Word[{Name}|{_configuration.Style}|dash:{_configuration.AllowDash}|dot:{_configuration.AllowDot}|dollar:{_configuration.AllowDollar}|hash:{_configuration.AllowHash}|caseInsensitive:{_configuration.CaseInsensitive}|unicode:{_configuration.UnicodeLetters}|start:{_configuration.StartRule}|custom:{_configuration.CustomStartCharacterClass}]";
         }
 
         public override string Name { get; }
         public override TermFlags Flags => TermFlags.Identifier;
         public override TerminalPriority Priority => TerminalPriority.Low;
 
-        public override string DictionaryKey =>
-            $"Word[{Name}|{_configuration.Style}|dash:{_configuration.AllowDash}|dot:{_configuration.AllowDot}|dollar:{_configuration.AllowDollar}|hash:{_configuration.AllowHash}|caseInsensitive:{_configuration.CaseInsensitive}|unicode:{_configuration.UnicodeLetters}|start:{_configuration.StartRule}|custom:{_configuration.CustomStartCharacterClass}]";
+        public override string DictionaryKey => _dictionaryKey;
 
         private static Configuration BuildConfiguration(WordStyle style, WordOptions? options)
         {

@@ -10,6 +10,7 @@ namespace DSLKIT.Terminals
     public class NewLineTerminal : RegExpTerminalBase
     {
         private readonly bool _collapseConsecutive;
+        private readonly string _dictionaryKey;
 
         public NewLineTerminal(
             string name = "NewLine",
@@ -25,6 +26,7 @@ namespace DSLKIT.Terminals
             Name = name;
             Style = style;
             _collapseConsecutive = collapseConsecutive;
+            _dictionaryKey = $"NewLine[{Name}|{Style}|collapse:{_collapseConsecutive}]";
         }
 
         public NewLineStyle Style { get; }
@@ -32,8 +34,7 @@ namespace DSLKIT.Terminals
         public override TermFlags Flags => TermFlags.None;
         public override TerminalPriority Priority => TerminalPriority.Low;
 
-        public override string DictionaryKey =>
-            $"NewLine[{Name}|{Style}|collapse:{_collapseConsecutive}]";
+        public override string DictionaryKey => _dictionaryKey;
 
         private static string BuildPattern(NewLineStyle style, bool collapseConsecutive)
         {

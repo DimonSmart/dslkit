@@ -40,6 +40,7 @@ namespace DSLKIT.Terminals
     {
         private readonly Configuration _configuration;
         private readonly IReadOnlyList<string> _prefixes;
+        private readonly string _dictionaryKey;
 
         public QuotedStringTerminal(
             string name = "String",
@@ -54,14 +55,15 @@ namespace DSLKIT.Terminals
             Name = name;
             _configuration = BuildConfiguration(style, options);
             _prefixes = BuildPrefixList(_configuration.Prefixes);
+            _dictionaryKey =
+                $"QuotedString[{Name}|{_configuration.Style}|quotes:{_configuration.QuoteKinds}|escape:{_configuration.EscapeMode}|multiline:{_configuration.AllowMultiline}|prefixes:{string.Join(",", _configuration.Prefixes)}]";
         }
 
         public string Name { get; }
         public TermFlags Flags => TermFlags.Const;
         public TerminalPriority Priority => TerminalPriority.Normal;
 
-        public string DictionaryKey =>
-            $"QuotedString[{Name}|{_configuration.Style}|quotes:{_configuration.QuoteKinds}|escape:{_configuration.EscapeMode}|multiline:{_configuration.AllowMultiline}|prefixes:{string.Join(",", _configuration.Prefixes)}]";
+        public string DictionaryKey => _dictionaryKey;
 
         public bool CanStartWith(char c)
         {

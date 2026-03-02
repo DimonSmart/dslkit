@@ -18,8 +18,7 @@ namespace DSLKIT.Terminals
             { ">", TermFlags.CloseBrace }
         };
 
-        private readonly bool _wholeWord;
-        private readonly bool _ignoreCase;
+        private readonly string _dictionaryKey;
 
         public KeywordTerminal(
             string keyword,
@@ -32,25 +31,13 @@ namespace DSLKIT.Terminals
             Keyword = keyword;
             Name = string.IsNullOrWhiteSpace(name) ? keyword : name;
             Flags = GetFlag(keyword, flags);
-            _wholeWord = wholeWord;
-            _ignoreCase = ignoreCase;
+            _dictionaryKey = BuildDictionaryKey(keyword, Name, wholeWord, ignoreCase);
         }
 
         public override string Name { get; }
         public override TermFlags Flags { get; }
         public override TerminalPriority Priority => TerminalPriority.Normal;
-        public override string DictionaryKey
-        {
-            get
-            {
-                if (!_wholeWord && !_ignoreCase && string.Equals(Name, Keyword, StringComparison.Ordinal))
-                {
-                    return $"Keyword[{Keyword}]";
-                }
-
-                return $"Keyword[{Keyword}|wholeWord:{_wholeWord}|ignoreCase:{_ignoreCase}|name:{Name}]";
-            }
-        }
+        public override string DictionaryKey => _dictionaryKey;
 
         private string Keyword { get; }
 
@@ -102,6 +89,16 @@ namespace DSLKIT.Terminals
             }
 
             return keyword[0];
+        }
+
+        private static string BuildDictionaryKey(string keyword, string name, bool wholeWord, bool ignoreCase)
+        {
+            if (!wholeWord && !ignoreCase && string.Equals(name, keyword, StringComparison.Ordinal))
+            {
+                return $"Keyword[{keyword}]";
+            }
+
+            return $"Keyword[{keyword}|wholeWord:{wholeWord}|ignoreCase:{ignoreCase}|name:{name}]";
         }
     }
 }

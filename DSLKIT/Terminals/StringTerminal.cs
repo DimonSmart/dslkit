@@ -9,6 +9,7 @@ namespace DSLKIT.Terminals
     public class StringTerminal : ITerminal
     {
         private readonly string _end;
+        private readonly string _dictionaryKey;
         private readonly Regex _regex;
         private readonly string _start;
 
@@ -58,6 +59,7 @@ namespace DSLKIT.Terminals
             var pattern = @"\G" + stringStartPattern + stringBodyPattern + stringEndPattern;
 
             _regex = new Regex(pattern, RegexOptions.Compiled);
+            _dictionaryKey = $"String[{_start.Length}:{_start}|{_end.Length}:{_end}]";
         }
 
         public string Name => "String";
@@ -99,7 +101,7 @@ namespace DSLKIT.Terminals
             return true;
         }
 
-        public string DictionaryKey => $"String[{_start.Length}:{_start}|{_end.Length}:{_end}]";
+        public string DictionaryKey => _dictionaryKey;
 
         public override string ToString()
         {
