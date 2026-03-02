@@ -555,6 +555,29 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseSetIdentityInsert_WithSchemaQualifiedTableName()
+        {
+            const string script = """
+                SET IDENTITY_INSERT dbo.MyTable ON;
+                INSERT INTO dbo.MyTable (Id, Name) VALUES (1, N'Alpha');
+                SET IDENTITY_INSERT dbo.MyTable OFF;
+
+                SET IDENTITY_INSERT Nodes.StockItems ON;
+                INSERT INTO Nodes.StockItems (StockItemID, StockItemName) SELECT StockItemID, StockItemName FROM Warehouse.StockItems;
+                SET IDENTITY_INSERT Nodes.StockItems OFF;
+
+                SET IDENTITY_INSERT SimpleTable ON;
+                INSERT INTO SimpleTable (Id) VALUES (42);
+                SET IDENTITY_INSERT SimpleTable OFF;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseMultiRowValues_InInsertAndTableConstructor()
         {
             const string script = """

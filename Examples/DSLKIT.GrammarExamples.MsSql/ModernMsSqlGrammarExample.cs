@@ -684,6 +684,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("SetStatement").Is(kw("SET"), identifierTerm, kw("OFF"));
             gb.Prod("SetStatement").Is(kw("SET"), identifierTerm, "=", expression);
             gb.Prod("SetStatement").Is(kw("SET"), identifierTerm, identifierTerm);
+            gb.Prod("SetStatement").Is(kw("SET"), kw("IDENTITY_INSERT"), qualifiedName, kw("ON"));
+            gb.Prod("SetStatement").Is(kw("SET"), kw("IDENTITY_INSERT"), qualifiedName, kw("OFF"));
 
             gb.Prod("PrintStatement").Is(kw("PRINT"), expression);
 
