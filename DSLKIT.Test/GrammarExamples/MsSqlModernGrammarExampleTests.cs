@@ -165,6 +165,36 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseGrantStatement_Variants()
+        {
+            const string script = """
+                GRANT SELECT, UPDATE (Email, Phone), VIEW DEFINITION ON OBJECT::dbo.Company TO [app_role], PUBLIC WITH GRANT OPTION AS dbo;
+                GRANT ALL PRIVILEGES TO [report_user];
+                GRANT CONNECT ON DATABASE::[Clinic] TO [reader];
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseDbccStatement_Variants()
+        {
+            const string script = """
+                DBCC CHECKDB (0, NOINDEX) WITH NO_INFOMSGS, ALL_ERRORMSGS, MAXDOP = 2;
+                DBCC DROPCLEANBUFFERS;
+                DBCC TRACESTATUS (0) WITH NO_INFOMSGS;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseCreateAlterTableAndIndex_Variants()
         {
             const string script = """
