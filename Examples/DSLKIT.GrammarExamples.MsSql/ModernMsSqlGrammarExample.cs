@@ -175,6 +175,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             var insertTarget = gb.NT("InsertTarget");
             var insertColumnList = gb.NT("InsertColumnList");
             var insertValueList = gb.NT("InsertValueList");
+            var deleteStatement = gb.NT("DeleteStatement");
+            var deleteTarget = gb.NT("DeleteTarget");
             var ifStatement = gb.NT("IfStatement");
             var beginEndStatement = gb.NT("BeginEndStatement");
             var setStatement = gb.NT("SetStatement");
@@ -441,6 +443,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("Statement").Is(queryStatement);
             gb.Prod("Statement").Is(updateStatement);
             gb.Prod("Statement").Is(insertStatement);
+            gb.Prod("Statement").Is(deleteStatement);
             gb.Prod("Statement").Is(ifStatement);
             gb.Prod("Statement").Is(beginEndStatement);
             gb.Prod("Statement").Is(whileStatement);
@@ -473,11 +476,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("Statement").Is(createDatabaseStatement);
             gb.Prod("Statement").Is(withClause, updateStatement);
             gb.Prod("Statement").Is(withClause, insertStatement);
+            gb.Prod("Statement").Is(withClause, deleteStatement);
 
             gb.Prod("QueryStatement").Is(queryExpression);
             gb.Prod("QueryStatement").Is(withClause, queryExpression);
             gb.Prod("UpdateStatement").Is(kw("UPDATE"), tableFactor, kw("SET"), updateSetList);
             gb.Prod("UpdateStatement").Is(kw("UPDATE"), tableFactor, kw("SET"), updateSetList, kw("WHERE"), searchCondition);
+            gb.Prod("UpdateStatement").Is(kw("UPDATE"), tableFactor, kw("SET"), updateSetList, kw("FROM"), tableSourceList);
+            gb.Prod("UpdateStatement").Is(kw("UPDATE"), tableFactor, kw("SET"), updateSetList, kw("FROM"), tableSourceList, kw("WHERE"), searchCondition);
             gb.Prod("UpdateSetList").Is(updateSetItem);
             gb.Prod("UpdateSetList").Is(updateSetList, ",", updateSetItem);
             gb.Prod("UpdateSetItem").Is(qualifiedName, "=", expression);
@@ -497,6 +503,18 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("InsertColumnList").Is(insertColumnList, ",", identifierTerm);
             gb.Prod("InsertValueList").Is(expression);
             gb.Prod("InsertValueList").Is(insertValueList, ",", expression);
+
+            gb.Prod("DeleteStatement").Is(kw("DELETE"), deleteTarget);
+            gb.Prod("DeleteStatement").Is(kw("DELETE"), kw("FROM"), deleteTarget);
+            gb.Prod("DeleteStatement").Is(kw("DELETE"), deleteTarget, kw("WHERE"), searchCondition);
+            gb.Prod("DeleteStatement").Is(kw("DELETE"), kw("FROM"), deleteTarget, kw("WHERE"), searchCondition);
+            gb.Prod("DeleteStatement").Is(kw("DELETE"), deleteTarget, kw("FROM"), tableSourceList);
+            gb.Prod("DeleteStatement").Is(kw("DELETE"), kw("FROM"), deleteTarget, kw("FROM"), tableSourceList);
+            gb.Prod("DeleteStatement").Is(kw("DELETE"), deleteTarget, kw("FROM"), tableSourceList, kw("WHERE"), searchCondition);
+            gb.Prod("DeleteStatement").Is(kw("DELETE"), kw("FROM"), deleteTarget, kw("FROM"), tableSourceList, kw("WHERE"), searchCondition);
+            gb.Prod("DeleteTarget").Is(identifierTerm);
+            gb.Prod("DeleteTarget").Is(qualifiedName);
+            gb.Prod("DeleteTarget").Is(variableReference);
 
             gb.Prod("IfStatement").Is(kw("IF"), searchCondition, statement);
             gb.Prod("IfStatement").Is(kw("IF"), searchCondition, statement, kw("ELSE"), statement);

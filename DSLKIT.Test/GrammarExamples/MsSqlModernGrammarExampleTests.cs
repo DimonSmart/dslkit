@@ -174,6 +174,66 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseUpdateWithFromAndWhere()
+        {
+            const string script = """
+                UPDATE c
+                   SET c.ValidTo = rtco.ValidFrom
+                FROM Dimension.City AS c
+                INNER JOIN Integration.City_Staging AS rtco
+                        ON c.CityId = rtco.CityId
+                WHERE c.ValidTo = @EndOfTime;
+
+                WITH RowsToCloseOff AS
+                (
+                    SELECT c.CityId, MIN(c.ValidFrom) AS ValidFrom
+                    FROM Integration.City_Staging AS c
+                    GROUP BY c.CityId
+                )
+                UPDATE c
+                   SET c.ValidTo = r.ValidFrom
+                FROM Dimension.City AS c
+                INNER JOIN RowsToCloseOff AS r
+                        ON c.CityId = r.CityId
+                WHERE c.ValidTo = @EndOfTime;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseDeleteWithFromAndWhere()
+        {
+            const string script = """
+                DELETE c
+                FROM Dimension.City AS c
+                INNER JOIN Integration.City_Staging AS s
+                        ON c.CityId = s.CityId
+                WHERE s.IsDeleted = 1;
+
+                WITH RowsToDelete AS
+                (
+                    SELECT s.CityId
+                    FROM Integration.City_Staging AS s
+                    WHERE s.IsDeleted = 1
+                )
+                DELETE FROM c
+                FROM Dimension.City AS c
+                INNER JOIN RowsToDelete AS d
+                        ON c.CityId = d.CityId
+                WHERE c.IsActive = 0;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseCreateOrAlterViewAndAlterProcedure()
         {
             const string script = """
