@@ -282,6 +282,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             var dropFileStreamTarget = gb.NT("DropFileStreamTarget");
             var dropStatisticsTargetList = gb.NT("DropStatisticsTargetList");
             var dropStatisticsTarget = gb.NT("DropStatisticsTarget");
+            var createTriggerStatement = gb.NT("CreateTriggerStatement");
+            var createTriggerHead = gb.NT("CreateTriggerHead");
+            var createTriggerFireClause = gb.NT("CreateTriggerFireClause");
+            var createTriggerEventList = gb.NT("CreateTriggerEventList");
+            var createTriggerEvent = gb.NT("CreateTriggerEvent");
+            var createTriggerWithOptionList = gb.NT("CreateTriggerWithOptionList");
+            var createTriggerWithOption = gb.NT("CreateTriggerWithOption");
+            var dropTriggerStatement = gb.NT("DropTriggerStatement");
             var createProcHead = gb.NT("CreateProcHead");
             var createProcKeyword = gb.NT("CreateProcKeyword");
             var createProcName = gb.NT("CreateProcName");
@@ -504,6 +512,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("Statement").Is(createIndexStatement);
             gb.Prod("Statement").Is(alterIndexStatement);
             gb.Prod("Statement").Is(createDatabaseStatement);
+            gb.Prod("Statement").Is(createTriggerStatement);
+            gb.Prod("Statement").Is(dropTriggerStatement);
             gb.Prod("Statement").Is(withClause, updateStatement);
             gb.Prod("Statement").Is(withClause, insertStatement);
             gb.Prod("Statement").Is(withClause, deleteStatement);
@@ -1034,6 +1044,47 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("DropStatisticsTargetList").Is(dropStatisticsTarget);
             gb.Prod("DropStatisticsTargetList").Is(dropStatisticsTargetList, ",", dropStatisticsTarget);
             gb.Prod("DropStatisticsTarget").Is(qualifiedName, ".", identifierTerm);
+
+            gb.Prod("CreateTriggerHead").Is(kw("CREATE"), kw("TRIGGER"));
+            gb.Prod("CreateTriggerHead").Is(kw("CREATE"), kw("OR"), kw("ALTER"), kw("TRIGGER"));
+            gb.Prod("CreateTriggerHead").Is(kw("ALTER"), kw("TRIGGER"));
+
+            gb.Prod("CreateTriggerFireClause").Is(kw("FOR"), createTriggerEventList);
+            gb.Prod("CreateTriggerFireClause").Is(kw("AFTER"), createTriggerEventList);
+            gb.Prod("CreateTriggerFireClause").Is(kw("INSTEAD"), kw("OF"), createTriggerEventList);
+
+            gb.Prod("CreateTriggerEventList").Is(createTriggerEvent);
+            gb.Prod("CreateTriggerEventList").Is(createTriggerEventList, ",", createTriggerEvent);
+            gb.Prod("CreateTriggerEvent").Is(kw("INSERT"));
+            gb.Prod("CreateTriggerEvent").Is(kw("UPDATE"));
+            gb.Prod("CreateTriggerEvent").Is(kw("DELETE"));
+            gb.Prod("CreateTriggerEvent").Is(identifierTerm); // DDL events: CREATE_TABLE, LOGON, etc.
+
+            gb.Prod("CreateTriggerWithOptionList").Is(createTriggerWithOption);
+            gb.Prod("CreateTriggerWithOptionList").Is(createTriggerWithOptionList, ",", createTriggerWithOption);
+            gb.Prod("CreateTriggerWithOption").Is(kw("ENCRYPTION"));
+            gb.Prod("CreateTriggerWithOption").Is(kw("SCHEMABINDING"));
+            gb.Prod("CreateTriggerWithOption").Is(kw("NATIVE_COMPILATION"));
+            gb.Prod("CreateTriggerWithOption").Is(createProcExecuteAsClause);
+
+            // DML trigger: ON table [WITH opts] fireClause [NOT FOR REPLICATION] AS body
+            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, kw("ON"), qualifiedName, createTriggerFireClause, kw("AS"), createProcBodyBlock);
+            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, kw("ON"), qualifiedName, kw("WITH"), createTriggerWithOptionList, createTriggerFireClause, kw("AS"), createProcBodyBlock);
+            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, kw("ON"), qualifiedName, createTriggerFireClause, kw("NOT"), kw("FOR"), kw("REPLICATION"), kw("AS"), createProcBodyBlock);
+            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, kw("ON"), qualifiedName, kw("WITH"), createTriggerWithOptionList, createTriggerFireClause, kw("NOT"), kw("FOR"), kw("REPLICATION"), kw("AS"), createProcBodyBlock);
+            // DDL trigger: ON ALL SERVER | DATABASE
+            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, kw("ON"), kw("ALL"), kw("SERVER"), createTriggerFireClause, kw("AS"), createProcBodyBlock);
+            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, kw("ON"), kw("DATABASE"), createTriggerFireClause, kw("AS"), createProcBodyBlock);
+            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, kw("ON"), kw("ALL"), kw("SERVER"), kw("WITH"), createTriggerWithOptionList, createTriggerFireClause, kw("AS"), createProcBodyBlock);
+            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, kw("ON"), kw("DATABASE"), kw("WITH"), createTriggerWithOptionList, createTriggerFireClause, kw("AS"), createProcBodyBlock);
+
+            gb.Prod("DropTriggerStatement").Is(kw("DROP"), kw("TRIGGER"), qualifiedName);
+            gb.Prod("DropTriggerStatement").Is(kw("DROP"), kw("TRIGGER"), dropIfExistsClause, qualifiedName);
+            gb.Prod("DropTriggerStatement").Is(kw("DROP"), kw("TRIGGER"), qualifiedName, kw("ON"), kw("DATABASE"));
+            gb.Prod("DropTriggerStatement").Is(kw("DROP"), kw("TRIGGER"), dropIfExistsClause, qualifiedName, kw("ON"), kw("DATABASE"));
+            gb.Prod("DropTriggerStatement").Is(kw("DROP"), kw("TRIGGER"), qualifiedName, kw("ON"), kw("ALL"), kw("SERVER"));
+            gb.Prod("DropTriggerStatement").Is(kw("DROP"), kw("TRIGGER"), dropIfExistsClause, qualifiedName, kw("ON"), kw("ALL"), kw("SERVER"));
+
             gb.Prod("ProcStatementList").Is(statement);
             gb.Prod("ProcStatementList").Is(procStatementList, ";", statement);
             gb.Prod("ProcStatementList").Is(procStatementList, statement);
@@ -1692,6 +1743,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("IdentifierTerm").Is(kw("USER"));
             gb.Prod("IdentifierTerm").Is(kw("ROLE"));
             gb.Prod("IdentifierTerm").Is(kw("MERGE"));
+            gb.Prod("IdentifierTerm").Is(kw("AFTER"));
+            gb.Prod("IdentifierTerm").Is(kw("SERVER"));
+            gb.Prod("IdentifierTerm").Is(kw("INSTEAD"));
 
             gb.Prod("QualifiedName").Is(identifierTerm);
             gb.Prod("QualifiedName").Is(qualifiedName, ".", identifierTerm);
