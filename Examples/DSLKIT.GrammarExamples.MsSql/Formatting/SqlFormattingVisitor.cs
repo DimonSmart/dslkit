@@ -310,6 +310,52 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 return true;
             }
 
+            if (_writer.HasContent && !_writer.IsLineStart)
+            {
+                _writer.WriteSpace();
+            }
+
+            if (TryWriteExpandedCreateProcStructured(node))
+            {
+                UpdatePreviousTokenFromNode(node);
+                return true;
+            }
+
+            if (TryWriteExpandedCreateProcLegacy(node))
+            {
+                UpdatePreviousTokenFromNode(node);
+                return true;
+            }
+
+            _writer.WriteToken(RenderNodeInline(node));
+            UpdatePreviousTokenFromNode(node);
+            return true;
+        }
+
+        private bool TryWriteExpandedCreateProcStructured(NonTerminalNode node)
+        {
+            if (node.Children.Count != 3 ||
+                node.Children[2] is not NonTerminalNode createProcBodyNode)
+            {
+                return false;
+            }
+
+            var createHeadText = RenderNodeInline(node.Children[0]);
+            var signatureText = RenderNodeInline(node.Children[1]);
+            _writer.WriteToken($"{createHeadText} {signatureText}");
+
+            if (TryWriteExpandedCreateProcBody(createProcBodyNode))
+            {
+                return true;
+            }
+
+            _writer.WriteLine();
+            _writer.WriteToken(RenderNodeInline(createProcBodyNode));
+            return true;
+        }
+
+        private bool TryWriteExpandedCreateProcLegacy(NonTerminalNode node)
+        {
             if (node.Children.Count < 7)
             {
                 return false;
@@ -322,11 +368,6 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             var beginKeywordText = RenderNodeInline(node.Children[4]);
             var procStatementsNode = node.Children[5];
             var endKeywordText = RenderNodeInline(node.Children[6]);
-
-            if (_writer.HasContent && !_writer.IsLineStart)
-            {
-                _writer.WriteSpace();
-            }
 
             _writer.WriteToken($"{createText} {procKeywordText} {procNameText}");
             _writer.WriteLine();
@@ -346,7 +387,86 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             }
 
             _writer.WriteToken(endKeywordText);
-            UpdatePreviousTokenFromNode(node);
+            return true;
+        }
+
+        private bool TryWriteExpandedCreateProcBody(NonTerminalNode createProcBodyNode)
+        {
+            if (createProcBodyNode.Children.Count != 2 ||
+                !TryGetTerminalText(createProcBodyNode.Children[0], out var asKeywordText) ||
+                createProcBodyNode.Children[1] is not NonTerminalNode createProcBodyBlockNode)
+            {
+                return false;
+            }
+
+            _writer.WriteLine();
+            _writer.WriteToken(asKeywordText);
+
+            if (!TryExtractBeginEndProcBlock(createProcBodyBlockNode, out var beginKeywordText, out var procStatementsNode, out var endKeywordText))
+            {
+                _writer.WriteLine();
+                using (_writer.PushIndent())
+                {
+                    Visit(createProcBodyBlockNode);
+                }
+
+                return true;
+            }
+
+            _writer.WriteLine();
+            _writer.WriteToken(beginKeywordText);
+            _writer.WriteLine();
+            using (_writer.PushIndent())
+            {
+                Visit(procStatementsNode);
+            }
+
+            if (!_writer.IsLineStart)
+            {
+                _writer.WriteLine();
+            }
+
+            _writer.WriteToken(endKeywordText);
+            return true;
+        }
+
+        private static bool TryExtractBeginEndProcBlock(
+            NonTerminalNode createProcBodyBlockNode,
+            out string beginKeywordText,
+            out ParseTreeNode procStatementsNode,
+            out string endKeywordText)
+        {
+            beginKeywordText = string.Empty;
+            endKeywordText = string.Empty;
+            procStatementsNode = null!;
+
+            if (!string.Equals(createProcBodyBlockNode.NonTerminal.Name, "CreateProcBodyBlock", StringComparison.Ordinal) ||
+                createProcBodyBlockNode.Children.Count < 3)
+            {
+                return false;
+            }
+
+            if (!TryGetTerminalText(createProcBodyBlockNode.Children[0], out beginKeywordText) ||
+                !string.Equals(beginKeywordText, "BEGIN", StringComparison.OrdinalIgnoreCase) ||
+                !TryGetTerminalText(createProcBodyBlockNode.Children[^1], out endKeywordText) ||
+                !string.Equals(endKeywordText, "END", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            procStatementsNode = createProcBodyBlockNode.Children[1];
+            return true;
+        }
+
+        private static bool TryGetTerminalText(ParseTreeNode node, out string text)
+        {
+            text = string.Empty;
+            if (node is not TerminalNode terminalNode || string.IsNullOrEmpty(terminalNode.Token.OriginalString))
+            {
+                return false;
+            }
+
+            text = terminalNode.Token.OriginalString;
             return true;
         }
 

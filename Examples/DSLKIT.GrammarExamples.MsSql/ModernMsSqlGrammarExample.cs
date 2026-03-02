@@ -396,6 +396,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var alterIndexResumeSpec = gb.NT("AlterIndexResumeSpec");
             var alterIndexPartitionSelector = gb.NT("AlterIndexPartitionSelector");
             var createDatabaseStatement = gb.NT("CreateDatabaseStatement");
+            var dropDatabaseStatement = gb.NT("DropDatabaseStatement");
             var createDatabaseClauseList = gb.NT("CreateDatabaseClauseList");
             var createDatabaseClause = gb.NT("CreateDatabaseClause");
             var createDatabaseContainmentClause = gb.NT("CreateDatabaseContainmentClause");
@@ -514,6 +515,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("Statement").Is(dropViewStatement);
             gb.Prod("Statement").Is(dropIndexStatement);
             gb.Prod("Statement").Is(dropStatisticsStatement);
+            gb.Prod("Statement").Is(dropDatabaseStatement);
             gb.Prod("Statement").Is(createRoleStatement);
             gb.Prod("Statement").Is(createSchemaStatement);
             gb.Prod("Statement").Is(createViewStatement);
@@ -1054,6 +1056,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("DropStatisticsTargetList").Is(dropStatisticsTarget);
             gb.Prod("DropStatisticsTargetList").Is(dropStatisticsTargetList, ",", dropStatisticsTarget);
             gb.Prod("DropStatisticsTarget").Is(qualifiedName, ".", identifierTerm);
+
+            gb.Prod("DropDatabaseStatement").Is(kw("DROP"), kw("DATABASE"), identifierTerm);
+            gb.Prod("DropDatabaseStatement").Is(kw("DROP"), kw("DATABASE"), dropIfExistsClause, identifierTerm);
 
             gb.Prod("CreateTriggerHead").Is(kw("CREATE"), kw("TRIGGER"));
             gb.Prod("CreateTriggerHead").Is(kw("CREATE"), kw("OR"), kw("ALTER"), kw("TRIGGER"));
@@ -1766,5 +1771,4 @@ namespace DSLKIT.GrammarExamples.MsSql
         }
     }
 }
-
 

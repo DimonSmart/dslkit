@@ -23,7 +23,7 @@ namespace DSLKIT.Test.GrammarExamples
         public void ParseSelectBatchesSplitByGo_ShouldProcessSqlServerSamples_AndWriteDetailedReport()
         {
             var repositoryRoot = ResolveRepositoryRoot();
-            var sqlSamplesRoot = Path.Combine(repositoryRoot, "sql-server-samples");
+            var sqlSamplesRoot = Path.Combine(repositoryRoot, "sql-dataset");
             var sqlFiles = Directory
                 .EnumerateFiles(sqlSamplesRoot, "*.sql", SearchOption.AllDirectories)
                 .OrderBy(filePath => filePath, StringComparer.OrdinalIgnoreCase)
@@ -34,11 +34,25 @@ namespace DSLKIT.Test.GrammarExamples
             var totalBatchCount = 0;
             var parsedSelectBatchCount = 0;
             var skippedWithoutSelectCount = 0;
+            var skippedWithoutSelectFiles = 0;
+            var skippedTemplatePlaceholderFiles = 0;
 
             foreach (var sqlFilePath in sqlFiles)
             {
                 var relativePath = Path.GetRelativePath(sqlSamplesRoot, sqlFilePath);
                 var script = File.ReadAllText(sqlFilePath);
+                if (!ContainsSelect(script))
+                {
+                    skippedWithoutSelectFiles++;
+                    continue;
+                }
+
+                if (ContainsTemplatePlaceholder(script))
+                {
+                    skippedTemplatePlaceholderFiles++;
+                    continue;
+                }
+
                 var batches = SplitScriptByGo(script);
                 totalBatchCount += batches.Count;
 
@@ -88,11 +102,13 @@ namespace DSLKIT.Test.GrammarExamples
             var reportPath = Path.Combine(
                 repositoryRoot,
                 "test-results",
-                "mssql-parser-select-batches-sql-server-samples-report.txt");
+                "mssql-parser-select-batches-sql-dataset-report.txt");
             Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
             var report = BuildReport(
                 sqlSamplesRoot,
                 sqlFiles.Count,
+                skippedWithoutSelectFiles,
+                skippedTemplatePlaceholderFiles,
                 totalBatchCount,
                 parsedSelectBatchCount,
                 skippedWithoutSelectCount,
@@ -101,6 +117,8 @@ namespace DSLKIT.Test.GrammarExamples
             File.WriteAllText(reportPath, report, Encoding.UTF8);
 
             testOutput.WriteLine($"Total files: {sqlFiles.Count}");
+            testOutput.WriteLine($"Skipped files without SELECT: {skippedWithoutSelectFiles}");
+            testOutput.WriteLine($"Skipped files with template placeholders: {skippedTemplatePlaceholderFiles}");
             testOutput.WriteLine($"Total batches: {totalBatchCount}");
             testOutput.WriteLine($"Parsed SELECT batches: {parsedSelectBatchCount}");
             testOutput.WriteLine($"Skipped non-SELECT batches: {skippedWithoutSelectCount}");
@@ -117,6 +135,8 @@ namespace DSLKIT.Test.GrammarExamples
         private static string BuildReport(
             string sqlSamplesRoot,
             int totalFileCount,
+            int skippedWithoutSelectFiles,
+            int skippedTemplatePlaceholderFiles,
             int totalBatchCount,
             int parsedSelectBatchCount,
             int skippedWithoutSelectCount,
@@ -127,6 +147,8 @@ namespace DSLKIT.Test.GrammarExamples
             reportBuilder.AppendLine($"Generated (UTC): {DateTimeOffset.UtcNow:O}");
             reportBuilder.AppendLine($"SQL samples root: {sqlSamplesRoot}");
             reportBuilder.AppendLine($"Total files: {totalFileCount}");
+            reportBuilder.AppendLine($"Skipped files without SELECT: {skippedWithoutSelectFiles}");
+            reportBuilder.AppendLine($"Skipped files with template placeholders: {skippedTemplatePlaceholderFiles}");
             reportBuilder.AppendLine($"Total batches (split by GO): {totalBatchCount}");
             reportBuilder.AppendLine($"Parsed SELECT batches: {parsedSelectBatchCount}");
             reportBuilder.AppendLine($"Skipped non-SELECT batches: {skippedWithoutSelectCount}");
@@ -159,7 +181,7 @@ namespace DSLKIT.Test.GrammarExamples
                 while (current != null)
                 {
                     var hasSolution = File.Exists(Path.Combine(current.FullName, "DSLKIT.sln"));
-                    var hasSamples = Directory.Exists(Path.Combine(current.FullName, "sql-server-samples"));
+                    var hasSamples = Directory.Exists(Path.Combine(current.FullName, "sql-dataset"));
                     if (hasSolution && hasSamples)
                     {
                         return current.FullName;
@@ -169,7 +191,7 @@ namespace DSLKIT.Test.GrammarExamples
                 }
             }
 
-            throw new DirectoryNotFoundException("Could not locate repository root with DSLKIT.sln and sql-server-samples folder.");
+            throw new DirectoryNotFoundException("Could not locate repository root with DSLKIT.sln and sql-dataset folder.");
         }
 
         private static string NormalizeErrorMessage(string message)
@@ -230,6 +252,11 @@ namespace DSLKIT.Test.GrammarExamples
         private static bool ContainsSelect(string sqlBatch)
         {
             return Regex.IsMatch(sqlBatch, @"\bSELECT\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        }
+
+        private static bool ContainsTemplatePlaceholder(string sqlText)
+        {
+            return Regex.IsMatch(sqlText, @"<[^<>]*,[^<>]*>", RegexOptions.CultureInvariant);
         }
 
         private sealed class SqlScriptRunResult
