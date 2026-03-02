@@ -471,6 +471,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("Statement").Is(createIndexStatement);
             gb.Prod("Statement").Is(alterIndexStatement);
             gb.Prod("Statement").Is(createDatabaseStatement);
+            gb.Prod("Statement").Is(withClause, updateStatement);
+            gb.Prod("Statement").Is(withClause, insertStatement);
 
             gb.Prod("QueryStatement").Is(queryExpression);
             gb.Prod("QueryStatement").Is(withClause, queryExpression);

@@ -148,6 +148,32 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseCtePrefixedInsertAndUpdate()
+        {
+            const string script = """
+                WITH SourceRows AS
+                (
+                    SELECT 1 AS ItemId, N'Alpha' AS ItemName
+                )
+                INSERT INTO dbo.TargetTable (ItemId, ItemName)
+                SELECT ItemId, ItemName
+                FROM SourceRows;
+
+                WITH RowsToUpdate AS
+                (
+                    SELECT 1 AS ItemId, 10 AS Qty
+                )
+                UPDATE RowsToUpdate
+                    SET Qty = Qty + 1;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseCreateOrAlterViewAndAlterProcedure()
         {
             const string script = """
