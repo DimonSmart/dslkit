@@ -426,6 +426,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var createDatabaseFilestreamOption = gb.NT("CreateDatabaseFilestreamOption");
             var createDatabaseNonTransactedAccessValue = gb.NT("CreateDatabaseNonTransactedAccessValue");
             var procStatementList = gb.NT("ProcStatementList");
+            var tryCatchStatement = gb.NT("TryCatchStatement");
             var withClause = gb.NT("WithClause");
             var cteDefinitionList = gb.NT("CteDefinitionList");
             var cteDefinition = gb.NT("CteDefinition");
@@ -529,6 +530,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("Statement").Is(createDatabaseStatement);
             gb.Prod("Statement").Is(createTriggerStatement);
             gb.Prod("Statement").Is(dropTriggerStatement);
+            gb.Prod("Statement").Is(tryCatchStatement);
             gb.Prod("Statement").Is(withClause, updateStatement);
             gb.Prod("Statement").Is(withClause, insertStatement);
             gb.Prod("Statement").Is(withClause, deleteStatement);
@@ -820,6 +822,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateProcSignature").Is(createProcName, createProcParameterList, createProcForReplicationClause);
             gb.Prod("CreateProcSignature").Is(createProcName, createProcWithClause, createProcForReplicationClause);
             gb.Prod("CreateProcSignature").Is(createProcName, createProcParameterList, createProcWithClause, createProcForReplicationClause);
+            gb.Prod("CreateProcSignature").Is(createProcName, "(", ")");
+            gb.Prod("CreateProcSignature").Is(createProcName, "(", createProcParameterList, ")");
+            gb.Prod("CreateProcSignature").Is(createProcName, "(", ")", createProcWithClause);
+            gb.Prod("CreateProcSignature").Is(createProcName, "(", createProcParameterList, ")", createProcWithClause);
+            gb.Prod("CreateProcSignature").Is(createProcName, "(", ")", createProcForReplicationClause);
+            gb.Prod("CreateProcSignature").Is(createProcName, "(", createProcParameterList, ")", createProcForReplicationClause);
+            gb.Prod("CreateProcSignature").Is(createProcName, "(", ")", createProcWithClause, createProcForReplicationClause);
+            gb.Prod("CreateProcSignature").Is(createProcName, "(", createProcParameterList, ")", createProcWithClause, createProcForReplicationClause);
 
             gb.Prod("CreateProcParameterList").Is(createProcParameter);
             gb.Prod("CreateProcParameterList").Is(createProcParameterList, ",", createProcParameter);
@@ -1114,6 +1124,47 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("ProcStatementList").Is(procStatementList, ";", statement);
             gb.Prod("ProcStatementList").Is(procStatementList, statement);
 
+            gb.Prod("TryCatchStatement").Is(
+                kw("BEGIN"), kw("TRY"),
+                procStatementList,
+                kw("END"), kw("TRY"),
+                kw("BEGIN"), kw("CATCH"),
+                kw("END"), kw("CATCH"));
+            gb.Prod("TryCatchStatement").Is(
+                kw("BEGIN"), kw("TRY"),
+                procStatementList,
+                kw("END"), kw("TRY"),
+                kw("BEGIN"), kw("CATCH"),
+                procStatementList,
+                kw("END"), kw("CATCH"));
+            gb.Prod("TryCatchStatement").Is(
+                kw("BEGIN"), kw("TRY"),
+                procStatementList, statementSeparatorList,
+                kw("END"), kw("TRY"),
+                kw("BEGIN"), kw("CATCH"),
+                kw("END"), kw("CATCH"));
+            gb.Prod("TryCatchStatement").Is(
+                kw("BEGIN"), kw("TRY"),
+                procStatementList, statementSeparatorList,
+                kw("END"), kw("TRY"),
+                kw("BEGIN"), kw("CATCH"),
+                procStatementList,
+                kw("END"), kw("CATCH"));
+            gb.Prod("TryCatchStatement").Is(
+                kw("BEGIN"), kw("TRY"),
+                procStatementList, statementSeparatorList,
+                kw("END"), kw("TRY"),
+                kw("BEGIN"), kw("CATCH"),
+                procStatementList, statementSeparatorList,
+                kw("END"), kw("CATCH"));
+            gb.Prod("TryCatchStatement").Is(
+                kw("BEGIN"), kw("TRY"),
+                procStatementList,
+                kw("END"), kw("TRY"),
+                kw("BEGIN"), kw("CATCH"),
+                procStatementList, statementSeparatorList,
+                kw("END"), kw("CATCH"));
+
             gb.Prod("CreateRoleStatement").Is(kw("CREATE"), kw("ROLE"), identifierTerm);
             gb.Prod("CreateRoleStatement").Is(kw("CREATE"), kw("ROLE"), identifierTerm, kw("AUTHORIZATION"), identifierTerm);
 
@@ -1162,6 +1213,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateTableColumnOption").Is(kw("FOR"), kw("ALL_SPARSE_COLUMNS"));
             gb.Prod("CreateTableColumnOption").Is(kw("DEFAULT"), expression);
             gb.Prod("CreateTableColumnOption").Is(kw("DEFAULT"), "(", expression, ")");
+            gb.Prod("CreateTableColumnOption").Is(kw("IDENTITY"));
             gb.Prod("CreateTableColumnOption").Is(kw("IDENTITY"), "(", expression, ",", expression, ")");
             gb.Prod("CreateTableColumnOption").Is(kw("COLLATE"), identifierTerm);
             gb.Prod("CreateTableColumnOption").Is(kw("MASKED"), kw("WITH"), "(", indexOptionList, ")");
@@ -1683,10 +1735,13 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("BinaryOperator").Is(">");
             gb.Prod("BinaryOperator").Is(">=");
             gb.Prod("BinaryOperator").Is(kw("LIKE"));
+            gb.Prod("BinaryOperator").Is(kw("NOT"), kw("LIKE"));
             gb.Prod("BinaryOperator").Is(kw("IN"));
+            gb.Prod("BinaryOperator").Is(kw("NOT"), kw("IN"));
             gb.Prod("BinaryOperator").Is(kw("IS"));
             gb.Prod("BinaryOperator").Is(kw("IS"), kw("NOT"));
             gb.Prod("BinaryOperator").Is(kw("BETWEEN"));
+            gb.Prod("BinaryOperator").Is(kw("NOT"), kw("BETWEEN"));
             gb.Prod("BinaryOperator").Is("+");
             gb.Prod("BinaryOperator").Is("-");
             gb.Prod("BinaryOperator").Is("*");
