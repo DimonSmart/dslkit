@@ -555,6 +555,25 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseAggregateFunction_WithDistinctModifier()
+        {
+            const string script = """
+                SELECT
+                    COUNT(DISTINCT ProductKey)         AS DistinctProducts,
+                    COUNT(DISTINCT CustomerKey)        AS DistinctCustomers,
+                    COUNT(DISTINCT query_hash)         AS DistinctQueries,
+                    AVG(DISTINCT CONVERT(BIGINT, qty)) AS AvgDistinct,
+                    SUM(ALL Price)                     AS TotalPrice
+                FROM dbo.Sales;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseProcParameter_WithAsKeyword()
         {
             const string script = """
