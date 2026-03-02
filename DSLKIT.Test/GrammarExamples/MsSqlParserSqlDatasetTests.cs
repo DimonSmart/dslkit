@@ -32,12 +32,19 @@ namespace DSLKIT.Test.GrammarExamples
             var successfulFiles = new List<string>();
             var failedFiles = new List<SqlDatasetParseFailure>();
             var selectFilesCount = 0;
+            var skippedTemplatePlaceholderFiles = 0;
 
             foreach (var sqlFilePath in sqlFiles)
             {
                 var script = File.ReadAllText(sqlFilePath);
                 if (!ContainsSelect(script))
                 {
+                    continue;
+                }
+
+                if (ContainsTemplatePlaceholder(script))
+                {
+                    skippedTemplatePlaceholderFiles++;
                     continue;
                 }
 
@@ -77,11 +84,12 @@ namespace DSLKIT.Test.GrammarExamples
                 "test-results",
                 "mssql-parser-sql-dataset-select-report.txt");
             Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
-            var report = BuildReport(datasetRoot, sqlFiles.Count, selectFilesCount, successfulFiles, failedFiles);
+            var report = BuildReport(datasetRoot, sqlFiles.Count, selectFilesCount, skippedTemplatePlaceholderFiles, successfulFiles, failedFiles);
             File.WriteAllText(reportPath, report, Encoding.UTF8);
 
             testOutput.WriteLine($"Dataset SQL files: {sqlFiles.Count}");
             testOutput.WriteLine($"Files containing SELECT: {selectFilesCount}");
+            testOutput.WriteLine($"Skipped (template placeholders): {skippedTemplatePlaceholderFiles}");
             testOutput.WriteLine($"Successful parse: {successfulFiles.Count}");
             testOutput.WriteLine($"Failed parse: {failedFiles.Count}");
             testOutput.WriteLine($"Detailed report: {reportPath}");
@@ -93,6 +101,7 @@ namespace DSLKIT.Test.GrammarExamples
             string datasetRoot,
             int totalSqlFiles,
             int selectFilesCount,
+            int skippedTemplatePlaceholderFiles,
             IReadOnlyCollection<string> successfulFiles,
             IReadOnlyCollection<SqlDatasetParseFailure> failedFiles)
         {
@@ -101,6 +110,7 @@ namespace DSLKIT.Test.GrammarExamples
             reportBuilder.AppendLine($"SQL dataset root: {datasetRoot}");
             reportBuilder.AppendLine($"Total SQL files: {totalSqlFiles}");
             reportBuilder.AppendLine($"Files containing SELECT: {selectFilesCount}");
+            reportBuilder.AppendLine($"Skipped (template placeholders): {skippedTemplatePlaceholderFiles}");
             reportBuilder.AppendLine($"Successful parse: {successfulFiles.Count}");
             reportBuilder.AppendLine($"Failed parse: {failedFiles.Count}");
             reportBuilder.AppendLine();
@@ -134,6 +144,12 @@ namespace DSLKIT.Test.GrammarExamples
         private static bool ContainsSelect(string sqlText)
         {
             return Regex.IsMatch(sqlText, @"\bSELECT\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        }
+
+        private static bool ContainsTemplatePlaceholder(string sqlText)
+        {
+            // SSMS template placeholders look like <name, sysname, value> — angle brackets with at least one comma inside
+            return Regex.IsMatch(sqlText, @"<[^<>]*,[^<>]*>", RegexOptions.CultureInvariant);
         }
 
         private static string GetParseErrorType(string parseErrorMessage)
