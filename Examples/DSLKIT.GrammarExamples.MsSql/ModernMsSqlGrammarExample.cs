@@ -207,6 +207,22 @@ namespace DSLKIT.GrammarExamples.MsSql
             var executeAtClause = gb.NT("ExecuteAtClause");
             var useStatement = gb.NT("UseStatement");
             var createProcStatement = gb.NT("CreateProcStatement");
+            var createFunctionStatement = gb.NT("CreateFunctionStatement");
+            var createFunctionHead = gb.NT("CreateFunctionHead");
+            var createFunctionName = gb.NT("CreateFunctionName");
+            var createFunctionSignature = gb.NT("CreateFunctionSignature");
+            var createFunctionParameterList = gb.NT("CreateFunctionParameterList");
+            var createFunctionParameter = gb.NT("CreateFunctionParameter");
+            var createFunctionParameterOptionList = gb.NT("CreateFunctionParameterOptionList");
+            var createFunctionParameterOption = gb.NT("CreateFunctionParameterOption");
+            var createFunctionReturnsClause = gb.NT("CreateFunctionReturnsClause");
+            var createFunctionWithClause = gb.NT("CreateFunctionWithClause");
+            var createFunctionOptionList = gb.NT("CreateFunctionOptionList");
+            var createFunctionOption = gb.NT("CreateFunctionOption");
+            var createFunctionBody = gb.NT("CreateFunctionBody");
+            var createFunctionTableReturnDefinition = gb.NT("CreateFunctionTableReturnDefinition");
+            var createFunctionTableReturnItemList = gb.NT("CreateFunctionTableReturnItemList");
+            var createFunctionTableReturnItem = gb.NT("CreateFunctionTableReturnItem");
             var dropProcStatement = gb.NT("DropProcStatement");
             var dropTableStatement = gb.NT("DropTableStatement");
             var dropViewStatement = gb.NT("DropViewStatement");
@@ -418,6 +434,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("Statement").Is(executeStatement);
             gb.Prod("Statement").Is(useStatement);
             gb.Prod("Statement").Is(createProcStatement);
+            gb.Prod("Statement").Is(createFunctionStatement);
             gb.Prod("Statement").Is(dropProcStatement);
             gb.Prod("Statement").Is(dropTableStatement);
             gb.Prod("Statement").Is(dropViewStatement);
@@ -647,6 +664,62 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateProcBodyBlock").Is(kw("BEGIN"), kw("ATOMIC"), kw("WITH"), "(", createProcNativeAtomicOptionList, ")", procStatementList, statementSeparatorList, kw("END"));
 
             gb.Prod("CreateProcStatement").Is(createProcHead, createProcSignature, createProcBody);
+
+            gb.Prod("CreateFunctionHead").Is(kw("CREATE"), kw("FUNCTION"));
+            gb.Prod("CreateFunctionHead").Is(kw("CREATE"), kw("OR"), kw("ALTER"), kw("FUNCTION"));
+            gb.Prod("CreateFunctionHead").Is(kw("ALTER"), kw("FUNCTION"));
+            gb.Prod("CreateFunctionName").Is(qualifiedName);
+
+            gb.Prod("CreateFunctionSignature").Is(createFunctionName, "(", ")", createFunctionReturnsClause);
+            gb.Prod("CreateFunctionSignature").Is(createFunctionName, "(", createFunctionParameterList, ")", createFunctionReturnsClause);
+            gb.Prod("CreateFunctionSignature").Is(createFunctionName, "(", ")", createFunctionReturnsClause, createFunctionWithClause);
+            gb.Prod("CreateFunctionSignature").Is(createFunctionName, "(", createFunctionParameterList, ")", createFunctionReturnsClause, createFunctionWithClause);
+
+            gb.Prod("CreateFunctionParameterList").Is(createFunctionParameter);
+            gb.Prod("CreateFunctionParameterList").Is(createFunctionParameterList, ",", createFunctionParameter);
+            gb.Prod("CreateFunctionParameter").Is(variableReference, typeSpec);
+            gb.Prod("CreateFunctionParameter").Is(variableReference, kw("AS"), typeSpec);
+            gb.Prod("CreateFunctionParameter").Is(variableReference, typeSpec, createFunctionParameterOptionList);
+            gb.Prod("CreateFunctionParameter").Is(variableReference, kw("AS"), typeSpec, createFunctionParameterOptionList);
+            gb.Prod("CreateFunctionParameterOptionList").Is(createFunctionParameterOption);
+            gb.Prod("CreateFunctionParameterOptionList").Is(createFunctionParameterOptionList, createFunctionParameterOption);
+            gb.Prod("CreateFunctionParameterOption").Is(kw("NULL"));
+            gb.Prod("CreateFunctionParameterOption").Is(kw("NOT"), kw("NULL"));
+            gb.Prod("CreateFunctionParameterOption").Is("=", expression);
+            gb.Prod("CreateFunctionParameterOption").Is(kw("READONLY"));
+
+            gb.Prod("CreateFunctionReturnsClause").Is(kw("RETURNS"), typeSpec);
+            gb.Prod("CreateFunctionReturnsClause").Is(kw("RETURNS"), kw("TABLE"));
+            gb.Prod("CreateFunctionReturnsClause").Is(kw("RETURNS"), createFunctionTableReturnDefinition);
+            gb.Prod("CreateFunctionTableReturnDefinition").Is(variableReference, kw("TABLE"), "(", createFunctionTableReturnItemList, ")");
+            gb.Prod("CreateFunctionTableReturnItemList").Is(createFunctionTableReturnItem);
+            gb.Prod("CreateFunctionTableReturnItemList").Is(createFunctionTableReturnItemList, ",", createFunctionTableReturnItem);
+            gb.Prod("CreateFunctionTableReturnItem").Is(createTableColumnDefinition);
+            gb.Prod("CreateFunctionTableReturnItem").Is(createTableComputedColumn);
+            gb.Prod("CreateFunctionTableReturnItem").Is(createTableConstraint);
+            gb.Prod("CreateFunctionTableReturnItem").Is(createTableTableIndex);
+
+            gb.Prod("CreateFunctionWithClause").Is(kw("WITH"), createFunctionOptionList);
+            gb.Prod("CreateFunctionOptionList").Is(createFunctionOption);
+            gb.Prod("CreateFunctionOptionList").Is(createFunctionOptionList, ",", createFunctionOption);
+            gb.Prod("CreateFunctionOption").Is(kw("ENCRYPTION"));
+            gb.Prod("CreateFunctionOption").Is(kw("SCHEMABINDING"));
+            gb.Prod("CreateFunctionOption").Is(kw("RETURNS"), kw("NULL"), kw("ON"), kw("NULL"), kw("INPUT"));
+            gb.Prod("CreateFunctionOption").Is(kw("CALLED"), kw("ON"), kw("NULL"), kw("INPUT"));
+            gb.Prod("CreateFunctionOption").Is(createProcExecuteAsClause);
+            gb.Prod("CreateFunctionOption").Is(kw("INLINE"), "=", kw("ON"));
+            gb.Prod("CreateFunctionOption").Is(kw("INLINE"), "=", kw("OFF"));
+
+            gb.Prod("CreateFunctionBody").Is(kw("AS"), kw("RETURN"), queryExpression);
+            gb.Prod("CreateFunctionBody").Is(kw("AS"), kw("RETURN"), "(", queryExpression, ")");
+            gb.Prod("CreateFunctionBody").Is(kw("RETURN"), queryExpression);
+            gb.Prod("CreateFunctionBody").Is(kw("RETURN"), "(", queryExpression, ")");
+            gb.Prod("CreateFunctionBody").Is(kw("AS"), kw("BEGIN"), procStatementList, kw("END"));
+            gb.Prod("CreateFunctionBody").Is(kw("AS"), kw("BEGIN"), procStatementList, statementSeparatorList, kw("END"));
+            gb.Prod("CreateFunctionBody").Is(kw("BEGIN"), procStatementList, kw("END"));
+            gb.Prod("CreateFunctionBody").Is(kw("BEGIN"), procStatementList, statementSeparatorList, kw("END"));
+
+            gb.Prod("CreateFunctionStatement").Is(createFunctionHead, createFunctionSignature, createFunctionBody);
 
             gb.Prod("DropProcStatement").Is(kw("DROP"), kw("PROC"), qualifiedName);
             gb.Prod("DropProcStatement").Is(kw("DROP"), kw("PROCEDURE"), qualifiedName);
@@ -883,6 +956,7 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod("IndexOptionName").Is(identifierTerm);
             gb.Prod("IndexOptionName").Is(qualifiedName);
+            gb.Prod("IndexOptionName").Is(kw("FUNCTION"));
             gb.Prod("IndexOptionName").Is(kw("ONLINE"));
             gb.Prod("IndexOptionName").Is(kw("MAXDOP"));
 
@@ -1109,6 +1183,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("SelectItemList").Is(selectItemList, ",", selectItem);
             gb.Prod("SelectItem").Is("*");
             gb.Prod("SelectItem").Is(expression, kw("AS"), identifierTerm);
+            gb.Prod("SelectItem").Is(expression, identifierTerm);
             gb.Prod("SelectItem").Is(expression);
             gb.Prod("SelectItem").Is(qualifiedName, ".", "*");
 
@@ -1180,6 +1255,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("BinaryOperator").Is(kw("IN"));
             gb.Prod("BinaryOperator").Is(kw("IS"));
             gb.Prod("BinaryOperator").Is(kw("IS"), kw("NOT"));
+            gb.Prod("BinaryOperator").Is(kw("BETWEEN"));
             gb.Prod("BinaryOperator").Is("+");
             gb.Prod("BinaryOperator").Is("-");
             gb.Prod("BinaryOperator").Is("*");
@@ -1193,6 +1269,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("PrimaryExpression").Is(qualifiedName);
             gb.Prod("PrimaryExpression").Is(functionCall);
             gb.Prod("PrimaryExpression").Is(functionCall, overClause);
+            gb.Prod("PrimaryExpression").Is(kw("CAST"), "(", expression, kw("AS"), typeSpec, ")");
             gb.Prod("PrimaryExpression").Is("(", expression, ")");
             gb.Prod("PrimaryExpression").Is("(", expressionList, ")");
             gb.Prod("PrimaryExpression").Is("(", queryExpression, ")");

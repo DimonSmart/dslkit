@@ -268,6 +268,58 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseCreateFunction_InlineTableValued()
+        {
+            const string script = """
+                CREATE FUNCTION Integration.GenerateDateDimensionColumns(@Date date)
+                RETURNS TABLE
+                AS
+                RETURN
+                SELECT @Date AS [Date]
+                     , YEAR(@Date) * 10000 + MONTH(@Date) * 0100 + DAY(@Date) AS [DateKey]
+                     , N'Q' + DATENAME(quarter, @Date) AS [Quarter]
+                     , CASE WHEN MONTH(@Date) BETWEEN 1 AND 3
+                            THEN CAST(DATENAME(year, @Date) + N'-01-01' AS DATE)
+                            ELSE CAST(DATENAME(year, @Date) + N'-04-01' AS DATE)
+                       END [Beginning of Quarter Label Short];
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseCreateOrAlterFunction_ScalarAndMstvf()
+        {
+            const string script = """
+                CREATE OR ALTER FUNCTION dbo.ufn_customer_category(@CustomerKey INT)
+                RETURNS NVARCHAR(10)
+                WITH SCHEMABINDING, INLINE = OFF
+                AS
+                BEGIN
+                    RETURN N'GENERIC';
+                END;
+
+                CREATE FUNCTION policy.pfn_ServerGroupInstances(@server_group_name NVARCHAR(128))
+                RETURNS @ServerGroups TABLE
+                (
+                    [Server Group Name] NVARCHAR(128) NOT NULL
+                )
+                AS
+                BEGIN
+                    RETURN;
+                END;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseExecuteStatement_Variants()
         {
             const string script = """
