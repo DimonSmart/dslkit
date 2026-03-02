@@ -447,6 +447,13 @@ namespace DSLKIT.GrammarExamples.MsSql
             var identifierTerm = gb.NT("IdentifierTerm");
             var qualifiedName = gb.NT("QualifiedName");
             var variableReference = gb.NT("VariableReference");
+            var forClause = gb.NT("ForClause");
+            var forJsonMode = gb.NT("ForJsonMode");
+            var forJsonOptionList = gb.NT("ForJsonOptionList");
+            var forJsonOption = gb.NT("ForJsonOption");
+            var forXmlMode = gb.NT("ForXmlMode");
+            var forXmlOptionList = gb.NT("ForXmlOptionList");
+            var forXmlOption = gb.NT("ForXmlOption");
 
             gb.Prod("Start").Is(script);
             gb.Prod("Script").Is(statementList);
@@ -1389,9 +1396,50 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("QueryPrimary").Is(querySpecification);
             gb.Prod("QueryPrimary").Is(querySpecification, orderByClause);
             gb.Prod("QueryPrimary").Is(querySpecification, orderByClause, offsetFetchClause);
+            gb.Prod("QueryPrimary").Is(querySpecification, forClause);
+            gb.Prod("QueryPrimary").Is(querySpecification, orderByClause, forClause);
+            gb.Prod("QueryPrimary").Is(querySpecification, orderByClause, offsetFetchClause, forClause);
             gb.Prod("QueryPrimary").Is("(", queryExpression, ")");
             gb.Prod("QueryPrimary").Is("(", queryExpression, ")", orderByClause);
             gb.Prod("QueryPrimary").Is("(", queryExpression, ")", orderByClause, offsetFetchClause);
+
+            gb.Prod("ForClause").Is(kw("FOR"), kw("BROWSE"));
+            gb.Prod("ForClause").Is(kw("FOR"), kw("JSON"), forJsonMode);
+            gb.Prod("ForClause").Is(kw("FOR"), kw("JSON"), forJsonMode, ",", forJsonOptionList);
+            gb.Prod("ForClause").Is(kw("FOR"), kw("XML"), forXmlMode);
+            gb.Prod("ForClause").Is(kw("FOR"), kw("XML"), forXmlMode, ",", forXmlOptionList);
+
+            gb.Prod("ForJsonMode").Is(kw("AUTO"));
+            gb.Prod("ForJsonMode").Is(kw("PATH"));
+            gb.Prod("ForJsonMode").Is(kw("NONE"));
+
+            gb.Prod("ForJsonOptionList").Is(forJsonOption);
+            gb.Prod("ForJsonOptionList").Is(forJsonOptionList, ",", forJsonOption);
+            gb.Prod("ForJsonOption").Is(kw("WITHOUT_ARRAY_WRAPPER"));
+            gb.Prod("ForJsonOption").Is(kw("INCLUDE_NULL_VALUES"));
+            gb.Prod("ForJsonOption").Is(kw("ROOT"));
+            gb.Prod("ForJsonOption").Is(kw("ROOT"), "(", expression, ")");
+
+            gb.Prod("ForXmlMode").Is(kw("AUTO"));
+            gb.Prod("ForXmlMode").Is(kw("PATH"));
+            gb.Prod("ForXmlMode").Is(kw("PATH"), "(", expression, ")");
+            gb.Prod("ForXmlMode").Is(kw("RAW"));
+            gb.Prod("ForXmlMode").Is(kw("RAW"), "(", expression, ")");
+            gb.Prod("ForXmlMode").Is(kw("EXPLICIT"));
+
+            gb.Prod("ForXmlOptionList").Is(forXmlOption);
+            gb.Prod("ForXmlOptionList").Is(forXmlOptionList, ",", forXmlOption);
+            gb.Prod("ForXmlOption").Is(kw("TYPE"));
+            gb.Prod("ForXmlOption").Is(kw("XMLDATA"));
+            gb.Prod("ForXmlOption").Is(kw("XMLSCHEMA"));
+            gb.Prod("ForXmlOption").Is(kw("XMLSCHEMA"), "(", expression, ")");
+            gb.Prod("ForXmlOption").Is(kw("ELEMENTS"));
+            gb.Prod("ForXmlOption").Is(kw("ELEMENTS"), kw("XSINIL"));
+            gb.Prod("ForXmlOption").Is(kw("ELEMENTS"), kw("ABSENT"));
+            gb.Prod("ForXmlOption").Is(kw("ROOT"));
+            gb.Prod("ForXmlOption").Is(kw("ROOT"), "(", expression, ")");
+            gb.Prod("ForXmlOption").Is(kw("BINARY"), kw("BASE64"));
+            gb.Prod("ForXmlOption").Is(kw("WITHOUT_ARRAY_WRAPPER"));
 
             gb.Prod("SelectCore").Is(kw("SELECT"), selectList, kw("FROM"), tableSourceList);
             gb.Prod("SelectCore").Is(kw("SELECT"), setQuantifier, selectList, kw("FROM"), tableSourceList);
@@ -1565,6 +1613,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("IdentifierTerm").Is(kw("TYPE"));
             gb.Prod("IdentifierTerm").Is(kw("OPENQUERY"));
             gb.Prod("IdentifierTerm").Is(kw("OPENROWSET"));
+            gb.Prod("IdentifierTerm").Is(kw("BINARY"));
 
             gb.Prod("QualifiedName").Is(identifierTerm);
             gb.Prod("QualifiedName").Is(qualifiedName, ".", identifierTerm);
