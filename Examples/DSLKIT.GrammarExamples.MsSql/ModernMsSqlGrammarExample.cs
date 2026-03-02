@@ -195,6 +195,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var deleteQueryHintList = gb.NT("DeleteQueryHintList");
             var deleteQueryHint = gb.NT("DeleteQueryHint");
             var deleteQueryHintName = gb.NT("DeleteQueryHintName");
+            var optionClause = gb.NT("OptionClause");
             var ifStatement = gb.NT("IfStatement");
             var beginEndStatement = gb.NT("BeginEndStatement");
             var setStatement = gb.NT("SetStatement");
@@ -623,6 +624,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("DeleteQueryHintName").Is(kw("RECOMPILE"));
             gb.Prod("DeleteQueryHintName").Is(kw("MAXDOP"));
             gb.Prod("DeleteQueryHintName").Is(kw("USE"));
+            gb.Prod("DeleteQueryHintName").Is(kw("JOIN"));
+            gb.Prod("DeleteQueryHintName").Is(kw("ORDER"));
+
+            gb.Prod("OptionClause").Is(kw("OPTION"), "(", deleteQueryHintList, ")");
 
             gb.Prod("IfStatement").Is(kw("IF"), searchCondition, statement);
             gb.Prod("IfStatement").Is(kw("IF"), searchCondition, statement, kw("ELSE"), statement);
@@ -1399,6 +1404,12 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("QueryPrimary").Is(querySpecification, forClause);
             gb.Prod("QueryPrimary").Is(querySpecification, orderByClause, forClause);
             gb.Prod("QueryPrimary").Is(querySpecification, orderByClause, offsetFetchClause, forClause);
+            gb.Prod("QueryPrimary").Is(querySpecification, optionClause);
+            gb.Prod("QueryPrimary").Is(querySpecification, orderByClause, optionClause);
+            gb.Prod("QueryPrimary").Is(querySpecification, orderByClause, offsetFetchClause, optionClause);
+            gb.Prod("QueryPrimary").Is(querySpecification, forClause, optionClause);
+            gb.Prod("QueryPrimary").Is(querySpecification, orderByClause, forClause, optionClause);
+            gb.Prod("QueryPrimary").Is(querySpecification, orderByClause, offsetFetchClause, forClause, optionClause);
             gb.Prod("QueryPrimary").Is("(", queryExpression, ")");
             gb.Prod("QueryPrimary").Is("(", queryExpression, ")", orderByClause);
             gb.Prod("QueryPrimary").Is("(", queryExpression, ")", orderByClause, offsetFetchClause);
