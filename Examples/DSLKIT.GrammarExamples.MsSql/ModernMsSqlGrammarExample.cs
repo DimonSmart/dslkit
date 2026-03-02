@@ -422,6 +422,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             var tableSourceList = gb.NT("TableSourceList");
             var tableSource = gb.NT("TableSource");
             var tableFactor = gb.NT("TableFactor");
+            var openJsonWithClause = gb.NT("OpenJsonWithClause");
+            var openJsonColumnList = gb.NT("OpenJsonColumnList");
+            var openJsonColumnDef = gb.NT("OpenJsonColumnDef");
             var joinPart = gb.NT("JoinPart");
             var joinType = gb.NT("JoinType");
             var orderByClause = gb.NT("OrderByClause");
@@ -1517,8 +1520,20 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("TableFactor").Is(variableReference, identifierTerm);
             gb.Prod("TableFactor").Is(functionCall, kw("AS"), identifierTerm);
             gb.Prod("TableFactor").Is(functionCall, identifierTerm);
+            gb.Prod("TableFactor").Is(functionCall, openJsonWithClause);
+            gb.Prod("TableFactor").Is(functionCall, openJsonWithClause, kw("AS"), identifierTerm);
+            gb.Prod("TableFactor").Is(functionCall, openJsonWithClause, identifierTerm);
             gb.Prod("TableFactor").Is("(", queryExpression, ")", kw("AS"), identifierTerm);
             gb.Prod("TableFactor").Is("(", queryExpression, ")", identifierTerm);
+
+            gb.Prod("OpenJsonWithClause").Is(kw("WITH"), "(", openJsonColumnList, ")");
+            gb.Prod("OpenJsonColumnList").Is(openJsonColumnDef);
+            gb.Prod("OpenJsonColumnList").Is(openJsonColumnList, ",", openJsonColumnDef);
+            // col_name typeSpec [ path_expr ] [ AS JSON ]
+            gb.Prod("OpenJsonColumnDef").Is(identifierTerm, typeSpec);
+            gb.Prod("OpenJsonColumnDef").Is(identifierTerm, typeSpec, expression);
+            gb.Prod("OpenJsonColumnDef").Is(identifierTerm, typeSpec, kw("AS"), kw("JSON"));
+            gb.Prod("OpenJsonColumnDef").Is(identifierTerm, typeSpec, expression, kw("AS"), kw("JSON"));
 
             gb.Prod("JoinPart").Is(kw("JOIN"), tableFactor, kw("ON"), searchCondition);
             gb.Prod("JoinPart").Is(joinType, kw("JOIN"), tableFactor, kw("ON"), searchCondition);
