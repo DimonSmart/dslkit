@@ -172,6 +172,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var updateStatement = gb.NT("UpdateStatement");
             var updateSetList = gb.NT("UpdateSetList");
             var updateSetItem = gb.NT("UpdateSetItem");
+            var compoundAssignOp = gb.NT("CompoundAssignOp");
             var insertStatement = gb.NT("InsertStatement");
             var insertTarget = gb.NT("InsertTarget");
             var insertColumnList = gb.NT("InsertColumnList");
@@ -513,6 +514,18 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("UpdateSetList").Is(updateSetItem);
             gb.Prod("UpdateSetList").Is(updateSetList, ",", updateSetItem);
             gb.Prod("UpdateSetItem").Is(qualifiedName, "=", expression);
+            gb.Prod("UpdateSetItem").Is(qualifiedName, compoundAssignOp, expression);
+            gb.Prod("UpdateSetItem").Is(variableReference, "=", expression);
+            gb.Prod("UpdateSetItem").Is(variableReference, compoundAssignOp, expression);
+
+            gb.Prod("CompoundAssignOp").Is("+=");
+            gb.Prod("CompoundAssignOp").Is("-=");
+            gb.Prod("CompoundAssignOp").Is("*=");
+            gb.Prod("CompoundAssignOp").Is("/=");
+            gb.Prod("CompoundAssignOp").Is("%=");
+            gb.Prod("CompoundAssignOp").Is("&=");
+            gb.Prod("CompoundAssignOp").Is("|=");
+            gb.Prod("CompoundAssignOp").Is("^=");
 
             gb.Prod("InsertStatement").Is(kw("INSERT"), insertTarget, kw("VALUES"), "(", insertValueList, ")");
             gb.Prod("InsertStatement").Is(kw("INSERT"), insertTarget, executeStatement);
@@ -636,6 +649,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("WhileStatement").Is(kw("WHILE"), searchCondition, statement);
 
             gb.Prod("SetStatement").Is(kw("SET"), variableReference, "=", expression);
+            gb.Prod("SetStatement").Is(kw("SET"), variableReference, compoundAssignOp, expression);
             gb.Prod("SetStatement").Is(kw("SET"), identifierTerm, kw("ON"));
             gb.Prod("SetStatement").Is(kw("SET"), identifierTerm, kw("OFF"));
             gb.Prod("SetStatement").Is(kw("SET"), identifierTerm, "=", expression);
