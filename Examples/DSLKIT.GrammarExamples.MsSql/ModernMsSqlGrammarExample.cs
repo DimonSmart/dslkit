@@ -824,6 +824,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateProcParameterList").Is(createProcParameterList, ",", createProcParameter);
             gb.Prod("CreateProcParameter").Is(variableReference, typeSpec);
             gb.Prod("CreateProcParameter").Is(variableReference, typeSpec, createProcParameterOptionList);
+            gb.Prod("CreateProcParameter").Is(variableReference, kw("AS"), typeSpec);
+            gb.Prod("CreateProcParameter").Is(variableReference, kw("AS"), typeSpec, createProcParameterOptionList);
             gb.Prod("CreateProcParameterOptionList").Is(createProcParameterOption);
             gb.Prod("CreateProcParameterOptionList").Is(createProcParameterOptionList, createProcParameterOption);
             gb.Prod("CreateProcParameterOption").Is(kw("VARYING"));

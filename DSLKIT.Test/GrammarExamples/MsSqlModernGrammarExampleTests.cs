@@ -555,6 +555,31 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseProcParameter_WithAsKeyword()
+        {
+            const string script = """
+                CREATE PROCEDURE [DataLoadSimulation].[GetFicticiousName]
+                    @FirstName AS NVARCHAR(20) OUTPUT
+                  , @LastName  AS NVARCHAR(20) OUTPUT
+                  , @FullName  AS NVARCHAR(40) OUTPUT
+                  , @Email     AS NVARCHAR(200) OUTPUT
+                AS
+                BEGIN
+                    SELECT TOP 1
+                           @FirstName = PreferredName
+                         , @LastName  = LastName
+                      FROM dbo.NamePool
+                     ORDER BY NEWID();
+                END;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseSetIdentityInsert_WithSchemaQualifiedTableName()
         {
             const string script = """
