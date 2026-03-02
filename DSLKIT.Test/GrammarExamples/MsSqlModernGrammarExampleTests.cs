@@ -555,6 +555,34 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseTemporalTable_ForSystemTimeClauses()
+        {
+            const string script = """
+                SELECT ProductID, Name, Price
+                FROM Product FOR SYSTEM_TIME AS OF '2015-07-28 13:20:00';
+
+                SELECT ProductID, Name, Price
+                FROM Product FOR SYSTEM_TIME ALL
+                WHERE ProductID = 17
+                ORDER BY DateModified DESC;
+
+                SELECT ProductID, Name, Price
+                FROM Product FOR SYSTEM_TIME BETWEEN '2015-01-01' AND '2016-01-01';
+
+                SELECT ProductID, Name, Price
+                FROM Product FOR SYSTEM_TIME FROM '2015-01-01' TO '2016-01-01';
+
+                SELECT ProductID, Name, Price
+                FROM Product FOR SYSTEM_TIME AS OF @date AS p;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseAggregateFunction_WithDistinctModifier()
         {
             const string script = """

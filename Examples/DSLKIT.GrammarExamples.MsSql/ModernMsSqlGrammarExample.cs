@@ -443,6 +443,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var tableSourceList = gb.NT("TableSourceList");
             var tableSource = gb.NT("TableSource");
             var tableFactor = gb.NT("TableFactor");
+            var temporalClause = gb.NT("TemporalClause");
             var openJsonWithClause = gb.NT("OpenJsonWithClause");
             var openJsonColumnList = gb.NT("OpenJsonColumnList");
             var openJsonColumnDef = gb.NT("OpenJsonColumnDef");
@@ -1590,6 +1591,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("TableFactor").Is(qualifiedName);
             gb.Prod("TableFactor").Is(qualifiedName, kw("AS"), identifierTerm);
             gb.Prod("TableFactor").Is(qualifiedName, identifierTerm);
+            gb.Prod("TableFactor").Is(qualifiedName, temporalClause);
+            gb.Prod("TableFactor").Is(qualifiedName, temporalClause, kw("AS"), identifierTerm);
+            gb.Prod("TableFactor").Is(qualifiedName, temporalClause, identifierTerm);
+            gb.Prod("TemporalClause").Is(kw("FOR"), kw("SYSTEM_TIME"), kw("AS"), kw("OF"), expression);
+            gb.Prod("TemporalClause").Is(kw("FOR"), kw("SYSTEM_TIME"), kw("ALL"));
+            gb.Prod("TemporalClause").Is(kw("FOR"), kw("SYSTEM_TIME"), kw("BETWEEN"), expression, kw("AND"), expression);
+            gb.Prod("TemporalClause").Is(kw("FOR"), kw("SYSTEM_TIME"), kw("FROM"), expression, kw("TO"), expression);
+            gb.Prod("TemporalClause").Is(kw("FOR"), kw("SYSTEM_TIME"), kw("CONTAINED"), kw("IN"), "(", expression, ",", expression, ")");
             gb.Prod("TableFactor").Is(variableReference);
             gb.Prod("TableFactor").Is(variableReference, kw("AS"), identifierTerm);
             gb.Prod("TableFactor").Is(variableReference, identifierTerm);
