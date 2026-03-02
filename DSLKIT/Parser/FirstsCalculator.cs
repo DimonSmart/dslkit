@@ -1,6 +1,6 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using DSLKIT.Base;
 using DSLKIT.Parser.ExtendedGrammar;
 using DSLKIT.SpecialTerms;
@@ -9,89 +9,98 @@ namespace DSLKIT.Parser
 {
     public class FirstsCalculator
     {
-        private readonly IEnumerable<ExProduction> _exProductions;
+        private static readonly ITerm Empty = EmptyTerm.Empty;
+        private readonly IReadOnlyList<ExProduction> _exProductions;
         private readonly Dictionary<IExNonTerminal, HashSet<ITerm>> _firsts;
-        private readonly HashSet<ExProduction> _searchStack;
 
         public FirstsCalculator(IEnumerable<ExProduction> exProductions)
         {
-            _exProductions = exProductions;
+            _exProductions = exProductions as IReadOnlyList<ExProduction> ?? [.. exProductions];
             _firsts = [];
-            _searchStack = [];
         }
 
         public IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> Calculate()
         {
-            AddFirstSets();
-            return new ReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>>(
-                _firsts.ToDictionary(
-                    pair => pair.Key,
-                    pair => (IReadOnlyCollection<ITerm>)pair.Value.ToList()));
-        }
+            InitializeFirstSets();
 
-        private void AddFirstSets(IExNonTerminal? startExNonTerminal = null)
-        {
-            foreach (var exProduction in _exProductions
-                .Where(p => (startExNonTerminal == null || p.ExLeftNonTerminal.Equals(startExNonTerminal)) &&
-                            !_searchStack.Contains(p)))
+            bool updated;
+            do
             {
-                var allRulesContainsEpsilon = true;
-                foreach (var exTerm in exProduction.ExProductionDefinition)
+                updated = false;
+                foreach (var exProduction in _exProductions)
                 {
-                    if (exTerm is IExTerminal exTerminal)
+                    var leftFirsts = _firsts[exProduction.ExLeftNonTerminal];
+                    var allTermsCanBeEmpty = true;
+
+                    foreach (var exTerm in exProduction.ExProductionDefinition)
                     {
-                        AddFirst(exProduction.ExLeftNonTerminal, exTerminal.Terminal);
-                        allRulesContainsEpsilon = false;
+                        if (exTerm is IExTerminal exTerminal)
+                        {
+                            updated |= leftFirsts.Add(exTerminal.Terminal);
+                            allTermsCanBeEmpty = false;
+                            break;
+                        }
+
+                        if (exTerm is IExNonTerminal exNonTerminal)
+                        {
+                            var rightFirsts = _firsts[exNonTerminal];
+                            var containsEmpty = false;
+
+                            foreach (var rightFirst in rightFirsts)
+                            {
+                                if (ReferenceEquals(rightFirst, Empty))
+                                {
+                                    containsEmpty = true;
+                                }
+
+                                updated |= leftFirsts.Add(rightFirst);
+                            }
+
+                            if (!containsEmpty)
+                            {
+                                allTermsCanBeEmpty = false;
+                                break;
+                            }
+
+                            continue;
+                        }
+
+                        if (exTerm is IExEmptyTerm)
+                        {
+                            continue;
+                        }
+
+                        allTermsCanBeEmpty = false;
                         break;
                     }
 
-                    if (exTerm is IExNonTerminal exNonTerminal)
+                    if (allTermsCanBeEmpty)
                     {
-                        _searchStack.Add(exProduction);
-                        AddFirstSets(exNonTerminal);
-                        _searchStack.Remove(exProduction);
-
-                        if (_firsts.TryGetValue(exNonTerminal, out var exNonTerminalFirsts))
-                        {
-                            AddFirsts(exProduction.ExLeftNonTerminal, exNonTerminalFirsts);
-
-                            // If it doesn't contain the empty terminal, then stop
-                            if (!_firsts[exNonTerminal].Contains(EmptyTerm.Empty))
-                            {
-                                allRulesContainsEpsilon = false;
-                                break;
-                            }
-                        }
+                        updated |= leftFirsts.Add(Empty);
                     }
                 }
+            } while (updated);
 
-                if (allRulesContainsEpsilon)
+            var snapshot = new Dictionary<IExNonTerminal, IReadOnlyCollection<ITerm>>(_firsts.Count);
+            foreach (var pair in _firsts)
+            {
+                snapshot[pair.Key] = [.. pair.Value];
+            }
+
+            return new ReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>>(snapshot);
+        }
+
+        private void InitializeFirstSets()
+        {
+            foreach (var exProduction in _exProductions)
+            {
+                if (_firsts.ContainsKey(exProduction.ExLeftNonTerminal))
                 {
-                    AddFirst(exProduction.ExLeftNonTerminal, EmptyTerm.Empty);
+                    continue;
                 }
+
+                _firsts[exProduction.ExLeftNonTerminal] = [];
             }
-        }
-
-        private bool AddFirsts(IExNonTerminal nonTerminal, IEnumerable<ITerm> terms)
-        {
-            var added = false;
-            foreach (var terminal in terms)
-            {
-                added |= AddFirst(nonTerminal, terminal);
-            }
-
-            return added;
-        }
-
-        private bool AddFirst(IExNonTerminal nonTerminal, ITerm term)
-        {
-            if (_firsts.TryGetValue(nonTerminal, out var firsts))
-            {
-                return firsts.Add(term);
-            }
-
-            _firsts[nonTerminal] = new HashSet<ITerm> { term };
-            return true;
         }
     }
 }

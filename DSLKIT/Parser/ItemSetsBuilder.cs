@@ -12,6 +12,7 @@ namespace DSLKIT.Parser
         private readonly Dictionary<INonTerminal, IReadOnlyList<Production>> _productionsByLeft;
         private readonly INonTerminal _root;
         private readonly List<RuleSet> _sets;
+        private readonly Dictionary<int, List<RuleSet>> _setsByKernelHash;
 
         public ItemSetsBuilder(IEnumerable<Production> productions, INonTerminal root)
         {
@@ -19,6 +20,7 @@ namespace DSLKIT.Parser
             _productionsByLeft = BuildProductionsByLeft(_productions);
             var estimatedSetCapacity = Math.Max(16, _productions.Count * 2);
             _sets = new List<RuleSet>(estimatedSetCapacity);
+            _setsByKernelHash = new Dictionary<int, List<RuleSet>>(estimatedSetCapacity);
             _root = root;
         }
 
@@ -39,8 +41,11 @@ namespace DSLKIT.Parser
                 throw new InvalidOperationException($"No start production found for root non-terminal '{_root.Name}'.");
             }
 
-            _sets.Add(new RuleSet(_sets.Count, new Rule(startProduction)));
-            FillRuleSet(_sets[0]);
+            var startSet = new RuleSet(_sets.Count, new Rule(startProduction));
+            _sets.Add(startSet);
+            RegisterSet(startSet);
+
+            FillRuleSet(startSet);
             bool changes;
             do
             {
@@ -98,6 +103,7 @@ namespace DSLKIT.Parser
 
                     var newRuleSet = new RuleSet(_sets.Count, newRules);
                     _sets.Add(newRuleSet);
+                    RegisterSet(newRuleSet);
                     set.SetArrow(group.Key, newRuleSet);
 
                     anyChanges = true;
@@ -107,9 +113,23 @@ namespace DSLKIT.Parser
             return anyChanges;
         }
 
-        private RuleSet? GetSetBySetDefinitionRules(IEnumerable<Rule> newRules)
+        private RuleSet? GetSetBySetDefinitionRules(IReadOnlyCollection<Rule> newRules)
         {
-            return _sets.SingleOrDefault(s => s.StartsFrom(newRules));
+            var kernelHash = ComputeKernelHash(newRules);
+            if (!_setsByKernelHash.TryGetValue(kernelHash, out var candidates))
+            {
+                return null;
+            }
+
+            foreach (var candidate in candidates)
+            {
+                if (candidate.StartsFrom(newRules))
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
         }
 
         private bool FillRuleSet(RuleSet set)
@@ -151,6 +171,33 @@ namespace DSLKIT.Parser
             }
 
             return result;
+        }
+
+        private void RegisterSet(RuleSet set)
+        {
+            var kernelHash = ComputeKernelHash(set.KernelRules);
+            if (!_setsByKernelHash.TryGetValue(kernelHash, out var bucket))
+            {
+                bucket = [];
+                _setsByKernelHash[kernelHash] = bucket;
+            }
+
+            bucket.Add(set);
+        }
+
+        private static int ComputeKernelHash(IReadOnlyCollection<Rule> rules)
+        {
+            var xor = 0;
+            var sum = 0;
+
+            foreach (var rule in rules)
+            {
+                var hash = rule.GetHashCode();
+                xor ^= hash;
+                sum = unchecked(sum + hash * 397);
+            }
+
+            return HashCode.Combine(rules.Count, xor, sum);
         }
     }
 }

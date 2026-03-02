@@ -35,6 +35,7 @@ namespace DSLKIT.Parser
 
         public IReadOnlyList<Rule> Rules => _rulesView;
         public IReadOnlyDictionary<ITerm, RuleSet> Arrows => _arrowsView;
+        internal IReadOnlyCollection<Rule> KernelRules => _kernelRules;
         public int KernelRuleCount { get; }
         public int SetNumber { get; set; }
 
@@ -74,20 +75,27 @@ namespace DSLKIT.Parser
             return $"Set({SetNumber}){Environment.NewLine}{string.Join(Environment.NewLine, _rules)}";
         }
 
-        internal bool StartsFrom(IEnumerable<Rule> newRules)
+        internal bool StartsFrom(IReadOnlyCollection<Rule> newRules)
         {
             if (newRules == null)
             {
                 throw new ArgumentNullException(nameof(newRules));
             }
 
-            var candidateKernel = newRules as ICollection<Rule> ?? newRules.ToArray();
-            if (candidateKernel.Count != KernelRuleCount)
+            if (newRules.Count != KernelRuleCount)
             {
                 return false;
             }
 
-            return _kernelRules.SetEquals(candidateKernel);
+            foreach (var rule in newRules)
+            {
+                if (!_kernelRules.Contains(rule))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
