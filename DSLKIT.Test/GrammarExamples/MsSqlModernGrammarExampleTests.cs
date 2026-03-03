@@ -588,6 +588,61 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseSystemFunctionWithDoubleColonPrefix()
+        {
+            const string script = """
+                IF EXISTS (SELECT * FROM ::fn_listextendedproperty('SnapshotFolder', 'user', 'dbo', 'table', 'UIProperties', null, null))
+                    SELECT 1;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseWithXmlNamespacesPrefix()
+        {
+            const string script = """
+                WITH XMLNAMESPACES ('http://schemas.microsoft.com/sqlserver/DMF/2007/08' AS DMF)
+                INSERT INTO policy.PolicyHistoryDetail
+                SELECT Res.Expr.value('(../DMF:TargetQueryExpression)[1]', 'nvarchar(150)')
+                FROM policy.PolicyHistory AS PH
+                CROSS APPLY EvaluationResults.nodes('//TargetQueryExpression') AS Res(Expr);
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseSqlGraphShortestPathPatterns()
+        {
+            const string script = """
+                SELECT
+                    STRING_AGG(P2.Name,'->') WITHIN GROUP (GRAPH PATH) AS [Assembly],
+                    COUNT(P2.ProductID) WITHIN GROUP (GRAPH PATH) AS Levels
+                FROM PRODUCT P1, PRODUCT FOR PATH P2, ISPARTOF FOR PATH IPO
+                WHERE MATCH(SHORTEST_PATH(P1(-(IPO)->P2)+))
+                  AND P1.ProductID = 2;
+
+                SELECT
+                    LAST_VALUE(P2.ProductID) WITHIN GROUP (GRAPH PATH) AS FinalProductID
+                FROM PRODUCT P1, PRODUCT FOR PATH P2, ISPARTOF FOR PATH IPO
+                WHERE MATCH(SHORTEST_PATH(P1(-(IPO)->P2){1,3}))
+                  AND P1.ProductID = 2;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseTemporalTable_ForSystemTimeClauses()
         {
             const string script = """

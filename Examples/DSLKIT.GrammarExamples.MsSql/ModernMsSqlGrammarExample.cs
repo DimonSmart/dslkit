@@ -166,9 +166,6 @@ namespace DSLKIT.GrammarExamples.MsSql
                 previewChar: '$',
                 flags: TermFlags.Identifier);
 
-            // Combined terminal for "FOR SYSTEM_TIME" — eliminates the LALR(1) shift/reduce
-            // conflict with FOR JSON/XML/BROWSE. The lexer's maximal-munch picks this
-            // longer match (14+ chars) over the plain 3-char FOR keyword.
             // SQLCMD preprocessor directives: :r, :setvar, :on error exit, etc.
             // Matched as a single token per line to keep parser logic simple.
             var sqlcmdPreprocessorCommand = new RegExpTerminal(
@@ -181,6 +178,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             var forSystemTime = new RegExpTerminal(
                 "FOR_SYSTEM_TIME",
                 @"\G(?i)FOR\s+SYSTEM_TIME(?!\w)",
+                previewChar: null,
+                flags: TermFlags.None);
+
+            // Combined terminal for SQL Graph table source syntax: "FOR PATH".
+            // This avoids ambiguity with query FOR JSON / FOR XML clauses.
+            var forPath = new RegExpTerminal(
+                "FOR_PATH",
+                @"\G(?i)FOR\s+PATH(?!\w)",
                 previewChar: null,
                 flags: TermFlags.None);
 
@@ -209,6 +214,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .AddTerminal(sqlcmdVariable)
                 .AddTerminal(sqlcmdPreprocessorCommand)
                 .AddTerminal(forSystemTime)
+                .AddTerminal(forPath)
                 .AddTerminal(graphColumnRef);
             var keywordCache = new Dictionary<string, KeywordTerminal>(StringComparer.OrdinalIgnoreCase);
 
@@ -507,6 +513,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             var dropColumnEncryptionKeyStatement = gb.NT("DropColumnEncryptionKeyStatement");
             var matchGraphPattern = gb.NT("MatchGraphPattern");
             var matchGraphPath = gb.NT("MatchGraphPath");
+            var matchGraphShortestPath = gb.NT("MatchGraphShortestPath");
+            var graphWithinGroupClause = gb.NT("GraphWithinGroupClause");
             var predictArgList = gb.NT("PredictArgList");
             var predictArg = gb.NT("PredictArg");
             var openRowsetBulk = gb.NT("OpenRowsetBulk");
@@ -529,6 +537,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             var mergeMatchedAction = gb.NT("MergeMatchedAction");
             var mergeNotMatchedAction = gb.NT("MergeNotMatchedAction");
             var withClause = gb.NT("WithClause");
+            var withXmlNamespacesClause = gb.NT("WithXmlNamespacesClause");
+            var xmlNamespaceItemList = gb.NT("XmlNamespaceItemList");
+            var xmlNamespaceItem = gb.NT("XmlNamespaceItem");
             var cteDefinitionList = gb.NT("CteDefinitionList");
             var cteDefinition = gb.NT("CteDefinition");
             var queryExpression = gb.NT("QueryExpression");
@@ -648,6 +659,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("Statement").Is(withClause, updateStatement);
             gb.Prod("Statement").Is(withClause, insertStatement);
             gb.Prod("Statement").Is(withClause, deleteStatement);
+            gb.Prod("Statement").Is(withXmlNamespacesClause, updateStatement);
+            gb.Prod("Statement").Is(withXmlNamespacesClause, insertStatement);
+            gb.Prod("Statement").Is(withXmlNamespacesClause, deleteStatement);
+            gb.Prod("Statement").Is(withXmlNamespacesClause, queryStatement);
             gb.Prod("Statement").Is(declareCursorStatement);
             gb.Prod("Statement").Is(cursorOperationStatement);
             gb.Prod("Statement").Is(waitforStatement);
@@ -1736,6 +1751,12 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateDatabaseGrowthUnit").Is(createDatabaseSizeUnit);
             gb.Prod("CreateDatabaseGrowthUnit").Is("%");
 
+            gb.Prod("WithXmlNamespacesClause").Is(kw("WITH"), kw("XMLNAMESPACES"), "(", xmlNamespaceItemList, ")");
+            gb.Prod("XmlNamespaceItemList").Is(xmlNamespaceItem);
+            gb.Prod("XmlNamespaceItemList").Is(xmlNamespaceItemList, ",", xmlNamespaceItem);
+            gb.Prod("XmlNamespaceItem").Is(expression, kw("AS"), identifierTerm);
+            gb.Prod("XmlNamespaceItem").Is(kw("DEFAULT"), expression);
+
             gb.Prod("WithClause").Is(kw("WITH"), cteDefinitionList);
             gb.Prod("CteDefinitionList").Is(cteDefinition);
             gb.Prod("CteDefinitionList").Is(cteDefinitionList, ",", cteDefinition);
@@ -1857,6 +1878,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("TableFactor").Is(qualifiedName);
             gb.Prod("TableFactor").Is(qualifiedName, kw("AS"), identifierTerm);
             gb.Prod("TableFactor").Is(qualifiedName, identifierTerm);
+            gb.Prod("TableFactor").Is(qualifiedName, forPath);
+            gb.Prod("TableFactor").Is(qualifiedName, forPath, identifierTerm);
             gb.Prod("TableFactor").Is(qualifiedName, kw("WITH"), "(", tableHintLimitedList, ")");
             gb.Prod("TableFactor").Is(qualifiedName, kw("AS"), identifierTerm, kw("WITH"), "(", tableHintLimitedList, ")");
             gb.Prod("TableFactor").Is(qualifiedName, identifierTerm, kw("WITH"), "(", tableHintLimitedList, ")");
@@ -1992,6 +2015,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("PrimaryExpression").Is(qualifiedName);
             gb.Prod("PrimaryExpression").Is(functionCall);
             gb.Prod("PrimaryExpression").Is(functionCall, overClause);
+            gb.Prod("PrimaryExpression").Is(functionCall, graphWithinGroupClause);
             gb.Prod("PrimaryExpression").Is(kw("CAST"), "(", expression, kw("AS"), typeSpec, ")");
             gb.Prod("PrimaryExpression").Is("(", expression, ")");
             gb.Prod("PrimaryExpression").Is("(", expressionList, ")");
@@ -2005,6 +2029,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("FunctionCall").Is(qualifiedName, "(", ")");
             gb.Prod("FunctionCall").Is(qualifiedName, "(", "*", ")");
             gb.Prod("FunctionCall").Is(qualifiedName, "(", functionArgumentList, ")");
+            gb.Prod("FunctionCall").Is("::", qualifiedName, "(", ")");
+            gb.Prod("FunctionCall").Is("::", qualifiedName, "(", functionArgumentList, ")");
             gb.Prod("FunctionCall").Is(qualifiedName, "(", kw("DISTINCT"), functionArgumentList, ")");
             gb.Prod("FunctionCall").Is(qualifiedName, "(", kw("ALL"), functionArgumentList, ")");
             // FREETEXTTABLE/CONTAINSTABLE with wildcard column: func(table, *, search, ...)
@@ -2029,6 +2055,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("OpenRowsetBulkOption").Is(identifierTerm, "=", expression);
             gb.Prod("FunctionArgumentList").Is(expression);
             gb.Prod("FunctionArgumentList").Is(functionArgumentList, ",", expression);
+            gb.Prod("GraphWithinGroupClause").Is(kw("WITHIN"), kw("GROUP"), "(", kw("GRAPH"), kw("PATH"), ")");
 
             gb.Prod("OverClause").Is(kw("OVER"), "(", overSpec, ")");
             gb.Prod("OverSpec").Is(EmptyTerm.Empty);
@@ -2154,6 +2181,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("IdentifierTerm").Is(kw("PIVOT"));
             gb.Prod("IdentifierTerm").Is(kw("UNPIVOT"));
             gb.Prod("IdentifierTerm").Is(kw("LANGUAGE"));
+            gb.Prod("IdentifierTerm").Is(kw("GRAPH"));
 
             gb.Prod("TruncateStatement").Is(kw("TRUNCATE"), kw("TABLE"), qualifiedName);
 
@@ -2281,9 +2309,15 @@ namespace DSLKIT.GrammarExamples.MsSql
             // SQL Graph: MATCH search condition (as PrimaryExpression so AND works after it)
             gb.Prod("PrimaryExpression").Is(kw("MATCH"), "(", matchGraphPattern, ")");
             gb.Prod("MatchGraphPattern").Is(matchGraphPath);
+            gb.Prod("MatchGraphPattern").Is(kw("SHORTEST_PATH"), "(", matchGraphShortestPath, ")");
             gb.Prod("MatchGraphPattern").Is(matchGraphPattern, kw("AND"), matchGraphPath);
+            gb.Prod("MatchGraphPattern").Is(matchGraphPattern, kw("AND"), kw("SHORTEST_PATH"), "(", matchGraphShortestPath, ")");
+            gb.Prod("MatchGraphShortestPath").Is(matchGraphPath);
+            gb.Prod("MatchGraphShortestPath").Is(matchGraphPath, "+");
+            gb.Prod("MatchGraphShortestPath").Is(matchGraphPath, "{", number, ",", number, "}");
             // MatchGraphPath: identifierTerm  or  N1-(E)->N2  or  N1-(E)->N2-(E2)->N3 (chained)
             gb.Prod("MatchGraphPath").Is(identifierTerm);  // simple node ref
+            gb.Prod("MatchGraphPath").Is(identifierTerm, "(", "-", "(", identifierTerm, ")", "-", ">", identifierTerm, ")");
             gb.Prod("MatchGraphPath").Is(matchGraphPath, "-", "(", identifierTerm, ")", "-", ">", identifierTerm); // forward: ...(E)->N
             gb.Prod("MatchGraphPath").Is(identifierTerm, "<", "-", "(", identifierTerm, ")", "-", identifierTerm); // backward N<-(E)-N
             gb.Prod("MatchGraphPath").Is(matchGraphPath, "<", "-", "(", identifierTerm, ")", "-", identifierTerm); // backward chain: path<-(E)-N
@@ -2330,3 +2364,4 @@ namespace DSLKIT.GrammarExamples.MsSql
         }
     }
 }
+
