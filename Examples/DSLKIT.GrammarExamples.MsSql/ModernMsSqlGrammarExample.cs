@@ -169,6 +169,15 @@ namespace DSLKIT.GrammarExamples.MsSql
             // Combined terminal for "FOR SYSTEM_TIME" — eliminates the LALR(1) shift/reduce
             // conflict with FOR JSON/XML/BROWSE. The lexer's maximal-munch picks this
             // longer match (14+ chars) over the plain 3-char FOR keyword.
+            // SQLCMD preprocessor directives: :r, :setvar, :on error exit, etc.
+            // Matched as a single token per line to keep parser logic simple.
+            var sqlcmdPreprocessorCommand = new RegExpTerminal(
+                "SqlcmdPreprocessorCommand",
+                @"\G:[a-z_][a-z0-9_]*(?:[ \t][^\r\n]*)?",
+                previewChar: ':',
+                flags: TermFlags.None);
+
+            // Combined terminal for "FOR SYSTEM_TIME" to reduce ambiguity with FOR JSON/XML/BROWSE.
             var forSystemTime = new RegExpTerminal(
                 "FOR_SYSTEM_TIME",
                 @"\G(?i)FOR\s+SYSTEM_TIME(?!\w)",
@@ -198,6 +207,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .AddTerminal(number)
                 .AddTerminal(stringLiteral)
                 .AddTerminal(sqlcmdVariable)
+                .AddTerminal(sqlcmdPreprocessorCommand)
                 .AddTerminal(forSystemTime)
                 .AddTerminal(graphColumnRef);
             var keywordCache = new Dictionary<string, KeywordTerminal>(StringComparer.OrdinalIgnoreCase);
@@ -371,6 +381,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             var raiserrorWithOptionList = gb.NT("RaiserrorWithOptionList");
             var throwStatement = gb.NT("ThrowStatement");
             var loopControlStatement = gb.NT("LoopControlStatement");
+            var gotoStatement = gb.NT("GotoStatement");
+            var labelStatement = gb.NT("LabelStatement");
+            var sqlcmdPreprocessorStatement = gb.NT("SqlcmdPreprocessorStatement");
             var createRoleStatement = gb.NT("CreateRoleStatement");
             var createSchemaStatement = gb.NT("CreateSchemaStatement");
             var schemaNameClause = gb.NT("SchemaNameClause");
@@ -603,7 +616,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("Statement").Is(raiserrorStatement);
             gb.Prod("Statement").Is(throwStatement);
             gb.Prod("Statement").Is(loopControlStatement);
+            gb.Prod("Statement").Is(gotoStatement);
+            gb.Prod("Statement").Is(labelStatement);
             gb.Prod("Statement").Is(executeStatement);
+            gb.Prod("Statement").Is(sqlcmdPreprocessorStatement);
             gb.Prod("Statement").Is(useStatement);
             gb.Prod("Statement").Is(createProcStatement);
             gb.Prod("Statement").Is(createFunctionStatement);
@@ -853,6 +869,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("ThrowStatement").Is(kw("THROW"), expression, ",", expression, ",", expression);
             gb.Prod("LoopControlStatement").Is(kw("BREAK"));
             gb.Prod("LoopControlStatement").Is(kw("CONTINUE"));
+            gb.Prod("GotoStatement").Is(kw("GOTO"), identifierTerm);
+            gb.Prod("LabelStatement").Is(identifierTerm, ":");
+            gb.Prod("LabelStatement").Is(identifierTerm, ":", statement);
+            gb.Prod("SqlcmdPreprocessorStatement").Is(sqlcmdPreprocessorCommand);
 
             gb.Prod("DeclareStatement").Is(kw("DECLARE"), declareItemList);
             gb.Prod("DeclareStatement").Is(kw("DECLARE"), declareTableVariable);
@@ -2310,4 +2330,3 @@ namespace DSLKIT.GrammarExamples.MsSql
         }
     }
 }
-

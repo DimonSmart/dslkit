@@ -555,6 +555,39 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseSqlcmdPreprocessorCommands()
+        {
+            const string script = """
+                :r .\setup.sql
+                :setvar JobOwner sa
+                :on error exit
+                PRINT N'after sqlcmd preprocessor commands';
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseGotoAndLabelStatements()
+        {
+            const string script = """
+                BEGIN TRANSACTION;
+                GOTO EndSave;
+                QuitWithRollback:
+                    IF (@@TRANCOUNT > 0) ROLLBACK TRANSACTION;
+                EndSave:
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseTemporalTable_ForSystemTimeClauses()
         {
             const string script = """
