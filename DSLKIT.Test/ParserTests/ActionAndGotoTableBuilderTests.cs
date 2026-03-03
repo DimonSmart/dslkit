@@ -1,8 +1,10 @@
 using DSLKIT.Parser;
+using DSLKIT.NonTerminals;
 using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
 using DSLKIT.Test.Common;
 using FluentAssertions;
+using System;
 using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
@@ -108,6 +110,62 @@ namespace DSLKIT.Test.ParserTests
         }
 
         [Fact]
+        public void ConflictResolution_PrecedenceLeft_ReplacesShiftWithReduce()
+        {
+            var e = new NonTerminal("E");
+
+            var grammarWithoutPrecedence = new GrammarBuilder()
+                .WithGrammarName("conflict_without_precedence")
+                .AddProduction("S").Is(e)
+                .AddProduction("E").Is(e, "+", e)
+                .AddProduction("E").Is("x")
+                .BuildGrammar();
+
+            var grammarWithPrecedence = new GrammarBuilder()
+                .WithGrammarName("conflict_with_precedence")
+                .Precedence(Assoc.Left, "+")
+                .AddProduction("S").Is(e)
+                .AddProduction("E").Is(e, "+", e)
+                .AddProduction("E").Is("x")
+                .BuildGrammar();
+
+            var reduceOnPlusWithoutPrecedence = CountReduceActionsForTerminal(grammarWithoutPrecedence, "+");
+            var reduceOnPlusWithPrecedence = CountReduceActionsForTerminal(grammarWithPrecedence, "+");
+
+            reduceOnPlusWithPrecedence.Should().BeGreaterThan(
+                reduceOnPlusWithoutPrecedence,
+                "left associativity should turn at least one + conflict into reduce");
+        }
+
+        [Fact]
+        public void ConflictResolution_LocalRule_CanForceReduceForSpecificLookahead()
+        {
+            var e = new NonTerminal("E");
+
+            var grammarWithoutLocalRule = new GrammarBuilder()
+                .WithGrammarName("sr_default_shift")
+                .AddProduction("S").Is(e)
+                .AddProduction("E").Is(e, "+", e)
+                .AddProduction("E").Is("x")
+                .BuildGrammar();
+
+            var grammarWithLocalRule = new GrammarBuilder()
+                .WithGrammarName("sr_force_reduce")
+                .OnShiftReduce("E", "+", Resolve.Reduce)
+                .AddProduction("S").Is(e)
+                .AddProduction("E").Is(e, "+", e)
+                .AddProduction("E").Is("x")
+                .BuildGrammar();
+
+            var reduceOnPlusWithoutRule = CountReduceActionsForTerminal(grammarWithoutLocalRule, "+");
+            var reduceOnPlusWithRule = CountReduceActionsForTerminal(grammarWithLocalRule, "+");
+
+            reduceOnPlusWithRule.Should().BeGreaterThan(
+                reduceOnPlusWithoutRule,
+                "local OnShiftReduce rule should force reduce for configured non-terminal/lookahead pair");
+        }
+
+        [Fact]
         public void AcceptAction_StartingProduction_PlacedCorrectly()
         {
             var grammar = new GrammarBuilder()
@@ -204,6 +262,15 @@ namespace DSLKIT.Test.ParserTests
 
             grammar.Productions.Should().Contain(p => p.LeftNonTerminal.Name == "S");
             grammar.Productions.Should().Contain(p => p.LeftNonTerminal.Name == "A");
+        }
+
+        private static int CountReduceActionsForTerminal(IGrammar grammar, string terminalName)
+        {
+            return grammar.ActionAndGotoTable.ActionTable
+                .Where(action =>
+                    string.Equals(action.Key.Key.Name, terminalName, StringComparison.OrdinalIgnoreCase) &&
+                    action.Value is ReduceAction)
+                .Count();
         }
     }
 }

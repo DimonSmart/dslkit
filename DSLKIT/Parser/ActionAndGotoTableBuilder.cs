@@ -15,17 +15,21 @@ namespace DSLKIT.Parser
         private readonly INonTerminal _root;
         private readonly IEnumerable<RuleSet> _ruleSets;
         private readonly TranslationTable _translationTable;
+        private readonly IReadOnlyDictionary<string, PrecedenceRule> _precedenceByTerminalName;
+        private readonly IReadOnlyDictionary<string, Resolve> _shiftReduceResolutions;
         private ActionAndGotoTable? _actionAndGotoTable;
         private List<MergedRow>? _mergedRows;
 
         public GrammarBuilder.ReductionStep0? OnReductionStep0 { get; }
         public GrammarBuilder.ReductionStep1? OnReductionStep1 { get; }
 
-        public ActionAndGotoTableBuilder(INonTerminal root,
+        internal ActionAndGotoTableBuilder(INonTerminal root,
             IReadOnlyList<ExProduction> exProductions,
             IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> follows,
             IEnumerable<RuleSet> ruleSets,
             TranslationTable translationTable,
+            IReadOnlyDictionary<string, PrecedenceRule> precedenceByTerminalName,
+            IReadOnlyDictionary<string, Resolve> shiftReduceResolutions,
             GrammarBuilder.ReductionStep0? onReductionStep0,
             GrammarBuilder.ReductionStep1? onReductionStep1
         )
@@ -35,6 +39,8 @@ namespace DSLKIT.Parser
             _follows = follows;
             _ruleSets = ruleSets;
             _translationTable = translationTable;
+            _precedenceByTerminalName = precedenceByTerminalName;
+            _shiftReduceResolutions = shiftReduceResolutions;
             OnReductionStep0 = onReductionStep0;
             OnReductionStep1 = onReductionStep1;
         }
@@ -197,7 +203,18 @@ namespace DSLKIT.Parser
 
                         if (actionAndGotoTable.ActionTable.TryGetValue(key, out var existingAction))
                         {
-                            var conflictType = existingAction is ShiftAction ? "shift/reduce" : "reduce/reduce";
+                            if (existingAction is ShiftAction)
+                            {
+                                if (TryResolveShiftReduceConflict(terminal, mergedRow.Production, out var resolution) &&
+                                    resolution == Resolve.Reduce)
+                                {
+                                    actionAndGotoTable.MutableActionTable[key] = reduceAction;
+                                }
+
+                                continue;
+                            }
+
+                            var conflictType = "reduce/reduce";
 
                             System.Diagnostics.Debug.WriteLine(
                                 $"Conflict detected: {conflictType} conflict for terminal '{terminal.Name}' " +
@@ -217,6 +234,87 @@ namespace DSLKIT.Parser
         private bool ContainStartingRuleWithPointerAtTheEnd(RuleSet ruleSet)
         {
             return ruleSet.Rules.Any(rule => rule.IsFinished && rule.Production.LeftNonTerminal == _root);
+        }
+
+        private bool TryResolveShiftReduceConflict(ITerminal lookaheadTerminal, Production reduceProduction, out Resolve resolution)
+        {
+            if (TryResolveByExplicitRule(lookaheadTerminal, reduceProduction, out resolution))
+            {
+                return true;
+            }
+
+            return TryResolveByPrecedence(lookaheadTerminal, reduceProduction, out resolution);
+        }
+
+        private bool TryResolveByExplicitRule(ITerminal lookaheadTerminal, Production reduceProduction, out Resolve resolution)
+        {
+            var key = BuildShiftReduceRuleKey(reduceProduction.LeftNonTerminal.Name, lookaheadTerminal.Name);
+            return _shiftReduceResolutions.TryGetValue(key, out resolution);
+        }
+
+        private bool TryResolveByPrecedence(ITerminal lookaheadTerminal, Production reduceProduction, out Resolve resolution)
+        {
+            if (!TryGetTerminalPrecedence(lookaheadTerminal.Name, out var lookaheadPrecedence))
+            {
+                resolution = default;
+                return false;
+            }
+
+            if (!TryGetProductionPrecedence(reduceProduction, out var reducePrecedence))
+            {
+                resolution = default;
+                return false;
+            }
+
+            if (lookaheadPrecedence.Level > reducePrecedence.Level)
+            {
+                resolution = Resolve.Shift;
+                return true;
+            }
+
+            if (lookaheadPrecedence.Level < reducePrecedence.Level)
+            {
+                resolution = Resolve.Reduce;
+                return true;
+            }
+
+            switch (lookaheadPrecedence.Associativity)
+            {
+                case Assoc.Left:
+                    resolution = Resolve.Reduce;
+                    return true;
+                case Assoc.Right:
+                    resolution = Resolve.Shift;
+                    return true;
+                default:
+                    resolution = default;
+                    return false;
+            }
+        }
+
+        private bool TryGetTerminalPrecedence(string terminalName, out PrecedenceRule precedence)
+        {
+            return _precedenceByTerminalName.TryGetValue(terminalName, out precedence);
+        }
+
+        private bool TryGetProductionPrecedence(Production reduceProduction, out PrecedenceRule precedence)
+        {
+            for (var index = reduceProduction.ProductionDefinition.Count - 1; index >= 0; index--)
+            {
+                if (reduceProduction.ProductionDefinition[index] is ITerminal terminal &&
+                    TryGetTerminalPrecedence(terminal.Name, out precedence))
+                {
+                    return true;
+                }
+            }
+
+            precedence = default;
+            return false;
+        }
+
+        private static string BuildShiftReduceRuleKey(string nonTerminalName, string lookaheadTerminalName)
+        {
+            return $"{nonTerminalName.Trim()}\u001f{lookaheadTerminalName.Trim()}";
         }
 
         public class MergedRow

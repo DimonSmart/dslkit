@@ -24,6 +24,12 @@ namespace DSLKIT.Terminals
         private readonly Dictionary<string, ITerminal> _keywordTerminals =
             new Dictionary<string, ITerminal>(256, StringComparer.Ordinal);
 
+        private readonly Dictionary<string, PrecedenceRule> _precedenceByTerminalName =
+            new Dictionary<string, PrecedenceRule>(64, StringComparer.OrdinalIgnoreCase);
+
+        private readonly Dictionary<string, Resolve> _shiftReduceResolutions =
+            new Dictionary<string, Resolve>(64, StringComparer.OrdinalIgnoreCase);
+
         private readonly Dictionary<Production, AstNodeBinding> _productionAstBindings =
             new Dictionary<Production, AstNodeBinding>(64);
 
@@ -33,6 +39,7 @@ namespace DSLKIT.Terminals
         private IEofTerminal _eof = EofTerminal.Instance;
 
         private string _name = string.Empty;
+        private int _precedenceLevel;
 
         public INonTerminal GetOrAddNonTerminal(string nonTerminalName)
         {
@@ -104,6 +111,46 @@ namespace DSLKIT.Terminals
             return this;
         }
 
+        /// <summary>
+        /// Declares operator precedence and associativity for one precedence level.
+        /// Later calls have higher precedence.
+        /// </summary>
+        public GrammarBuilder Precedence(Assoc associativity, params object[] terminals)
+        {
+            if (terminals == null || terminals.Length == 0)
+            {
+                throw new ArgumentException("At least one terminal must be specified.", nameof(terminals));
+            }
+
+            _precedenceLevel++;
+            foreach (var terminal in terminals)
+            {
+                var terminalName = ResolveTerminalName(terminal);
+                _precedenceByTerminalName[terminalName] = new PrecedenceRule(_precedenceLevel, associativity);
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a local shift/reduce resolution for a specific reduced non-terminal and lookahead terminal.
+        /// </summary>
+        public GrammarBuilder OnShiftReduce(string nonTerminalName, string lookahead, Resolve resolution)
+        {
+            if (string.IsNullOrWhiteSpace(nonTerminalName))
+            {
+                throw new ArgumentException("Non-terminal name must be specified.", nameof(nonTerminalName));
+            }
+
+            if (string.IsNullOrWhiteSpace(lookahead))
+            {
+                throw new ArgumentException("Lookahead terminal name must be specified.", nameof(lookahead));
+            }
+
+            _shiftReduceResolutions[BuildShiftReduceRuleKey(nonTerminalName, lookahead)] = resolution;
+            return this;
+        }
+
         public Grammar BuildGrammar(string? rootProductionName = null)
         {
             var root = GetRootNonTerminal(rootProductionName);
@@ -128,6 +175,8 @@ namespace DSLKIT.Terminals
                     follows,
                     ruleSets,
                     translationTable,
+                    _precedenceByTerminalName,
+                    _shiftReduceResolutions,
                     OnReductionStep0,
                     OnReductionStep1)
                 .Build();
@@ -495,6 +544,24 @@ namespace DSLKIT.Terminals
             }
 
             return new KeywordTerminal(delimiter);
+        }
+
+        private static string ResolveTerminalName(object terminal)
+        {
+            switch (terminal)
+            {
+                case string terminalName when !string.IsNullOrWhiteSpace(terminalName):
+                    return terminalName.Trim();
+                case ITerminal terminalValue:
+                    return terminalValue.Name;
+                default:
+                    throw new ArgumentException("Terminal must be a string or ITerminal instance.", nameof(terminal));
+            }
+        }
+
+        private static string BuildShiftReduceRuleKey(string nonTerminalName, string lookahead)
+        {
+            return $"{nonTerminalName.Trim()}\u001f{lookahead.Trim()}";
         }
 
         #region Events
