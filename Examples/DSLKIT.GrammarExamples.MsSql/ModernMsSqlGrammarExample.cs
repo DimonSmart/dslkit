@@ -427,6 +427,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             var createDatabaseNonTransactedAccessValue = gb.NT("CreateDatabaseNonTransactedAccessValue");
             var procStatementList = gb.NT("ProcStatementList");
             var tryCatchStatement = gb.NT("TryCatchStatement");
+            var truncateStatement = gb.NT("TruncateStatement");
+            var createTableAsSelectStatement = gb.NT("CreateTableAsSelectStatement");
+            var alterDatabaseStatement = gb.NT("AlterDatabaseStatement");
+            var alterDatabaseSetOption = gb.NT("AlterDatabaseSetOption");
             var withClause = gb.NT("WithClause");
             var cteDefinitionList = gb.NT("CteDefinitionList");
             var cteDefinition = gb.NT("CteDefinition");
@@ -531,6 +535,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("Statement").Is(createTriggerStatement);
             gb.Prod("Statement").Is(dropTriggerStatement);
             gb.Prod("Statement").Is(tryCatchStatement);
+            gb.Prod("Statement").Is(truncateStatement);
+            gb.Prod("Statement").Is(createTableAsSelectStatement);
+            gb.Prod("Statement").Is(alterDatabaseStatement);
             gb.Prod("Statement").Is(withClause, updateStatement);
             gb.Prod("Statement").Is(withClause, insertStatement);
             gb.Prod("Statement").Is(withClause, deleteStatement);
@@ -560,6 +567,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("InsertStatement").Is(kw("INSERT"), insertTarget, kw("VALUES"), rowValueList);
             gb.Prod("InsertStatement").Is(kw("INSERT"), insertTarget, executeStatement);
             gb.Prod("InsertStatement").Is(kw("INSERT"), insertTarget, queryExpression);
+            gb.Prod("InsertStatement").Is(kw("INSERT"), insertTarget, deleteOutputClause, kw("VALUES"), rowValueList);
+            gb.Prod("InsertStatement").Is(kw("INSERT"), insertTarget, deleteOutputClause, queryExpression);
             gb.Prod("InsertTarget").Is(kw("INTO"), qualifiedName);
             gb.Prod("InsertTarget").Is(qualifiedName);
             gb.Prod("InsertTarget").Is(kw("INTO"), qualifiedName, "(", insertColumnList, ")");
@@ -568,6 +577,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("InsertTarget").Is(variableReference);
             gb.Prod("InsertTarget").Is(kw("INTO"), variableReference, "(", insertColumnList, ")");
             gb.Prod("InsertTarget").Is(variableReference, "(", insertColumnList, ")");
+            gb.Prod("InsertTarget").Is(kw("INTO"), qualifiedName, kw("WITH"), "(", tableHintLimitedList, ")");
+            gb.Prod("InsertTarget").Is(qualifiedName, kw("WITH"), "(", tableHintLimitedList, ")");
+            gb.Prod("InsertTarget").Is(kw("INTO"), qualifiedName, "(", insertColumnList, ")", kw("WITH"), "(", tableHintLimitedList, ")");
             gb.Prod("InsertColumnList").Is(identifierTerm);
             gb.Prod("InsertColumnList").Is(insertColumnList, ",", identifierTerm);
             gb.Prod("InsertValueList").Is(expression);
@@ -687,6 +699,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("SetStatement").Is(kw("SET"), identifierTerm, kw("OFF"));
             gb.Prod("SetStatement").Is(kw("SET"), identifierTerm, "=", expression);
             gb.Prod("SetStatement").Is(kw("SET"), identifierTerm, identifierTerm);
+            gb.Prod("SetStatement").Is(kw("SET"), identifierTerm, identifierTerm, kw("ON"));
+            gb.Prod("SetStatement").Is(kw("SET"), identifierTerm, identifierTerm, kw("OFF"));
             gb.Prod("SetStatement").Is(kw("SET"), kw("IDENTITY_INSERT"), qualifiedName, kw("ON"));
             gb.Prod("SetStatement").Is(kw("SET"), kw("IDENTITY_INSERT"), qualifiedName, kw("OFF"));
 
@@ -938,8 +952,10 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod("CreateFunctionBody").Is(kw("AS"), kw("RETURN"), queryExpression);
             gb.Prod("CreateFunctionBody").Is(kw("AS"), kw("RETURN"), "(", queryExpression, ")");
+            gb.Prod("CreateFunctionBody").Is(kw("AS"), kw("RETURN"), "(", withClause, queryExpression, ")");
             gb.Prod("CreateFunctionBody").Is(kw("RETURN"), queryExpression);
             gb.Prod("CreateFunctionBody").Is(kw("RETURN"), "(", queryExpression, ")");
+            gb.Prod("CreateFunctionBody").Is(kw("RETURN"), "(", withClause, queryExpression, ")");
             gb.Prod("CreateFunctionBody").Is(kw("AS"), kw("BEGIN"), procStatementList, kw("END"));
             gb.Prod("CreateFunctionBody").Is(kw("AS"), kw("BEGIN"), procStatementList, statementSeparatorList, kw("END"));
             gb.Prod("CreateFunctionBody").Is(kw("BEGIN"), procStatementList, kw("END"));
@@ -1039,6 +1055,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("DropProcStatement").Is(kw("DROP"), kw("PROCEDURE"), qualifiedName);
             gb.Prod("DropProcStatement").Is(kw("DROP"), kw("PROC"), dropIfExistsClause, qualifiedName);
             gb.Prod("DropProcStatement").Is(kw("DROP"), kw("PROCEDURE"), dropIfExistsClause, qualifiedName);
+            gb.Prod("DropProcStatement").Is(kw("DROP"), kw("FUNCTION"), qualifiedName);
+            gb.Prod("DropProcStatement").Is(kw("DROP"), kw("FUNCTION"), dropIfExistsClause, qualifiedName);
             gb.Prod("DropIfExistsClause").Is(kw("IF"), kw("EXISTS"));
 
             gb.Prod("DropTableStatement").Is(kw("DROP"), kw("TABLE"), dropTableTargetList);
@@ -1177,6 +1195,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateViewHead").Is(kw("CREATE"), kw("OR"), kw("ALTER"), kw("VIEW"));
             gb.Prod("CreateViewHead").Is(kw("ALTER"), kw("VIEW"));
             gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, kw("AS"), queryExpression);
+            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, kw("AS"), withClause, queryExpression);
+            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, kw("WITH"), identifierTerm, kw("AS"), queryExpression);
+            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, kw("WITH"), identifierTerm, kw("AS"), withClause, queryExpression);
+            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, kw("WITH"), identifierTerm, ",", identifierTerm, kw("AS"), queryExpression);
+            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, kw("WITH"), identifierTerm, ",", identifierTerm, kw("AS"), withClause, queryExpression);
 
             gb.Prod("CreateTableFileTableClause").Is(kw("AS"), kw("FILETABLE"));
             gb.Prod("CreateTableStatement").Is(kw("CREATE"), kw("TABLE"), qualifiedName, "(", createTableElementList, ")");
@@ -1247,6 +1270,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateTableConstraintBody").Is(kw("CHECK"), "(", searchCondition, ")");
             gb.Prod("CreateTableConstraintBody").Is(kw("FOREIGN"), kw("KEY"), "(", identifierList, ")", kw("REFERENCES"), qualifiedName);
             gb.Prod("CreateTableConstraintBody").Is(kw("FOREIGN"), kw("KEY"), "(", identifierList, ")", kw("REFERENCES"), qualifiedName, "(", identifierList, ")");
+            gb.Prod("CreateTableConstraintBody").Is(kw("DEFAULT"), expression, kw("FOR"), identifierTerm);
+            gb.Prod("CreateTableConstraintBody").Is(kw("DEFAULT"), "(", expression, ")", kw("FOR"), identifierTerm);
 
             gb.Prod("CreateTableClusterType").Is(kw("CLUSTERED"));
             gb.Prod("CreateTableClusterType").Is(kw("NONCLUSTERED"));
@@ -1316,6 +1341,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateIndexHead").Is(kw("CREATE"), kw("NONCLUSTERED"), kw("INDEX"), identifierTerm);
             gb.Prod("CreateIndexHead").Is(kw("CREATE"), kw("UNIQUE"), kw("CLUSTERED"), kw("INDEX"), identifierTerm);
             gb.Prod("CreateIndexHead").Is(kw("CREATE"), kw("UNIQUE"), kw("NONCLUSTERED"), kw("INDEX"), identifierTerm);
+            gb.Prod("CreateIndexHead").Is(kw("CREATE"), kw("NONCLUSTERED"), kw("COLUMNSTORE"), kw("INDEX"), identifierTerm);
+            gb.Prod("CreateIndexHead").Is(kw("CREATE"), kw("CLUSTERED"), kw("COLUMNSTORE"), kw("INDEX"), identifierTerm);
             gb.Prod("CreateIndexStatement").Is(createIndexHead, kw("ON"), qualifiedName, "(", createIndexKeyList, ")");
             gb.Prod("CreateIndexStatement").Is(createIndexHead, kw("ON"), qualifiedName, "(", createIndexKeyList, ")", createIndexTailClauseList);
 
@@ -1603,6 +1630,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("SelectCore").Is(kw("SELECT"), setQuantifier, selectList, kw("FROM"), tableSourceList);
             gb.Prod("SelectCore").Is(kw("SELECT"), topClause, selectList, kw("FROM"), tableSourceList);
             gb.Prod("SelectCore").Is(kw("SELECT"), setQuantifier, topClause, selectList, kw("FROM"), tableSourceList);
+            gb.Prod("SelectCore").Is(kw("SELECT"), selectList, kw("INTO"), qualifiedName, kw("FROM"), tableSourceList);
+            gb.Prod("SelectCore").Is(kw("SELECT"), setQuantifier, selectList, kw("INTO"), qualifiedName, kw("FROM"), tableSourceList);
+            gb.Prod("SelectCore").Is(kw("SELECT"), topClause, selectList, kw("INTO"), qualifiedName, kw("FROM"), tableSourceList);
             gb.Prod("SelectCore").Is(kw("SELECT"), selectList);
             gb.Prod("SelectCore").Is(kw("SELECT"), setQuantifier, selectList);
             gb.Prod("SelectCore").Is(kw("SELECT"), topClause, selectList);
@@ -1614,6 +1644,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("QuerySpecification").Is(selectCore, kw("WHERE"), searchCondition, kw("GROUP"), kw("BY"), expressionList);
             gb.Prod("QuerySpecification").Is(selectCore, kw("GROUP"), kw("BY"), expressionList, kw("HAVING"), searchCondition);
             gb.Prod("QuerySpecification").Is(selectCore, kw("WHERE"), searchCondition, kw("GROUP"), kw("BY"), expressionList, kw("HAVING"), searchCondition);
+            gb.Prod("QuerySpecification").Is(selectCore, kw("GROUP"), kw("BY"), expressionList, kw("WITH"), identifierTerm);
+            gb.Prod("QuerySpecification").Is(selectCore, kw("WHERE"), searchCondition, kw("GROUP"), kw("BY"), expressionList, kw("WITH"), identifierTerm);
+            gb.Prod("QuerySpecification").Is(selectCore, kw("GROUP"), kw("BY"), expressionList, kw("WITH"), identifierTerm, kw("HAVING"), searchCondition);
+            gb.Prod("QuerySpecification").Is(selectCore, kw("WHERE"), searchCondition, kw("GROUP"), kw("BY"), expressionList, kw("WITH"), identifierTerm, kw("HAVING"), searchCondition);
 
             gb.Prod("SetQuantifier").Is(kw("ALL"));
             gb.Prod("SetQuantifier").Is(kw("DISTINCT"));
@@ -1654,6 +1688,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("TableFactor").Is(variableReference);
             gb.Prod("TableFactor").Is(variableReference, kw("AS"), identifierTerm);
             gb.Prod("TableFactor").Is(variableReference, identifierTerm);
+            gb.Prod("TableFactor").Is(functionCall);
             gb.Prod("TableFactor").Is(functionCall, kw("AS"), identifierTerm);
             gb.Prod("TableFactor").Is(functionCall, identifierTerm);
             gb.Prod("TableFactor").Is(functionCall, openJsonWithClause);
@@ -1761,6 +1796,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("PrimaryExpression").Is("(", expressionList, ")");
             gb.Prod("PrimaryExpression").Is("(", queryExpression, ")");
             gb.Prod("PrimaryExpression").Is(kw("EXISTS"), "(", queryExpression, ")");
+            gb.Prod("PrimaryExpression").Is(kw("NOT"), kw("EXISTS"), "(", queryExpression, ")");
             gb.Prod("PrimaryExpression").Is(caseExpression);
 
             gb.Prod("FunctionCall").Is(qualifiedName, "(", ")");
@@ -1777,8 +1813,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("FunctionArgumentList").Is(functionArgumentList, ",", expression);
 
             gb.Prod("OverClause").Is(kw("OVER"), "(", overSpec, ")");
+            gb.Prod("OverSpec").Is(EmptyTerm.Empty);
+            gb.Prod("OverSpec").Is(kw("ORDER"), kw("BY"), orderItemList);
+            gb.Prod("OverSpec").Is(kw("ORDER"), kw("BY"), orderItemList, kw("ROWS"), frameClause);
+            gb.Prod("OverSpec").Is(kw("ORDER"), kw("BY"), orderItemList, kw("RANGE"), frameClause);
+            gb.Prod("OverSpec").Is(kw("PARTITION"), kw("BY"), expressionList);
             gb.Prod("OverSpec").Is(kw("PARTITION"), kw("BY"), expressionList, kw("ORDER"), kw("BY"), orderItemList);
             gb.Prod("OverSpec").Is(kw("PARTITION"), kw("BY"), expressionList, kw("ORDER"), kw("BY"), orderItemList, kw("ROWS"), frameClause);
+            gb.Prod("OverSpec").Is(kw("PARTITION"), kw("BY"), expressionList, kw("ORDER"), kw("BY"), orderItemList, kw("RANGE"), frameClause);
 
             gb.Prod("FrameClause").Is(frameBoundary);
             gb.Prod("FrameClause").Is(kw("BETWEEN"), frameBoundary, kw("AND"), frameBoundary);
@@ -1842,6 +1884,24 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("IdentifierTerm").Is(kw("AFTER"));
             gb.Prod("IdentifierTerm").Is(kw("SERVER"));
             gb.Prod("IdentifierTerm").Is(kw("INSTEAD"));
+            gb.Prod("IdentifierTerm").Is(kw("SCOPED"));
+            gb.Prod("IdentifierTerm").Is(kw("CONFIGURATION"));
+            gb.Prod("IdentifierTerm").Is(kw("CLEAR"));
+            gb.Prod("IdentifierTerm").Is(kw("SCHEMABINDING"));
+
+            gb.Prod("TruncateStatement").Is(kw("TRUNCATE"), kw("TABLE"), qualifiedName);
+
+            gb.Prod("CreateTableAsSelectStatement").Is(kw("CREATE"), kw("TABLE"), qualifiedName, kw("AS"), queryExpression);
+            gb.Prod("CreateTableAsSelectStatement").Is(kw("CREATE"), kw("TABLE"), qualifiedName, kw("WITH"), "(", createTableOptionList, ")", kw("AS"), queryExpression);
+
+            gb.Prod("AlterDatabaseStatement").Is(kw("ALTER"), kw("DATABASE"), identifierTerm, kw("SET"), alterDatabaseSetOption);
+            gb.Prod("AlterDatabaseStatement").Is(kw("ALTER"), kw("DATABASE"), kw("SCOPED"), kw("CONFIGURATION"), kw("CLEAR"), identifierTerm);
+            gb.Prod("AlterDatabaseStatement").Is(kw("ALTER"), kw("DATABASE"), kw("SCOPED"), kw("CONFIGURATION"), kw("SET"), identifierTerm, "=", expression);
+            gb.Prod("AlterDatabaseSetOption").Is(identifierTerm, identifierTerm);
+            gb.Prod("AlterDatabaseSetOption").Is(identifierTerm, identifierTerm, identifierTerm);
+            gb.Prod("AlterDatabaseSetOption").Is(identifierTerm, identifierTerm, kw("WITH"), identifierTerm);
+            gb.Prod("AlterDatabaseSetOption").Is(identifierTerm, "=", expression);
+            gb.Prod("AlterDatabaseSetOption").Is(identifierTerm, "(", indexOptionList, ")");
 
             gb.Prod("QualifiedName").Is(identifierTerm);
             gb.Prod("QualifiedName").Is(qualifiedName, ".", identifierTerm);
