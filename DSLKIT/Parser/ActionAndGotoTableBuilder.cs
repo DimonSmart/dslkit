@@ -75,14 +75,21 @@ namespace DSLKIT.Parser
                     break;
                 }
 
+                var isEpsilon = exProduction.ExProductionDefinition[^1].Term is IEmptyTerm;
                 var group = prods
                     .Where(p =>
                         p.ExLeftNonTerminal.NonTerminal == exProduction.ExLeftNonTerminal.NonTerminal &&
                         // p.ExLeftNonTerminal.To == exProduction.ExLeftNonTerminal.To &&
                         exProduction.ExProductionDefinition[^1].Term == p.ExProductionDefinition[^1].Term &&
-                        exProduction.ExProductionDefinition[^1].To == p.ExProductionDefinition[^1].To).ToList();
-                var finalSet = group.First().ExProductionDefinition[^1].To
-                    ?? throw new System.InvalidOperationException("Final set cannot be null when building merged reduction rows.");
+                        (isEpsilon
+                            ? exProduction.ExProductionDefinition[^1].From == p.ExProductionDefinition[^1].From
+                            : exProduction.ExProductionDefinition[^1].To == p.ExProductionDefinition[^1].To)).ToList();
+                // For epsilon productions (X → Empty), the reduce action must fire in the predecessor state
+                // (where "• Empty" appears), not the successor state (which the parser never reaches).
+                var finalSet = isEpsilon
+                    ? group.First().ExProductionDefinition[^1].From
+                    : (group.First().ExProductionDefinition[^1].To
+                        ?? throw new System.InvalidOperationException("Final set cannot be null when building merged reduction rows."));
                 // FOLLOW is a set by definition. When merged rows share the same terminal in FOLLOW,
                 // keep one copy to avoid duplicate reduction attempts and noisy false conflict logs.
                 var mergedFollowSet = group
@@ -93,6 +100,7 @@ namespace DSLKIT.Parser
                 var mergedRow = new MergedRow
                 {
                     FinalSet = finalSet,
+                    IsEpsilon = isEpsilon,
                     Production = new Production(group.First().ExLeftNonTerminal.NonTerminal, group.First().Production.ProductionDefinition),
                     FollowSet = mergedFollowSet,
                     PreMergedRules = group
@@ -177,7 +185,9 @@ namespace DSLKIT.Parser
                     continue;
                 }
 
-                var reduceAction = new ReduceAction(mergedRow.Production, mergedRow.Production.ProductionDefinition.Count);
+                // For epsilon productions (X → Empty), pop 0 items — Empty was never shifted.
+                var popLength = mergedRow.IsEpsilon ? 0 : mergedRow.Production.ProductionDefinition.Count;
+                var reduceAction = new ReduceAction(mergedRow.Production, popLength);
 
                 foreach (var followTerm in mergedRow.FollowSet)
                 {
@@ -212,6 +222,7 @@ namespace DSLKIT.Parser
         public class MergedRow
         {
             public RuleSet FinalSet { get; init; } = null!;
+            public bool IsEpsilon { get; init; }
             public IReadOnlyList<ExProduction> PreMergedRules { get; init; } = null!;
             public Production Production { get; init; } = null!;
             public IReadOnlyCollection<ITerm> FollowSet { get; init; } = null!;

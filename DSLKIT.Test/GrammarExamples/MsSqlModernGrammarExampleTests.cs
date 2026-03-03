@@ -583,6 +583,20 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseIfWithElse_InsideProcBody()
+        {
+            // Simple IF DELETE ELSE TRUNCATE (was failing before epsilon fix, should now work)
+            var r0 = ModernMsSqlGrammarExample.ParseScript(
+                "IF (1=1) DELETE dbo.T ELSE TRUNCATE TABLE dbo.T");
+            r0.IsSuccess.Should().BeTrue($"DELETE ELSE TRUNCATE: {r0.Error?.ErrorPosition}: {r0.Error?.Message}");
+
+            // Pattern from 4401.sql: IF cond SET val; ELSE IF cond SET val; ELSE SET val
+            var r1 = ModernMsSqlGrammarExample.ParseScript(
+                "IF @x < 500 SET @c = 'A'; ELSE IF @x < 1000 SET @c = 'B'; ELSE SET @c = 'C'");
+            r1.IsSuccess.Should().BeTrue($"IF SET; ELSE IF: {r1.Error?.ErrorPosition}: {r1.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseAggregateFunction_WithDistinctModifier()
         {
             const string script = """
@@ -683,6 +697,52 @@ namespace DSLKIT.Test.GrammarExamples
                 var scriptText = File.ReadAllText(filePath);
                 yield return new object[] { scriptName, scriptText };
             }
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParse73And1575_DiagnosticFiles()
+        {
+            // Minimal test for 73.sql components
+            var r73a = ModernMsSqlGrammarExample.ParseScript(
+                "CREATE TABLE dbo.T ([RowID] bigint NOT NULL\nINDEX [IX] NONCLUSTERED HASH ([RowID]) WITH (BUCKET_COUNT=100000)) WITH (MEMORY_OPTIMIZED=ON)");
+            r73a.IsSuccess.Should().BeTrue($"73a failed at {r73a.Error?.ErrorPosition}: {r73a.Error?.Message}");
+
+            // The full 73.sql file (grammar building is separate from run)
+            var sql73 = System.IO.File.ReadAllText(@"c:\Private\dslkit\sql-dataset\73.sql");
+            var r73 = ModernMsSqlGrammarExample.ParseScript(sql73);
+            r73.IsSuccess.Should().BeTrue($"73.sql failed at {r73.Error?.ErrorPosition}: {r73.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParse1575_DiagnosticFile()
+        {
+            // Minimal: FOREIGN KEY without source column list
+            var r1575a = ModernMsSqlGrammarExample.ParseScript(
+                "CREATE TABLE dbo.T (ID int, CONSTRAINT FK_X FOREIGN KEY REFERENCES dbo.S (SID))");
+            r1575a.IsSuccess.Should().BeTrue($"1575a failed at {r1575a.Error?.ErrorPosition}: {r1575a.Error?.Message}");
+
+            // 1575.sql: FOREIGN KEY REFERENCES without source column list
+            var sql1575 = System.IO.File.ReadAllText(@"c:\Private\dslkit\sql-dataset\1575.sql");
+            var r1575 = ModernMsSqlGrammarExample.ParseScript(sql1575);
+            r1575.IsSuccess.Should().BeTrue($"1575.sql failed at {r1575.Error?.ErrorPosition}: {r1575.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseExternalDataSourceAnd608_DiagnosticFiles()
+        {
+            // 5080: CREATE EXTERNAL DATA SOURCE with WITH clause
+            var r5080a = ModernMsSqlGrammarExample.ParseScript(
+                "CREATE EXTERNAL DATA SOURCE MyStorage WITH (TYPE = BLOB_STORAGE, LOCATION = 'https://example.com/path')");
+            r5080a.IsSuccess.Should().BeTrue($"5080a failed at {r5080a.Error?.ErrorPosition}: {r5080a.Error?.Message}");
+
+            // 608: FREETEXTTABLE with * and LANGUAGE param
+            var r608a = ModernMsSqlGrammarExample.ParseScript(
+                "SELECT * FROM t INNER JOIN FREETEXTTABLE(dbo.T, *, @s, LANGUAGE @lang) AS k ON t.id = k.[KEY]");
+            r608a.IsSuccess.Should().BeTrue($"608a failed at {r608a.Error?.ErrorPosition}: {r608a.Error?.Message}");
+
+            var sql608 = System.IO.File.ReadAllText(@"c:\Private\dslkit\sql-dataset\608.sql");
+            var r608 = ModernMsSqlGrammarExample.ParseScript(sql608);
+            r608.IsSuccess.Should().BeTrue($"608 failed at {r608.Error?.ErrorPosition}: {r608.Error?.Message}");
         }
 
         private static string ResolveScriptsRoot()

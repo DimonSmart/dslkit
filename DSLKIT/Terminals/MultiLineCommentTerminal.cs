@@ -11,7 +11,7 @@ namespace DSLKIT.Terminals
         public MultiLineCommentTerminal(string start, string end) :
             base(new Regex(@"\G" + "(?<Start>" + start.Escape() + ")" +
                            "(?<CommentBody>.*?)" +
-                           "(?<End>" + end.Escape() + ")", RegexOptions.Compiled | RegexOptions.Singleline), start[0])
+                           "(?<End>" + end.Escape() + @"|\z)", RegexOptions.Compiled | RegexOptions.Singleline), start[0])
         {
         }
     }
