@@ -823,8 +823,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("DeleteOutputClause").Is(kw("OUTPUT"), selectItemList, kw("INTO"), deleteOutputTarget, deleteOutputIntoColumnListOpt);
             gb.Prod("DeleteOutputTarget").Is(qualifiedName);
             gb.Prod("DeleteOutputTarget").Is(variableReference);
-            gb.Prod("DeleteOutputIntoColumnListOpt").Is("(", identifierList, ")");
-            gb.Prod("DeleteOutputIntoColumnListOpt").Is(EmptyTerm.Empty);
+            gb.Opt(deleteOutputIntoColumnListOpt, "(", identifierList, ")");
 
             gb.Prod("DeleteSourceFromClause").Is(kw("FROM"), tableSourceList);
 
