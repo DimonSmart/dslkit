@@ -234,6 +234,43 @@ namespace DSLKIT.Terminals
         }
 
         /// <summary>
+        /// Defines an optional production.
+        /// Example: Opt("WhereOpt", whereClause) creates:
+        /// WhereOpt -> Empty | whereClause
+        /// </summary>
+        public GrammarBuilder Opt(string optionalNonTerminalName, params object[] terms)
+        {
+            if (string.IsNullOrWhiteSpace(optionalNonTerminalName))
+            {
+                throw new ArgumentException("Non-terminal name must be specified.", nameof(optionalNonTerminalName));
+            }
+
+            if (terms == null || terms.Length == 0)
+            {
+                throw new ArgumentException("At least one term must be specified.", nameof(terms));
+            }
+
+            Prod(optionalNonTerminalName).Is(Empty);
+            Prod(optionalNonTerminalName).Is(terms);
+            return this;
+        }
+
+        /// <summary>
+        /// Defines an optional production for the provided non-terminal.
+        /// Example: Opt(whereOpt, whereClause) creates:
+        /// WhereOpt -> Empty | whereClause
+        /// </summary>
+        public GrammarBuilder Opt(INonTerminal optionalNonTerminal, params object[] terms)
+        {
+            if (optionalNonTerminal == null)
+            {
+                throw new ArgumentNullException(nameof(optionalNonTerminal));
+            }
+
+            return Opt(optionalNonTerminal.Name, terms);
+        }
+
+        /// <summary>
         /// Defines a "zero or more" delimited list production, similar to Irony's MakeStarRule.
         /// Example: List -> Empty | Item | List Delimiter Item
         /// </summary>

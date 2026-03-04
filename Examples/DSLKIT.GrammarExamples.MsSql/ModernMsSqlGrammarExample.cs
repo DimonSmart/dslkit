@@ -262,6 +262,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             var tableHintLimited = gb.NT("TableHintLimited");
             var tableHintLimitedName = gb.NT("TableHintLimitedName");
             var deleteStatementTail = gb.NT("DeleteStatementTail");
+            var deleteStatementTailNoOutput = gb.NT("DeleteStatementTailNoOutput");
+            var deleteStatementTailNoFrom = gb.NT("DeleteStatementTailNoFrom");
+            var deleteOptionOpt = gb.NT("DeleteOptionOpt");
             var deleteOutputClause = gb.NT("DeleteOutputClause");
             var deleteOutputTarget = gb.NT("DeleteOutputTarget");
             var deleteOutputIntoColumnListOpt = gb.NT("DeleteOutputIntoColumnListOpt");
@@ -553,6 +556,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             var queryIntersectExpression = gb.NT("QueryIntersectExpression");
             var setOperator = gb.NT("SetOperator");
             var queryPrimary = gb.NT("QueryPrimary");
+            var queryPrimaryTail = gb.NT("QueryPrimaryTail");
+            var queryPrimaryOrderByAndOffsetOpt = gb.NT("QueryPrimaryOrderByAndOffsetOpt");
+            var queryPrimaryForOpt = gb.NT("QueryPrimaryForOpt");
+            var queryPrimaryOptionOpt = gb.NT("QueryPrimaryOptionOpt");
+            var parenQueryPrimaryOrderByAndOffsetOpt = gb.NT("ParenQueryPrimaryOrderByAndOffsetOpt");
             var querySpecification = gb.NT("QuerySpecification");
             var selectCore = gb.NT("SelectCore");
             var setQuantifier = gb.NT("SetQuantifier");
@@ -803,22 +811,13 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("TableHintLimitedName").Is(identifierTerm);
             gb.Prod("TableHintLimitedName").Is(kw("INDEX"));
 
-            gb.Prod("DeleteStatementTail").Is(EmptyTerm.Empty);
-            gb.Prod("DeleteStatementTail").Is(deleteOutputClause);
-            gb.Prod("DeleteStatementTail").Is(deleteSourceFromClause);
-            gb.Prod("DeleteStatementTail").Is(deleteWhereClause);
-            gb.Prod("DeleteStatementTail").Is(deleteOptionClause);
-            gb.Prod("DeleteStatementTail").Is(deleteOutputClause, deleteSourceFromClause);
-            gb.Prod("DeleteStatementTail").Is(deleteOutputClause, deleteWhereClause);
-            gb.Prod("DeleteStatementTail").Is(deleteOutputClause, deleteOptionClause);
-            gb.Prod("DeleteStatementTail").Is(deleteSourceFromClause, deleteWhereClause);
-            gb.Prod("DeleteStatementTail").Is(deleteSourceFromClause, deleteOptionClause);
-            gb.Prod("DeleteStatementTail").Is(deleteWhereClause, deleteOptionClause);
-            gb.Prod("DeleteStatementTail").Is(deleteOutputClause, deleteSourceFromClause, deleteWhereClause);
-            gb.Prod("DeleteStatementTail").Is(deleteOutputClause, deleteSourceFromClause, deleteOptionClause);
-            gb.Prod("DeleteStatementTail").Is(deleteOutputClause, deleteWhereClause, deleteOptionClause);
-            gb.Prod("DeleteStatementTail").Is(deleteSourceFromClause, deleteWhereClause, deleteOptionClause);
-            gb.Prod("DeleteStatementTail").Is(deleteOutputClause, deleteSourceFromClause, deleteWhereClause, deleteOptionClause);
+            gb.Prod("DeleteStatementTail").Is(deleteOutputClause, deleteStatementTailNoOutput);
+            gb.Prod("DeleteStatementTail").Is(deleteStatementTailNoOutput);
+            gb.Prod("DeleteStatementTailNoOutput").Is(deleteSourceFromClause, deleteStatementTailNoFrom);
+            gb.Prod("DeleteStatementTailNoOutput").Is(deleteStatementTailNoFrom);
+            gb.Prod("DeleteStatementTailNoFrom").Is(deleteWhereClause, deleteOptionOpt);
+            gb.Prod("DeleteStatementTailNoFrom").Is(deleteOptionOpt);
+            gb.Opt(deleteOptionOpt, deleteOptionClause);
 
             gb.Prod("DeleteOutputClause").Is(kw("OUTPUT"), selectItemList);
             gb.Prod("DeleteOutputClause").Is(kw("OUTPUT"), selectItemList, kw("INTO"), deleteOutputTarget, deleteOutputIntoColumnListOpt);
@@ -1792,21 +1791,15 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("SetOperator").Is(kw("UNION"), kw("ALL"));
             gb.Prod("SetOperator").Is(kw("EXCEPT"));
 
-            gb.Prod("QueryPrimary").Is(querySpecification);
-            gb.Prod("QueryPrimary").Is(querySpecification, orderByClause);
-            gb.Prod("QueryPrimary").Is(querySpecification, orderByClause, offsetFetchClause);
-            gb.Prod("QueryPrimary").Is(querySpecification, forClause);
-            gb.Prod("QueryPrimary").Is(querySpecification, orderByClause, forClause);
-            gb.Prod("QueryPrimary").Is(querySpecification, orderByClause, offsetFetchClause, forClause);
-            gb.Prod("QueryPrimary").Is(querySpecification, optionClause);
-            gb.Prod("QueryPrimary").Is(querySpecification, orderByClause, optionClause);
-            gb.Prod("QueryPrimary").Is(querySpecification, orderByClause, offsetFetchClause, optionClause);
-            gb.Prod("QueryPrimary").Is(querySpecification, forClause, optionClause);
-            gb.Prod("QueryPrimary").Is(querySpecification, orderByClause, forClause, optionClause);
-            gb.Prod("QueryPrimary").Is(querySpecification, orderByClause, offsetFetchClause, forClause, optionClause);
-            gb.Prod("QueryPrimary").Is("(", queryExpression, ")");
-            gb.Prod("QueryPrimary").Is("(", queryExpression, ")", orderByClause);
-            gb.Prod("QueryPrimary").Is("(", queryExpression, ")", orderByClause, offsetFetchClause);
+            gb.Prod("QueryPrimary").Is(querySpecification, queryPrimaryTail);
+            gb.Prod("QueryPrimaryTail").Is(queryPrimaryOrderByAndOffsetOpt, queryPrimaryForOpt, queryPrimaryOptionOpt);
+            gb.Opt(queryPrimaryOrderByAndOffsetOpt, orderByClause);
+            gb.Prod("QueryPrimaryOrderByAndOffsetOpt").Is(orderByClause, offsetFetchClause);
+            gb.Opt(queryPrimaryForOpt, forClause);
+            gb.Opt(queryPrimaryOptionOpt, optionClause);
+            gb.Prod("QueryPrimary").Is("(", queryExpression, ")", parenQueryPrimaryOrderByAndOffsetOpt);
+            gb.Opt(parenQueryPrimaryOrderByAndOffsetOpt, orderByClause);
+            gb.Prod("ParenQueryPrimaryOrderByAndOffsetOpt").Is(orderByClause, offsetFetchClause);
 
             gb.Prod("ForClause").Is(kw("FOR"), kw("BROWSE"));
             gb.Prod("ForClause").Is(kw("FOR"), kw("JSON"), forJsonMode);
