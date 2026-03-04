@@ -230,6 +230,9 @@ namespace DSLKIT.GrammarExamples.MsSql
                 return newKeyword;
             }
 
+            // Resolve dangling-ELSE ambiguity explicitly: ELSE binds to nearest IF.
+            gb.OnShiftReduce("IfStatement", "ELSE", Resolve.Shift);
+
             var script = gb.NT("Script");
             var statementList = gb.NT("StatementList");
             var statementSeparator = gb.NT("StatementSeparator");
