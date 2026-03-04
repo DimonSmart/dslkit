@@ -230,8 +230,11 @@ namespace DSLKIT.GrammarExamples.MsSql
                 return newKeyword;
             }
 
-            // Resolve dangling-ELSE ambiguity explicitly: ELSE binds to nearest IF.
-            gb.OnShiftReduce("IfStatement", "ELSE", Resolve.Shift);
+            // Resolve known LALR(1) ambiguities explicitly.
+            gb.OnShiftReduce("IfStatement", "ELSE", Resolve.Shift); // dangling ELSE binds to nearest IF
+            gb.OnShiftReduce("QueryUnionExpression", "UNION", Resolve.Reduce);
+            gb.OnShiftReduce("QueryUnionExpression", "EXCEPT", Resolve.Reduce);
+            gb.OnShiftReduce("QueryIntersectExpression", "INTERSECT", Resolve.Reduce);
 
             var script = gb.NT("Script");
             var statementList = gb.NT("StatementList");
@@ -546,6 +549,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             var cteDefinitionList = gb.NT("CteDefinitionList");
             var cteDefinition = gb.NT("CteDefinition");
             var queryExpression = gb.NT("QueryExpression");
+            var queryUnionExpression = gb.NT("QueryUnionExpression");
+            var queryIntersectExpression = gb.NT("QueryIntersectExpression");
             var setOperator = gb.NT("SetOperator");
             var queryPrimary = gb.NT("QueryPrimary");
             var querySpecification = gb.NT("QuerySpecification");
@@ -573,8 +578,19 @@ namespace DSLKIT.GrammarExamples.MsSql
             var offsetFetchClause = gb.NT("OffsetFetchClause");
             var searchCondition = gb.NT("SearchCondition");
             var expression = gb.NT("Expression");
-            var binaryOperator = gb.NT("BinaryOperator");
-            var unaryOperator = gb.NT("UnaryOperator");
+            var logicalOrExpression = gb.NT("LogicalOrExpression");
+            var logicalAndExpression = gb.NT("LogicalAndExpression");
+            var logicalNotExpression = gb.NT("LogicalNotExpression");
+            var comparisonExpression = gb.NT("ComparisonExpression");
+            var comparisonOperator = gb.NT("ComparisonOperator");
+            var likeOperator = gb.NT("LikeOperator");
+            var inOperator = gb.NT("InOperator");
+            var isOperator = gb.NT("IsOperator");
+            var betweenOperator = gb.NT("BetweenOperator");
+            var additiveExpression = gb.NT("AdditiveExpression");
+            var multiplicativeExpression = gb.NT("MultiplicativeExpression");
+            var unaryExpression = gb.NT("UnaryExpression");
+            var collateExpression = gb.NT("CollateExpression");
             var primaryExpression = gb.NT("PrimaryExpression");
             var overClause = gb.NT("OverClause");
             var overSpec = gb.NT("OverSpec");
@@ -1766,12 +1782,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CteDefinition").Is(identifierTerm, kw("AS"), "(", queryExpression, ")");
             gb.Prod("CteDefinition").Is(identifierTerm, "(", identifierList, ")", kw("AS"), "(", queryExpression, ")");
 
-            gb.Prod("QueryExpression").Is(queryPrimary);
-            gb.Prod("QueryExpression").Is(queryExpression, setOperator, queryPrimary);
+            gb.Prod("QueryExpression").Is(queryUnionExpression);
+            gb.Prod("QueryUnionExpression").Is(queryIntersectExpression);
+            gb.Prod("QueryUnionExpression").Is(queryUnionExpression, setOperator, queryIntersectExpression);
+            gb.Prod("QueryIntersectExpression").Is(queryPrimary);
+            gb.Prod("QueryIntersectExpression").Is(queryIntersectExpression, kw("INTERSECT"), queryPrimary);
 
             gb.Prod("SetOperator").Is(kw("UNION"));
             gb.Prod("SetOperator").Is(kw("UNION"), kw("ALL"));
-            gb.Prod("SetOperator").Is(kw("INTERSECT"));
             gb.Prod("SetOperator").Is(kw("EXCEPT"));
 
             gb.Prod("QueryPrimary").Is(querySpecification);
@@ -1889,11 +1907,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("TableFactor").Is(qualifiedName, temporalClause);
             gb.Prod("TableFactor").Is(qualifiedName, temporalClause, kw("AS"), identifierTerm);
             gb.Prod("TableFactor").Is(qualifiedName, temporalClause, identifierTerm);
-            gb.Prod("TemporalClause").Is(forSystemTime, kw("AS"), kw("OF"), expression);
+            gb.Prod("TemporalClause").Is(forSystemTime, kw("AS"), kw("OF"), additiveExpression);
             gb.Prod("TemporalClause").Is(forSystemTime, kw("ALL"));
-            gb.Prod("TemporalClause").Is(forSystemTime, kw("BETWEEN"), expression, kw("AND"), expression);
-            gb.Prod("TemporalClause").Is(forSystemTime, kw("FROM"), expression, kw("TO"), expression);
-            gb.Prod("TemporalClause").Is(forSystemTime, kw("CONTAINED"), kw("IN"), "(", expression, ",", expression, ")");
+            gb.Prod("TemporalClause").Is(forSystemTime, kw("BETWEEN"), additiveExpression, kw("AND"), additiveExpression);
+            gb.Prod("TemporalClause").Is(forSystemTime, kw("FROM"), additiveExpression, kw("TO"), additiveExpression);
+            gb.Prod("TemporalClause").Is(forSystemTime, kw("CONTAINED"), kw("IN"), "(", additiveExpression, ",", additiveExpression, ")");
             gb.Prod("TableFactor").Is(variableReference);
             gb.Prod("TableFactor").Is(variableReference, kw("AS"), identifierTerm);
             gb.Prod("TableFactor").Is(variableReference, identifierTerm);
@@ -1975,40 +1993,61 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod("SearchCondition").Is(expression);
 
-            gb.Prod("Expression").Is(primaryExpression);
-            gb.Prod("Expression").Is(unaryOperator, expression);
-            gb.Prod("Expression").Is(expression, binaryOperator, primaryExpression);
-            gb.Prod("Expression").Is(expression, binaryOperator, unaryOperator, primaryExpression);
-            gb.Prod("Expression").Is(expression, kw("COLLATE"), identifierTerm);
+            gb.Prod("Expression").Is(logicalOrExpression);
 
-            gb.Prod("UnaryOperator").Is(kw("NOT"));
-            gb.Prod("UnaryOperator").Is("+");
-            gb.Prod("UnaryOperator").Is("-");
-            gb.Prod("UnaryOperator").Is("~");
+            gb.Prod("LogicalOrExpression").Is(logicalAndExpression);
+            gb.Prod("LogicalOrExpression").Is(logicalOrExpression, kw("OR"), logicalAndExpression);
 
-            gb.Prod("BinaryOperator").Is(kw("OR"));
-            gb.Prod("BinaryOperator").Is(kw("AND"));
-            gb.Prod("BinaryOperator").Is("=");
-            gb.Prod("BinaryOperator").Is("<>");
-            gb.Prod("BinaryOperator").Is("!=");
-            gb.Prod("BinaryOperator").Is("<");
-            gb.Prod("BinaryOperator").Is("<=");
-            gb.Prod("BinaryOperator").Is(">");
-            gb.Prod("BinaryOperator").Is(">=");
-            gb.Prod("BinaryOperator").Is(kw("LIKE"));
-            gb.Prod("BinaryOperator").Is(kw("NOT"), kw("LIKE"));
-            gb.Prod("BinaryOperator").Is(kw("IN"));
-            gb.Prod("BinaryOperator").Is(kw("NOT"), kw("IN"));
-            gb.Prod("BinaryOperator").Is(kw("IS"));
-            gb.Prod("BinaryOperator").Is(kw("IS"), kw("NOT"));
-            gb.Prod("BinaryOperator").Is(kw("BETWEEN"));
-            gb.Prod("BinaryOperator").Is(kw("NOT"), kw("BETWEEN"));
-            gb.Prod("BinaryOperator").Is("+");
-            gb.Prod("BinaryOperator").Is("-");
-            gb.Prod("BinaryOperator").Is("*");
-            gb.Prod("BinaryOperator").Is("/");
-            gb.Prod("BinaryOperator").Is("%");
-            gb.Prod("BinaryOperator").Is("&");
+            gb.Prod("LogicalAndExpression").Is(logicalNotExpression);
+            gb.Prod("LogicalAndExpression").Is(logicalAndExpression, kw("AND"), logicalNotExpression);
+
+            gb.Prod("LogicalNotExpression").Is(comparisonExpression);
+            gb.Prod("LogicalNotExpression").Is(kw("NOT"), logicalNotExpression);
+
+            gb.Prod("ComparisonExpression").Is(additiveExpression);
+            gb.Prod("ComparisonExpression").Is(additiveExpression, comparisonOperator, additiveExpression);
+            gb.Prod("ComparisonExpression").Is(additiveExpression, likeOperator, additiveExpression);
+            gb.Prod("ComparisonExpression").Is(additiveExpression, inOperator, additiveExpression);
+            gb.Prod("ComparisonExpression").Is(additiveExpression, isOperator, additiveExpression);
+            gb.Prod("ComparisonExpression").Is(additiveExpression, betweenOperator, additiveExpression, kw("AND"), additiveExpression);
+
+            gb.Prod("ComparisonOperator").Is("=");
+            gb.Prod("ComparisonOperator").Is("<>");
+            gb.Prod("ComparisonOperator").Is("!=");
+            gb.Prod("ComparisonOperator").Is("<");
+            gb.Prod("ComparisonOperator").Is("<=");
+            gb.Prod("ComparisonOperator").Is(">");
+            gb.Prod("ComparisonOperator").Is(">=");
+
+            gb.Prod("LikeOperator").Is(kw("LIKE"));
+            gb.Prod("LikeOperator").Is(kw("NOT"), kw("LIKE"));
+
+            gb.Prod("InOperator").Is(kw("IN"));
+            gb.Prod("InOperator").Is(kw("NOT"), kw("IN"));
+
+            gb.Prod("IsOperator").Is(kw("IS"));
+            gb.Prod("IsOperator").Is(kw("IS"), kw("NOT"));
+
+            gb.Prod("BetweenOperator").Is(kw("BETWEEN"));
+            gb.Prod("BetweenOperator").Is(kw("NOT"), kw("BETWEEN"));
+
+            gb.Prod("AdditiveExpression").Is(multiplicativeExpression);
+            gb.Prod("AdditiveExpression").Is(additiveExpression, "+", multiplicativeExpression);
+            gb.Prod("AdditiveExpression").Is(additiveExpression, "-", multiplicativeExpression);
+            gb.Prod("AdditiveExpression").Is(additiveExpression, "&", multiplicativeExpression);
+
+            gb.Prod("MultiplicativeExpression").Is(unaryExpression);
+            gb.Prod("MultiplicativeExpression").Is(multiplicativeExpression, "*", unaryExpression);
+            gb.Prod("MultiplicativeExpression").Is(multiplicativeExpression, "/", unaryExpression);
+            gb.Prod("MultiplicativeExpression").Is(multiplicativeExpression, "%", unaryExpression);
+
+            gb.Prod("UnaryExpression").Is(collateExpression);
+            gb.Prod("UnaryExpression").Is("+", unaryExpression);
+            gb.Prod("UnaryExpression").Is("-", unaryExpression);
+            gb.Prod("UnaryExpression").Is("~", unaryExpression);
+
+            gb.Prod("CollateExpression").Is(primaryExpression);
+            gb.Prod("CollateExpression").Is(collateExpression, kw("COLLATE"), identifierTerm);
 
             gb.Prod("PrimaryExpression").Is(literal);
             gb.Prod("PrimaryExpression").Is(unicodeStringLiteral);

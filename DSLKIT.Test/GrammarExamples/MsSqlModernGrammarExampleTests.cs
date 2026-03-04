@@ -671,6 +671,38 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseSetOperators_WithIntersectMix()
+        {
+            const string script = """
+                SELECT 1 AS X
+                UNION
+                SELECT 2 AS X
+                INTERSECT
+                SELECT 2 AS X;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseWhere_WithLogicalAndArithmeticPrecedenceMix()
+        {
+            const string script = """
+                SELECT *
+                FROM dbo.T
+                WHERE A = 1 OR B = 2 AND C + 3 * D > 10;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseIfWithElse_InsideProcBody()
         {
             // Simple IF DELETE ELSE TRUNCATE (was failing before epsilon fix, should now work)
