@@ -40,7 +40,6 @@ jobs:
       run: dotnet workload install wasm-tools
 
     - name: Update base href in index.html
-      if: false
       run: sed -i 's|<base href="/" />|<base href="/dslkit/" />|g' DSLKIT.Visualizer.App/wwwroot/index.html
 
     - name: Publish
