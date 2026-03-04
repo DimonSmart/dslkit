@@ -12,7 +12,13 @@ namespace DSLKIT.Parser
 
         public TranslationTable(IReadOnlyDictionary<KeyValuePair<ITerm, RuleSet>, RuleSet> table)
         {
-            _table = new Dictionary<KeyValuePair<ITerm, RuleSet>, RuleSet>(table);
+            _table = new Dictionary<KeyValuePair<ITerm, RuleSet>, RuleSet>(
+                table.Count,
+                ParserKeyComparers.TermBySet);
+            foreach (var record in table)
+            {
+                _table[record.Key] = record.Value;
+            }
         }
 
         public IReadOnlyDictionary<KeyValuePair<ITerm, RuleSet>, RuleSet> GetAllRecords()

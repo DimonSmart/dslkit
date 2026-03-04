@@ -10,7 +10,9 @@ namespace DSLKIT.Parser
         {
             var sets = ruleSets.ToList();
             var recordCapacity = sets.Sum(set => set.Arrows.Count);
-            var dict = new Dictionary<KeyValuePair<ITerm, RuleSet>, RuleSet>(recordCapacity);
+            var dict = new Dictionary<KeyValuePair<ITerm, RuleSet>, RuleSet>(
+                recordCapacity,
+                ParserKeyComparers.TermBySet);
             foreach (var set in sets)
             {
                 foreach (var arrow in set.Arrows)

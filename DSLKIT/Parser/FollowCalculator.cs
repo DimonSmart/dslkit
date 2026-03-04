@@ -25,6 +25,7 @@ namespace DSLKIT.Parser
         private readonly IEofTerminal _eof;
         private readonly IEnumerable<ExProduction> _exProductions;
         private readonly IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> _firsts;
+        private readonly Dictionary<IExTerm, FirstInfo> _firstInfoByTerm = [];
 
         private readonly Dictionary<IExNonTerminal, HashSet<ITerm>> _follow =
             [];
@@ -64,11 +65,13 @@ namespace DSLKIT.Parser
                         {
                             var termD = rule[i];
                             var termB = rule[i + 1];
-                            if (termD is IExNonTerminal exNonTerminalD)
+                            if (termD is not IExNonTerminal exNonTerminalD)
                             {
-                                var firstsOfB = GetFirsts(termB).Where(f => !(f is EmptyTerm)).ToList();
-                                updated |= AddFollow(exNonTerminalD, firstsOfB);
+                                continue;
                             }
+
+                            var firstInfo = GetFirstInfo(termB);
+                            updated |= AddFollow(exNonTerminalD, firstInfo.NonEmptyTerms);
                         }
 
                         // Add back cycle with epsilon checking
@@ -79,8 +82,8 @@ namespace DSLKIT.Parser
                             var termD = rule[i];
                             var termB = rule[i + 1];
 
-                            var firstsOfBHasEpsilon = GetFirsts(termB).Any(f => f is EmptyTerm);
-                            if (firstsOfBHasEpsilon && termD is IExNonTerminal exNonTerminalD)
+                            var firstInfo = GetFirstInfo(termB);
+                            if (firstInfo.HasEpsilon && termD is IExNonTerminal exNonTerminalD)
                             {
                                 updated |= AddFollow(exNonTerminalD, GetFollow(r));
                             }
@@ -143,6 +146,44 @@ namespace DSLKIT.Parser
                 default:
                     throw new InvalidOperationException();
             }
+        }
+
+        private FirstInfo GetFirstInfo(IExTerm term)
+        {
+            if (_firstInfoByTerm.TryGetValue(term, out var firstInfo))
+            {
+                return firstInfo;
+            }
+
+            var firsts = GetFirsts(term);
+            var nonEmptyTerms = new List<ITerm>(firsts.Count);
+            var hasEpsilon = false;
+            foreach (var first in firsts)
+            {
+                if (first is EmptyTerm)
+                {
+                    hasEpsilon = true;
+                    continue;
+                }
+
+                nonEmptyTerms.Add(first);
+            }
+
+            firstInfo = new FirstInfo(nonEmptyTerms, hasEpsilon);
+            _firstInfoByTerm[term] = firstInfo;
+            return firstInfo;
+        }
+
+        private readonly struct FirstInfo
+        {
+            public FirstInfo(IReadOnlyCollection<ITerm> nonEmptyTerms, bool hasEpsilon)
+            {
+                NonEmptyTerms = nonEmptyTerms;
+                HasEpsilon = hasEpsilon;
+            }
+
+            public IReadOnlyCollection<ITerm> NonEmptyTerms { get; }
+            public bool HasEpsilon { get; }
         }
     }
 }

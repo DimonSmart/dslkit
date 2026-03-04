@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using DSLKIT.Base;
 using DSLKIT.NonTerminals;
 using DSLKIT.Parser.ExtendedGrammar;
@@ -63,62 +65,62 @@ namespace DSLKIT.Parser
 
         private void ReductionsSubStep1()
         {
-            var rule2FollowSet = new Dictionary<ExProduction, IReadOnlyCollection<ITerm>>(_exProductions.Count);
-            foreach (var exProduction in _exProductions)
+            if (OnReductionStep0 != null)
             {
-                rule2FollowSet[exProduction] = _follows[exProduction.ExLeftNonTerminal];
+                var ruleToFollowSet = new Dictionary<ExProduction, IReadOnlyCollection<ITerm>>(_exProductions.Count);
+                foreach (var exProduction in _exProductions)
+                {
+                    ruleToFollowSet[exProduction] = _follows[exProduction.ExLeftNonTerminal];
+                }
+
+                OnReductionStep0(ruleToFollowSet);
             }
 
-            OnReductionStep0?.Invoke(rule2FollowSet);
-
-            _mergedRows = new List<MergedRow>(_exProductions.Count);
-            var prods = new List<ExProduction>(_exProductions);
-            do
+            var mergeGroups = new Dictionary<ReductionMergeKey, ReductionMergeAccumulator>(_exProductions.Count);
+            var orderedGroups = new List<ReductionMergeAccumulator>(_exProductions.Count);
+            foreach (var exProduction in _exProductions)
             {
-                var exProduction = prods.FirstOrDefault();
-                if (exProduction == null)
-                {
-                    break;
-                }
-
-                var isEpsilon = exProduction.ExProductionDefinition[^1].Term is IEmptyTerm;
-                var group = prods
-                    .Where(p =>
-                        p.ExLeftNonTerminal.NonTerminal == exProduction.ExLeftNonTerminal.NonTerminal &&
-                        // p.ExLeftNonTerminal.To == exProduction.ExLeftNonTerminal.To &&
-                        exProduction.ExProductionDefinition[^1].Term == p.ExProductionDefinition[^1].Term &&
-                        (isEpsilon
-                            ? exProduction.ExProductionDefinition[^1].From == p.ExProductionDefinition[^1].From
-                            : exProduction.ExProductionDefinition[^1].To == p.ExProductionDefinition[^1].To)).ToList();
-                // For epsilon productions (X → Empty), the reduce action must fire in the predecessor state
-                // (where "• Empty" appears), not the successor state (which the parser never reaches).
+                var finalTerm = exProduction.ExProductionDefinition[^1];
+                var isEpsilon = finalTerm.Term is IEmptyTerm;
                 var finalSet = isEpsilon
-                    ? group.First().ExProductionDefinition[^1].From
-                    : (group.First().ExProductionDefinition[^1].To
-                        ?? throw new System.InvalidOperationException("Final set cannot be null when building merged reduction rows."));
-                // FOLLOW is a set by definition. When merged rows share the same terminal in FOLLOW,
-                // keep one copy to avoid duplicate reduction attempts and noisy false conflict logs.
-                var mergedFollowSet = group
-                    .SelectMany(p => rule2FollowSet[p])
-                    .Distinct()
-                    .ToList();
+                    ? finalTerm.From
+                    : finalTerm.To ??
+                    throw new InvalidOperationException("Final set cannot be null when building merged reduction rows.");
 
-                var mergedRow = new MergedRow
+                var key = new ReductionMergeKey(
+                    exProduction.ExLeftNonTerminal.NonTerminal,
+                    finalTerm.Term,
+                    finalSet,
+                    isEpsilon);
+
+                if (!mergeGroups.TryGetValue(key, out var group))
                 {
-                    FinalSet = finalSet,
-                    IsEpsilon = isEpsilon,
-                    Production = new Production(group.First().ExLeftNonTerminal.NonTerminal, group.First().Production.ProductionDefinition),
-                    FollowSet = mergedFollowSet,
-                    PreMergedRules = group
-                };
-
-                _mergedRows.Add(mergedRow);
-
-                foreach (var g in group)
-                {
-                    prods.Remove(g);
+                    group = new ReductionMergeAccumulator(exProduction, finalSet, isEpsilon);
+                    mergeGroups[key] = group;
+                    orderedGroups.Add(group);
                 }
-            } while (true);
+
+                group.PreMergedRules.Add(exProduction);
+                foreach (var followTerm in _follows[exProduction.ExLeftNonTerminal])
+                {
+                    group.FollowSet.Add(followTerm);
+                }
+            }
+
+            _mergedRows = new List<MergedRow>(orderedGroups.Count);
+            foreach (var group in orderedGroups)
+            {
+                _mergedRows.Add(new MergedRow
+                {
+                    FinalSet = group.FinalSet,
+                    IsEpsilon = group.IsEpsilon,
+                    Production = new Production(
+                        group.FirstProduction.ExLeftNonTerminal.NonTerminal,
+                        group.FirstProduction.Production.ProductionDefinition),
+                    FollowSet = group.FollowSet.ToList(),
+                    PreMergedRules = group.PreMergedRules
+                });
+            }
 
             OnReductionStep1?.Invoke(_mergedRows);
         }
@@ -201,7 +203,7 @@ namespace DSLKIT.Parser
                     {
                         var key = new KeyValuePair<ITerm, RuleSet>(terminal, mergedRow.FinalSet);
 
-                        if (actionAndGotoTable.ActionTable.TryGetValue(key, out var existingAction))
+                        if (actionAndGotoTable.MutableActionTable.TryGetValue(key, out var existingAction))
                         {
                             if (existingAction is ShiftAction)
                             {
@@ -317,6 +319,62 @@ namespace DSLKIT.Parser
             return $"{nonTerminalName.Trim()}\u001f{lookaheadTerminalName.Trim()}";
         }
 
+        private readonly struct ReductionMergeKey : IEquatable<ReductionMergeKey>
+        {
+            private readonly INonTerminal _leftNonTerminal;
+            private readonly ITerm _finalTerm;
+            private readonly RuleSet _finalSet;
+            private readonly bool _isEpsilon;
+
+            public ReductionMergeKey(INonTerminal leftNonTerminal, ITerm finalTerm, RuleSet finalSet, bool isEpsilon)
+            {
+                _leftNonTerminal = leftNonTerminal;
+                _finalTerm = finalTerm;
+                _finalSet = finalSet;
+                _isEpsilon = isEpsilon;
+            }
+
+            public bool Equals(ReductionMergeKey other)
+            {
+                return ReferenceEquals(_leftNonTerminal, other._leftNonTerminal) &&
+                    ReferenceEquals(_finalTerm, other._finalTerm) &&
+                    ReferenceEquals(_finalSet, other._finalSet) &&
+                    _isEpsilon == other._isEpsilon;
+            }
+
+            public override bool Equals(object? obj)
+            {
+                return obj is ReductionMergeKey other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hash = RuntimeHelpers.GetHashCode(_leftNonTerminal);
+                    hash = (hash * 397) ^ RuntimeHelpers.GetHashCode(_finalTerm);
+                    hash = (hash * 397) ^ RuntimeHelpers.GetHashCode(_finalSet);
+                    return (hash * 397) ^ (_isEpsilon ? 1 : 0);
+                }
+            }
+        }
+
+        private sealed class ReductionMergeAccumulator
+        {
+            public ReductionMergeAccumulator(ExProduction firstProduction, RuleSet finalSet, bool isEpsilon)
+            {
+                FirstProduction = firstProduction;
+                FinalSet = finalSet;
+                IsEpsilon = isEpsilon;
+            }
+
+            public ExProduction FirstProduction { get; }
+            public RuleSet FinalSet { get; }
+            public bool IsEpsilon { get; }
+            public List<ExProduction> PreMergedRules { get; } = [];
+            public HashSet<ITerm> FollowSet { get; } = [];
+        }
+
         public class MergedRow
         {
             public RuleSet FinalSet { get; init; } = null!;
@@ -327,3 +385,4 @@ namespace DSLKIT.Parser
         }
     }
 }
+

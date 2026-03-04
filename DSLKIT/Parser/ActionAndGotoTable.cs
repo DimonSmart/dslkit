@@ -9,8 +9,10 @@ namespace DSLKIT.Parser
     public class ActionAndGotoTable
     {
         private readonly INonTerminal _root;
-        private readonly Dictionary<KeyValuePair<ITerm, RuleSet>, IActionItem> _actionTable = [];
-        private readonly Dictionary<KeyValuePair<INonTerminal, RuleSet>, RuleSet> _gotoTable = [];
+        private readonly Dictionary<KeyValuePair<ITerm, RuleSet>, IActionItem> _actionTable =
+            new(ParserKeyComparers.TermBySet);
+        private readonly Dictionary<KeyValuePair<INonTerminal, RuleSet>, RuleSet> _gotoTable =
+            new(ParserKeyComparers.NonTerminalBySet);
 
         public IReadOnlyDictionary<KeyValuePair<ITerm, RuleSet>, IActionItem> ActionTable => _actionTable;
         public IReadOnlyDictionary<KeyValuePair<INonTerminal, RuleSet>, RuleSet> GotoTable => _gotoTable;

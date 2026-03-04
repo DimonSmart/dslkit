@@ -44,73 +44,58 @@ namespace DSLKIT.Parser
             var startSet = new RuleSet(_sets.Count, new Rule(startProduction));
             _sets.Add(startSet);
             RegisterSet(startSet);
-
             FillRuleSet(startSet);
-            bool changes;
-            do
+            var pendingSets = new Queue<RuleSet>();
+            pendingSets.Enqueue(startSet);
+            while (pendingSets.Count > 0)
             {
-                changes = false;
-                changes |= TryFormNewSets();
-                foreach (var set in _sets)
-                {
-                    changes |= FillRuleSet(set);
-                }
-            } while (changes);
+                BuildTransitionsForSet(pendingSets.Dequeue(), pendingSets);
+            }
 
             return _sets;
         }
 
-        private bool TryFormNewSets()
+        private void BuildTransitionsForSet(RuleSet set, Queue<RuleSet> pendingSets)
         {
-            var anyChanges = false;
-
-            var setCount = _sets.Count;
-            for (var setIndex = 0; setIndex < setCount; setIndex++)
+            var groupedByNextTerm = new Dictionary<ITerm, List<Rule>>(Math.Clamp(set.Rules.Count, 4, 32));
+            foreach (var rule in set.Rules)
             {
-                var set = _sets[setIndex];
-                var groupedByNextTerm = new Dictionary<ITerm, List<Rule>>(Math.Clamp(set.Rules.Count, 4, 32));
-
-                foreach (var rule in set.Rules)
+                if (rule.IsFinished)
                 {
-                    if (rule.IsFinished)
-                    {
-                        continue;
-                    }
-
-                    if (!groupedByNextTerm.TryGetValue(rule.NextTerm, out var group))
-                    {
-                        group = [];
-                        groupedByNextTerm[rule.NextTerm] = group;
-                    }
-
-                    group.Add(rule);
+                    continue;
                 }
 
-                foreach (var group in groupedByNextTerm)
+                if (!groupedByNextTerm.TryGetValue(rule.NextTerm, out var group))
                 {
-                    var newRules = new List<Rule>(group.Value.Count);
-                    foreach (var rule in group.Value)
-                    {
-                        newRules.Add(rule.MoveDot());
-                    }
-
-                    var existsSet = GetSetBySetDefinitionRules(newRules);
-                    if (existsSet != null)
-                    {
-                        set.SetArrow(group.Key, existsSet);
-                        continue;
-                    }
-
-                    var newRuleSet = new RuleSet(_sets.Count, newRules);
-                    _sets.Add(newRuleSet);
-                    RegisterSet(newRuleSet);
-                    set.SetArrow(group.Key, newRuleSet);
-
-                    anyChanges = true;
+                    group = [];
+                    groupedByNextTerm[rule.NextTerm] = group;
                 }
+
+                group.Add(rule);
             }
 
-            return anyChanges;
+            foreach (var group in groupedByNextTerm)
+            {
+                var newRules = new List<Rule>(group.Value.Count);
+                foreach (var groupedRule in group.Value)
+                {
+                    newRules.Add(groupedRule.MoveDot());
+                }
+
+                var existingSet = GetSetBySetDefinitionRules(newRules);
+                if (existingSet != null)
+                {
+                    set.SetArrow(group.Key, existingSet);
+                    continue;
+                }
+
+                var newRuleSet = new RuleSet(_sets.Count, newRules);
+                _sets.Add(newRuleSet);
+                RegisterSet(newRuleSet);
+                FillRuleSet(newRuleSet);
+                set.SetArrow(group.Key, newRuleSet);
+                pendingSets.Enqueue(newRuleSet);
+            }
         }
 
         private RuleSet? GetSetBySetDefinitionRules(IReadOnlyCollection<Rule> newRules)
@@ -165,9 +150,15 @@ namespace DSLKIT.Parser
             IReadOnlyList<Production> productions)
         {
             var result = new Dictionary<INonTerminal, IReadOnlyList<Production>>(Math.Max(4, productions.Count));
-            foreach (var grouping in productions.GroupBy(production => production.LeftNonTerminal))
+            foreach (var production in productions)
             {
-                result[grouping.Key] = grouping.ToList();
+                if (!result.TryGetValue(production.LeftNonTerminal, out var group))
+                {
+                    result[production.LeftNonTerminal] = new List<Production> { production };
+                    continue;
+                }
+
+                ((List<Production>)group).Add(production);
             }
 
             return result;
