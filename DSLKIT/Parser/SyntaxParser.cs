@@ -1,17 +1,20 @@
-using DSLKIT.Tokens;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using DSLKIT.Tokens;
 
 namespace DSLKIT.Parser
 {
     public class SyntaxParser
     {
-        protected readonly IGrammar _grammar;
+        private static readonly ConditionalWeakTable<IGrammar, IntParserTables> TablesCache = new();
+        private readonly IGrammar _grammar;
+        private readonly IntParserTables _tables;
 
         public SyntaxParser(IGrammar grammar)
         {
             _grammar = grammar;
+            _tables = TablesCache.GetValue(grammar, IntParserTables.Create);
         }
 
         public ParseResult Parse(IEnumerable<IToken> tokens)
@@ -19,15 +22,14 @@ namespace DSLKIT.Parser
             var tokenList = tokens.ToList();
             var inputPosition = 0;
             var output = new List<int>();
-            var stateStack = new Stack<RuleSet>();
+            var stateStack = new Stack<int>();
             var nodeStack = new Stack<ParseTreeNode>();
 
-            var initialState = _grammar.RuleSets.First(rs => rs.SetNumber == 0);
-            stateStack.Push(initialState);
+            stateStack.Push(_tables.StartStateId);
 
             while (true)
             {
-                var currentState = stateStack.Peek();
+                var currentStateId = stateStack.Peek();
                 var currentToken = GetCurrentToken(tokenList, inputPosition);
                 if (currentToken.Terminal == null)
                 {
@@ -38,75 +40,56 @@ namespace DSLKIT.Parser
                     };
                 }
 
-                if (!_grammar.ActionAndGotoTable.TryGetActionValue(currentToken.Terminal, currentState, out var action))
+                if (!_tables.TryGetTerminalId(currentToken.Terminal, out var terminalId))
                 {
-                    var terminalName = currentToken.Terminal.Name;
-                    return new ParseResult
-                    {
-                        Error = new ParseErrorDescription($"No action found for terminal '{terminalName}' in state {currentState.SetNumber}", currentToken.Position),
-                        Productions = output.ToArray()
-                    };
+                    return BuildNoActionResult(currentToken, currentStateId, output);
                 }
 
-                switch (action)
+                var encodedAction = _tables.ActionTable.GetActionCode(currentStateId, terminalId);
+                if (encodedAction == IntParserActionEncoding.Error)
                 {
-                    case ShiftAction shiftAction:
-                        ProcessShift(shiftAction, currentToken, ref inputPosition, stateStack, nodeStack);
-                        break;
-
-                    case ReduceAction reduceAction:
-                        ProcessReduce(reduceAction, currentToken, stateStack, nodeStack, output);
-                        break;
-
-                    case AcceptAction _:
-                        return ProcessAccept(nodeStack, output);
-
-                    default:
-                        return new ParseResult
-                        {
-                            Error = new ParseErrorDescription($"Unknown action type: {action.GetType().Name}", currentToken.Position),
-                            Productions = output.ToArray()
-                        };
+                    return BuildNoActionResult(currentToken, currentStateId, output);
                 }
+
+                if (encodedAction == IntParserActionEncoding.Accept)
+                {
+                    return ProcessAccept(nodeStack, output);
+                }
+
+                if (encodedAction > IntParserActionEncoding.Error)
+                {
+                    nodeStack.Push(new TerminalNode(currentToken));
+                    stateStack.Push(IntParserActionEncoding.DecodeShiftStateId(encodedAction));
+                    inputPosition++;
+                    continue;
+                }
+
+                var productionId = IntParserActionEncoding.DecodeReduceProductionId(encodedAction);
+                var production = _tables.GetProduction(productionId);
+                output.Add(productionId);
+
+                var popCount = _tables.GetPopLength(productionId);
+                var children = new List<ParseTreeNode>();
+                for (var i = 0; i < popCount; i++)
+                {
+                    stateStack.Pop();
+                    children.Insert(0, nodeStack.Pop());
+                }
+
+                var parent = new NonTerminalNode(production.LeftNonTerminal, production, children);
+                nodeStack.Push(parent);
+
+                var newCurrentStateId = stateStack.Peek();
+                var leftNonTerminalId = _tables.GetLeftNonTerminalId(productionId);
+                var gotoStateId = _tables.GotoTable.GetGotoStateId(newCurrentStateId, leftNonTerminalId);
+                if (gotoStateId < 0)
+                {
+                    throw new System.InvalidOperationException(
+                        $"No goto found for non-terminal '{production.LeftNonTerminal.Name}' in state {_tables.GetStateSetNumber(newCurrentStateId)}");
+                }
+
+                stateStack.Push(gotoStateId);
             }
-        }
-
-        private void ProcessShift(ShiftAction shiftAction, IToken currentToken, ref int inputPosition,
-                                Stack<RuleSet> stateStack, Stack<ParseTreeNode> nodeStack)
-        {
-            nodeStack.Push(new TerminalNode(currentToken));
-            stateStack.Push(shiftAction.RuleSet);
-            inputPosition++;
-        }
-
-        private void ProcessReduce(ReduceAction reduceAction, IToken currentToken,
-                                 Stack<RuleSet> stateStack, Stack<ParseTreeNode> nodeStack, List<int> output)
-        {
-            var production = reduceAction.Production;
-            var productionNumber = GetProductionNumber(production);
-            output.Add(productionNumber);
-
-            var popCount = reduceAction.PopLength;
-
-            var children = new List<ParseTreeNode>();
-            for (int i = 0; i < popCount; i++)
-            {
-                stateStack.Pop();
-                children.Insert(0, nodeStack.Pop());
-            }
-
-            var parent = new NonTerminalNode(production.LeftNonTerminal, production, children);
-            nodeStack.Push(parent);
-
-            var newCurrentState = stateStack.Peek();
-            var leftNonTerminal = production.LeftNonTerminal;
-
-            if (!_grammar.ActionAndGotoTable.TryGetGotoValue(leftNonTerminal, newCurrentState, out var gotoState))
-            {
-                throw new System.InvalidOperationException($"No goto found for non-terminal '{leftNonTerminal.Name}' in state {newCurrentState.SetNumber}");
-            }
-
-            stateStack.Push(gotoState);
         }
 
         private ParseResult ProcessAccept(Stack<ParseTreeNode> nodeStack, List<int> output)
@@ -124,7 +107,18 @@ namespace DSLKIT.Parser
             return result;
         }
 
-        protected IToken GetCurrentToken(IList<IToken> tokens, int position)
+        private ParseResult BuildNoActionResult(IToken currentToken, int currentStateId, List<int> output)
+        {
+            return new ParseResult
+            {
+                Error = new ParseErrorDescription(
+                    $"No action found for terminal '{currentToken.Terminal?.Name}' in state {_tables.GetStateSetNumber(currentStateId)}",
+                    currentToken.Position),
+                Productions = output.ToArray()
+            };
+        }
+
+        private IToken GetCurrentToken(IList<IToken> tokens, int position)
         {
             if (position >= tokens.Count)
             {
@@ -141,14 +135,6 @@ namespace DSLKIT.Parser
             }
 
             return tokens[position];
-        }
-
-        protected int GetProductionNumber(Production production)
-        {
-            var productions = _grammar.Productions.ToList();
-            var index = productions.IndexOf(production);
-            Debug.Assert(index != -1, "Production not found in grammar.Productions. This should not happen in a correct grammar.");
-            return index;
         }
     }
 }

@@ -10,21 +10,30 @@
 
         <div class="dsl-sql-header-actions">
             <label class="dsl-sql-autoformat-toggle" for="sql-auto-format">
-                <input id="sql-auto-format" class="form-check-input mt-0" type="checkbox" @bind="autoFormat" />
+                <input id="sql-auto-format" class="form-check-input mt-0" type="checkbox" @bind="autoFormat" disabled="@isFormatterInitializing" />
                 <span>Auto-format input</span>
             </label>
 
             <button class="btn btn-primary btn-sm"
-                    @onclick="OnFormatRequestedAsync">
+                    @onclick="OnFormatRequestedAsync"
+                    disabled="@isFormatterInitializing">
                 Format SQL
             </button>
         </div>
     </div>
 
-    <MudSplitPanel Class="dsl-sql-workspace-split"
-                   FirstPanelInitialSize="420"
-                   MinPanelSize="290"
-                   PanelGap="10">
+    @if (isFormatterInitializing)
+    {
+        <div class="alert alert-info py-2 mb-3" role="status">
+            Loading SQL grammar and initializing formatter. First startup may take several seconds.
+        </div>
+    }
+
+    <fieldset class="m-0 p-0 border-0" disabled="@isFormatterInitializing">
+        <MudSplitPanel Class="dsl-sql-workspace-split"
+                       FirstPanelInitialSize="420"
+                       MinPanelSize="290"
+                       PanelGap="10">
         <FirstPanel>
             <div class="dsl-sql-workspace-panel">
                 <section class="card dsl-sql-controls-panel">
@@ -555,7 +564,13 @@
                         <span class="text-muted small">Always visible</span>
                     </div>
                     <div class="card-body d-flex flex-column dsl-sql-output-body">
-                        @if (!string.IsNullOrWhiteSpace(formattingError))
+                        @if (isFormatterInitializing)
+                        {
+                            <div class="alert alert-info dsl-sql-error" role="status">
+                                Preparing formatter...
+                            </div>
+                        }
+                        else if (!string.IsNullOrWhiteSpace(formattingError))
                         {
                             <div class="alert alert-danger dsl-sql-error" role="alert">
                                 @formattingError
@@ -574,7 +589,8 @@
                 </section>
             </div>
         </SecondPanel>
-    </MudSplitPanel>
+        </MudSplitPanel>
+    </fieldset>
 </section>
 
 @code {
@@ -665,14 +681,16 @@ create proc p as begin select case when @flag=1 then 'Y' else 'N' end as v end;"
     private int inlineInListMaxItems;
     private int inlineInListMaxLineLength = 120;
     private bool resizeEditorsPending = true;
-
-    protected override void OnInitialized()
-    {
-        FormatCurrentSql();
-    }
+    private bool isFormatterInitializing;
+    private bool isFormatterInitialized;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+        {
+            await InitializeFormatterAsync();
+        }
+
         if (!firstRender && !resizeEditorsPending)
         {
             return;
@@ -684,6 +702,27 @@ create proc p as begin select case when @flag=1 then 'Y' else 'N' end as v end;"
             "sql-source-input",
             "sql-formatted-output",
             170);
+    }
+
+    private async Task InitializeFormatterAsync()
+    {
+        if (isFormatterInitialized || isFormatterInitializing)
+        {
+            return;
+        }
+
+        isFormatterInitializing = true;
+        formattingError = null;
+        formattedSql = string.Empty;
+        await InvokeAsync(StateHasChanged);
+
+        await Task.Yield();
+        FormatCurrentSql();
+
+        isFormatterInitializing = false;
+        isFormatterInitialized = true;
+        resizeEditorsPending = true;
+        await InvokeAsync(StateHasChanged);
     }
 
     private string GetPaneTabClass(LeftPaneTab tab) =>
@@ -711,6 +750,11 @@ create proc p as begin select case when @flag=1 then 'Y' else 'N' end as v end;"
 
     private Task OnSourceInputAsync(ChangeEventArgs args)
     {
+        if (isFormatterInitializing)
+        {
+            return Task.CompletedTask;
+        }
+
         sourceSql = args.Value?.ToString() ?? string.Empty;
         if (autoFormat)
         {
@@ -726,12 +770,22 @@ create proc p as begin select case when @flag=1 then 'Y' else 'N' end as v end;"
 
     private Task OnOptionsChangedAsync(ChangeEventArgs _)
     {
+        if (isFormatterInitializing)
+        {
+            return Task.CompletedTask;
+        }
+
         FormatCurrentSql();
         return Task.CompletedTask;
     }
 
     private Task OnLoadDemoRequestedAsync()
     {
+        if (isFormatterInitializing)
+        {
+            return Task.CompletedTask;
+        }
+
         sourceSql = DemoSql;
         FormatCurrentSql();
         return Task.CompletedTask;
@@ -739,12 +793,22 @@ create proc p as begin select case when @flag=1 then 'Y' else 'N' end as v end;"
 
     private Task OnFormatRequestedAsync()
     {
+        if (isFormatterInitializing)
+        {
+            return Task.CompletedTask;
+        }
+
         FormatCurrentSql();
         return Task.CompletedTask;
     }
 
     private Task OnResetOptionsRequestedAsync()
     {
+        if (isFormatterInitializing)
+        {
+            return Task.CompletedTask;
+        }
+
         ApplyDefaultOptions();
         FormatCurrentSql();
         return Task.CompletedTask;

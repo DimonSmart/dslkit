@@ -24,6 +24,12 @@ namespace DSLKIT.Test.GrammarExamples
         {
             var repositoryRoot = ResolveRepositoryRoot();
             var sqlSamplesRoot = Path.Combine(repositoryRoot, "sql-dataset");
+            if (!Directory.Exists(sqlSamplesRoot))
+            {
+                testOutput.WriteLine($"sql-dataset not found at '{sqlSamplesRoot}'. Skipping dataset-dependent test.");
+                return;
+            }
+
             var sqlFiles = Directory
                 .EnumerateFiles(sqlSamplesRoot, "*.sql", SearchOption.AllDirectories)
                 .OrderBy(filePath => filePath, StringComparer.OrdinalIgnoreCase)
@@ -181,8 +187,7 @@ namespace DSLKIT.Test.GrammarExamples
                 while (current != null)
                 {
                     var hasSolution = File.Exists(Path.Combine(current.FullName, "DSLKIT.sln"));
-                    var hasSamples = Directory.Exists(Path.Combine(current.FullName, "sql-dataset"));
-                    if (hasSolution && hasSamples)
+                    if (hasSolution)
                     {
                         return current.FullName;
                     }
@@ -191,7 +196,7 @@ namespace DSLKIT.Test.GrammarExamples
                 }
             }
 
-            throw new DirectoryNotFoundException("Could not locate repository root with DSLKIT.sln and sql-dataset folder.");
+            throw new DirectoryNotFoundException("Could not locate repository root with DSLKIT.sln.");
         }
 
         private static string NormalizeErrorMessage(string message)

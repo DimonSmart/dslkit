@@ -1,0 +1,61 @@
+name: Deploy Blazor Visualizer to GitHub Pages
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - DSLKIT.Visualizer.App/**
+      - DSLKIT.Visualizer.Abstractions/**
+      - DSLKIT/**
+      - Examples/**
+      - .github/workflows/deploy-visualizer-pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore DSLKIT.Visualizer.App/DSLKIT.Visualizer.App.csproj
+
+    - name: Install wasm-tools workload
+      run: dotnet workload install wasm-tools
+
+    - name: Update base href in index.html
+      if: false
+      run: sed -i 's|<base href="/" />|<base href="/dslkit/" />|g' DSLKIT.Visualizer.App/wwwroot/index.html
+
+    - name: Publish
+      run: dotnet publish DSLKIT.Visualizer.App/DSLKIT.Visualizer.App.csproj -c Release -o release
+
+    - name: Copy index.html to 404.html
+      run: cp ./release/wwwroot/index.html ./release/wwwroot/404.html
+
+    - name: Add CNAME
+      if: ${{ vars.PAGES_CNAME != '' }}
+      run: echo "${{ vars.PAGES_CNAME }}" > ./release/wwwroot/CNAME
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./release/wwwroot
+        enable_jekyll: false

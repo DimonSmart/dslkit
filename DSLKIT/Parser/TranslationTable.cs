@@ -8,8 +8,6 @@ namespace DSLKIT.Parser
     {
         private readonly Dictionary<KeyValuePair<ITerm, RuleSet>, RuleSet> _table;
 
-        public RuleSet this[ITerm x, RuleSet y] => _table[new KeyValuePair<ITerm, RuleSet>(x, y)];
-
         public TranslationTable(IReadOnlyDictionary<KeyValuePair<ITerm, RuleSet>, RuleSet> table)
         {
             _table = new Dictionary<KeyValuePair<ITerm, RuleSet>, RuleSet>(

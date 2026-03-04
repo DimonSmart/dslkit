@@ -828,7 +828,11 @@ namespace DSLKIT.Test.GrammarExamples
             r73a.IsSuccess.Should().BeTrue($"73a failed at {r73a.Error?.ErrorPosition}: {r73a.Error?.Message}");
 
             // The full 73.sql file (grammar building is separate from run)
-            var sql73 = System.IO.File.ReadAllText(@"c:\Private\dslkit\sql-dataset\73.sql");
+            if (!TryReadSqlDatasetFile("73.sql", out var sql73))
+            {
+                return;
+            }
+
             var r73 = ModernMsSqlGrammarExample.ParseScript(sql73);
             r73.IsSuccess.Should().BeTrue($"73.sql failed at {r73.Error?.ErrorPosition}: {r73.Error?.Message}");
         }
@@ -842,7 +846,11 @@ namespace DSLKIT.Test.GrammarExamples
             r1575a.IsSuccess.Should().BeTrue($"1575a failed at {r1575a.Error?.ErrorPosition}: {r1575a.Error?.Message}");
 
             // 1575.sql: FOREIGN KEY REFERENCES without source column list
-            var sql1575 = System.IO.File.ReadAllText(@"c:\Private\dslkit\sql-dataset\1575.sql");
+            if (!TryReadSqlDatasetFile("1575.sql", out var sql1575))
+            {
+                return;
+            }
+
             var r1575 = ModernMsSqlGrammarExample.ParseScript(sql1575);
             r1575.IsSuccess.Should().BeTrue($"1575.sql failed at {r1575.Error?.ErrorPosition}: {r1575.Error?.Message}");
         }
@@ -860,7 +868,11 @@ namespace DSLKIT.Test.GrammarExamples
                 "SELECT * FROM t INNER JOIN FREETEXTTABLE(dbo.T, *, @s, LANGUAGE @lang) AS k ON t.id = k.[KEY]");
             r608a.IsSuccess.Should().BeTrue($"608a failed at {r608a.Error?.ErrorPosition}: {r608a.Error?.Message}");
 
-            var sql608 = System.IO.File.ReadAllText(@"c:\Private\dslkit\sql-dataset\608.sql");
+            if (!TryReadSqlDatasetFile("608.sql", out var sql608))
+            {
+                return;
+            }
+
             var r608 = ModernMsSqlGrammarExample.ParseScript(sql608);
             r608.IsSuccess.Should().BeTrue($"608 failed at {r608.Error?.ErrorPosition}: {r608.Error?.Message}");
         }
@@ -880,6 +892,46 @@ namespace DSLKIT.Test.GrammarExamples
             }
 
             throw new DirectoryNotFoundException("Could not find SQL test data folder.");
+        }
+
+        private static bool TryReadSqlDatasetFile(string fileName, out string scriptText)
+        {
+            scriptText = string.Empty;
+            if (!TryResolveRepositoryRoot(out var repositoryRoot))
+            {
+                return false;
+            }
+
+            var datasetFilePath = Path.Combine(repositoryRoot, "sql-dataset", fileName);
+            if (!File.Exists(datasetFilePath))
+            {
+                return false;
+            }
+
+            scriptText = File.ReadAllText(datasetFilePath);
+            return true;
+        }
+
+        private static bool TryResolveRepositoryRoot(out string repositoryRoot)
+        {
+            var startingPoints = new[] { Directory.GetCurrentDirectory(), AppContext.BaseDirectory };
+            foreach (var startingPoint in startingPoints)
+            {
+                var current = new DirectoryInfo(startingPoint);
+                while (current != null)
+                {
+                    if (File.Exists(Path.Combine(current.FullName, "DSLKIT.sln")))
+                    {
+                        repositoryRoot = current.FullName;
+                        return true;
+                    }
+
+                    current = current.Parent;
+                }
+            }
+
+            repositoryRoot = string.Empty;
+            return false;
         }
     }
 }
