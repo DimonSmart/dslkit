@@ -279,6 +279,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var ifBranchStatement = gb.NT("IfBranchStatement");
             var beginEndStatement = gb.NT("BeginEndStatement");
             var setStatement = gb.NT("SetStatement");
+            var setTransactionIsolationLevel = gb.NT("SetTransactionIsolationLevel");
             var printStatement = gb.NT("PrintStatement");
             var declareStatement = gb.NT("DeclareStatement");
             var declareItemList = gb.NT("DeclareItemList");
@@ -873,6 +874,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("SetStatement").Is(kw("SET"), identifierTerm, identifierTerm, kw("OFF"));
             gb.Prod("SetStatement").Is(kw("SET"), kw("IDENTITY_INSERT"), qualifiedName, kw("ON"));
             gb.Prod("SetStatement").Is(kw("SET"), kw("IDENTITY_INSERT"), qualifiedName, kw("OFF"));
+            gb.Prod("SetStatement").Is(kw("SET"), kw("TRANSACTION"), identifierTerm, identifierTerm, setTransactionIsolationLevel);
+
+            gb.Prod("SetTransactionIsolationLevel").Is(identifierTerm);
+            gb.Prod("SetTransactionIsolationLevel").Is(identifierTerm, identifierTerm);
 
             gb.Prod("PrintStatement").Is(kw("PRINT"), expression);
 
