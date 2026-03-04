@@ -47,6 +47,28 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void TryFormat_ShouldApplyKeywordCaseOnlyToKeywords()
+        {
+            const string sourceSql = "select o.CustomerId as customerAlias from dbo.Orders as o where o.CustomerId=@customerId";
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, new SqlFormattingOptions
+            {
+                KeywordCase = SqlKeywordCase.Upper
+            });
+
+            result.IsSuccess.Should().BeTrue();
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+            formattedSql.Should().Contain("SELECT");
+            formattedSql.Should().Contain("AS");
+            formattedSql.Should().Contain("FROM");
+            formattedSql.Should().Contain("WHERE");
+            formattedSql.Should().Contain("o.CustomerId");
+            formattedSql.Should().Contain("customerAlias");
+            formattedSql.Should().Contain("dbo.Orders");
+            formattedSql.Should().Contain("@customerId");
+        }
+
+        [Fact]
         public void TryFormat_ShouldApplyStage1Settings()
         {
             const string sourceSql = "SELECT(a) AS A,b AS B FROM dbo.t AS t WHERE a=1";
@@ -72,8 +94,8 @@ namespace DSLKIT.Test.GrammarExamples
             var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
 
             result.IsSuccess.Should().BeTrue();
-            result.FormattedSql.Should().Contain("SELECT ( A ) AS A,B AS B");
-            result.FormattedSql.Should().Contain("WHERE A=1 ;");
+            result.FormattedSql.Should().Contain("SELECT ( a ) AS A,b AS B");
+            result.FormattedSql.Should().Contain("WHERE a=1 ;");
         }
 
         [Fact]
@@ -104,9 +126,9 @@ namespace DSLKIT.Test.GrammarExamples
             var formattedSql = NormalizeLineEndings(result.FormattedSql);
 
             result.IsSuccess.Should().BeTrue();
-            formattedSql.Should().Contain("\n  A AS A,");
-            formattedSql.Should().Contain("FROM DBO.T AS T\n\nWHERE");
-            formattedSql.Should().Contain("WHERE X = 1\n\nORDER BY");
+            formattedSql.Should().Contain("\n  a AS A,");
+            formattedSql.Should().Contain("FROM dbo.t AS t\n\nWHERE");
+            formattedSql.Should().Contain("WHERE x = 1\n\nORDER BY");
         }
 
         [Fact]
@@ -130,8 +152,8 @@ namespace DSLKIT.Test.GrammarExamples
             var formattedSql = NormalizeLineEndings(result.FormattedSql);
 
             result.IsSuccess.Should().BeTrue();
-            formattedSql.Should().MatchRegex("SUM\\s*\\(X\\)\\s{2,}AS\\s+TOTAL");
-            formattedSql.Should().MatchRegex("\\n\\s*,\\s*COUNT\\s*\\(\\s*\\*\\s*\\)\\s+AS\\s+CNT");
+            formattedSql.Should().MatchRegex("SUM\\s*\\(x\\)\\s{2,}AS\\s+Total");
+            formattedSql.Should().MatchRegex("\\n\\s*,\\s*COUNT\\s*\\(\\s*\\*\\s*\\)\\s+AS\\s+Cnt");
         }
 
         [Fact]
@@ -156,7 +178,7 @@ namespace DSLKIT.Test.GrammarExamples
             var formattedSql = NormalizeLineEndings(result.FormattedSql);
 
             result.IsSuccess.Should().BeTrue();
-            formattedSql.Should().Contain("SELECT A AS A, B AS B");
+            formattedSql.Should().Contain("SELECT a AS A, b AS B");
         }
 
         [Fact]
@@ -181,10 +203,10 @@ namespace DSLKIT.Test.GrammarExamples
             var formattedSql = NormalizeLineEndings(result.FormattedSql);
 
             result.IsSuccess.Should().BeTrue();
-            formattedSql.Should().Contain("INNER JOIN DBO.B AS B");
-            formattedSql.Should().MatchRegex("\\n\\s+ON\\s+A\\.ID\\s*=\\s*B\\.ID");
-            formattedSql.Should().MatchRegex("\\n\\s+AND\\s+A\\.TYPE\\s*=\\s*B\\.TYPE");
-            formattedSql.Should().MatchRegex("\\n\\s+AND\\s+A\\.ISACTIVE\\s*=\\s*1");
+            formattedSql.Should().Contain("INNER JOIN dbo.B AS b");
+            formattedSql.Should().MatchRegex("\\n\\s+ON\\s+a\\.Id\\s*=\\s*b\\.Id");
+            formattedSql.Should().MatchRegex("\\n\\s+AND\\s+a\\.TYPE\\s*=\\s*b\\.TYPE");
+            formattedSql.Should().MatchRegex("\\n\\s+AND\\s+a\\.IsActive\\s*=\\s*1");
         }
 
         [Fact]
@@ -214,7 +236,7 @@ namespace DSLKIT.Test.GrammarExamples
             var formattedSql = NormalizeLineEndings(result.FormattedSql);
 
             result.IsSuccess.Should().BeTrue();
-            formattedSql.Should().MatchRegex("WHERE\\n\\s+A\\s*=\\s*1\\n\\s+AND\\s+\\(B\\s*=\\s*2\\s+OR\\s+C\\s*=\\s*3\\)");
+            formattedSql.Should().MatchRegex("WHERE\\n\\s+a\\s*=\\s*1\\n\\s+AND\\s+\\(b\\s*=\\s*2\\s+OR\\s+c\\s*=\\s*3\\)");
         }
 
         [Fact]
@@ -239,7 +261,7 @@ namespace DSLKIT.Test.GrammarExamples
             var formattedSql = NormalizeLineEndings(result.FormattedSql);
 
             result.IsSuccess.Should().BeTrue();
-            formattedSql.Should().Contain("WHERE A = 1");
+            formattedSql.Should().Contain("WHERE a = 1");
         }
 
         [Fact]
@@ -268,7 +290,7 @@ namespace DSLKIT.Test.GrammarExamples
             var formattedSql = NormalizeLineEndings(result.FormattedSql);
 
             result.IsSuccess.Should().BeTrue();
-            formattedSql.Should().Contain("CASE WHEN X = 1 THEN 'A' ELSE 'B' END AS V");
+            formattedSql.Should().Contain("CASE WHEN x = 1 THEN 'A' ELSE 'B' END AS v");
         }
 
         [Fact]
@@ -323,8 +345,8 @@ namespace DSLKIT.Test.GrammarExamples
             var formattedSql = NormalizeLineEndings(result.FormattedSql);
 
             result.IsSuccess.Should().BeTrue();
-            formattedSql.Should().Contain("SELECT A + B + C + D AS S");
-            formattedSql.Should().Contain("\nFROM DBO.T AS T");
+            formattedSql.Should().Contain("SELECT a + b + c + d AS s");
+            formattedSql.Should().Contain("\nFROM dbo.t AS t");
         }
 
         [Fact]
@@ -352,10 +374,10 @@ namespace DSLKIT.Test.GrammarExamples
             var formattedSql = NormalizeLineEndings(result.FormattedSql);
 
             result.IsSuccess.Should().BeTrue();
-            formattedSql.Should().Contain("UPDATE DBO.T\nSET\n");
-            formattedSql.Should().Contain("\n    A = 1,\n");
-            formattedSql.Should().Contain("\nWHERE ID = @ID;\n");
-            formattedSql.Should().Contain("CREATE PROC P\nAS\nBEGIN\n");
+            formattedSql.Should().Contain("UPDATE dbo.t\nSET\n");
+            formattedSql.Should().Contain("\n    a = 1,\n");
+            formattedSql.Should().Contain("\nWHERE id = @id;\n");
+            formattedSql.Should().Contain("CREATE PROC p\nAS\nBEGIN\n");
             formattedSql.Should().Contain("\n    SELECT\n        1\nEND");
         }
 
@@ -410,7 +432,7 @@ namespace DSLKIT.Test.GrammarExamples
 
             result.IsSuccess.Should().BeTrue();
             var formattedSql = NormalizeLineEndings(result.FormattedSql!);
-            formattedSql.Should().Contain("CREATE DATABASE SALES");
+            formattedSql.Should().Contain("CREATE DATABASE Sales");
             formattedSql.Should().Contain("FILESTREAM (DIRECTORY_NAME = 'salesfs', NON_TRANSACTED_ACCESS =");
             formattedSql.Should().Contain("FULL");
             formattedSql.Should().Contain("GO");

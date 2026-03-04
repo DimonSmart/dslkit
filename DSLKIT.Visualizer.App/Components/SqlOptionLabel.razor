@@ -1,0 +1,31 @@
+<div class="dsl-sql-option-label-group">
+    <label for="@ForId">@Text</label>
+    <button type="button"
+            class="btn btn-link btn-sm p-0 dsl-sql-option-example-link"
+            @onclick="OnExampleRequestedInternalAsync">
+        Example
+    </button>
+</div>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public string ForId { get; set; } = string.Empty;
+
+    [Parameter]
+    [EditorRequired]
+    public string Text { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> OnExampleRequested { get; set; }
+
+    private Task OnExampleRequestedInternalAsync()
+    {
+        if (!OnExampleRequested.HasDelegate)
+        {
+            return Task.CompletedTask;
+        }
+
+        return OnExampleRequested.InvokeAsync(ForId);
+    }
+}

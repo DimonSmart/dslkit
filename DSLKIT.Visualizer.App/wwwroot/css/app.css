@@ -701,6 +701,24 @@ code {
     line-height: 1.32;
 }
 
+.dsl-sql-option-label-group {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    min-width: 0;
+}
+
+.dsl-sql-option-example-link {
+    font-size: 0.75rem;
+    line-height: 1;
+    text-decoration: underline;
+}
+
+.dsl-sql-option-example-link:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
 .dsl-sql-property-row .form-select,
 .dsl-sql-property-row .form-control {
     font-size: 0.82rem;

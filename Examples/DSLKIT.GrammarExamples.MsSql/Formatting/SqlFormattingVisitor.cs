@@ -168,7 +168,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 return;
             }
 
-            var isKeyword = node.Token is KeywordToken;
+            var isKeyword = IsKeywordToken(node.Token);
             var tokenForRules = isKeyword
                 ? rawToken.ToUpperInvariant()
                 : rawToken;
@@ -1489,9 +1489,9 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                     continue;
                 }
 
-                if (terminalNode.Token is KeywordToken keywordToken)
+                if (IsKeywordToken(terminalNode.Token))
                 {
-                    var keyword = keywordToken.OriginalString.ToUpperInvariant();
+                    var keyword = rawToken.ToUpperInvariant();
                     if (!string.Equals(keyword, "AS", StringComparison.Ordinal))
                     {
                         return false;
@@ -1657,7 +1657,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                     continue;
                 }
 
-                var isKeyword = terminalNode.Token is KeywordToken;
+                var isKeyword = IsKeywordToken(terminalNode.Token);
                 var tokenForRules = isKeyword ? rawToken.ToUpperInvariant() : rawToken;
                 tokenInfos.Add(new SqlTokenInfo(rawToken, tokenForRules, isKeyword));
 
@@ -1704,10 +1704,15 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 return;
             }
 
-            var isKeyword = lastTerminalNode.Token is KeywordToken;
+            var isKeyword = IsKeywordToken(lastTerminalNode.Token);
             _tokenBeforePrevious = _previousToken;
             _previousToken = isKeyword ? rawToken.ToUpperInvariant() : rawToken;
             _previousTokenWasKeyword = isKeyword;
+        }
+
+        private static bool IsKeywordToken(IToken token)
+        {
+            return token is KeywordToken && token.Terminal.Flags != TermFlags.Identifier;
         }
 
         private void UpdatePreviousToken(SqlTokenInfo tokenInfo)

@@ -714,6 +714,8 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod("QueryStatement").Is(queryExpression);
             gb.Prod("QueryStatement").Is(withClause, queryExpression);
+            gb.Prod("QueryStatement").Is(queryExpression, optionClause);
+            gb.Prod("QueryStatement").Is(withClause, queryExpression, optionClause);
             gb.Prod("UpdateStatement").Is(kw("UPDATE"), tableFactor, kw("SET"), updateSetList);
             gb.Prod("UpdateStatement").Is(kw("UPDATE"), tableFactor, kw("SET"), updateSetList, kw("WHERE"), searchCondition);
             gb.Prod("UpdateStatement").Is(kw("UPDATE"), tableFactor, kw("SET"), updateSetList, kw("FROM"), tableSourceList);
