@@ -44,7 +44,16 @@ select 1";
 select o.CustomerId as customer_id,o.TotalAmount as very_long_total_amount,o.Region as region from dbo.Orders as o;";
 
         private const string LayoutClausesExampleSql =
-            @"-- Clause layout: WITH follows AS so ""New line before WITH"" is visible.
+            @"-- Clause layout: inspect SELECT/FROM/WHERE/GROUP BY/HAVING/ORDER BY line breaks.
+select o.CustomerId,o.Region,sum(o.TotalAmount) as total_amount
+from dbo.Orders as o
+where o.TotalAmount>=100
+group by o.CustomerId,o.Region
+having sum(o.TotalAmount)>150
+order by o.CustomerId;";
+
+        private const string LayoutWithClauseExampleSql =
+            @"-- WITH clause newline: toggle whether WITH stays after AS or starts a new line.
 create view dbo.v_sales as with sales_cte as (select o.CustomerId,o.TotalAmount,o.Region from dbo.Orders as o)
 select CustomerId,Region,sum(TotalAmount) as total_amount
 from sales_cte
@@ -116,7 +125,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             ["sql-align-select-aliases"] = AlignAliasesExampleSql,
             ["sql-indent-size"] = LayoutClausesExampleSql,
             ["sql-blank-line-between-clauses"] = LayoutClausesExampleSql,
-            ["sql-newline-with"] = LayoutClausesExampleSql,
+            ["sql-newline-with"] = LayoutWithClauseExampleSql,
             ["sql-newline-select"] = LayoutClausesExampleSql,
             ["sql-newline-from"] = LayoutClausesExampleSql,
             ["sql-newline-where"] = LayoutClausesExampleSql,

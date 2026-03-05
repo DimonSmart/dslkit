@@ -132,6 +132,58 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void TryFormat_ShouldToggleNewlineBeforeWithClause()
+        {
+            const string sourceSql =
+                "CREATE VIEW dbo.v_sales AS WITH sales_cte AS (SELECT o.CustomerId FROM dbo.Orders AS o) SELECT CustomerId FROM sales_cte";
+
+            var withNewlineOptions = new SqlFormattingOptions
+            {
+                Layout = new SqlLayoutFormattingOptions
+                {
+                    NewlineBeforeClause = new SqlClauseNewlineOptions
+                    {
+                        With = true,
+                        Select = false,
+                        From = false,
+                        Where = false,
+                        GroupBy = false,
+                        Having = false,
+                        OrderBy = false,
+                        Option = false
+                    }
+                }
+            };
+
+            var withoutNewlineOptions = new SqlFormattingOptions
+            {
+                Layout = new SqlLayoutFormattingOptions
+                {
+                    NewlineBeforeClause = new SqlClauseNewlineOptions
+                    {
+                        With = false,
+                        Select = false,
+                        From = false,
+                        Where = false,
+                        GroupBy = false,
+                        Having = false,
+                        OrderBy = false,
+                        Option = false
+                    }
+                }
+            };
+
+            var withNewlineResult = ModernMsSqlFormatter.TryFormat(sourceSql, withNewlineOptions);
+            var withoutNewlineResult = ModernMsSqlFormatter.TryFormat(sourceSql, withoutNewlineOptions);
+
+            withNewlineResult.IsSuccess.Should().BeTrue();
+            withoutNewlineResult.IsSuccess.Should().BeTrue();
+
+            NormalizeLineEndings(withNewlineResult.FormattedSql).Should().Contain("AS\nWITH sales_cte AS");
+            NormalizeLineEndings(withoutNewlineResult.FormattedSql).Should().Contain("AS WITH sales_cte AS");
+        }
+
+        [Fact]
         public void TryFormat_ShouldApplyStage3ListSettings()
         {
             const string sourceSql = "SELECT SUM(x) AS Total, COUNT(*) AS Cnt FROM dbo.t AS t";
