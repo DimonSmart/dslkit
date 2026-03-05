@@ -1,13 +1,33 @@
 <div class="dsl-sql-option-label-group">
     <label for="@ForId">@Text</label>
-    <button type="button"
-            class="btn btn-link btn-sm p-0 dsl-sql-option-example-link"
-            @onclick="OnExampleRequestedInternalAsync">
-        Example
-    </button>
+    <div class="dsl-sql-option-help">
+        <button type="button"
+                class="btn btn-link btn-sm p-0 dsl-sql-option-help-trigger"
+                aria-label="@GetHelpAriaLabel()">
+            <span aria-hidden="true">?</span>
+        </button>
+
+        <div class="dsl-sql-option-help-popover" role="tooltip">
+            <p class="dsl-sql-option-help-description">@HelpDescription</p>
+
+            @if (!string.IsNullOrWhiteSpace(examplePreview))
+            {
+                <pre class="dsl-sql-option-help-preview">@examplePreview</pre>
+            }
+
+            <button type="button"
+                    class="btn btn-link btn-sm p-0 dsl-sql-option-help-action"
+                    @onclick="OnExampleRequestedInternalAsync">
+                Load sample
+            </button>
+        </div>
+    </div>
 </div>
 
 @code {
+    private const int MaxPreviewLines = 2;
+    private const int MaxPreviewLineLength = 78;
+
     [Parameter]
     [EditorRequired]
     public string ForId { get; set; } = string.Empty;
@@ -19,6 +39,15 @@
     [Parameter]
     public EventCallback<string> OnExampleRequested { get; set; }
 
+    [CascadingParameter]
+    public IReadOnlyDictionary<string, string>? OptionExamples { get; set; }
+
+    private string HelpDescription =>
+        "Quick hint and focused SQL snippet for this option.";
+
+    private string? examplePreview =>
+        BuildPreview(FindExampleSql());
+
     private Task OnExampleRequestedInternalAsync()
     {
         if (!OnExampleRequested.HasDelegate)
@@ -28,4 +57,44 @@
 
         return OnExampleRequested.InvokeAsync(ForId);
     }
+
+    private string GetHelpAriaLabel() => $"Show help for {Text}";
+
+    private string? FindExampleSql()
+    {
+        if (OptionExamples is null)
+        {
+            return null;
+        }
+
+        if (!OptionExamples.TryGetValue(ForId, out var exampleSql))
+        {
+            return null;
+        }
+
+        return exampleSql;
+    }
+
+    private static string? BuildPreview(string? sql)
+    {
+        if (string.IsNullOrWhiteSpace(sql))
+        {
+            return null;
+        }
+
+        var lines = sql
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line.Trim().Replace('\r', ' '))
+            .Where(line => line.Length > 0)
+            .Take(MaxPreviewLines)
+            .Select(TrimLine);
+
+        var preview = string.Join(Environment.NewLine, lines);
+        return string.IsNullOrWhiteSpace(preview) ? null : preview;
+    }
+
+    private static string TrimLine(string line) =>
+        line.Length <= MaxPreviewLineLength
+            ? line
+            : $"{line[..MaxPreviewLineLength]}...";
 }

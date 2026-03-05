@@ -69,7 +69,7 @@
         </details>
     </section>
 
-    <fieldset class="m-0 p-0 border-0" disabled="@isFormatterInitializing">
+    <fieldset class="m-0 p-0 border-0 dsl-sql-workspace" disabled="@isFormatterInitializing">
         <MudSplitPanel Class="dsl-sql-workspace-split"
                        FirstPanelInitialSize="420"
                        MinPanelSize="290"
@@ -91,7 +91,8 @@
                                        @bind:event="oninput" />
                             </div>
 
-                            <div class="dsl-sql-option-sections" @onchange="OnOptionsChangedAsync">
+                            <CascadingValue Value="OptionExamples">
+                                <div class="dsl-sql-option-sections" @onchange="OnOptionsChangedAsync">
                                 <details class="dsl-sql-option-section" open>
                                     <summary>Text</summary>
                                     <div class="dsl-sql-property-grid">
@@ -546,7 +547,8 @@
                                         </div>
                                     </div>
                                 </details>
-                            </div>
+                                </div>
+                            </CascadingValue>
                     </div>
                 </section>
             </div>
@@ -803,9 +805,8 @@ from dbo.A as a;";
 
         resizeEditorsPending = false;
         await JsRuntime.InvokeVoidAsync(
-            "dslkitSqlEditor.autoSizeEditors",
+            "dslkitSqlEditor.autoSizeTextAreaById",
             "sql-source-input",
-            "sql-formatted-output",
             170);
     }
 
