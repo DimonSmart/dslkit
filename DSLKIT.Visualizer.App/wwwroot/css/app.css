@@ -701,6 +701,10 @@ code {
     min-height: 0;
 }
 
+.dsl-sql-output-panel {
+    min-height: 14rem;
+}
+
 .dsl-sql-controls-header,
 .dsl-sql-output-header {
     display: flex;
@@ -945,6 +949,7 @@ code {
     background: #f8fafc;
     flex: 1 1 auto;
     min-height: 0;
+    min-height: 12rem !important;
     height: 100%;
     overflow: auto !important;
     resize: none;
@@ -978,6 +983,21 @@ code {
 }
 
 @media (max-width: 991.98px) {
+    .dsl-sql-formatter-page {
+        height: auto;
+        min-height: 0;
+    }
+
+    .dsl-sql-formatter-panel,
+    .dsl-sql-workspace {
+        flex: 0 0 auto;
+    }
+
+    .dsl-sql-formatting-tab {
+        height: auto;
+        overflow: visible;
+    }
+
     .dsl-ast-layout {
         grid-template-columns: 1fr;
     }

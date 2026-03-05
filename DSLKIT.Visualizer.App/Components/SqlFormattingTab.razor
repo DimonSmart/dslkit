@@ -90,7 +90,7 @@
                                     <div class="dsl-sql-property-grid">
                                         <div class="dsl-sql-property-row" hidden='@HideOption("keyword keyword case uppercase lowercase preserve")'>
                                             <SqlOptionLabel ForId="sql-keyword-case" Text="Keyword case" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <select id="sql-keyword-case" class="form-select form-select-sm" @bind="keywordCase">
+                                            <select id="sql-keyword-case" class="form-select form-select-sm" @bind="keywordCase" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlKeywordCase.Upper">Upper</option>
                                                 <option value="@SqlKeywordCase.Lower">Lower</option>
                                                 <option value="@SqlKeywordCase.Preserve">Preserve</option>
@@ -99,7 +99,7 @@
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("statement semicolon terminate with semicolon")'>
                                             <SqlOptionLabel ForId="sql-statement-semicolon" Text="Terminate with semicolon" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <select id="sql-statement-semicolon" class="form-select form-select-sm" @bind="terminateWithSemicolon">
+                                            <select id="sql-statement-semicolon" class="form-select form-select-sm" @bind="terminateWithSemicolon" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlStatementTerminationMode.Never">Never</option>
                                                 <option value="@SqlStatementTerminationMode.ExistingOnly">ExistingOnly</option>
                                                 <option value="@SqlStatementTerminationMode.Always">Always</option>
@@ -108,12 +108,12 @@
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("end of file eof newline new line")'>
                                             <SqlOptionLabel ForId="sql-eof-newline" Text="EOF newline" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-eof-newline" class="form-check-input" type="checkbox" @bind="eofNewline" />
+                                            <input id="sql-eof-newline" class="form-check-input" type="checkbox" @bind="eofNewline" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("align select aliases")'>
                                             <SqlOptionLabel ForId="sql-align-select-aliases" Text="Align select aliases" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-align-select-aliases" class="form-check-input" type="checkbox" @bind="alignSelectAliases" />
+                                            <input id="sql-align-select-aliases" class="form-check-input" type="checkbox" @bind="alignSelectAliases" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
                                     </div>
                                 </details>
@@ -128,14 +128,14 @@
                                                    type="number"
                                                    min="1"
                                                    step="1"
-                                                   @bind="indentSize" />
+                                                   @bind="indentSize" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("layout blank line between clauses")'>
                                             <SqlOptionLabel ForId="sql-blank-line-between-clauses" Text="Blank line between clauses" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <select id="sql-blank-line-between-clauses"
                                                     class="form-select form-select-sm"
-                                                    @bind="blankLineBetweenClauses">
+                                                    @bind="blankLineBetweenClauses" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlBlankLineBetweenClausesMode.None">None</option>
                                                 <option value="@SqlBlankLineBetweenClausesMode.BetweenMajorClauses">BetweenMajorClauses</option>
                                             </select>
@@ -143,42 +143,42 @@
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout newline with")'>
                                             <SqlOptionLabel ForId="sql-newline-with" Text="New line before WITH" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-newline-with" class="form-check-input" type="checkbox" @bind="newlineBeforeWith" />
+                                            <input id="sql-newline-with" class="form-check-input" type="checkbox" @bind="newlineBeforeWith" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout newline select")'>
                                             <SqlOptionLabel ForId="sql-newline-select" Text="New line before SELECT" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-newline-select" class="form-check-input" type="checkbox" @bind="newlineBeforeSelect" />
+                                            <input id="sql-newline-select" class="form-check-input" type="checkbox" @bind="newlineBeforeSelect" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout newline from")'>
                                             <SqlOptionLabel ForId="sql-newline-from" Text="New line before FROM" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-newline-from" class="form-check-input" type="checkbox" @bind="newlineBeforeFrom" />
+                                            <input id="sql-newline-from" class="form-check-input" type="checkbox" @bind="newlineBeforeFrom" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout newline where")'>
                                             <SqlOptionLabel ForId="sql-newline-where" Text="New line before WHERE" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-newline-where" class="form-check-input" type="checkbox" @bind="newlineBeforeWhere" />
+                                            <input id="sql-newline-where" class="form-check-input" type="checkbox" @bind="newlineBeforeWhere" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout newline group by")'>
                                             <SqlOptionLabel ForId="sql-newline-group-by" Text="New line before GROUP BY" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-newline-group-by" class="form-check-input" type="checkbox" @bind="newlineBeforeGroupBy" />
+                                            <input id="sql-newline-group-by" class="form-check-input" type="checkbox" @bind="newlineBeforeGroupBy" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout newline having")'>
                                             <SqlOptionLabel ForId="sql-newline-having" Text="New line before HAVING" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-newline-having" class="form-check-input" type="checkbox" @bind="newlineBeforeHaving" />
+                                            <input id="sql-newline-having" class="form-check-input" type="checkbox" @bind="newlineBeforeHaving" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout newline order by")'>
                                             <SqlOptionLabel ForId="sql-newline-order-by" Text="New line before ORDER BY" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-newline-order-by" class="form-check-input" type="checkbox" @bind="newlineBeforeOrderBy" />
+                                            <input id="sql-newline-order-by" class="form-check-input" type="checkbox" @bind="newlineBeforeOrderBy" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout newline option")'>
                                             <SqlOptionLabel ForId="sql-newline-option" Text="New line before OPTION" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-newline-option" class="form-check-input" type="checkbox" @bind="newlineBeforeOption" />
+                                            <input id="sql-newline-option" class="form-check-input" type="checkbox" @bind="newlineBeforeOption" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
                                     </div>
                                 </details>
@@ -188,12 +188,12 @@
                                     <div class="dsl-sql-property-grid">
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("joins newline per join")'>
                                             <SqlOptionLabel ForId="sql-joins-newline-per-join" Text="New line per JOIN" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-joins-newline-per-join" class="form-check-input" type="checkbox" @bind="joinsNewlinePerJoin" />
+                                            <input id="sql-joins-newline-per-join" class="form-check-input" type="checkbox" @bind="joinsNewlinePerJoin" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("joins on new line")'>
                                             <SqlOptionLabel ForId="sql-joins-on-new-line" Text="ON on new line" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-joins-on-new-line" class="form-check-input" type="checkbox" @bind="joinsOnNewLine" />
+                                            <input id="sql-joins-on-new-line" class="form-check-input" type="checkbox" @bind="joinsOnNewLine" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("joins multiline on threshold max tokens single line")'>
@@ -203,14 +203,14 @@
                                                    type="number"
                                                    min="0"
                                                    step="1"
-                                                   @bind="joinsMultilineOnMaxTokensSingleLine" />
+                                                   @bind="joinsMultilineOnMaxTokensSingleLine" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("joins multiline on threshold break on and only and or")'>
                                             <SqlOptionLabel ForId="sql-joins-break-on" Text="ON break on" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <select id="sql-joins-break-on"
                                                     class="form-select form-select-sm"
-                                                    @bind="joinsMultilineOnBreakOn">
+                                                    @bind="joinsMultilineOnBreakOn" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlJoinMultilineBreakOnMode.AndOnly">AndOnly</option>
                                                 <option value="@SqlJoinMultilineBreakOnMode.AndOr">AndOr</option>
                                             </select>
@@ -223,14 +223,14 @@
                                     <div class="dsl-sql-property-grid">
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("predicates multiline where having")'>
                                             <SqlOptionLabel ForId="sql-predicates-multiline-where" Text="Multiline WHERE/HAVING" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-predicates-multiline-where" class="form-check-input" type="checkbox" @bind="predicatesMultilineWhere" />
+                                            <input id="sql-predicates-multiline-where" class="form-check-input" type="checkbox" @bind="predicatesMultilineWhere" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("predicates logical operator line break before after")'>
                                             <SqlOptionLabel ForId="sql-predicates-logical-break" Text="Logical operator break" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <select id="sql-predicates-logical-break"
                                                     class="form-select form-select-sm"
-                                                    @bind="predicatesLogicalOperatorLineBreak">
+                                                    @bind="predicatesLogicalOperatorLineBreak" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlLogicalOperatorLineBreakMode.BeforeOperator">BeforeOperator</option>
                                                 <option value="@SqlLogicalOperatorLineBreakMode.AfterOperator">AfterOperator</option>
                                             </select>
@@ -243,7 +243,7 @@
                                                    type="number"
                                                    min="0"
                                                    step="1"
-                                                   @bind="predicatesInlineSimpleMaxConditions" />
+                                                   @bind="predicatesInlineSimpleMaxConditions" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("predicates inline simple predicate max line length")'>
@@ -253,19 +253,19 @@
                                                    type="number"
                                                    min="10"
                                                    step="1"
-                                                   @bind="predicatesInlineSimpleMaxLineLength" />
+                                                   @bind="predicatesInlineSimpleMaxLineLength" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("predicates inline simple predicate allow only and")'>
                                             <SqlOptionLabel ForId="sql-predicates-inline-allow-only-and" Text="Inline allow only AND" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-predicates-inline-allow-only-and" class="form-check-input" type="checkbox" @bind="predicatesInlineSimpleAllowOnlyAnd" />
+                                            <input id="sql-predicates-inline-allow-only-and" class="form-check-input" type="checkbox" @bind="predicatesInlineSimpleAllowOnlyAnd" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("predicates parenthesize mixed and or mode")'>
                                             <SqlOptionLabel ForId="sql-predicates-parenthesize-mode" Text="Parenthesize mixed AND/OR" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <select id="sql-predicates-parenthesize-mode"
                                                     class="form-select form-select-sm"
-                                                    @bind="predicatesParenthesizeMixedAndOrMode">
+                                                    @bind="predicatesParenthesizeMixedAndOrMode" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlParenthesizeMixedAndOrMode.None">None</option>
                                                 <option value="@SqlParenthesizeMixedAndOrMode.Minimal">Minimal</option>
                                                 <option value="@SqlParenthesizeMixedAndOrMode.AlwaysForOrGroups">AlwaysForOrGroups</option>
@@ -281,7 +281,7 @@
                                             <SqlOptionLabel ForId="sql-expressions-case-style" Text="CASE style" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <select id="sql-expressions-case-style"
                                                     class="form-select form-select-sm"
-                                                    @bind="expressionsCaseStyle">
+                                                    @bind="expressionsCaseStyle" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlCaseStyle.Multiline">Multiline</option>
                                                 <option value="@SqlCaseStyle.CompactWhenShort">CompactWhenShort</option>
                                             </select>
@@ -294,7 +294,7 @@
                                                    type="number"
                                                    min="0"
                                                    step="1"
-                                                   @bind="compactCaseMaxWhenClauses" />
+                                                   @bind="compactCaseMaxWhenClauses" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("expressions compact case threshold max tokens")'>
@@ -304,7 +304,7 @@
                                                    type="number"
                                                    min="0"
                                                    step="1"
-                                                   @bind="compactCaseMaxTokens" />
+                                                   @bind="compactCaseMaxTokens" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("expressions compact case threshold max line length")'>
@@ -314,7 +314,7 @@
                                                    type="number"
                                                    min="10"
                                                    step="1"
-                                                   @bind="compactCaseMaxLineLength" />
+                                                   @bind="compactCaseMaxLineLength" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("expressions inline short expression max tokens")'>
@@ -324,7 +324,7 @@
                                                    type="number"
                                                    min="0"
                                                    step="1"
-                                                   @bind="inlineShortExpressionMaxTokens" />
+                                                   @bind="inlineShortExpressionMaxTokens" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("expressions inline short expression max depth")'>
@@ -334,7 +334,7 @@
                                                    type="number"
                                                    min="0"
                                                    step="1"
-                                                   @bind="inlineShortExpressionMaxDepth" />
+                                                   @bind="inlineShortExpressionMaxDepth" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("expressions inline short expression max line length")'>
@@ -344,22 +344,22 @@
                                                    type="number"
                                                    min="10"
                                                    step="1"
-                                                   @bind="inlineShortExpressionMaxLineLength" />
+                                                   @bind="inlineShortExpressionMaxLineLength" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("expressions inline short expression context select item")'>
                                             <SqlOptionLabel ForId="sql-inline-short-select-item" Text="Inline in SELECT items" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-inline-short-select-item" class="form-check-input" type="checkbox" @bind="inlineShortContextSelectItem" />
+                                            <input id="sql-inline-short-select-item" class="form-check-input" type="checkbox" @bind="inlineShortContextSelectItem" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("expressions inline short expression context on")'>
                                             <SqlOptionLabel ForId="sql-inline-short-on" Text="Inline in ON" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-inline-short-on" class="form-check-input" type="checkbox" @bind="inlineShortContextOn" />
+                                            <input id="sql-inline-short-on" class="form-check-input" type="checkbox" @bind="inlineShortContextOn" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("expressions inline short expression context where")'>
                                             <SqlOptionLabel ForId="sql-inline-short-where" Text="Inline in WHERE" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-inline-short-where" class="form-check-input" type="checkbox" @bind="inlineShortContextWhere" />
+                                            <input id="sql-inline-short-where" class="form-check-input" type="checkbox" @bind="inlineShortContextWhere" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
                                     </div>
                                 </details>
@@ -369,7 +369,7 @@
                                     <div class="dsl-sql-property-grid">
                                         <div class="dsl-sql-property-row" hidden='@HideOption("lists comma style trailing leading")'>
                                             <SqlOptionLabel ForId="sql-comma-style" Text="Comma style" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <select id="sql-comma-style" class="form-select form-select-sm" @bind="commaStyle">
+                                            <select id="sql-comma-style" class="form-select form-select-sm" @bind="commaStyle" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlCommaStyle.Trailing">Trailing</option>
                                                 <option value="@SqlCommaStyle.Leading">Leading</option>
                                             </select>
@@ -377,7 +377,7 @@
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("lists select items style")'>
                                             <SqlOptionLabel ForId="sql-select-items-style" Text="SELECT items" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <select id="sql-select-items-style" class="form-select form-select-sm" @bind="selectItemsStyle">
+                                            <select id="sql-select-items-style" class="form-select form-select-sm" @bind="selectItemsStyle" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlListLayoutStyle.OnePerLine">OnePerLine</option>
                                                 <option value="@SqlListLayoutStyle.WrapByWidth">WrapByWidth</option>
                                             </select>
@@ -385,7 +385,7 @@
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("lists group by items style")'>
                                             <SqlOptionLabel ForId="sql-group-by-items-style" Text="GROUP BY items" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <select id="sql-group-by-items-style" class="form-select form-select-sm" @bind="groupByItemsStyle">
+                                            <select id="sql-group-by-items-style" class="form-select form-select-sm" @bind="groupByItemsStyle" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlListLayoutStyle.OnePerLine">OnePerLine</option>
                                                 <option value="@SqlListLayoutStyle.WrapByWidth">WrapByWidth</option>
                                             </select>
@@ -393,7 +393,7 @@
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("lists order by items style")'>
                                             <SqlOptionLabel ForId="sql-order-by-items-style" Text="ORDER BY items" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <select id="sql-order-by-items-style" class="form-select form-select-sm" @bind="orderByItemsStyle">
+                                            <select id="sql-order-by-items-style" class="form-select form-select-sm" @bind="orderByItemsStyle" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlListLayoutStyle.OnePerLine">OnePerLine</option>
                                                 <option value="@SqlListLayoutStyle.WrapByWidth">WrapByWidth</option>
                                             </select>
@@ -406,7 +406,7 @@
                                                    type="number"
                                                    min="0"
                                                    step="1"
-                                                   @bind="selectCompactMaxItems" />
+                                                   @bind="selectCompactMaxItems" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("lists select compact threshold max line length")'>
@@ -416,17 +416,17 @@
                                                    type="number"
                                                    min="10"
                                                    step="1"
-                                                   @bind="selectCompactMaxLineLength" />
+                                                   @bind="selectCompactMaxLineLength" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("lists compact threshold allow expressions")'>
                                             <SqlOptionLabel ForId="sql-select-compact-allow-expressions" Text="Compact allow expressions" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-select-compact-allow-expressions" class="form-check-input" type="checkbox" @bind="selectCompactAllowExpressions" />
+                                            <input id="sql-select-compact-allow-expressions" class="form-check-input" type="checkbox" @bind="selectCompactAllowExpressions" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("lists in list items style inline one per line wrap by width")'>
                                             <SqlOptionLabel ForId="sql-in-list-items-style" Text="IN list items" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <select id="sql-in-list-items-style" class="form-select form-select-sm" @bind="inListItemsStyle">
+                                            <select id="sql-in-list-items-style" class="form-select form-select-sm" @bind="inListItemsStyle" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlInListItemsStyle.Inline">Inline</option>
                                                 <option value="@SqlInListItemsStyle.OnePerLine">OnePerLine</option>
                                                 <option value="@SqlInListItemsStyle.WrapByWidth">WrapByWidth</option>
@@ -440,7 +440,7 @@
                                                    type="number"
                                                    min="0"
                                                    step="1"
-                                                   @bind="inlineInListMaxItems" />
+                                                   @bind="inlineInListMaxItems" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("lists inline in list threshold max line length")'>
@@ -450,7 +450,7 @@
                                                    type="number"
                                                    min="10"
                                                    step="1"
-                                                   @bind="inlineInListMaxLineLength" />
+                                                   @bind="inlineInListMaxLineLength" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
                                     </div>
                                 </details>
@@ -460,7 +460,7 @@
                                     <div class="dsl-sql-property-grid">
                                         <div class="dsl-sql-property-row" hidden='@HideOption("dml update set style one per line wrap by width")'>
                                             <SqlOptionLabel ForId="sql-update-set-style" Text="UPDATE SET style" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <select id="sql-update-set-style" class="form-select form-select-sm" @bind="updateSetStyle">
+                                            <select id="sql-update-set-style" class="form-select form-select-sm" @bind="updateSetStyle" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlDmlListStyle.OnePerLine">OnePerLine</option>
                                                 <option value="@SqlDmlListStyle.WrapByWidth">WrapByWidth</option>
                                             </select>
@@ -468,7 +468,7 @@
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("dml insert columns style one per line wrap by width")'>
                                             <SqlOptionLabel ForId="sql-insert-columns-style" Text="INSERT columns style" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <select id="sql-insert-columns-style" class="form-select form-select-sm" @bind="insertColumnsStyle">
+                                            <select id="sql-insert-columns-style" class="form-select form-select-sm" @bind="insertColumnsStyle" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlDmlListStyle.OnePerLine">OnePerLine</option>
                                                 <option value="@SqlDmlListStyle.WrapByWidth">WrapByWidth</option>
                                             </select>
@@ -476,7 +476,7 @@
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("ddl create proc layout expanded compact")'>
                                             <SqlOptionLabel ForId="sql-create-proc-layout" Text="CREATE PROC layout" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <select id="sql-create-proc-layout" class="form-select form-select-sm" @bind="createProcLayout">
+                                            <select id="sql-create-proc-layout" class="form-select form-select-sm" @bind="createProcLayout" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlCreateProcLayout.Expanded">Expanded</option>
                                                 <option value="@SqlCreateProcLayout.Compact">Compact</option>
                                             </select>
@@ -489,12 +489,12 @@
                                     <div class="dsl-sql-property-grid">
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("comments preserve attachment")'>
                                             <SqlOptionLabel ForId="sql-comments-preserve-attachment" Text="Preserve attachment" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-comments-preserve-attachment" class="form-check-input" type="checkbox" @bind="commentsPreserveAttachment" />
+                                            <input id="sql-comments-preserve-attachment" class="form-check-input" type="checkbox" @bind="commentsPreserveAttachment" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("comments formatting keep reflow safe only")'>
                                             <SqlOptionLabel ForId="sql-comments-formatting" Text="Comment formatting" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <select id="sql-comments-formatting" class="form-select form-select-sm" @bind="commentsFormatting">
+                                            <select id="sql-comments-formatting" class="form-select form-select-sm" @bind="commentsFormatting" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlCommentsFormattingMode.Keep">Keep</option>
                                                 <option value="@SqlCommentsFormattingMode.ReflowSafeOnly">ReflowSafeOnly</option>
                                             </select>
@@ -505,7 +505,7 @@
                                             <input id="sql-preserve-string-literals"
                                                    class="form-check-input"
                                                    type="checkbox"
-                                                   @bind="preserveStringLiterals"
+                                                   @bind="preserveStringLiterals" @bind:after="OnOptionValueChangedAsync"
                                                    disabled />
                                         </div>
                                     </div>
@@ -516,7 +516,7 @@
                                     <div class="dsl-sql-property-grid">
                                         <div class="dsl-sql-property-row" hidden='@HideOption("spaces inside parentheses smart always never")'>
                                             <SqlOptionLabel ForId="sql-inside-parentheses" Text="Inside parentheses" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <select id="sql-inside-parentheses" class="form-select form-select-sm" @bind="insideParentheses">
+                                            <select id="sql-inside-parentheses" class="form-select form-select-sm" @bind="insideParentheses" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlParenthesesSpacing.Never">Never</option>
                                                 <option value="@SqlParenthesesSpacing.Always">Always</option>
                                                 <option value="@SqlParenthesesSpacing.Smart">Smart</option>
@@ -525,17 +525,17 @@
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("spaces after comma")'>
                                             <SqlOptionLabel ForId="sql-spaces-after-comma" Text="Spaces after comma" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-spaces-after-comma" class="form-check-input" type="checkbox" @bind="spacesAfterComma" />
+                                            <input id="sql-spaces-after-comma" class="form-check-input" type="checkbox" @bind="spacesAfterComma" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("spaces around binary operators")'>
                                             <SqlOptionLabel ForId="sql-spaces-around-binary-operators" Text="Spaces around binary operators" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-spaces-around-binary-operators" class="form-check-input" type="checkbox" @bind="spacesAroundBinaryOperators" />
+                                            <input id="sql-spaces-around-binary-operators" class="form-check-input" type="checkbox" @bind="spacesAroundBinaryOperators" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("spaces before semicolon")'>
                                             <SqlOptionLabel ForId="sql-spaces-before-semicolon" Text="Spaces before semicolon" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-spaces-before-semicolon" class="form-check-input" type="checkbox" @bind="spacesBeforeSemicolon" />
+                                            <input id="sql-spaces-before-semicolon" class="form-check-input" type="checkbox" @bind="spacesBeforeSemicolon" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
                                     </div>
                                 </details>
@@ -886,19 +886,23 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         return Task.CompletedTask;
     }
 
-    private Task OnOptionsChangedAsync(ChangeEventArgs _)
+    private async Task OnOptionsChangedAsync(ChangeEventArgs _)
+    {
+        await OnOptionValueChangedAsync();
+    }
+
+    private async Task OnOptionValueChangedAsync()
     {
         if (isFormatterInitializing)
         {
-            return Task.CompletedTask;
+            return;
         }
 
+        await Task.Yield();
         if (autoFormatOptions)
         {
             FormatCurrentSql();
         }
-
-        return Task.CompletedTask;
     }
 
     private Task OnLoadDemoRequestedAsync()
