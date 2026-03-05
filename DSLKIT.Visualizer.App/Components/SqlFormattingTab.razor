@@ -9,11 +9,6 @@
         </div>
 
         <div class="dsl-sql-header-actions">
-            <label class="dsl-sql-autoformat-toggle" for="sql-auto-format">
-                <input id="sql-auto-format" class="form-check-input mt-0" type="checkbox" @bind="autoFormat" disabled="@isFormatterInitializing" />
-                <span>Auto-format input</span>
-            </label>
-
             <button class="btn btn-primary btn-sm"
                     @onclick="OnFormatRequestedAsync"
                     disabled="@isFormatterInitializing">
@@ -29,6 +24,51 @@
         </div>
     }
 
+    <section class="card dsl-sql-source-panel">
+        <details class="dsl-sql-source-details" open>
+            <summary class="dsl-sql-source-summary">
+                <span class="dsl-sql-source-title">Source SQL</span>
+                <span class="dsl-sql-source-preview">@GetSourcePreview()</span>
+            </summary>
+
+            <div class="dsl-sql-source-body">
+                <div class="dsl-sql-source-toolbar">
+                    <label class="dsl-sql-autoformat-toggle" for="sql-auto-format">
+                        <input id="sql-auto-format" class="form-check-input mt-0" type="checkbox" @bind="autoFormat" disabled="@isFormatterInitializing" />
+                        <span>Auto-format input</span>
+                    </label>
+
+                    <div class="dsl-sql-input-actions">
+                        <button class="btn btn-outline-secondary btn-sm"
+                                @onclick="OnLoadDemoRequestedAsync"
+                                disabled="@isFormatterInitializing">
+                            Load Demo SQL
+                        </button>
+
+                        <button class="btn btn-outline-secondary btn-sm"
+                                @onclick="OnResetOptionsRequestedAsync"
+                                disabled="@isFormatterInitializing">
+                            Reset Options
+                        </button>
+
+                        <button class="btn btn-primary btn-sm"
+                                @onclick="OnFormatRequestedAsync"
+                                disabled="@isFormatterInitializing">
+                            Format SQL
+                        </button>
+                    </div>
+                </div>
+
+                <textarea id="sql-source-input"
+                          class="form-control dsl-sql-editor dsl-sql-source-editor"
+                          spellcheck="false"
+                          value="@sourceSql"
+                          disabled="@isFormatterInitializing"
+                          @oninput="OnSourceInputAsync"></textarea>
+            </div>
+        </details>
+    </section>
+
     <fieldset class="m-0 p-0 border-0" disabled="@isFormatterInitializing">
         <MudSplitPanel Class="dsl-sql-workspace-split"
                        FirstPanelInitialSize="420"
@@ -38,25 +78,10 @@
             <div class="dsl-sql-workspace-panel">
                 <section class="card dsl-sql-controls-panel">
                     <div class="card-header dsl-sql-controls-header">
-                        <span>Controls</span>
-
-                        <div class="dsl-sql-pane-tabs">
-                            <button type="button"
-                                    class="btn btn-sm dsl-sql-pane-tab @GetPaneTabClass(LeftPaneTab.Options)"
-                                    @onclick="() => SetLeftPaneTab(LeftPaneTab.Options)">
-                                Options
-                            </button>
-                            <button type="button"
-                                    class="btn btn-sm dsl-sql-pane-tab @GetPaneTabClass(LeftPaneTab.Input)"
-                                    @onclick="() => SetLeftPaneTab(LeftPaneTab.Input)">
-                                Input
-                            </button>
-                        </div>
+                        <span>Options</span>
                     </div>
 
                     <div class="card-body dsl-sql-controls-body">
-                        @if (activeLeftPaneTab == LeftPaneTab.Options)
-                        {
                             <div class="dsl-sql-search">
                                 <input id="sql-option-search"
                                        type="search"
@@ -522,35 +547,6 @@
                                     </div>
                                 </details>
                             </div>
-                        }
-                        else
-                        {
-                            <div class="dsl-sql-input-tab">
-                                <label class="dsl-sql-pane-label" for="sql-source-input">Original SQL</label>
-                                <textarea id="sql-source-input"
-                                          class="form-control dsl-sql-editor"
-                                          spellcheck="false"
-                                          value="@sourceSql"
-                                          @oninput="OnSourceInputAsync"></textarea>
-
-                                <div class="dsl-sql-input-actions">
-                                    <button class="btn btn-outline-secondary btn-sm"
-                                            @onclick="OnLoadDemoRequestedAsync">
-                                        Load Demo SQL
-                                    </button>
-
-                                    <button class="btn btn-outline-secondary btn-sm"
-                                            @onclick="OnResetOptionsRequestedAsync">
-                                        Reset Options
-                                    </button>
-
-                                    <button class="btn btn-primary btn-sm"
-                                            @onclick="OnFormatRequestedAsync">
-                                        Format SQL
-                                    </button>
-                                </div>
-                            </div>
-                        }
                     </div>
                 </section>
             </div>
@@ -596,12 +592,6 @@
 @code {
     [Inject]
     private IJSRuntime JsRuntime { get; set; } = null!;
-
-    private enum LeftPaneTab
-    {
-        Options,
-        Input
-    }
 
     private const string DemoSql = @"with recent as (
 select top(3) o.CustomerId,o.Region,o.TotalAmount from dbo.Orders as o where o.TotalAmount>=50
@@ -667,6 +657,8 @@ from dbo.A as a;";
 
     private const string StringLiteralsExampleSql =
         @"select 'A   B  C' as label from dbo.A as a;";
+
+    private const int SourcePreviewLength = 80;
 
     private const string SpacingExampleSql =
         @"select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
@@ -734,7 +726,6 @@ from dbo.A as a;";
     private string? formattingError;
     private string optionSearch = string.Empty;
     private bool autoFormat = true;
-    private LeftPaneTab activeLeftPaneTab = LeftPaneTab.Options;
 
     private SqlKeywordCase keywordCase = SqlKeywordCase.Upper;
     private SqlParenthesesSpacing insideParentheses = SqlParenthesesSpacing.Never;
@@ -839,10 +830,18 @@ from dbo.A as a;";
         await InvokeAsync(StateHasChanged);
     }
 
-    private string GetPaneTabClass(LeftPaneTab tab) =>
-        activeLeftPaneTab == tab
-            ? "btn-primary"
-            : "btn-outline-secondary";
+    private string GetSourcePreview()
+    {
+        var sourcePreview = string.Join(' ', sourceSql.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        if (string.IsNullOrWhiteSpace(sourcePreview))
+        {
+            return "(empty)";
+        }
+
+        return sourcePreview.Length <= SourcePreviewLength
+            ? sourcePreview
+            : $"{sourcePreview[..SourcePreviewLength]}...";
+    }
 
     private bool HideOption(string searchTokens) => !MatchesOptionSearch(searchTokens);
 
@@ -854,12 +853,6 @@ from dbo.A as a;";
         }
 
         return searchTokens.Contains(optionSearch.Trim(), StringComparison.OrdinalIgnoreCase);
-    }
-
-    private void SetLeftPaneTab(LeftPaneTab tab)
-    {
-        activeLeftPaneTab = tab;
-        resizeEditorsPending = true;
     }
 
     private Task OnSourceInputAsync(ChangeEventArgs args)
@@ -918,7 +911,6 @@ from dbo.A as a;";
         }
 
         sourceSql = optionExampleSql;
-        activeLeftPaneTab = LeftPaneTab.Input;
         resizeEditorsPending = true;
         return Task.CompletedTask;
     }

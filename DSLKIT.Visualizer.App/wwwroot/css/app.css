@@ -605,6 +605,55 @@ code {
     font-size: 0.82rem;
 }
 
+.dsl-sql-source-panel {
+    border: 1px solid #e5e7eb;
+}
+
+.dsl-sql-source-details {
+    min-width: 0;
+}
+
+.dsl-sql-source-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.55rem 0.75rem;
+    background: #f8fafc;
+    cursor: pointer;
+    user-select: none;
+}
+
+.dsl-sql-source-title {
+    color: #1f2937;
+    font-size: 0.84rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.dsl-sql-source-preview {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #64748b;
+    font-size: 0.8rem;
+}
+
+.dsl-sql-source-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 0.75rem;
+}
+
+.dsl-sql-source-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
 .dsl-sql-workspace-split {
     flex: 0 0 auto;
     min-height: 0;
@@ -754,6 +803,12 @@ code {
     color: #475569;
     font-weight: 600;
     font-size: 0.84rem;
+}
+
+.dsl-sql-source-editor {
+    min-height: 8rem;
+    max-height: 20rem;
+    overflow-y: auto !important;
 }
 
 .dsl-sql-editor {
