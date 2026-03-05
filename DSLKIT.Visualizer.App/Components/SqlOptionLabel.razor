@@ -8,8 +8,6 @@
         </button>
 
         <div class="dsl-sql-option-help-popover" role="tooltip">
-            <p class="dsl-sql-option-help-description">@HelpDescription</p>
-
             @if (!string.IsNullOrWhiteSpace(examplePreview))
             {
                 <pre class="dsl-sql-option-help-preview">@examplePreview</pre>
@@ -41,9 +39,6 @@
 
     [CascadingParameter]
     public IReadOnlyDictionary<string, string>? OptionExamples { get; set; }
-
-    private string HelpDescription =>
-        "Quick hint and focused SQL snippet for this option.";
 
     private string? examplePreview =>
         BuildPreview(FindExampleSql());

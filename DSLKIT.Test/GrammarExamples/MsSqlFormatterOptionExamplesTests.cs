@@ -32,15 +32,20 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         private const string KeywordCaseExampleSql =
-            @"select o.CustomerId as customerAlias,o.Region as regionAlias from dbo.Orders as o where o.CustomerId=@customerId;";
+            @"-- Keyword case: watch SELECT/FROM/WHERE keyword casing after formatting.
+select o.CustomerId as customerAlias,o.Region as regionAlias from dbo.Orders as o where o.CustomerId=@customerId;";
 
-        private const string SemicolonAndEofExampleSql = "select 1";
+        private const string SemicolonAndEofExampleSql =
+            @"-- Statement terminator and EOF newline: watch the semicolon and final trailing newline.
+select 1";
 
         private const string AlignAliasesExampleSql =
-            @"select o.CustomerId as customer_id,o.TotalAmount as very_long_total_amount,o.Region as region from dbo.Orders as o;";
+            @"-- Align aliases: compare how alias columns line up in the SELECT list.
+select o.CustomerId as customer_id,o.TotalAmount as very_long_total_amount,o.Region as region from dbo.Orders as o;";
 
         private const string LayoutClausesExampleSql =
-            @"with sales_cte as (select o.CustomerId,o.TotalAmount,o.Region from dbo.Orders as o)
+            @"-- Clause layout: look at line breaks before WITH/SELECT/FROM/WHERE/GROUP BY/HAVING/ORDER BY.
+with sales_cte as (select o.CustomerId,o.TotalAmount,o.Region from dbo.Orders as o)
 select CustomerId,Region,sum(TotalAmount) as total_amount
 from sales_cte
 where TotalAmount>=100
@@ -49,43 +54,55 @@ having sum(TotalAmount)>150
 order by CustomerId;";
 
         private const string LayoutOptionClauseExampleSql =
-            @"select o.CustomerId,o.TotalAmount from dbo.Orders as o option (recompile);";
+            @"-- OPTION clause newline: check whether OPTION moves to a dedicated line.
+select o.CustomerId,o.TotalAmount from dbo.Orders as o option (recompile);";
 
         private const string JoinsExampleSql =
-            @"select a.Id,a.Region from dbo.A as a inner join dbo.B as b on a.Id=b.Id and a.Region=b.Region or a.IsActive=b.IsActive and a.Type=b.Type;";
+            @"-- JOIN layout: check JOIN/ON line breaks and where AND/OR splits inside ON.
+select a.Id,a.Region from dbo.A as a inner join dbo.B as b on a.Id=b.Id and a.Region=b.Region or a.IsActive=b.IsActive and a.Type=b.Type;";
 
         private const string PredicatesExampleSql =
-            @"select a.Id from dbo.A as a where a.Status=1 and a.Region='EU' or a.Region='US' and a.Score>10;";
+            @"-- Predicate layout: inspect WHERE logical breaks and mixed AND/OR grouping.
+select a.Id from dbo.A as a where a.Status=1 and a.Region='EU' or a.Region='US' and a.Score>10;";
 
         private const string ExpressionsCaseExampleSql =
-            @"select case when a.Score>90 then 'A' when a.Score>70 then 'B' else 'C' end as grade from dbo.A as a;";
+            @"-- CASE style: check WHEN/THEN formatting for multiline versus compact output.
+select case when a.Score>90 then 'A' when a.Score>70 then 'B' else 'C' end as grade from dbo.A as a;";
 
         private const string InlineShortExpressionExampleSql =
-            @"select ((a.Price+a.Tax)+a.Fee)+a.Discount as total from dbo.A as a inner join dbo.B as b on ((a.Id+b.Id)+b.ShiftAmount)>10 where ((a.Score+a.Bonus)+a.Penalty)>0;";
+            @"-- Inline short expression: watch nested expressions in SELECT/ON/WHERE collapse or expand.
+select ((a.Price+a.Tax)+a.Fee)+a.Discount as total from dbo.A as a inner join dbo.B as b on ((a.Id+b.Id)+b.ShiftAmount)>10 where ((a.Score+a.Bonus)+a.Penalty)>0;";
 
         private const string ListsExampleSql =
-            @"select a.Id,a.Region,a.Status,a.Score from dbo.A as a where a.Id in(1,2,3,4,5,6,7,8) group by a.Id,a.Region,a.Status,a.Score order by a.Id,a.Region,a.Status,a.Score;";
+            @"-- List layout: focus on comma style and wrapping in SELECT/IN/GROUP BY/ORDER BY lists.
+select a.Id,a.Region,a.Status,a.Score from dbo.A as a where a.Id in(1,2,3,4,5,6,7,8) group by a.Id,a.Region,a.Status,a.Score order by a.Id,a.Region,a.Status,a.Score;";
 
         private const string SelectCompactWithExpressionsExampleSql =
-            @"select a.Id,a.Region,a.Score+10 as boosted_score,a.Status from dbo.A as a;";
+            @"-- Compact SELECT threshold: verify whether expression items still stay on one line.
+select a.Id,a.Region,a.Score+10 as boosted_score,a.Status from dbo.A as a;";
 
         private const string InListThresholdExampleSql =
-            @"select a.Id from dbo.A as a where a.Id in(1,2,3,4,5,6,7,8,9,10,11,12);";
+            @"-- Inline IN threshold: inspect when IN(...) remains inline versus multiline.
+select a.Id from dbo.A as a where a.Id in(1,2,3,4,5,6,7,8,9,10,11,12);";
 
         private const string DmlAndDdlExampleSql =
-            @"update dbo.A set Region='EU',Status=1,Score=10 where Id=@id;
+            @"-- DML/DDL layout: check UPDATE/INSERT lists and CREATE PROC block formatting.
+update dbo.A set Region='EU',Status=1,Score=10 where Id=@id;
 insert into dbo.Log(Id,Region,Status,Score) values(@id,'EU',1,10);
 create proc p as begin select 1 end;";
 
         private const string CommentsExampleSql =
-            @"select a.Id /*    keep   spacing   */ as id_alias --line    comment
+            @"-- Comment formatting: watch comment attachment and internal comment spacing behavior.
+select a.Id /*    keep   spacing   */ as id_alias --line    comment
 from dbo.A as a;";
 
         private const string StringLiteralsExampleSql =
-            @"select 'A   B  C' as label from dbo.A as a;";
+            @"-- Preserve string literals: make sure spaces inside quoted strings are untouched.
+select 'A   B  C' as label from dbo.A as a;";
 
         private const string SpacingExampleSql =
-            @"select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
+            @"-- Spacing options: inspect spaces after commas, around operators, and parentheses.
+select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
 
         private static readonly IReadOnlyDictionary<string, string> OptionExampleSqlByOptionId = new Dictionary<string, string>(StringComparer.Ordinal)
         {
