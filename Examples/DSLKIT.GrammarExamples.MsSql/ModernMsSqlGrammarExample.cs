@@ -587,6 +587,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             var orderByClause = gb.NT("OrderByClause");
             var orderItemList = gb.NT("OrderItemList");
             var orderItem = gb.NT("OrderItem");
+            var groupingSetList = gb.NT("GroupingSetList");
+            var groupingSet = gb.NT("GroupingSet");
             var offsetFetchClause = gb.NT("OffsetFetchClause");
             var searchCondition = gb.NT("SearchCondition");
             var expression = gb.NT("Expression");
@@ -1876,6 +1878,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("QuerySpecification").Is(selectCore, kw("WHERE"), searchCondition, kw("GROUP"), kw("BY"), expressionList, kw("WITH"), identifierTerm);
             gb.Prod("QuerySpecification").Is(selectCore, kw("GROUP"), kw("BY"), expressionList, kw("WITH"), identifierTerm, kw("HAVING"), searchCondition);
             gb.Prod("QuerySpecification").Is(selectCore, kw("WHERE"), searchCondition, kw("GROUP"), kw("BY"), expressionList, kw("WITH"), identifierTerm, kw("HAVING"), searchCondition);
+            gb.Prod("QuerySpecification").Is(selectCore, kw("GROUP"), kw("BY"), kw("GROUPING"), kw("SETS"), "(", groupingSetList, ")");
+            gb.Prod("QuerySpecification").Is(selectCore, kw("WHERE"), searchCondition, kw("GROUP"), kw("BY"), kw("GROUPING"), kw("SETS"), "(", groupingSetList, ")");
+            gb.Prod("QuerySpecification").Is(selectCore, kw("GROUP"), kw("BY"), kw("GROUPING"), kw("SETS"), "(", groupingSetList, ")", kw("HAVING"), searchCondition);
+            gb.Prod("QuerySpecification").Is(selectCore, kw("WHERE"), searchCondition, kw("GROUP"), kw("BY"), kw("GROUPING"), kw("SETS"), "(", groupingSetList, ")", kw("HAVING"), searchCondition);
 
             gb.Prod("SetQuantifier").Is(kw("ALL"));
             gb.Prod("SetQuantifier").Is(kw("DISTINCT"));
@@ -2015,6 +2021,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("ComparisonExpression").Is(additiveExpression);
             gb.Prod("ComparisonExpression").Is(additiveExpression, comparisonOperator, additiveExpression);
             gb.Prod("ComparisonExpression").Is(additiveExpression, likeOperator, additiveExpression);
+            gb.Prod("ComparisonExpression").Is(additiveExpression, likeOperator, additiveExpression, kw("ESCAPE"), additiveExpression);
             gb.Prod("ComparisonExpression").Is(additiveExpression, inOperator, additiveExpression);
             gb.Prod("ComparisonExpression").Is(additiveExpression, isOperator, additiveExpression);
             gb.Prod("ComparisonExpression").Is(additiveExpression, betweenOperator, additiveExpression, kw("AND"), additiveExpression);
@@ -2106,6 +2113,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("FunctionArgumentList").Is(expression);
             gb.Prod("FunctionArgumentList").Is(functionArgumentList, ",", expression);
             gb.Prod("GraphWithinGroupClause").Is(kw("WITHIN"), kw("GROUP"), "(", kw("GRAPH"), kw("PATH"), ")");
+            gb.Prod("GraphWithinGroupClause").Is(kw("WITHIN"), kw("GROUP"), "(", kw("ORDER"), kw("BY"), orderItemList, ")");
 
             gb.Prod("OverClause").Is(kw("OVER"), "(", overSpec, ")");
             gb.Prod("OverSpec").Is(EmptyTerm.Empty);
@@ -2142,6 +2150,10 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod("ExpressionList").Is(expression);
             gb.Prod("ExpressionList").Is(expressionList, ",", expression);
+            gb.Prod("GroupingSetList").Is(groupingSet);
+            gb.Prod("GroupingSetList").Is(groupingSetList, ",", groupingSet);
+            gb.Prod("GroupingSet").Is("(", expressionList, ")");
+            gb.Prod("GroupingSet").Is("(", ")");
             gb.Prod("IdentifierList").Is(identifierTerm);
             gb.Prod("IdentifierList").Is(identifierList, ",", identifierTerm);
 
@@ -2228,6 +2240,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("IdentifierTerm").Is(kw("FILTER"));
             gb.Prod("IdentifierTerm").Is(kw("PREDICATE"));
             gb.Prod("IdentifierTerm").Is(kw("BLOCK"));
+            gb.Prod("IdentifierTerm").Is(kw("GROUPING"));
+            gb.Prod("IdentifierTerm").Is(kw("SETS"));
             gb.Prod("IdentifierTerm").Is(kw("PIVOT"));
             gb.Prod("IdentifierTerm").Is(kw("UNPIVOT"));
             gb.Prod("IdentifierTerm").Is(kw("LANGUAGE"));
