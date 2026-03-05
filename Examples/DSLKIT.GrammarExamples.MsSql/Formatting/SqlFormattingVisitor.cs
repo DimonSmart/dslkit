@@ -1643,13 +1643,25 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                     builder.Append(' ');
                 }
 
-                if (tokenInfo.IsComment)
-                {
-                    builder.Append(FormatCommentText(tokenInfo.Raw));
-                }
-                else
+                if (!tokenInfo.IsComment)
                 {
                     builder.Append(FormatToken(tokenInfo.Raw, tokenInfo.TokenForRules, tokenInfo.IsKeyword));
+                    previousToken = tokenInfo.TokenForRules;
+                    previousTokenWasKeyword = tokenInfo.IsKeyword;
+                    continue;
+                }
+
+                var commentText = FormatCommentText(tokenInfo.Raw);
+                builder.Append(commentText);
+
+                var isSingleLineComment = commentText.StartsWith("--", StringComparison.Ordinal);
+                var hasLineBreak = commentText.Contains('\n') || commentText.Contains('\r');
+                if (isSingleLineComment && !hasLineBreak)
+                {
+                    builder.Append(Environment.NewLine);
+                    previousToken = null;
+                    previousTokenWasKeyword = false;
+                    continue;
                 }
 
                 previousToken = tokenInfo.TokenForRules;

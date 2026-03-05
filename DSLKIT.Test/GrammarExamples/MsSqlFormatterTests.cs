@@ -502,6 +502,36 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void TryFormat_ShouldKeepSingleLineCommentOnDedicatedLine_WhenRenderingInlineNodes()
+        {
+            const string sourceSql = """
+                SELECT
+                    -- keep   spacing
+                    c.CustomerId /*  keep   spacing */ AS customer_id,
+                    c.Region AS region
+                FROM dbo.Customers AS c;
+                """;
+
+            var options = new SqlFormattingOptions
+            {
+                Comments = new SqlCommentsFormattingOptions
+                {
+                    PreserveAttachment = true,
+                    Formatting = SqlCommentsFormattingMode.ReflowSafeOnly
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+
+            result.IsSuccess.Should().BeTrue();
+
+            var formattedSql = NormalizeLineEndings(result.FormattedSql!);
+            formattedSql.Should().Contain("-- keep spacing\n");
+            formattedSql.Should().Contain("/* keep spacing */");
+            formattedSql.Should().NotContain("-- keep spacing c.CustomerId");
+        }
+
+        [Fact]
         public void TryFormat_ShouldFormatCreateDatabase_WithPopularOptions()
         {
             const string sourceSql = """
