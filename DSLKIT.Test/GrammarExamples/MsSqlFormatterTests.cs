@@ -194,7 +194,8 @@ namespace DSLKIT.Test.GrammarExamples
                     MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
                     {
                         MaxTokensSingleLine = 5,
-                        BreakOn = SqlJoinMultilineBreakOnMode.AndOnly
+                        BreakOnAnd = true,
+                        BreakOnOr = false
                     }
                 }
             };
@@ -207,6 +208,54 @@ namespace DSLKIT.Test.GrammarExamples
             formattedSql.Should().MatchRegex("\\n\\s+ON\\s+a\\.Id\\s*=\\s*b\\.Id");
             formattedSql.Should().MatchRegex("\\n\\s+AND\\s+a\\.TYPE\\s*=\\s*b\\.TYPE");
             formattedSql.Should().MatchRegex("\\n\\s+AND\\s+a\\.IsActive\\s*=\\s*1");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldApplyJoinBreakOnFlags()
+        {
+            const string sourceSql = "SELECT a AS A FROM dbo.A AS a INNER JOIN dbo.B AS b ON a.Id=b.Id AND a.Type=b.Type OR a.Flag=b.Flag";
+
+            var andOnlyOptions = new SqlFormattingOptions
+            {
+                Joins = new SqlJoinsFormattingOptions
+                {
+                    NewlinePerJoin = true,
+                    OnNewLine = true,
+                    MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
+                    {
+                        MaxTokensSingleLine = 1,
+                        BreakOnAnd = true,
+                        BreakOnOr = false
+                    }
+                }
+            };
+
+            var andOnlyResult = ModernMsSqlFormatter.TryFormat(sourceSql, andOnlyOptions);
+            var andOnlyFormattedSql = NormalizeLineEndings(andOnlyResult.FormattedSql);
+
+            andOnlyResult.IsSuccess.Should().BeTrue();
+            andOnlyFormattedSql.Should().MatchRegex("AND\\s+a\\.TYPE\\s*=\\s*b\\.TYPE\\s+OR\\s+a\\.Flag\\s*=\\s*b\\.Flag");
+
+            var andOrOptions = new SqlFormattingOptions
+            {
+                Joins = new SqlJoinsFormattingOptions
+                {
+                    NewlinePerJoin = true,
+                    OnNewLine = true,
+                    MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
+                    {
+                        MaxTokensSingleLine = 1,
+                        BreakOnAnd = true,
+                        BreakOnOr = true
+                    }
+                }
+            };
+
+            var andOrResult = ModernMsSqlFormatter.TryFormat(sourceSql, andOrOptions);
+            var andOrFormattedSql = NormalizeLineEndings(andOrResult.FormattedSql);
+
+            andOrResult.IsSuccess.Should().BeTrue();
+            andOrFormattedSql.Should().MatchRegex("\\n\\s+OR\\s+a\\.Flag\\s*=\\s*b\\.Flag");
         }
 
         [Fact]

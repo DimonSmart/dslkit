@@ -44,8 +44,8 @@ select 1";
 select o.CustomerId as customer_id,o.TotalAmount as very_long_total_amount,o.Region as region from dbo.Orders as o;";
 
         private const string LayoutClausesExampleSql =
-            @"-- Clause layout: look at line breaks before WITH/SELECT/FROM/WHERE/GROUP BY/HAVING/ORDER BY.
-with sales_cte as (select o.CustomerId,o.TotalAmount,o.Region from dbo.Orders as o)
+            @"-- Clause layout: WITH follows AS so ""New line before WITH"" is visible.
+create view dbo.v_sales as with sales_cte as (select o.CustomerId,o.TotalAmount,o.Region from dbo.Orders as o)
 select CustomerId,Region,sum(TotalAmount) as total_amount
 from sales_cte
 where TotalAmount>=100
@@ -58,8 +58,12 @@ order by CustomerId;";
 select o.CustomerId,o.TotalAmount from dbo.Orders as o option (recompile);";
 
         private const string JoinsExampleSql =
-            @"-- JOIN layout: check JOIN/ON line breaks and where AND/OR splits inside ON.
-select a.Id,a.Region from dbo.A as a inner join dbo.B as b on a.Id=b.Id and a.Region=b.Region or a.IsActive=b.IsActive and a.Type=b.Type;";
+            @"-- JOIN layout: try ON max tokens = 0, 1, 7, 11, 15 and toggle break on AND/OR.
+select a.Id,a.Region
+from dbo.A as a
+inner join dbo.B as b on a.Id=b.Id and b.Flag=1
+left join dbo.C as c on a.Id=c.Id and c.Flag=1 and c.Region=a.Region
+left join dbo.D as d on a.Id=d.Id and d.Flag=1 and d.Region=a.Region or d.Kind=a.Kind;";
 
         private const string PredicatesExampleSql =
             @"-- Predicate layout: inspect WHERE logical breaks and mixed AND/OR grouping.
@@ -124,6 +128,8 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             ["sql-joins-on-new-line"] = JoinsExampleSql,
             ["sql-joins-multiline-threshold"] = JoinsExampleSql,
             ["sql-joins-break-on"] = JoinsExampleSql,
+            ["sql-joins-break-on-and"] = JoinsExampleSql,
+            ["sql-joins-break-on-or"] = JoinsExampleSql,
             ["sql-predicates-multiline-where"] = PredicatesExampleSql,
             ["sql-predicates-logical-break"] = PredicatesExampleSql,
             ["sql-predicates-inline-max-conditions"] = PredicatesExampleSql,

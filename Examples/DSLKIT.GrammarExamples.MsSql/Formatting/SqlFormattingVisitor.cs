@@ -1012,9 +1012,25 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         private void WriteOnPredicate(IReadOnlyList<SqlTokenInfo> tokenInfos, bool forceInlineByShortExpression)
         {
             var threshold = _options.Joins.MultilineOnThreshold;
-            var breakOperators = threshold.BreakOn == SqlJoinMultilineBreakOnMode.AndOnly
-                ? new HashSet<string>(StringComparer.Ordinal) { "AND" }
-                : new HashSet<string>(StringComparer.Ordinal) { "AND", "OR" };
+            var breakOnAnd = threshold.BreakOnAnd;
+            var breakOnOr = threshold.BreakOnOr;
+            var breakOperators = new HashSet<string>(StringComparer.Ordinal);
+            if (breakOnAnd)
+            {
+                breakOperators.Add("AND");
+            }
+
+            if (breakOnOr)
+            {
+                breakOperators.Add("OR");
+            }
+
+            if (breakOperators.Count == 0)
+            {
+                _writer.WriteSpace();
+                _writer.WriteToken(RenderTokensInline(tokenInfos));
+                return;
+            }
 
             var split = SplitByTopLevelLogicalOperators(tokenInfos, breakOperators);
             var shouldUseMultiline = threshold.MaxTokensSingleLine > 0 &&

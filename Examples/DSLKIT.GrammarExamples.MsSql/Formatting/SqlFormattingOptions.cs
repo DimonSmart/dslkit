@@ -84,12 +84,6 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         ReflowSafeOnly
     }
 
-    public enum SqlJoinMultilineBreakOnMode
-    {
-        AndOnly,
-        AndOr
-    }
-
     public enum SqlLogicalOperatorLineBreakMode
     {
         BeforeOperator,
@@ -236,7 +230,9 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
     {
         public int MaxTokensSingleLine { get; init; } = 0;
 
-        public SqlJoinMultilineBreakOnMode BreakOn { get; init; } = SqlJoinMultilineBreakOnMode.AndOnly;
+        public bool BreakOnAnd { get; init; } = true;
+
+        public bool BreakOnOr { get; init; }
     }
 
     public sealed record SqlPredicatesFormattingOptions

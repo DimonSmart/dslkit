@@ -42,7 +42,8 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
 - `joins.onNewLine`: `true | false`
 - `[HEURISTIC] joins.multilineOnThreshold`:
   - `maxTokensSingleLine`
-  - `breakOn = AndOnly | AndOr`
+  - `breakOnAnd = true | false`
+  - `breakOnOr = true | false`
 
 ## Stage 5. WHERE/HAVING Boolean Logic
 
