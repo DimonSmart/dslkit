@@ -131,14 +131,12 @@
                                                    @bind="indentSize" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
-                                        <div class="dsl-sql-property-row" hidden='@HideOption("layout blank line between clauses")'>
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout blank line between clauses")'>
                                             <SqlOptionLabel ForId="sql-blank-line-between-clauses" Text="Blank line between clauses" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <select id="sql-blank-line-between-clauses"
-                                                    class="form-select form-select-sm"
-                                                    @bind="blankLineBetweenClauses" @bind:after="OnOptionValueChangedAsync">
-                                                <option value="@SqlBlankLineBetweenClausesMode.None">None</option>
-                                                <option value="@SqlBlankLineBetweenClausesMode.BetweenMajorClauses">BetweenMajorClauses</option>
-                                            </select>
+                                            <input id="sql-blank-line-between-clauses"
+                                                   class="form-check-input"
+                                                   type="checkbox"
+                                                   @bind="blankLineBetweenClauses" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout newline with")'>
@@ -758,7 +756,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
     private SqlKeywordCase keywordCase = SqlKeywordCase.Upper;
     private SqlParenthesesSpacing insideParentheses = SqlParenthesesSpacing.Never;
     private SqlStatementTerminationMode terminateWithSemicolon = SqlStatementTerminationMode.ExistingOnly;
-    private SqlBlankLineBetweenClausesMode blankLineBetweenClauses = SqlBlankLineBetweenClausesMode.None;
+    private bool blankLineBetweenClauses;
     private SqlCommaStyle commaStyle = SqlCommaStyle.Trailing;
     private SqlListLayoutStyle selectItemsStyle = SqlListLayoutStyle.OnePerLine;
     private SqlListLayoutStyle groupByItemsStyle = SqlListLayoutStyle.OnePerLine;
@@ -996,7 +994,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         keywordCase = SqlKeywordCase.Upper;
         insideParentheses = SqlParenthesesSpacing.Never;
         terminateWithSemicolon = SqlStatementTerminationMode.ExistingOnly;
-        blankLineBetweenClauses = SqlBlankLineBetweenClausesMode.None;
+        blankLineBetweenClauses = false;
         commaStyle = SqlCommaStyle.Trailing;
         selectItemsStyle = SqlListLayoutStyle.OnePerLine;
         groupByItemsStyle = SqlListLayoutStyle.OnePerLine;
@@ -1091,6 +1089,8 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
                         Option = newlineBeforeOption
                     },
                     BlankLineBetweenClauses = blankLineBetweenClauses
+                        ? SqlBlankLineBetweenClausesMode.BetweenMajorClauses
+                        : SqlBlankLineBetweenClausesMode.None
                 },
                 Lists = new SqlListsFormattingOptions
                 {
