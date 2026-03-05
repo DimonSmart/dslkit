@@ -37,6 +37,10 @@
                         <input id="sql-auto-format" class="form-check-input mt-0" type="checkbox" @bind="autoFormat" disabled="@isFormatterInitializing" />
                         <span>Auto-format input</span>
                     </label>
+                    <label class="dsl-sql-autoformat-toggle" for="sql-auto-format-options">
+                        <input id="sql-auto-format-options" class="form-check-input mt-0" type="checkbox" @bind="autoFormatOptions" disabled="@isFormatterInitializing" />
+                        <span>Auto-format on option change</span>
+                    </label>
 
                     <div class="dsl-sql-input-actions">
                         <button class="btn btn-outline-secondary btn-sm"
@@ -733,6 +737,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
     private string? formattingError;
     private string optionSearch = string.Empty;
     private bool autoFormat = true;
+    private bool autoFormatOptions = true;
 
     private SqlKeywordCase keywordCase = SqlKeywordCase.Upper;
     private SqlParenthesesSpacing insideParentheses = SqlParenthesesSpacing.Never;
@@ -888,7 +893,11 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             return Task.CompletedTask;
         }
 
-        FormatCurrentSql();
+        if (autoFormatOptions)
+        {
+            FormatCurrentSql();
+        }
+
         return Task.CompletedTask;
     }
 
