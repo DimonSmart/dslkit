@@ -174,6 +174,44 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldRequireTerminatorBeforeCte()
+        {
+            const string script = """
+                SELECT 1
+                WITH cte AS
+                (
+                    SELECT 1 AS Value
+                )
+                SELECT Value
+                FROM cte;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeFalse("CTE after another statement requires ';' before WITH in SQL Server.");
+            parseResult.Error?.Message.Should().Contain("WITH");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseCteAfterSemicolon()
+        {
+            const string script = """
+                SELECT 1;
+                WITH cte AS
+                (
+                    SELECT 1 AS Value
+                )
+                SELECT Value
+                FROM cte;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseUpdateWithFromAndWhere()
         {
             const string script = """
