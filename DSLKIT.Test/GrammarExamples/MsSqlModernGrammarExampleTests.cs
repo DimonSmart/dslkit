@@ -735,6 +735,55 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseOpenJsonWithClause()
+        {
+            const string script = """
+                SELECT j.RegionId, j.RegionMeta
+                FROM OPENJSON(@json)
+                WITH
+                (
+                    RegionId INT '$.id',
+                    RegionMeta NVARCHAR(MAX) N'$.meta' AS JSON
+                ) AS j;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldRejectOpenJsonWithClause_OnNonOpenJsonFunction()
+        {
+            const string script = """
+                SELECT *
+                FROM dbo.SomeTvf(@x) WITH (a INT);
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeFalse("OPENJSON WITH (...) must not be accepted on arbitrary function calls.");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldRejectNonLiteralOpenJsonColumnPath()
+        {
+            const string script = """
+                SELECT *
+                FROM OPENJSON(@json)
+                WITH
+                (
+                    RegionId INT @path
+                );
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeFalse("OPENJSON column paths should be string literals in the strict grammar.");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseSetOperators_WithIntersectMix()
         {
             const string script = """

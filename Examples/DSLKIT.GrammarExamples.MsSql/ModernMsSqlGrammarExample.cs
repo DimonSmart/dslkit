@@ -582,9 +582,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             var temporalClause = gb.NT("TemporalClause");
             var pivotClause = gb.NT("PivotClause");
             var pivotValueList = gb.NT("PivotValueList");
+            var openJsonCall = gb.NT("OpenJsonCall");
             var openJsonWithClause = gb.NT("OpenJsonWithClause");
             var openJsonColumnList = gb.NT("OpenJsonColumnList");
             var openJsonColumnDef = gb.NT("OpenJsonColumnDef");
+            var openJsonPath = gb.NT("OpenJsonPath");
             var joinPart = gb.NT("JoinPart");
             var joinType = gb.NT("JoinType");
             var orderByClause = gb.NT("OrderByClause");
@@ -1940,9 +1942,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("TableFactor").Is(functionCall, identifierTerm);
             gb.Prod("TableFactor").Is(functionCall, "AS", identifierTerm, "(", insertColumnList, ")");
             gb.Prod("TableFactor").Is(functionCall, identifierTerm, "(", insertColumnList, ")");
-            gb.Prod("TableFactor").Is(functionCall, openJsonWithClause);
-            gb.Prod("TableFactor").Is(functionCall, openJsonWithClause, "AS", identifierTerm);
-            gb.Prod("TableFactor").Is(functionCall, openJsonWithClause, identifierTerm);
+            gb.Prod("TableFactor").Is(openJsonCall);
+            gb.Prod("TableFactor").Is(openJsonCall, "AS", identifierTerm);
+            gb.Prod("TableFactor").Is(openJsonCall, identifierTerm);
             gb.Prod("TableFactor").Is("(", queryExpression, ")", "AS", identifierTerm);
             gb.Prod("TableFactor").Is("(", queryExpression, ")", identifierTerm);
             gb.Prod("TableFactor").Is("(", queryExpression, ")", "AS", identifierTerm, "(", insertColumnList, ")");
@@ -1963,14 +1965,18 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("TableFactor").Is("(", tableSource, ")", "AS", identifierTerm);
             gb.Prod("TableFactor").Is("(", tableSource, ")", identifierTerm);
 
+            gb.Prod("OpenJsonCall").Is("OPENJSON", "(", functionArgumentList, ")");
+            gb.Prod("OpenJsonCall").Is("OPENJSON", "(", functionArgumentList, ")", openJsonWithClause);
             gb.Prod("OpenJsonWithClause").Is("WITH", "(", openJsonColumnList, ")");
             gb.Prod("OpenJsonColumnList").Is(openJsonColumnDef);
             gb.Prod("OpenJsonColumnList").Is(openJsonColumnList, ",", openJsonColumnDef);
             // col_name typeSpec [ path_expr ] [ AS JSON ]
             gb.Prod("OpenJsonColumnDef").Is(identifierTerm, typeSpec);
-            gb.Prod("OpenJsonColumnDef").Is(identifierTerm, typeSpec, expression);
+            gb.Prod("OpenJsonPath").Is(stringLiteral);
+            gb.Prod("OpenJsonPath").Is(unicodeStringLiteral);
+            gb.Prod("OpenJsonColumnDef").Is(identifierTerm, typeSpec, openJsonPath);
             gb.Prod("OpenJsonColumnDef").Is(identifierTerm, typeSpec, "AS", "JSON");
-            gb.Prod("OpenJsonColumnDef").Is(identifierTerm, typeSpec, expression, "AS", "JSON");
+            gb.Prod("OpenJsonColumnDef").Is(identifierTerm, typeSpec, openJsonPath, "AS", "JSON");
 
             gb.Prod("JoinPart").Is("JOIN", tableFactor, "ON", searchCondition);
             gb.Prod("JoinPart").Is(joinType, "JOIN", tableFactor, "ON", searchCondition);
