@@ -306,6 +306,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             var createFunctionHead = gb.NT("CreateFunctionHead");
             var createFunctionName = gb.NT("CreateFunctionName");
             var createFunctionSignature = gb.NT("CreateFunctionSignature");
+            var createFunctionSignatureParameterListOpt = gb.NT("CreateFunctionSignatureParameterListOpt");
+            var createFunctionSignatureWithClauseOpt = gb.NT("CreateFunctionSignatureWithClauseOpt");
             var createFunctionParameterList = gb.NT("CreateFunctionParameterList");
             var createFunctionParameter = gb.NT("CreateFunctionParameter");
             var createFunctionParameterOptionList = gb.NT("CreateFunctionParameterOptionList");
@@ -365,6 +367,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             var createProcKeyword = gb.NT("CreateProcKeyword");
             var createProcName = gb.NT("CreateProcName");
             var createProcSignature = gb.NT("CreateProcSignature");
+            var createProcSignatureParameterListOpt = gb.NT("CreateProcSignatureParameterListOpt");
+            var createProcSignatureWithClauseOpt = gb.NT("CreateProcSignatureWithClauseOpt");
+            var createProcSignatureForReplicationOpt = gb.NT("CreateProcSignatureForReplicationOpt");
             var createProcParameterList = gb.NT("CreateProcParameterList");
             var createProcParameter = gb.NT("CreateProcParameter");
             var createProcParameterOptionList = gb.NT("CreateProcParameterOptionList");
@@ -555,8 +560,18 @@ namespace DSLKIT.GrammarExamples.MsSql
             var parenQueryPrimaryOrderByAndOffsetOpt = gb.NT("ParenQueryPrimaryOrderByAndOffsetOpt");
             var querySpecification = gb.NT("QuerySpecification");
             var selectCore = gb.NT("SelectCore");
+            var selectCorePrefix = gb.NT("SelectCorePrefix");
+            var selectCoreTail = gb.NT("SelectCoreTail");
+            var selectCoreIntoClause = gb.NT("SelectCoreIntoClause");
+            var querySpecificationWhereClause = gb.NT("QuerySpecificationWhereClause");
+            var querySpecificationGroupByClause = gb.NT("QuerySpecificationGroupByClause");
+            var querySpecificationGroupByExpressionList = gb.NT("QuerySpecificationGroupByExpressionList");
+            var querySpecificationGroupByGroupingSets = gb.NT("QuerySpecificationGroupByGroupingSets");
+            var querySpecificationGroupByWithOpt = gb.NT("QuerySpecificationGroupByWithOpt");
+            var querySpecificationHavingOpt = gb.NT("QuerySpecificationHavingOpt");
             var setQuantifier = gb.NT("SetQuantifier");
             var topClause = gb.NT("TopClause");
+            var topClauseTail = gb.NT("TopClauseTail");
             var topValue = gb.NT("TopValue");
             var selectList = gb.NT("SelectList");
             var selectItemList = gb.NT("SelectItemList");
@@ -596,6 +611,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             var primaryExpression = gb.NT("PrimaryExpression");
             var overClause = gb.NT("OverClause");
             var overSpec = gb.NT("OverSpec");
+            var overPartitionClause = gb.NT("OverPartitionClause");
+            var overOrderClause = gb.NT("OverOrderClause");
+            var overFrameExtentOpt = gb.NT("OverFrameExtentOpt");
             var frameClause = gb.NT("FrameClause");
             var frameBoundary = gb.NT("FrameBoundary");
             var functionCall = gb.NT("FunctionCall");
@@ -1028,22 +1046,12 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateProcName").Is(qualifiedName);
             gb.Prod("CreateProcName").Is(qualifiedName, ";", number);
 
-            gb.Prod("CreateProcSignature").Is(createProcName);
-            gb.Prod("CreateProcSignature").Is(createProcName, createProcParameterList);
-            gb.Prod("CreateProcSignature").Is(createProcName, createProcWithClause);
-            gb.Prod("CreateProcSignature").Is(createProcName, createProcForReplicationClause);
-            gb.Prod("CreateProcSignature").Is(createProcName, createProcParameterList, createProcWithClause);
-            gb.Prod("CreateProcSignature").Is(createProcName, createProcParameterList, createProcForReplicationClause);
-            gb.Prod("CreateProcSignature").Is(createProcName, createProcWithClause, createProcForReplicationClause);
-            gb.Prod("CreateProcSignature").Is(createProcName, createProcParameterList, createProcWithClause, createProcForReplicationClause);
-            gb.Prod("CreateProcSignature").Is(createProcName, "(", ")");
-            gb.Prod("CreateProcSignature").Is(createProcName, "(", createProcParameterList, ")");
-            gb.Prod("CreateProcSignature").Is(createProcName, "(", ")", createProcWithClause);
-            gb.Prod("CreateProcSignature").Is(createProcName, "(", createProcParameterList, ")", createProcWithClause);
-            gb.Prod("CreateProcSignature").Is(createProcName, "(", ")", createProcForReplicationClause);
-            gb.Prod("CreateProcSignature").Is(createProcName, "(", createProcParameterList, ")", createProcForReplicationClause);
-            gb.Prod("CreateProcSignature").Is(createProcName, "(", ")", createProcWithClause, createProcForReplicationClause);
-            gb.Prod("CreateProcSignature").Is(createProcName, "(", createProcParameterList, ")", createProcWithClause, createProcForReplicationClause);
+            gb.Opt(createProcSignatureParameterListOpt, createProcParameterList);
+            gb.Opt(createProcSignatureWithClauseOpt, createProcWithClause);
+            gb.Opt(createProcSignatureForReplicationOpt, createProcForReplicationClause);
+            gb.Rule("CreateProcSignature").OneOf(
+                gb.Seq(createProcName, createProcSignatureParameterListOpt, createProcSignatureWithClauseOpt, createProcSignatureForReplicationOpt),
+                gb.Seq(createProcName, "(", createProcSignatureParameterListOpt, ")", createProcSignatureWithClauseOpt, createProcSignatureForReplicationOpt));
 
             gb.Prod("CreateProcParameterList").Is(createProcParameter);
             gb.Prod("CreateProcParameterList").Is(createProcParameterList, ",", createProcParameter);
@@ -1113,10 +1121,15 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateFunctionHead").Is("ALTER", "FUNCTION");
             gb.Prod("CreateFunctionName").Is(qualifiedName);
 
-            gb.Prod("CreateFunctionSignature").Is(createFunctionName, "(", ")", createFunctionReturnsClause);
-            gb.Prod("CreateFunctionSignature").Is(createFunctionName, "(", createFunctionParameterList, ")", createFunctionReturnsClause);
-            gb.Prod("CreateFunctionSignature").Is(createFunctionName, "(", ")", createFunctionReturnsClause, createFunctionWithClause);
-            gb.Prod("CreateFunctionSignature").Is(createFunctionName, "(", createFunctionParameterList, ")", createFunctionReturnsClause, createFunctionWithClause);
+            gb.Opt(createFunctionSignatureParameterListOpt, createFunctionParameterList);
+            gb.Opt(createFunctionSignatureWithClauseOpt, createFunctionWithClause);
+            gb.Prod("CreateFunctionSignature").Is(
+                createFunctionName,
+                "(",
+                createFunctionSignatureParameterListOpt,
+                ")",
+                createFunctionReturnsClause,
+                createFunctionSignatureWithClauseOpt);
 
             gb.Prod("CreateFunctionParameterList").Is(createFunctionParameter);
             gb.Prod("CreateFunctionParameterList").Is(createFunctionParameterList, ",", createFunctionParameter);
@@ -1852,42 +1865,40 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .Or("BINARY", "BASE64")
                 .Or("WITHOUT_ARRAY_WRAPPER");
 
-            gb.Prod("SelectCore").Is("SELECT", selectList, "FROM", tableSourceList);
-            gb.Prod("SelectCore").Is("SELECT", setQuantifier, selectList, "FROM", tableSourceList);
-            gb.Rule("SelectCore").OneOf(
-                gb.Seq("SELECT", topClause, selectList, "FROM", tableSourceList),
-                gb.Seq("SELECT", setQuantifier, topClause, selectList, "FROM", tableSourceList),
-                gb.Seq("SELECT", selectList, "INTO", qualifiedName, "FROM", tableSourceList),
-                gb.Seq("SELECT", setQuantifier, selectList, "INTO", qualifiedName, "FROM", tableSourceList),
-                gb.Seq("SELECT", topClause, selectList, "INTO", qualifiedName, "FROM", tableSourceList),
-                gb.Seq("SELECT", selectList),
-                gb.Seq("SELECT", setQuantifier, selectList),
-                gb.Seq("SELECT", topClause, selectList),
-                gb.Seq("SELECT", setQuantifier, topClause, selectList));
+            gb.Rule("SelectCorePrefix").OneOf(
+                EmptyTerm.Empty,
+                setQuantifier,
+                topClause,
+                gb.Seq(setQuantifier, topClause));
+            gb.Rule("SelectCoreTail").OneOf(
+                EmptyTerm.Empty,
+                gb.Seq("FROM", tableSourceList),
+                selectCoreIntoClause);
+            gb.Prod("SelectCoreIntoClause").Is("INTO", qualifiedName, "FROM", tableSourceList);
+            gb.Prod("SelectCore").Is("SELECT", selectCorePrefix, selectList, selectCoreTail);
 
+            gb.Prod("QuerySpecificationWhereClause").Is("WHERE", searchCondition);
+            gb.Opt(querySpecificationHavingOpt, "HAVING", searchCondition);
+            gb.Opt(querySpecificationGroupByWithOpt, "WITH", identifierTerm);
+            gb.Prod("QuerySpecificationGroupByExpressionList").Is(expressionList, querySpecificationGroupByWithOpt);
+            gb.Prod("QuerySpecificationGroupByGroupingSets").Is("GROUPING", "SETS", "(", groupingSetList, ")");
+            gb.Rule("QuerySpecificationGroupByClause").OneOf(
+                gb.Seq("GROUP", "BY", querySpecificationGroupByExpressionList, querySpecificationHavingOpt),
+                gb.Seq("GROUP", "BY", querySpecificationGroupByGroupingSets, querySpecificationHavingOpt));
             gb.Rule("QuerySpecification").OneOf(
                 selectCore,
-                gb.Seq(selectCore, "WHERE", searchCondition),
-                gb.Seq(selectCore, "GROUP", "BY", expressionList),
-                gb.Seq(selectCore, "WHERE", searchCondition, "GROUP", "BY", expressionList),
-                gb.Seq(selectCore, "GROUP", "BY", expressionList, "HAVING", searchCondition),
-                gb.Seq(selectCore, "WHERE", searchCondition, "GROUP", "BY", expressionList, "HAVING", searchCondition),
-                gb.Seq(selectCore, "GROUP", "BY", expressionList, "WITH", identifierTerm),
-                gb.Seq(selectCore, "WHERE", searchCondition, "GROUP", "BY", expressionList, "WITH", identifierTerm),
-                gb.Seq(selectCore, "GROUP", "BY", expressionList, "WITH", identifierTerm, "HAVING", searchCondition),
-                gb.Seq(selectCore, "WHERE", searchCondition, "GROUP", "BY", expressionList, "WITH", identifierTerm, "HAVING", searchCondition),
-                gb.Seq(selectCore, "GROUP", "BY", "GROUPING", "SETS", "(", groupingSetList, ")"),
-                gb.Seq(selectCore, "WHERE", searchCondition, "GROUP", "BY", "GROUPING", "SETS", "(", groupingSetList, ")"),
-                gb.Seq(selectCore, "GROUP", "BY", "GROUPING", "SETS", "(", groupingSetList, ")", "HAVING", searchCondition),
-                gb.Seq(selectCore, "WHERE", searchCondition, "GROUP", "BY", "GROUPING", "SETS", "(", groupingSetList, ")", "HAVING", searchCondition));
+                gb.Seq(selectCore, querySpecificationWhereClause),
+                gb.Seq(selectCore, querySpecificationGroupByClause),
+                gb.Seq(selectCore, querySpecificationWhereClause, querySpecificationGroupByClause));
 
             gb.Rule("SetQuantifier").Keywords("ALL", "DISTINCT");
 
-            gb.Rule("TopClause").OneOf(
-                gb.Seq("TOP", topValue),
-                gb.Seq("TOP", topValue, "PERCENT"),
-                gb.Seq("TOP", topValue, "WITH", "TIES"),
-                gb.Seq("TOP", topValue, "PERCENT", "WITH", "TIES"));
+            gb.Rule("TopClauseTail").OneOf(
+                EmptyTerm.Empty,
+                "PERCENT",
+                gb.Seq("WITH", "TIES"),
+                gb.Seq("PERCENT", "WITH", "TIES"));
+            gb.Prod("TopClause").Is("TOP", topValue, topClauseTail);
             gb.Prod("TopValue").Is(number);
             gb.Prod("TopValue").Is("(", expression, ")");
 
@@ -2117,14 +2128,17 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("GraphWithinGroupClause").Is("WITHIN", "GROUP", "(", "ORDER", "BY", orderItemList, ")");
 
             gb.Prod("OverClause").Is("OVER", "(", overSpec, ")");
-            gb.Prod("OverSpec").Is(EmptyTerm.Empty);
-            gb.Prod("OverSpec").Is("ORDER", "BY", orderItemList);
-            gb.Prod("OverSpec").Is("ORDER", "BY", orderItemList, "ROWS", frameClause);
-            gb.Prod("OverSpec").Is("ORDER", "BY", orderItemList, "RANGE", frameClause);
-            gb.Prod("OverSpec").Is("PARTITION", "BY", expressionList);
-            gb.Prod("OverSpec").Is("PARTITION", "BY", expressionList, "ORDER", "BY", orderItemList);
-            gb.Prod("OverSpec").Is("PARTITION", "BY", expressionList, "ORDER", "BY", orderItemList, "ROWS", frameClause);
-            gb.Prod("OverSpec").Is("PARTITION", "BY", expressionList, "ORDER", "BY", orderItemList, "RANGE", frameClause);
+            gb.Prod("OverPartitionClause").Is("PARTITION", "BY", expressionList);
+            gb.Rule("OverFrameExtentOpt").OneOf(
+                EmptyTerm.Empty,
+                gb.Seq("ROWS", frameClause),
+                gb.Seq("RANGE", frameClause));
+            gb.Prod("OverOrderClause").Is("ORDER", "BY", orderItemList, overFrameExtentOpt);
+            gb.Rule("OverSpec").OneOf(
+                EmptyTerm.Empty,
+                overPartitionClause,
+                overOrderClause,
+                gb.Seq(overPartitionClause, overOrderClause));
 
             gb.Prod("FrameClause").Is(frameBoundary);
             gb.Prod("FrameClause").Is("BETWEEN", frameBoundary, "AND", frameBoundary);
