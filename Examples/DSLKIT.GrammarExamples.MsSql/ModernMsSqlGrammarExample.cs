@@ -189,6 +189,12 @@ namespace DSLKIT.GrammarExamples.MsSql
                 previewChar: null,
                 flags: TermFlags.None);
 
+            var withCheckOption = new RegExpTerminal(
+                "WITH_CHECK_OPTION",
+                @"\G(?i)WITH\s+CHECK\s+OPTION(?!\w)",
+                previewChar: null,
+                flags: TermFlags.None);
+
             // SQL Graph pseudo-column references: $node_id, $from_id, $to_id, etc.
             var graphColumnRef = new RegExpTerminal(
                 "GraphColumnRef",
@@ -216,6 +222,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .AddTerminal(sqlcmdPreprocessorCommand)
                 .AddTerminal(forSystemTime)
                 .AddTerminal(forPath)
+                .AddTerminal(withCheckOption)
                 .AddTerminal(graphColumnRef);
 
             // Resolve known LALR(1) ambiguities explicitly.
@@ -223,7 +230,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.OnShiftReduce("QueryUnionExpression", "UNION", Resolve.Reduce);
             gb.OnShiftReduce("QueryUnionExpression", "EXCEPT", Resolve.Reduce);
             gb.OnShiftReduce("QueryIntersectExpression", "INTERSECT", Resolve.Reduce);
-
             var script = gb.NT("Script");
             var statementList = gb.NT("StatementList");
             var statementSeparator = gb.NT("StatementSeparator");
@@ -401,7 +407,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             var schemaNameClause = gb.NT("SchemaNameClause");
             var createViewHead = gb.NT("CreateViewHead");
             var createViewStatement = gb.NT("CreateViewStatement");
+            var createViewColumnList = gb.NT("CreateViewColumnList");
+            var createViewOptionClause = gb.NT("CreateViewOptionClause");
             var createViewBody = gb.NT("CreateViewBody");
+            var createViewQuery = gb.NT("CreateViewQuery");
+            var createViewCheckOptionOpt = gb.NT("CreateViewCheckOptionOpt");
             var createViewOptionList = gb.NT("CreateViewOptionList");
             var createViewOption = gb.NT("CreateViewOption");
             var createTableStatement = gb.NT("CreateTableStatement");
@@ -1415,12 +1425,17 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateViewHead").Is("CREATE", "VIEW");
             gb.Prod("CreateViewHead").Is("CREATE", "OR", "ALTER", "VIEW");
             gb.Prod("CreateViewHead").Is("ALTER", "VIEW");
-            gb.Prod("CreateViewBody").Is("AS", queryExpression);
-            gb.Prod("CreateViewBody").Is("AS", withClause, queryExpression);
+            gb.Prod("CreateViewColumnList").Is("(", identifierList, ")");
+            gb.Prod("CreateViewOptionClause").Is("WITH", createViewOptionList);
+            gb.Prod("CreateViewQuery").Is(queryExpression);
+            gb.Prod("CreateViewQuery").Is(withClause, queryExpression);
+            gb.Prod("CreateViewBody").Is("AS", createViewQuery);
+            gb.Prod("CreateViewBody").Is("AS", createViewQuery, createViewCheckOptionOpt);
+            gb.Opt(createViewCheckOptionOpt, withCheckOption);
             gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, createViewBody);
-            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, "(", identifierList, ")", createViewBody);
-            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, "WITH", createViewOptionList, createViewBody);
-            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, "(", identifierList, ")", "WITH", createViewOptionList, createViewBody);
+            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, createViewColumnList, createViewBody);
+            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, createViewOptionClause, createViewBody);
+            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, createViewColumnList, createViewOptionClause, createViewBody);
             gb.Rule("CreateViewOptionList").SeparatedBy(",", createViewOption);
             gb.Rule("CreateViewOption").Keywords("ENCRYPTION", "SCHEMABINDING", "VIEW_METADATA");
 

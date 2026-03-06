@@ -367,6 +367,27 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseCreateView_WithCheckOption()
+        {
+            const string script = """
+                CREATE VIEW dbo.vActiveCustomers (CustomerId, CustomerName)
+                WITH SCHEMABINDING
+                AS
+                WITH src AS (
+                    SELECT 1 AS CustomerId, N'ACME' AS CustomerName
+                )
+                SELECT CustomerId, CustomerName
+                FROM src
+                WITH CHECK OPTION;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseIfExistsWithDropProcedureAndHexBitmask()
         {
             const string script = """
