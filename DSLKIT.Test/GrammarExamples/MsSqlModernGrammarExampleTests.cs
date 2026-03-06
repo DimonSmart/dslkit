@@ -215,12 +215,26 @@ namespace DSLKIT.Test.GrammarExamples
         [InlineData("SELECT 1 WHERE 1;")]
         [InlineData("SELECT 1 WHERE SomeColumn IN OtherColumn;")]
         [InlineData("SELECT 1 WHERE SomeColumn IS 5;")]
+        [InlineData("SELECT 1 WHERE SomeColumn IS OtherColumn + 1;")]
         public void ParseScript_ShouldRejectScalarExpressionsAsSearchConditions(string script)
         {
             var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
 
             parseResult.IsSuccess.Should().BeFalse(
                 $"script '{script}' should not parse because WHERE requires a predicate.");
+        }
+
+        [Theory]
+        [InlineData("SELECT 1 WHERE SomeColumn IN (1, 2, 3);")]
+        [InlineData("SELECT 1 WHERE SomeColumn IN (SELECT OtherColumn FROM dbo.OtherTable);")]
+        [InlineData("SELECT 1 WHERE SomeColumn IS NULL;")]
+        [InlineData("SELECT 1 WHERE SomeColumn IS NOT NULL;")]
+        public void ParseScript_ShouldParseStructuredSearchPredicates(string script)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script '{script}' should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
 
         [Fact]
