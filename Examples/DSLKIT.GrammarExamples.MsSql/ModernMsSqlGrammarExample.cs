@@ -489,7 +489,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             var createTableComputedColumn = gb.NT("CreateTableComputedColumn");
             var createTableColumnSet = gb.NT("CreateTableColumnSet");
             var createTableConstraint = gb.NT("CreateTableConstraint");
-            var createTableConstraintBody = gb.NT("CreateTableConstraintBody");
+            var createTableColumnConstraintBody = gb.NT("CreateTableColumnConstraintBody");
+            var createTableTableConstraintBody = gb.NT("CreateTableTableConstraintBody");
+            var createTableColumnKeyClusterType = gb.NT("CreateTableColumnKeyClusterType");
+            var createTableConstraintClusterType = gb.NT("CreateTableConstraintClusterType");
             var createTableClusterType = gb.NT("CreateTableClusterType");
             var createTableKeyColumnList = gb.NT("CreateTableKeyColumnList");
             var createTableKeyColumn = gb.NT("CreateTableKeyColumn");
@@ -531,6 +534,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             var indexOptionName = gb.NT("IndexOptionName");
             var indexOptionValue = gb.NT("IndexOptionValue");
             var indexOnOffValue = gb.NT("IndexOnOffValue");
+            var namedOptionValue = gb.NT("NamedOptionValue");
+            var maskingOptionList = gb.NT("MaskingOptionList");
+            var encryptionOptionList = gb.NT("EncryptionOptionList");
             var indexPartitionList = gb.NT("IndexPartitionList");
             var indexPartitionItem = gb.NT("IndexPartitionItem");
             var indexStorageTarget = gb.NT("IndexStorageTarget");
@@ -587,6 +593,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var createLoginOptionList = gb.NT("CreateLoginOptionList");
             var createLoginOption = gb.NT("CreateLoginOption");
             var bulkInsertStatement = gb.NT("BulkInsertStatement");
+            var bulkInsertOptionList = gb.NT("BulkInsertOptionList");
             var checkpointStatement = gb.NT("CheckpointStatement");
             var createUserStatement = gb.NT("CreateUserStatement");
             var createStatisticsStatement = gb.NT("CreateStatisticsStatement");
@@ -597,7 +604,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             var dropColumnEncryptionKeyStatement = gb.NT("DropColumnEncryptionKeyStatement");
             var matchGraphPattern = gb.NT("MatchGraphPattern");
             var matchGraphPath = gb.NT("MatchGraphPath");
+            var matchGraphStep = gb.NT("MatchGraphStep");
+            var matchGraphStepChain = gb.NT("MatchGraphStepChain");
             var matchGraphShortestPath = gb.NT("MatchGraphShortestPath");
+            var matchGraphShortestPathBody = gb.NT("MatchGraphShortestPathBody");
             var graphWithinGroupClause = gb.NT("GraphWithinGroupClause");
             var predictArgList = gb.NT("PredictArgList");
             var predictArg = gb.NT("PredictArg");
@@ -614,7 +624,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             var securityPolicyOptionList = gb.NT("SecurityPolicyOptionList");
             var securityPolicyOption = gb.NT("SecurityPolicyOption");
             var createExternalTableStatement = gb.NT("CreateExternalTableStatement");
+            var externalTableOptionList = gb.NT("ExternalTableOptionList");
             var createExternalDataSourceStatement = gb.NT("CreateExternalDataSourceStatement");
+            var externalDataSourceOptionList = gb.NT("ExternalDataSourceOptionList");
             var mergeStatement = gb.NT("MergeStatement");
             var mergeWhenList = gb.NT("MergeWhenList");
             var mergeWhen = gb.NT("MergeWhen");
@@ -1517,8 +1529,6 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod("CreateTableElementList").Is(createTableElement);
             gb.Prod("CreateTableElementList").Is(createTableElementList, ",", createTableElement);
-            // SQL Server memory-optimized tables may declare inline indices after columns without a comma
-            gb.Prod("CreateTableElementList").Is(createTableElementList, createTableTableIndex);
             gb.Prod("CreateTableElement").Is(createTableColumnDefinition);
             gb.Prod("CreateTableElement").Is(createTableComputedColumn);
             gb.Prod("CreateTableElement").Is(createTableColumnSet);
@@ -1543,14 +1553,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateTableColumnOption").Is("IDENTITY");
             gb.Prod("CreateTableColumnOption").Is("IDENTITY", "(", expression, ",", expression, ")");
             gb.Prod("CreateTableColumnOption").Is("COLLATE", identifierTerm);
-            gb.Prod("CreateTableColumnOption").Is("MASKED", "WITH", "(", indexOptionList, ")");
-            gb.Prod("CreateTableColumnOption").Is("ENCRYPTED", "WITH", "(", indexOptionList, ")");
+            gb.Prod("CreateTableColumnOption").Is("MASKED", "WITH", "(", maskingOptionList, ")");
+            gb.Prod("CreateTableColumnOption").Is("ENCRYPTED", "WITH", "(", encryptionOptionList, ")");
             gb.Prod("CreateTableColumnOption").Is("NOT", "FOR", "REPLICATION");
             gb.Prod("CreateTableColumnOption").Is("CHECK", "(", searchCondition, ")");
             gb.Prod("CreateTableColumnOption").Is("REFERENCES", qualifiedName);
             gb.Prod("CreateTableColumnOption").Is("REFERENCES", qualifiedName, "(", identifierList, ")");
             gb.Prod("CreateTableColumnOption").Is("WITH", "(", indexOptionList, ")");
-            gb.Prod("CreateTableColumnOption").Is("CONSTRAINT", identifierTerm, createTableConstraintBody);
+            gb.Prod("CreateTableColumnOption").Is("CONSTRAINT", identifierTerm, createTableColumnConstraintBody);
             gb.Prod("CreateTableColumnOption").Is(identifierTerm);
             gb.Prod("CreateTableColumnOption").Is(identifierTerm, identifierTerm);
             gb.Prod("CreateTableColumnOption").Is(qualifiedName, "(", expressionList, ")");
@@ -1561,36 +1571,55 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod("CreateTableColumnSet").Is(identifierTerm, typeSpec, "COLUMN_SET", "FOR", "ALL_SPARSE_COLUMNS");
 
-            gb.Prod("CreateTableConstraint").Is(createTableConstraintBody);
-            gb.Prod("CreateTableConstraint").Is("CONSTRAINT", identifierTerm, createTableConstraintBody);
+            gb.Prod("CreateTableConstraint").Is(createTableTableConstraintBody);
+            gb.Prod("CreateTableConstraint").Is("CONSTRAINT", identifierTerm, createTableTableConstraintBody);
 
-            gb.Prod("CreateTableConstraintBody").Is("PRIMARY", "KEY", "(", createTableKeyColumnList, ")");
-            gb.Prod("CreateTableConstraintBody").Is("PRIMARY", "KEY");
-            gb.Prod("CreateTableConstraintBody").Is("PRIMARY", "KEY", createTableClusterType);
-            gb.Prod("CreateTableConstraintBody").Is("PRIMARY", "KEY", createTableClusterType, "(", createTableKeyColumnList, ")");
-            gb.Prod("CreateTableConstraintBody").Is("PRIMARY", "KEY", createTableClusterType, "(", createTableKeyColumnList, ")", "ON", indexStorageTarget);
-            gb.Prod("CreateTableConstraintBody").Is("PRIMARY", "KEY", "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
-            gb.Prod("CreateTableConstraintBody").Is("PRIMARY", "KEY", createTableClusterType, "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
-            gb.Prod("CreateTableConstraintBody").Is("PRIMARY", "KEY", createTableClusterType, "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")", "ON", indexStorageTarget);
-            gb.Prod("CreateTableConstraintBody").Is("UNIQUE", "(", createTableKeyColumnList, ")");
-            gb.Prod("CreateTableConstraintBody").Is("UNIQUE");
-            gb.Prod("CreateTableConstraintBody").Is("UNIQUE", createTableClusterType, "(", createTableKeyColumnList, ")");
-            gb.Prod("CreateTableConstraintBody").Is("UNIQUE", "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
-            gb.Prod("CreateTableConstraintBody").Is("UNIQUE", createTableClusterType, "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
-            gb.Prod("CreateTableConstraintBody").Is("UNIQUE", createTableClusterType, "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")", "ON", indexStorageTarget);            gb.Prod("CreateTableConstraintBody").Is("CHECK", "(", searchCondition, ")");
-            gb.Prod("CreateTableConstraintBody").Is("FOREIGN", "KEY", "(", identifierList, ")", "REFERENCES", qualifiedName);
-            gb.Prod("CreateTableConstraintBody").Is("FOREIGN", "KEY", "(", identifierList, ")", "REFERENCES", qualifiedName, "(", identifierList, ")");
-            gb.Prod("CreateTableConstraintBody").Is("FOREIGN", "KEY", "REFERENCES", qualifiedName);
-            gb.Prod("CreateTableConstraintBody").Is("FOREIGN", "KEY", "REFERENCES", qualifiedName, "(", identifierList, ")");
-            gb.Prod("CreateTableConstraintBody").Is("DEFAULT", expression, "FOR", identifierTerm);
-            gb.Prod("CreateTableConstraintBody").Is("DEFAULT", "(", expression, ")", "FOR", identifierTerm);
+            gb.Prod("CreateTableColumnConstraintBody").Is("PRIMARY", "KEY");
+            gb.Prod("CreateTableColumnConstraintBody").Is("PRIMARY", "KEY", createTableColumnKeyClusterType);
+            gb.Prod("CreateTableColumnConstraintBody").Is("UNIQUE");
+            gb.Prod("CreateTableColumnConstraintBody").Is("UNIQUE", createTableColumnKeyClusterType);
+            gb.Prod("CreateTableColumnConstraintBody").Is("CHECK", "(", searchCondition, ")");
+            gb.Prod("CreateTableColumnConstraintBody").Is("FOREIGN", "KEY", "REFERENCES", qualifiedName);
+            gb.Prod("CreateTableColumnConstraintBody").Is("FOREIGN", "KEY", "REFERENCES", qualifiedName, "(", identifierList, ")");
+            gb.Prod("CreateTableColumnConstraintBody").Is("REFERENCES", qualifiedName);
+            gb.Prod("CreateTableColumnConstraintBody").Is("REFERENCES", qualifiedName, "(", identifierList, ")");
+            gb.Prod("CreateTableColumnConstraintBody").Is("DEFAULT", expression);
+            gb.Prod("CreateTableColumnConstraintBody").Is("DEFAULT", "(", expression, ")");
+
+            gb.Prod("CreateTableTableConstraintBody").Is("PRIMARY", "KEY", "(", createTableKeyColumnList, ")");
+            gb.Prod("CreateTableTableConstraintBody").Is("PRIMARY", "KEY", "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")");
+            gb.Prod("CreateTableTableConstraintBody").Is("PRIMARY", "KEY", "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
+            gb.Prod("CreateTableTableConstraintBody").Is("PRIMARY", "KEY", createTableConstraintClusterType, "(", createTableKeyColumnList, ")");
+            gb.Prod("CreateTableTableConstraintBody").Is("PRIMARY", "KEY", createTableConstraintClusterType, "(", createTableKeyColumnList, ")", "ON", indexStorageTarget);
+            gb.Prod("CreateTableTableConstraintBody").Is("PRIMARY", "KEY", "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
+            gb.Prod("CreateTableTableConstraintBody").Is("PRIMARY", "KEY", createTableConstraintClusterType, "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
+            gb.Prod("CreateTableTableConstraintBody").Is("PRIMARY", "KEY", createTableConstraintClusterType, "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")", "ON", indexStorageTarget);
+            gb.Prod("CreateTableTableConstraintBody").Is("UNIQUE", "(", createTableKeyColumnList, ")");
+            gb.Prod("CreateTableTableConstraintBody").Is("UNIQUE", createTableConstraintClusterType, "(", createTableKeyColumnList, ")");
+            gb.Prod("CreateTableTableConstraintBody").Is("UNIQUE", "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
+            gb.Prod("CreateTableTableConstraintBody").Is("UNIQUE", createTableConstraintClusterType, "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
+            gb.Prod("CreateTableTableConstraintBody").Is("UNIQUE", createTableConstraintClusterType, "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")", "ON", indexStorageTarget);
+            gb.Prod("CreateTableTableConstraintBody").Is("CHECK", "(", searchCondition, ")");
+            gb.Prod("CreateTableTableConstraintBody").Is("FOREIGN", "KEY", "(", identifierList, ")", "REFERENCES", qualifiedName);
+            gb.Prod("CreateTableTableConstraintBody").Is("FOREIGN", "KEY", "(", identifierList, ")", "REFERENCES", qualifiedName, "(", identifierList, ")");
+            gb.Prod("CreateTableTableConstraintBody").Is("DEFAULT", expression, "FOR", identifierTerm);
+            gb.Prod("CreateTableTableConstraintBody").Is("DEFAULT", "(", expression, ")", "FOR", identifierTerm);
+
+            gb.Rule(createTableColumnKeyClusterType)
+                .CanBe("CLUSTERED")
+                .Or("NONCLUSTERED");
+
+            gb.Rule(createTableConstraintClusterType)
+                .CanBe("NONCLUSTERED", "HASH")
+                .Or("CLUSTERED")
+                .Or("NONCLUSTERED");
 
             gb.Rule(createTableClusterType)
-                .CanBe("CLUSTERED")
-                .Or("NONCLUSTERED")
-                .Or("NONCLUSTERED", "HASH")
+                .CanBe("NONCLUSTERED", "HASH")
                 .Or("CLUSTERED", "COLUMNSTORE")
-                .Or("NONCLUSTERED", "COLUMNSTORE");
+                .Or("NONCLUSTERED", "COLUMNSTORE")
+                .Or("CLUSTERED")
+                .Or("NONCLUSTERED");
 
             gb.Prod("CreateTableKeyColumnList").Is(createTableKeyColumn);
             gb.Prod("CreateTableKeyColumnList").Is(createTableKeyColumnList, ",", createTableKeyColumn);
@@ -1599,8 +1628,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateTableKeyColumn").Is(identifierTerm, "DESC");
 
             gb.Prod("CreateTableTableIndex").Is("INDEX", identifierTerm, "(", createTableKeyColumnList, ")");
+            gb.Prod("CreateTableTableIndex").Is("INDEX", identifierTerm, "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")");
             gb.Prod("CreateTableTableIndex").Is("INDEX", identifierTerm, createTableClusterType, "(", createTableKeyColumnList, ")");
             gb.Prod("CreateTableTableIndex").Is("INDEX", identifierTerm, "(", createTableKeyColumnList, ")", createIndexWithClause);
+            gb.Prod("CreateTableTableIndex").Is("INDEX", identifierTerm, "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")", createIndexWithClause);
             gb.Prod("CreateTableTableIndex").Is("INDEX", identifierTerm, createTableClusterType, "(", createTableKeyColumnList, ")", createIndexWithClause);
             gb.Prod("CreateTableTableIndex").Is("INDEX", identifierTerm, "CLUSTERED", "COLUMNSTORE");
             gb.Prod("CreateTableTableIndex").Is("INDEX", identifierTerm, "CLUSTERED", "COLUMNSTORE", createIndexWithClause);
@@ -1609,6 +1640,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateTableOptions").Is("WITH", "(", createTableOptionList, ")");
             gb.Prod("CreateTableOptionList").Is(createTableOption);
             gb.Prod("CreateTableOptionList").Is(createTableOptionList, ",", createTableOption);
+            gb.Prod("CreateTableOption").Is("MEMORY_OPTIMIZED", "=", indexOptionValue);
             gb.Prod("CreateTableOption").Is(identifierTerm, "=", indexOptionValue);
             gb.Prod("CreateTableOption").Is(qualifiedName, "=", indexOptionValue);
             gb.Prod("CreateTableOption").Is(identifierTerm);
@@ -1722,6 +1754,21 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("IndexOptionValue").Is(indexOnOffValue, "(", indexOptionList, ")");
             gb.Prod("IndexOptionValue").Is("(", indexOptionList, ")");
             gb.Rule(indexOnOffValue).Keywords("ON", "OFF");
+
+            gb.Prod("NamedOptionValue").Is(expression);
+            gb.Prod("NamedOptionValue").Is(identifierTerm);
+            gb.Prod("NamedOptionValue").Is(qualifiedName);
+            gb.Prod("NamedOptionValue").Is("ON");
+            gb.Prod("NamedOptionValue").Is("OFF");
+
+            gb.Prod("MaskingOptionList").Is("FUNCTION", "=", expression);
+
+            gb.Prod("EncryptionOptionList").Is("COLUMN_ENCRYPTION_KEY", "=", namedOptionValue);
+            gb.Prod("EncryptionOptionList").Is(encryptionOptionList, ",", "ENCRYPTION_TYPE", "=", namedOptionValue);
+            gb.Prod("EncryptionOptionList").Is(encryptionOptionList, ",", "ALGORITHM", "=", namedOptionValue);
+            gb.Prod("EncryptionOptionList").Is(encryptionOptionList, ",", "COLUMN_ENCRYPTION_KEY", "=", namedOptionValue);
+            gb.Prod("EncryptionOptionList").Is("ENCRYPTION_TYPE", "=", namedOptionValue);
+            gb.Prod("EncryptionOptionList").Is("ALGORITHM", "=", namedOptionValue);
 
             gb.Prod("IndexPartitionList").Is(indexPartitionItem);
             gb.Prod("IndexPartitionList").Is(indexPartitionList, ",", indexPartitionItem);
@@ -2309,6 +2356,9 @@ namespace DSLKIT.GrammarExamples.MsSql
                 "SOURCE",
                 "TARGET",
                 "RESUME",
+                "INDEX",
+                "MASKED",
+                "ENCRYPTED",
                 "CLUSTERED",
                 "NONCLUSTERED",
                 "COLUMNSTORE",
@@ -2467,7 +2517,53 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             // BULK INSERT
             gb.Prod("BulkInsertStatement").Is("BULK", "INSERT", qualifiedName, "FROM", expression);
-            gb.Prod("BulkInsertStatement").Is("BULK", "INSERT", qualifiedName, "FROM", expression, "WITH", "(", tableHintLimitedList, ")");
+            gb.Prod("BulkInsertStatement").Is("BULK", "INSERT", qualifiedName, "FROM", expression, "WITH", "(", bulkInsertOptionList, ")");
+            gb.Prod("BulkInsertOptionList").Is("CHECK_CONSTRAINTS");
+            gb.Prod("BulkInsertOptionList").Is("KEEPIDENTITY");
+            gb.Prod("BulkInsertOptionList").Is("KEEPNULLS");
+            gb.Prod("BulkInsertOptionList").Is("TABLOCK");
+            gb.Prod("BulkInsertOptionList").Is("FIRE_TRIGGERS");
+            gb.Prod("BulkInsertOptionList").Is("CODEPAGE", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is("DATAFILETYPE", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is("DATA_SOURCE", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is("ERRORFILE", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is("ERRORFILE_DATA_SOURCE", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is("FIRSTROW", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is("FORMAT", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is("FIELDQUOTE", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is("FORMATFILE", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is("FORMATFILE_DATA_SOURCE", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is("KILOBYTES_PER_BATCH", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is("LASTROW", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is("MAXERRORS", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is("ROWS_PER_BATCH", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is("ROWTERMINATOR", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is("FIELDTERMINATOR", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is("BATCHSIZE", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is("ORDER", "(", createTableKeyColumnList, ")");
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "CHECK_CONSTRAINTS");
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "KEEPIDENTITY");
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "KEEPNULLS");
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "TABLOCK");
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "FIRE_TRIGGERS");
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "CODEPAGE", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "DATAFILETYPE", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "DATA_SOURCE", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "ERRORFILE", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "ERRORFILE_DATA_SOURCE", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "FIRSTROW", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "FORMAT", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "FIELDQUOTE", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "FORMATFILE", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "FORMATFILE_DATA_SOURCE", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "KILOBYTES_PER_BATCH", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "LASTROW", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "MAXERRORS", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "ROWS_PER_BATCH", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "ROWTERMINATOR", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "FIELDTERMINATOR", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "BATCHSIZE", "=", namedOptionValue);
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "ORDER", "(", createTableKeyColumnList, ")");
 
             gb.Prod("CheckpointStatement").Is("CHECKPOINT");
 
@@ -2476,16 +2572,18 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("MatchGraphPattern").Is("SHORTEST_PATH", "(", matchGraphShortestPath, ")");
             gb.Prod("MatchGraphPattern").Is(matchGraphPattern, "AND", matchGraphPath);
             gb.Prod("MatchGraphPattern").Is(matchGraphPattern, "AND", "SHORTEST_PATH", "(", matchGraphShortestPath, ")");
-            gb.Prod("MatchGraphShortestPath").Is(matchGraphPath);
-            gb.Prod("MatchGraphShortestPath").Is(matchGraphPath, "+");
-            gb.Prod("MatchGraphShortestPath").Is(matchGraphPath, "{", number, ",", number, "}");
-            // MatchGraphPath: identifierTerm  or  N1-(E)->N2  or  N1-(E)->N2-(E2)->N3 (chained)
-            gb.Prod("MatchGraphPath").Is(identifierTerm);  // simple node ref
-            gb.Prod("MatchGraphPath").Is(identifierTerm, "(", "-", "(", identifierTerm, ")", "-", ">", identifierTerm, ")");
-            gb.Prod("MatchGraphPath").Is(matchGraphPath, "-", "(", identifierTerm, ")", "-", ">", identifierTerm); // forward: ...(E)->N
-            gb.Prod("MatchGraphPath").Is(identifierTerm, "<", "-", "(", identifierTerm, ")", "-", identifierTerm); // backward N<-(E)-N
-            gb.Prod("MatchGraphPath").Is(matchGraphPath, "<", "-", "(", identifierTerm, ")", "-", identifierTerm); // backward chain: path<-(E)-N
-            gb.Prod("MatchGraphPath").Is(matchGraphPath, "-", "(", identifierTerm, ")", "-", identifierTerm); // undirected: ...(E)-N
+            gb.Prod("MatchGraphShortestPath").Is(matchGraphShortestPathBody);
+            gb.Prod("MatchGraphShortestPath").Is(matchGraphShortestPathBody, "+");
+            gb.Prod("MatchGraphShortestPath").Is(matchGraphShortestPathBody, "{", number, ",", number, "}");
+            gb.Prod("MatchGraphPath").Is(identifierTerm);
+            gb.Prod("MatchGraphPath").Is(identifierTerm, matchGraphStepChain);
+            gb.Prod("MatchGraphShortestPathBody").Is(identifierTerm, "(", matchGraphStepChain, ")");
+            gb.Rule(matchGraphStep)
+                .CanBe("-", "(", identifierTerm, ")", "-", ">", identifierTerm)
+                .Or("<", "-", "(", identifierTerm, ")", "-", identifierTerm)
+                .Or("-", "(", identifierTerm, ")", "-", identifierTerm);
+            gb.Prod("MatchGraphStepChain").Is(matchGraphStep);
+            gb.Prod("MatchGraphStepChain").Is(matchGraphStepChain, matchGraphStep);
 
             // PREDICT ML function
             gb.Prod("FunctionCall").Is("PREDICT", "(", predictArgList, ")");
@@ -2519,11 +2617,45 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             // CREATE EXTERNAL TABLE
             gb.Prod("CreateExternalTableStatement").Is("CREATE", "EXTERNAL", "TABLE", qualifiedName, "(", createTableElementList, ")");
-            gb.Prod("CreateExternalTableStatement").Is("CREATE", "EXTERNAL", "TABLE", qualifiedName, "(", createTableElementList, ")", "WITH", "(", tableHintLimitedList, ")");
+            gb.Prod("CreateExternalTableStatement").Is("CREATE", "EXTERNAL", "TABLE", qualifiedName, "(", createTableElementList, ")", "WITH", "(", externalTableOptionList, ")");
+            gb.Prod("ExternalTableOptionList").Is("LOCATION", "=", namedOptionValue);
+            gb.Prod("ExternalTableOptionList").Is("DATA_SOURCE", "=", namedOptionValue);
+            gb.Prod("ExternalTableOptionList").Is("FILE_FORMAT", "=", namedOptionValue);
+            gb.Prod("ExternalTableOptionList").Is("REJECT_TYPE", "=", namedOptionValue);
+            gb.Prod("ExternalTableOptionList").Is("REJECT_VALUE", "=", namedOptionValue);
+            gb.Prod("ExternalTableOptionList").Is("REJECT_SAMPLE_VALUE", "=", namedOptionValue);
+            gb.Prod("ExternalTableOptionList").Is("DISTRIBUTION", "=", namedOptionValue);
+            gb.Prod("ExternalTableOptionList").Is("SCHEMA_NAME", "=", namedOptionValue);
+            gb.Prod("ExternalTableOptionList").Is("OBJECT_NAME", "=", namedOptionValue);
+            gb.Prod("ExternalTableOptionList").Is(externalTableOptionList, ",", "LOCATION", "=", namedOptionValue);
+            gb.Prod("ExternalTableOptionList").Is(externalTableOptionList, ",", "DATA_SOURCE", "=", namedOptionValue);
+            gb.Prod("ExternalTableOptionList").Is(externalTableOptionList, ",", "FILE_FORMAT", "=", namedOptionValue);
+            gb.Prod("ExternalTableOptionList").Is(externalTableOptionList, ",", "REJECT_TYPE", "=", namedOptionValue);
+            gb.Prod("ExternalTableOptionList").Is(externalTableOptionList, ",", "REJECT_VALUE", "=", namedOptionValue);
+            gb.Prod("ExternalTableOptionList").Is(externalTableOptionList, ",", "REJECT_SAMPLE_VALUE", "=", namedOptionValue);
+            gb.Prod("ExternalTableOptionList").Is(externalTableOptionList, ",", "DISTRIBUTION", "=", namedOptionValue);
+            gb.Prod("ExternalTableOptionList").Is(externalTableOptionList, ",", "SCHEMA_NAME", "=", namedOptionValue);
+            gb.Prod("ExternalTableOptionList").Is(externalTableOptionList, ",", "OBJECT_NAME", "=", namedOptionValue);
 
             // CREATE EXTERNAL DATA SOURCE name WITH (TYPE=..., LOCATION=..., ...)
-            gb.Prod("CreateExternalDataSourceStatement").Is("CREATE", "EXTERNAL", "DATA", "SOURCE", identifierTerm, "WITH", "(", indexOptionList, ")");
-            gb.Prod("CreateExternalDataSourceStatement").Is("CREATE", "EXTERNAL", "DATA", "SOURCE", qualifiedName, "WITH", "(", indexOptionList, ")");
+            gb.Prod("CreateExternalDataSourceStatement").Is("CREATE", "EXTERNAL", "DATA", "SOURCE", identifierTerm, "WITH", "(", externalDataSourceOptionList, ")");
+            gb.Prod("CreateExternalDataSourceStatement").Is("CREATE", "EXTERNAL", "DATA", "SOURCE", qualifiedName, "WITH", "(", externalDataSourceOptionList, ")");
+            gb.Prod("ExternalDataSourceOptionList").Is("TYPE", "=", namedOptionValue);
+            gb.Prod("ExternalDataSourceOptionList").Is("LOCATION", "=", namedOptionValue);
+            gb.Prod("ExternalDataSourceOptionList").Is("RESOURCE_MANAGER_LOCATION", "=", namedOptionValue);
+            gb.Prod("ExternalDataSourceOptionList").Is("DATABASE_NAME", "=", namedOptionValue);
+            gb.Prod("ExternalDataSourceOptionList").Is("SHARD_MAP_NAME", "=", namedOptionValue);
+            gb.Prod("ExternalDataSourceOptionList").Is("CREDENTIAL", "=", namedOptionValue);
+            gb.Prod("ExternalDataSourceOptionList").Is("CONNECTION_OPTIONS", "=", namedOptionValue);
+            gb.Prod("ExternalDataSourceOptionList").Is("PUSHDOWN", "=", namedOptionValue);
+            gb.Prod("ExternalDataSourceOptionList").Is(externalDataSourceOptionList, ",", "TYPE", "=", namedOptionValue);
+            gb.Prod("ExternalDataSourceOptionList").Is(externalDataSourceOptionList, ",", "LOCATION", "=", namedOptionValue);
+            gb.Prod("ExternalDataSourceOptionList").Is(externalDataSourceOptionList, ",", "RESOURCE_MANAGER_LOCATION", "=", namedOptionValue);
+            gb.Prod("ExternalDataSourceOptionList").Is(externalDataSourceOptionList, ",", "DATABASE_NAME", "=", namedOptionValue);
+            gb.Prod("ExternalDataSourceOptionList").Is(externalDataSourceOptionList, ",", "SHARD_MAP_NAME", "=", namedOptionValue);
+            gb.Prod("ExternalDataSourceOptionList").Is(externalDataSourceOptionList, ",", "CREDENTIAL", "=", namedOptionValue);
+            gb.Prod("ExternalDataSourceOptionList").Is(externalDataSourceOptionList, ",", "CONNECTION_OPTIONS", "=", namedOptionValue);
+            gb.Prod("ExternalDataSourceOptionList").Is(externalDataSourceOptionList, ",", "PUSHDOWN", "=", namedOptionValue);
 
             return gb.BuildGrammar("Start");
         }

@@ -516,6 +516,13 @@ namespace DSLKIT.Test.GrammarExamples
                 ALTER COLUMN Phone ADD MASKED WITH (FUNCTION = 'partial(5,"XXXXXXX",2)');
 
                 ALTER TABLE Company
+                ALTER COLUMN Price ADD ENCRYPTED WITH (
+                    COLUMN_ENCRYPTION_KEY = CEK_Company,
+                    ENCRYPTION_TYPE = DETERMINISTIC,
+                    ALGORITHM = 'AEAD_AES_256_CBC_HMAC_SHA_256'
+                );
+
+                ALTER TABLE Company
                 ADD CONSTRAINT CK_Company_Phone CHECK (Phone IS NOT NULL);
 
                 CREATE UNIQUE NONCLUSTERED INDEX IX_Company_Email2
@@ -781,6 +788,10 @@ namespace DSLKIT.Test.GrammarExamples
         public void ParseScript_ShouldParseSqlGraphShortestPathPatterns()
         {
             const string script = """
+                SELECT *
+                FROM PRODUCT P1, PRODUCT P2, ISPARTOF IPO
+                WHERE MATCH(P1-(IPO)->P2);
+
                 SELECT
                     STRING_AGG(P2.Name,'->') WITHIN GROUP (GRAPH PATH) AS [Assembly],
                     COUNT(P2.ProductID) WITHIN GROUP (GRAPH PATH) AS Levels
@@ -1148,39 +1159,77 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
-        public void ParseScript_ShouldParse73And1575_DiagnosticFiles()
+        public void ParseScript_ShouldRejectMemoryOptimizedInlineIndexWithoutDedicatedContext()
         {
-            // Minimal test for 73.sql components
-            var r73a = ModernMsSqlGrammarExample.ParseScript(
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(
                 "CREATE TABLE dbo.T ([RowID] bigint NOT NULL\nINDEX [IX] NONCLUSTERED HASH ([RowID]) WITH (BUCKET_COUNT=100000)) WITH (MEMORY_OPTIMIZED=ON)");
-            r73a.IsSuccess.Should().BeTrue($"73a failed at {r73a.Error?.ErrorPosition}: {r73a.Error?.Message}");
+            parseResult.IsSuccess.Should().BeFalse("no-comma inline INDEX remains disabled until there is a dedicated memory-optimized CREATE TABLE branch.");
+        }
 
-            // The full 73.sql file (grammar building is separate from run)
-            if (!TryReadSqlDatasetFile("73.sql", out var sql73))
+        [Fact]
+        public void ParseScript_ShouldParseStatementSpecificWithClauses()
+        {
+            const string script = """
+                BULK INSERT dbo.T
+                FROM 'x.csv'
+                WITH (
+                    FORMAT = 'CSV',
+                    FIRSTROW = 2,
+                    FIELDTERMINATOR = ',',
+                    ROWTERMINATOR = '0x0a',
+                    TABLOCK
+                );
+
+                CREATE EXTERNAL TABLE dbo.ExtCompany
+                (
+                    Id INT,
+                    Name NVARCHAR(100)
+                )
+                WITH (
+                    LOCATION = '/company/',
+                    DATA_SOURCE = CompanyDataSource,
+                    FILE_FORMAT = CompanyFileFormat
+                );
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldRejectOverAcceptedCreateTableAndWithClauseForms()
+        {
+            var invalidScripts = new (string Script, string Reason)[]
             {
-                return;
-            }
+                ("CREATE TABLE dbo.T (ID int, PRIMARY KEY)", "table-level PRIMARY KEY requires a column list"),
+                ("CREATE TABLE dbo.T (ID int, CONSTRAINT FK_X FOREIGN KEY REFERENCES dbo.S (SID))", "table-level FOREIGN KEY requires a local column list"),
+                ("CREATE TABLE dbo.T (ID int INDEX IX_T (ID))", "inline INDEX without a comma must not be accepted in the generic CREATE TABLE path"),
+                ("ALTER TABLE dbo.T ALTER COLUMN Email ADD MASKED WITH (ONLINE = ON)", "MASKED WITH must not accept index options"),
+                ("ALTER TABLE dbo.T ALTER COLUMN Email ADD ENCRYPTED WITH (ONLINE = ON)", "ENCRYPTED WITH must not accept index options"),
+                ("BULK INSERT dbo.T FROM 'x.csv' WITH (INDEX = 1, ONLINE = ON)", "BULK INSERT must not accept index options"),
+                ("CREATE EXTERNAL TABLE dbo.ExtT (ID int) WITH (INDEX = 1)", "CREATE EXTERNAL TABLE must not accept table hints"),
+                ("CREATE EXTERNAL DATA SOURCE MyStorage WITH (ONLINE = ON)", "CREATE EXTERNAL DATA SOURCE must not accept index options")
+            };
 
-            var r73 = ModernMsSqlGrammarExample.ParseScript(sql73);
-            r73.IsSuccess.Should().BeTrue($"73.sql failed at {r73.Error?.ErrorPosition}: {r73.Error?.Message}");
+            foreach (var (script, reason) in invalidScripts)
+            {
+                var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+                parseResult.IsSuccess.Should().BeFalse(reason);
+            }
         }
 
         [Fact]
         public void ParseScript_ShouldParse1575_DiagnosticFile()
         {
-            // Minimal: FOREIGN KEY without source column list
-            var r1575a = ModernMsSqlGrammarExample.ParseScript(
-                "CREATE TABLE dbo.T (ID int, CONSTRAINT FK_X FOREIGN KEY REFERENCES dbo.S (SID))");
-            r1575a.IsSuccess.Should().BeTrue($"1575a failed at {r1575a.Error?.ErrorPosition}: {r1575a.Error?.Message}");
-
-            // 1575.sql: FOREIGN KEY REFERENCES without source column list
             if (!TryReadSqlDatasetFile("1575.sql", out var sql1575))
             {
                 return;
             }
 
-            var r1575 = ModernMsSqlGrammarExample.ParseScript(sql1575);
-            r1575.IsSuccess.Should().BeTrue($"1575.sql failed at {r1575.Error?.ErrorPosition}: {r1575.Error?.Message}");
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(sql1575);
+            parseResult.IsSuccess.Should().BeTrue($"1575.sql failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
 
         [Fact]
