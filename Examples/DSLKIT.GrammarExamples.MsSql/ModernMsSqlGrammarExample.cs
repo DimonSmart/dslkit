@@ -401,6 +401,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             var schemaNameClause = gb.NT("SchemaNameClause");
             var createViewHead = gb.NT("CreateViewHead");
             var createViewStatement = gb.NT("CreateViewStatement");
+            var createViewBody = gb.NT("CreateViewBody");
+            var createViewOptionList = gb.NT("CreateViewOptionList");
+            var createViewOption = gb.NT("CreateViewOption");
             var createTableStatement = gb.NT("CreateTableStatement");
             var createTableFileTableClause = gb.NT("CreateTableFileTableClause");
             var createTableElementList = gb.NT("CreateTableElementList");
@@ -1412,12 +1415,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateViewHead").Is("CREATE", "VIEW");
             gb.Prod("CreateViewHead").Is("CREATE", "OR", "ALTER", "VIEW");
             gb.Prod("CreateViewHead").Is("ALTER", "VIEW");
-            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, "AS", queryExpression);
-            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, "AS", withClause, queryExpression);
-            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, "WITH", identifierTerm, "AS", queryExpression);
-            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, "WITH", identifierTerm, "AS", withClause, queryExpression);
-            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, "WITH", identifierTerm, ",", identifierTerm, "AS", queryExpression);
-            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, "WITH", identifierTerm, ",", identifierTerm, "AS", withClause, queryExpression);
+            gb.Prod("CreateViewBody").Is("AS", queryExpression);
+            gb.Prod("CreateViewBody").Is("AS", withClause, queryExpression);
+            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, createViewBody);
+            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, "(", identifierList, ")", createViewBody);
+            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, "WITH", createViewOptionList, createViewBody);
+            gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, "(", identifierList, ")", "WITH", createViewOptionList, createViewBody);
+            gb.Rule("CreateViewOptionList").SeparatedBy(",", createViewOption);
+            gb.Rule("CreateViewOption").Keywords("ENCRYPTION", "SCHEMABINDING", "VIEW_METADATA");
 
             gb.Prod("CreateTableFileTableClause").Is("AS", "FILETABLE");
             gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")");
