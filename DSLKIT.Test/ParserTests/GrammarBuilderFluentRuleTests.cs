@@ -19,11 +19,13 @@ namespace DSLKIT.Test.ParserTests
             var setQuantifier = grammarBuilder.NT("SetQuantifier");
 
             grammarBuilder.Rule("Start").CanBe(statement);
-            grammarBuilder.Rule(statement).OneOf(
-                "SELECT",
-                grammarBuilder.Seq("INSERT", "INTO"),
-                "DELETE");
-            grammarBuilder.Rule(setQuantifier).Keywords("ALL", "DISTINCT");
+            grammarBuilder.Rule(statement)
+                .CanBe("SELECT")
+                .Or(grammarBuilder.Seq("INSERT", "INTO"))
+                .Or("DELETE");
+            grammarBuilder.Rule(setQuantifier)
+                .CanBe("ALL")
+                .OrKeywords("DISTINCT");
 
             var grammar = grammarBuilder.BuildGrammar("Start");
 

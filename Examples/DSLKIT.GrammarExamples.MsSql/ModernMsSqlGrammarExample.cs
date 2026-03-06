@@ -848,12 +848,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("DeleteQueryHint").Is(deleteQueryHintName, deleteQueryHintName, "(", expressionList, ")");
             gb.Prod("DeleteQueryHint").Is(qualifiedName);
             gb.Prod("DeleteQueryHint").Is(qualifiedName, "(", expressionList, ")");
-            gb.Prod("DeleteQueryHintName").Is(identifierTerm);
-            gb.Prod("DeleteQueryHintName").Is("RECOMPILE");
-            gb.Prod("DeleteQueryHintName").Is("MAXDOP");
-            gb.Prod("DeleteQueryHintName").Is("USE");
-            gb.Prod("DeleteQueryHintName").Is("JOIN");
-            gb.Prod("DeleteQueryHintName").Is("ORDER");
+            gb.Rule(deleteQueryHintName)
+                .CanBe(identifierTerm)
+                .OrKeywords("RECOMPILE", "MAXDOP", "USE", "JOIN", "ORDER");
 
             gb.Prod("OptionClause").Is("OPTION", "(", deleteQueryHintList, ")");
 

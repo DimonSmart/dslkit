@@ -276,22 +276,22 @@ namespace DSLKIT.Terminals
 
         public GrammarBuilder OneOf(string ruleName, params object[] alternatives)
         {
-            return Rule(ruleName).OneOf(alternatives);
+            return Rule(ruleName).OneOf(alternatives).Done();
         }
 
         public GrammarBuilder OneOf(INonTerminal nonTerminal, params object[] alternatives)
         {
-            return Rule(nonTerminal).OneOf(alternatives);
+            return Rule(nonTerminal).OneOf(alternatives).Done();
         }
 
         public GrammarBuilder Keywords(string ruleName, params string[] keywords)
         {
-            return Rule(ruleName).Keywords(keywords);
+            return Rule(ruleName).Keywords(keywords).Done();
         }
 
         public GrammarBuilder Keywords(INonTerminal nonTerminal, params string[] keywords)
         {
-            return Rule(nonTerminal).Keywords(keywords);
+            return Rule(nonTerminal).Keywords(keywords).Done();
         }
 
         /// <summary>

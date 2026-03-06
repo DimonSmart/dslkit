@@ -15,12 +15,19 @@ namespace DSLKIT.Terminals
                 : ruleName;
         }
 
-        public GrammarBuilder CanBe(params object[] terms)
+        public GrammarRuleBuilder CanBe(params object[] terms)
         {
-            return _grammarBuilder.Prod(_ruleName).Is(terms);
+            AddAlternative(terms);
+            return this;
         }
 
-        public GrammarBuilder OneOf(params object[] alternatives)
+        public GrammarRuleBuilder Or(params object[] terms)
+        {
+            AddAlternative(terms);
+            return this;
+        }
+
+        public GrammarRuleBuilder OneOf(params object[] alternatives)
         {
             if (alternatives == null || alternatives.Length == 0)
             {
@@ -34,18 +41,18 @@ namespace DSLKIT.Terminals
                     case null:
                         throw new ArgumentException("Alternatives must not contain null values.", nameof(alternatives));
                     case RulePattern pattern:
-                        _grammarBuilder.Prod(_ruleName).Is(pattern.Terms);
+                        AddAlternative(pattern.Terms);
                         break;
                     default:
-                        _grammarBuilder.Prod(_ruleName).Is(alternative);
+                        AddAlternative(alternative);
                         break;
                 }
             }
 
-            return _grammarBuilder;
+            return this;
         }
 
-        public GrammarBuilder Keywords(params string[] keywords)
+        public GrammarRuleBuilder Keywords(params string[] keywords)
         {
             if (keywords == null || keywords.Length == 0)
             {
@@ -54,20 +61,42 @@ namespace DSLKIT.Terminals
 
             foreach (var keyword in keywords)
             {
-                _grammarBuilder.Prod(_ruleName).Is(keyword);
+                AddAlternative(keyword);
             }
 
+            return this;
+        }
+
+        public GrammarRuleBuilder OrKeywords(params string[] keywords)
+        {
+            return Keywords(keywords);
+        }
+
+        public GrammarRuleBuilder Plus(object repeatedTerm)
+        {
+            _grammarBuilder.Plus(_ruleName, repeatedTerm);
+            return this;
+        }
+
+        public GrammarRuleBuilder SeparatedBy(object delimiter, object repeatedTerm)
+        {
+            _grammarBuilder.SeparatedBy(_ruleName, repeatedTerm, delimiter);
+            return this;
+        }
+
+        public GrammarBuilder Done()
+        {
             return _grammarBuilder;
         }
 
-        public GrammarBuilder Plus(object repeatedTerm)
+        private void AddAlternative(params object[] terms)
         {
-            return _grammarBuilder.Plus(_ruleName, repeatedTerm);
-        }
+            if (terms == null)
+            {
+                throw new ArgumentNullException(nameof(terms));
+            }
 
-        public GrammarBuilder SeparatedBy(object delimiter, object repeatedTerm)
-        {
-            return _grammarBuilder.SeparatedBy(_ruleName, repeatedTerm, delimiter);
+            _grammarBuilder.Prod(_ruleName).Is(terms);
         }
     }
 }
