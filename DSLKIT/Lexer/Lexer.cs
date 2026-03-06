@@ -63,6 +63,7 @@ namespace DSLKIT.Lexer
                     yield return new ErrorToken(
                         $"Many terminals found at same position. Possible duplicates or priority error : {msg}",
                         source.Position, 0);
+                    yield break;
                 }
 
                 var bestMatch = matches.Single();

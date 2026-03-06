@@ -830,6 +830,54 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldKeepTriviaInsideSplitMultiKeywordConstructs()
+        {
+            const string script = """
+                CREATE VIEW dbo.vTrivia AS
+                SELECT 1 AS A
+                WITH /*check-before*/ CHECK /*option-before*/ OPTION;
+
+                SELECT ProductID
+                FROM Product FOR /*system-time-before*/ SYSTEM_TIME AS OF '2015-07-28 13:20:00';
+
+                SELECT 1
+                FROM Product FOR /*path-before*/ PATH p;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+            parseResult.ParseTree.Should().NotBeNull();
+
+            var terminalNodes = GetTerminalNodes(parseResult.ParseTree!);
+
+            terminalNodes.Single(node => string.Equals(node.Token.OriginalString, "CHECK", StringComparison.OrdinalIgnoreCase))
+                .Token.Trivia.LeadingTrivia
+                .Select(token => token.OriginalString)
+                .Should()
+                .Contain("/*check-before*/");
+
+            terminalNodes.Single(node => string.Equals(node.Token.OriginalString, "OPTION", StringComparison.OrdinalIgnoreCase))
+                .Token.Trivia.LeadingTrivia
+                .Select(token => token.OriginalString)
+                .Should()
+                .Contain("/*option-before*/");
+
+            terminalNodes.Single(node => string.Equals(node.Token.OriginalString, "SYSTEM_TIME", StringComparison.OrdinalIgnoreCase))
+                .Token.Trivia.LeadingTrivia
+                .Select(token => token.OriginalString)
+                .Should()
+                .Contain("/*system-time-before*/");
+
+            terminalNodes.Single(node => string.Equals(node.Token.OriginalString, "PATH", StringComparison.OrdinalIgnoreCase))
+                .Token.Trivia.LeadingTrivia
+                .Select(token => token.OriginalString)
+                .Should()
+                .Contain("/*path-before*/");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseOpenJsonWithClause()
         {
             const string script = """
@@ -1212,6 +1260,27 @@ namespace DSLKIT.Test.GrammarExamples
 
             repositoryRoot = string.Empty;
             return false;
+        }
+
+        private static IReadOnlyList<TerminalNode> GetTerminalNodes(ParseTreeNode rootNode)
+        {
+            var terminalNodes = new List<TerminalNode>();
+            CollectTerminalNodes(rootNode, terminalNodes);
+            return terminalNodes;
+        }
+
+        private static void CollectTerminalNodes(ParseTreeNode node, List<TerminalNode> output)
+        {
+            if (node is TerminalNode terminalNode)
+            {
+                output.Add(terminalNode);
+                return;
+            }
+
+            foreach (var childNode in node.Children)
+            {
+                CollectTerminalNodes(childNode, output);
+            }
         }
 
         private static IReadOnlyList<string> FindNonTerminalPath(ParseTreeNode rootNode, string nonTerminalName)

@@ -532,6 +532,42 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void TryFormat_ShouldPreserveCommentsInsideSplitMultiKeywordConstructs()
+        {
+            const string sourceSql = """
+                CREATE VIEW dbo.vTrivia AS
+                SELECT 1 AS A
+                WITH /*check-before*/ CHECK /*option-before*/ OPTION;
+
+                SELECT ProductID
+                FROM Product FOR /*system-time-before*/ SYSTEM_TIME AS OF '2015-07-28 13:20:00';
+
+                SELECT 1
+                FROM Product FOR /*path-before*/ PATH p;
+                """;
+
+            var options = new SqlFormattingOptions
+            {
+                Comments = new SqlCommentsFormattingOptions
+                {
+                    PreserveAttachment = true,
+                    Formatting = SqlCommentsFormattingMode.Keep
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+
+            result.IsSuccess.Should().BeTrue();
+
+            var formattedSql = NormalizeLineEndings(result.FormattedSql!);
+            NormalizeSql(formattedSql).Should().Be(NormalizeSql(sourceSql));
+            formattedSql.Should().Contain("WITH /*check-before*/ CHECK");
+            formattedSql.Should().Contain("/*option-before*/");
+            formattedSql.Should().Contain("FOR /*system-time-before*/ SYSTEM_TIME AS OF");
+            formattedSql.Should().Contain("FOR /*path-before*/ PATH p");
+        }
+
+        [Fact]
         public void TryFormat_ShouldFormatCreateDatabase_WithPopularOptions()
         {
             const string sourceSql = """

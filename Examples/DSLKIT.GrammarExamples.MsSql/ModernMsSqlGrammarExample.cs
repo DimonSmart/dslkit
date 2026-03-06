@@ -246,26 +246,21 @@ namespace DSLKIT.GrammarExamples.MsSql
                 previewChar: '$',
                 flags: TermFlags.Identifier);
 
-            // Combined terminal for "FOR SYSTEM_TIME" to reduce ambiguity with FOR JSON/XML/BROWSE.
-            var forSystemTime = new RegExpTerminal(
-                "FOR_SYSTEM_TIME",
-                @"\G(?i)FOR\s+SYSTEM_TIME(?!\w)",
-                previewChar: null,
-                flags: TermFlags.None);
+            var forSystemTimeStart = new ContextualKeywordTerminal(
+                "FOR",
+                "FOR_SYSTEM_TIME_START",
+                "SYSTEM_TIME");
 
-            // Combined terminal for SQL Graph table source syntax: "FOR PATH".
-            // This avoids ambiguity with query FOR JSON / FOR XML clauses.
-            var forPath = new RegExpTerminal(
-                "FOR_PATH",
-                @"\G(?i)FOR\s+PATH(?!\w)",
-                previewChar: null,
-                flags: TermFlags.None);
+            var forPathStart = new ContextualKeywordTerminal(
+                "FOR",
+                "FOR_PATH_START",
+                "PATH");
 
-            var withCheckOption = new RegExpTerminal(
-                "WITH_CHECK_OPTION",
-                @"\G(?i)WITH\s+CHECK\s+OPTION(?!\w)",
-                previewChar: null,
-                flags: TermFlags.None);
+            var withCheckOptionStart = new ContextualKeywordTerminal(
+                "WITH",
+                "WITH_CHECK_OPTION_START",
+                "CHECK",
+                "OPTION");
 
             // SQL Graph pseudo-column references: $node_id, $from_id, $to_id, etc.
             var graphColumnRef = new RegExpTerminal(
@@ -291,9 +286,9 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .AddTerminal(number)
                 .AddTerminal(stringLiteral)
                 .AddTerminal(sqlcmdVariable)
-                .AddTerminal(forSystemTime)
-                .AddTerminal(forPath)
-                .AddTerminal(withCheckOption)
+                .AddTerminal(forSystemTimeStart)
+                .AddTerminal(forPathStart)
+                .AddTerminal(withCheckOptionStart)
                 .AddTerminal(graphColumnRef);
 
             // Resolve known LALR(1) ambiguities explicitly.
@@ -1495,7 +1490,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateViewQuery").Is(withClause, queryExpression);
             gb.Prod("CreateViewBody").Is("AS", createViewQuery);
             gb.Prod("CreateViewBody").Is("AS", createViewQuery, createViewCheckOptionOpt);
-            gb.Opt(createViewCheckOptionOpt, withCheckOption);
+            gb.Opt(createViewCheckOptionOpt, withCheckOptionStart, "CHECK", "OPTION");
             gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, createViewBody);
             gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, createViewColumnList, createViewBody);
             gb.Prod("CreateViewStatement").Is(createViewHead, qualifiedName, createViewOptionClause, createViewBody);
@@ -1610,7 +1605,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateTableTableIndex").Is("INDEX", identifierTerm, "CLUSTERED", "COLUMNSTORE");
             gb.Prod("CreateTableTableIndex").Is("INDEX", identifierTerm, "CLUSTERED", "COLUMNSTORE", createIndexWithClause);
 
-            gb.Prod("CreateTablePeriodClause").Is("PERIOD", forSystemTime, "(", identifierTerm, ",", identifierTerm, ")");
+            gb.Prod("CreateTablePeriodClause").Is("PERIOD", forSystemTimeStart, "SYSTEM_TIME", "(", identifierTerm, ",", identifierTerm, ")");
             gb.Prod("CreateTableOptions").Is("WITH", "(", createTableOptionList, ")");
             gb.Prod("CreateTableOptionList").Is(createTableOption);
             gb.Prod("CreateTableOptionList").Is(createTableOptionList, ",", createTableOption);
@@ -1631,7 +1626,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("AlterTableAction").Is("ENABLE", "TRIGGER", alterTableTriggerTarget);
             gb.Prod("AlterTableAction").Is("DISABLE", "TRIGGER", alterTableTriggerTarget);
             gb.Prod("AlterTableAction").Is("ADD", createTablePeriodClause);
-            gb.Prod("AlterTableAction").Is("DROP", "PERIOD", forSystemTime);
+            gb.Prod("AlterTableAction").Is("DROP", "PERIOD", forSystemTimeStart, "SYSTEM_TIME");
             gb.Prod("AlterTableAction").Is("SET", "(", indexOptionList, ")");
             gb.Prod("AlterTableAddItemList").Is(alterTableAddItem);
             gb.Prod("AlterTableAddItemList").Is(alterTableAddItemList, ",", alterTableAddItem);
@@ -2002,8 +1997,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("TableFactor").Is(qualifiedName);
             gb.Prod("TableFactor").Is(qualifiedName, "AS", identifierTerm);
             gb.Prod("TableFactor").Is(qualifiedName, identifierTerm);
-            gb.Prod("TableFactor").Is(qualifiedName, forPath);
-            gb.Prod("TableFactor").Is(qualifiedName, forPath, identifierTerm);
+            gb.Prod("TableFactor").Is(qualifiedName, forPathStart, "PATH");
+            gb.Prod("TableFactor").Is(qualifiedName, forPathStart, "PATH", identifierTerm);
             gb.Prod("TableFactor").Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")");
             gb.Prod("TableFactor").Is(qualifiedName, "AS", identifierTerm, "WITH", "(", tableHintLimitedList, ")");
             gb.Prod("TableFactor").Is(qualifiedName, identifierTerm, "WITH", "(", tableHintLimitedList, ")");
@@ -2011,11 +2006,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("TableFactor").Is(qualifiedName, temporalClause, "AS", identifierTerm);
             gb.Prod("TableFactor").Is(qualifiedName, temporalClause, identifierTerm);
             gb.Rule("TemporalClause").OneOf(
-                gb.Seq(forSystemTime, "AS", "OF", additiveExpression),
-                gb.Seq(forSystemTime, "ALL"),
-                gb.Seq(forSystemTime, "BETWEEN", additiveExpression, "AND", additiveExpression),
-                gb.Seq(forSystemTime, "FROM", additiveExpression, "TO", additiveExpression),
-                gb.Seq(forSystemTime, "CONTAINED", "IN", "(", additiveExpression, ",", additiveExpression, ")"));
+                gb.Seq(forSystemTimeStart, "SYSTEM_TIME", "AS", "OF", additiveExpression),
+                gb.Seq(forSystemTimeStart, "SYSTEM_TIME", "ALL"),
+                gb.Seq(forSystemTimeStart, "SYSTEM_TIME", "BETWEEN", additiveExpression, "AND", additiveExpression),
+                gb.Seq(forSystemTimeStart, "SYSTEM_TIME", "FROM", additiveExpression, "TO", additiveExpression),
+                gb.Seq(forSystemTimeStart, "SYSTEM_TIME", "CONTAINED", "IN", "(", additiveExpression, ",", additiveExpression, ")"));
             gb.Prod("TableFactor").Is(variableReference);
             gb.Prod("TableFactor").Is(variableReference, "AS", identifierTerm);
             gb.Prod("TableFactor").Is(variableReference, identifierTerm);
