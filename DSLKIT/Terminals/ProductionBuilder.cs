@@ -113,6 +113,12 @@ namespace DSLKIT.Terminals
             {
                 switch (term)
                 {
+                    case RulePattern pattern:
+                        foreach (var nestedTerm in BuildRuleDefinition(pattern.Terms))
+                        {
+                            ruleDefinition.Add(nestedTerm);
+                        }
+                        break;
                     case string keyword:
                         ruleDefinition.Add(_grammarBuilder.GetOrAddKeywordTerminal(keyword));
                         break;

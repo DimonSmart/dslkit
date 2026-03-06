@@ -40,6 +40,8 @@ namespace DSLKIT.Terminals
 
         private string _name = string.Empty;
         private int _precedenceLevel;
+        private bool _keywordWholeWord;
+        private bool _keywordIgnoreCase;
 
         public INonTerminal GetOrAddNonTerminal(string nonTerminalName)
         {
@@ -95,19 +97,33 @@ namespace DSLKIT.Terminals
 
         internal ITerminal GetOrAddKeywordTerminal(string keyword)
         {
-            if (_keywordTerminals.TryGetValue(keyword, out var terminal))
+            var terminal = CreateKeywordTerminal(keyword);
+            if (_keywordTerminals.TryGetValue(terminal.DictionaryKey, out var existingTerminal))
             {
-                return terminal;
+                return existingTerminal;
             }
 
-            terminal = AddTerminalBody(new KeywordTerminal(keyword));
-            _keywordTerminals[keyword] = terminal;
-            return terminal;
+            existingTerminal = AddTerminalBody(terminal);
+            _keywordTerminals[terminal.DictionaryKey] = existingTerminal;
+            return existingTerminal;
         }
 
         public GrammarBuilder WithGrammarName(string name)
         {
             _name = name;
+            return this;
+        }
+
+        public GrammarBuilder WithKeywordPolicy(bool wholeWord = false, bool ignoreCase = false)
+        {
+            if (_keywordTerminals.Count > 0)
+            {
+                throw new InvalidOperationException(
+                    "Keyword policy must be configured before adding string-based productions.");
+            }
+
+            _keywordWholeWord = wholeWord;
+            _keywordIgnoreCase = ignoreCase;
             return this;
         }
 
@@ -228,9 +244,54 @@ namespace DSLKIT.Terminals
             return new ProductionBuilder(this, ruleName);
         }
 
+        public GrammarRuleBuilder Rule(string ruleName)
+        {
+            if (string.IsNullOrWhiteSpace(ruleName))
+            {
+                throw new ArgumentException("Rule name must be specified.", nameof(ruleName));
+            }
+
+            return new GrammarRuleBuilder(this, ruleName);
+        }
+
+        public GrammarRuleBuilder Rule(INonTerminal nonTerminal)
+        {
+            if (nonTerminal == null)
+            {
+                throw new ArgumentNullException(nameof(nonTerminal));
+            }
+
+            return Rule(nonTerminal.Name);
+        }
+
+        public RulePattern Seq(params object[] terms)
+        {
+            return new RulePattern(terms);
+        }
+
         public ProductionBuilder AddProduction(string ruleName)
         {
             return new ProductionBuilder(this, ruleName);
+        }
+
+        public GrammarBuilder OneOf(string ruleName, params object[] alternatives)
+        {
+            return Rule(ruleName).OneOf(alternatives);
+        }
+
+        public GrammarBuilder OneOf(INonTerminal nonTerminal, params object[] alternatives)
+        {
+            return Rule(nonTerminal).OneOf(alternatives);
+        }
+
+        public GrammarBuilder Keywords(string ruleName, params string[] keywords)
+        {
+            return Rule(ruleName).Keywords(keywords);
+        }
+
+        public GrammarBuilder Keywords(INonTerminal nonTerminal, params string[] keywords)
+        {
+            return Rule(nonTerminal).Keywords(keywords);
         }
 
         /// <summary>
@@ -364,6 +425,57 @@ namespace DSLKIT.Terminals
             return AddStarWithDelimiter(listNonTerminal, repeatedTerminal, CreateDelimiterTerminal(delimiter));
         }
 
+        public GrammarBuilder Plus(string listNonTerminalName, object repeatedTerm)
+        {
+            var listNonTerminal = GetRequiredListNonTerminal(listNonTerminalName);
+            return Plus(listNonTerminal, repeatedTerm);
+        }
+
+        public GrammarBuilder Plus(INonTerminal listNonTerminal, object repeatedTerm)
+        {
+            if (listNonTerminal == null)
+            {
+                throw new ArgumentNullException(nameof(listNonTerminal));
+            }
+
+            if (repeatedTerm == null)
+            {
+                throw new ArgumentNullException(nameof(repeatedTerm));
+            }
+
+            Prod(listNonTerminal.Name).Is(repeatedTerm);
+            Prod(listNonTerminal.Name).Is(listNonTerminal, repeatedTerm);
+            return this;
+        }
+
+        public GrammarBuilder SeparatedBy(string listNonTerminalName, object repeatedTerm, object delimiter)
+        {
+            var listNonTerminal = GetRequiredListNonTerminal(listNonTerminalName);
+            return SeparatedBy(listNonTerminal, repeatedTerm, delimiter);
+        }
+
+        public GrammarBuilder SeparatedBy(INonTerminal listNonTerminal, object repeatedTerm, object delimiter)
+        {
+            if (listNonTerminal == null)
+            {
+                throw new ArgumentNullException(nameof(listNonTerminal));
+            }
+
+            if (repeatedTerm == null)
+            {
+                throw new ArgumentNullException(nameof(repeatedTerm));
+            }
+
+            if (delimiter == null)
+            {
+                throw new ArgumentNullException(nameof(delimiter));
+            }
+
+            Prod(listNonTerminal.Name).Is(repeatedTerm);
+            Prod(listNonTerminal.Name).Is(listNonTerminal, delimiter, repeatedTerm);
+            return this;
+        }
+
         public GrammarBuilder BindAst(INonTerminal nonTerminal, Type astType)
         {
             return BindAst(nonTerminal, new AstNodeBinding(astType));
@@ -495,7 +607,7 @@ namespace DSLKIT.Terminals
                     continue;
                 }
 
-                definition.Add(item.AsKeywordTerminal());
+                definition.Add(GetOrAddKeywordTerminal(item));
             }
 
             productionBuilder.Define(definition.ToArray()).Done();
@@ -568,19 +680,41 @@ namespace DSLKIT.Terminals
             return this;
         }
 
-        private static ITerminal CreateDelimiterTerminal(string delimiter)
+        internal ITerminal CreateKeywordTerminal(string keyword)
         {
-            if (delimiter == null)
+            if (keyword == null)
             {
-                throw new ArgumentNullException(nameof(delimiter));
+                throw new ArgumentNullException(nameof(keyword));
             }
 
-            if (delimiter.Length == 0)
+            if (keyword.Length == 0)
             {
-                throw new ArgumentException("Delimiter must not be empty.", nameof(delimiter));
+                throw new ArgumentException("Keyword must not be empty.", nameof(keyword));
             }
 
-            return new KeywordTerminal(delimiter);
+            var shouldApplyKeywordPolicy = ShouldApplyKeywordPolicy(keyword);
+            return new KeywordTerminal(
+                keyword,
+                wholeWord: shouldApplyKeywordPolicy && _keywordWholeWord,
+                ignoreCase: shouldApplyKeywordPolicy && _keywordIgnoreCase);
+        }
+
+        private ITerminal CreateDelimiterTerminal(string delimiter)
+        {
+            return CreateKeywordTerminal(delimiter);
+        }
+
+        private static bool ShouldApplyKeywordPolicy(string keyword)
+        {
+            foreach (var ch in keyword)
+            {
+                if (char.IsLetterOrDigit(ch) || ch == '_')
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static string ResolveTerminalName(object terminal)
