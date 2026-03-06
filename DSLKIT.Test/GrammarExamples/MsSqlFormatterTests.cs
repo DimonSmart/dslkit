@@ -586,29 +586,93 @@ namespace DSLKIT.Test.GrammarExamples
         [Fact]
         public void TryFormat_ShouldFormatUseStatement()
         {
-            const string sourceSql = "USE [Clinic]; GO";
+            const string sourceSql = """
+                USE [Clinic];
+                GO
+                """;
 
             var result = ModernMsSqlFormatter.TryFormat(sourceSql);
 
             result.IsSuccess.Should().BeTrue();
             var formattedSql = NormalizeLineEndings(result.FormattedSql!);
             NormalizeSql(formattedSql).Should().Be(
-                NormalizeSql("USE [Clinic]; GO"),
+                NormalizeSql(sourceSql),
                 "formatted USE should preserve significant SQL tokens.");
         }
 
         [Fact]
         public void TryFormat_ShouldFormatCreateSchema_BasicAndAuthorization()
         {
-            const string sourceSql = "CREATE SCHEMA ext; GO CREATE SCHEMA [sales] AUTHORIZATION [dbo];";
+            const string sourceSql = """
+                CREATE SCHEMA ext;
+                GO
+                CREATE SCHEMA [sales] AUTHORIZATION [dbo];
+                """;
 
             var result = ModernMsSqlFormatter.TryFormat(sourceSql);
 
             result.IsSuccess.Should().BeTrue();
             var formattedSql = NormalizeLineEndings(result.FormattedSql!);
             NormalizeSql(formattedSql).Should().Be(
-                NormalizeSql("CREATE SCHEMA ext; GO CREATE SCHEMA [sales] AUTHORIZATION [dbo];"),
+                NormalizeSql(sourceSql),
                 "formatted CREATE SCHEMA should preserve significant SQL tokens.");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldReturnError_ForInlineGoBatchSeparator()
+        {
+            const string sourceSql = "USE [Clinic]; GO";
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql);
+
+            result.IsSuccess.Should().BeFalse();
+            result.ErrorMessage.Should().NotBeNullOrWhiteSpace();
+        }
+
+        [Fact]
+        public void TryFormat_ShouldFormatGoBatchRepeat_OnDedicatedLine()
+        {
+            const string sourceSql = """
+                SELECT 1;
+                GO 5
+                SELECT 2;
+                """;
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql);
+
+            result.IsSuccess.Should().BeTrue();
+            NormalizeSql(result.FormattedSql!).Should().Be(
+                NormalizeSql(sourceSql),
+                "formatted GO batch repeat should preserve significant SQL tokens.");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldFormatSqlcmdPreprocessorCommands_OnDedicatedLines()
+        {
+            const string sourceSql = """
+                :r .\setup.sql
+                :setvar JobOwner sa
+                :on error exit
+                PRINT N'after sqlcmd preprocessor commands';
+                """;
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql);
+
+            result.IsSuccess.Should().BeTrue();
+            NormalizeSql(result.FormattedSql!).Should().Be(
+                NormalizeSql(sourceSql),
+                "formatted SQLCMD control lines should preserve significant SQL tokens.");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldReturnError_ForInlineSqlcmdPreprocessorCommand()
+        {
+            const string sourceSql = "PRINT N'before'; :setvar JobOwner sa";
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql);
+
+            result.IsSuccess.Should().BeFalse();
+            result.ErrorMessage.Should().NotBeNullOrWhiteSpace();
         }
 
         [Fact]

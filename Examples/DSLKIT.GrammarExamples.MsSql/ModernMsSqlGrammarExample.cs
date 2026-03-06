@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DSLKIT.Formatting;
 using DSLKIT.Lexer;
+using DSLKIT.NonTerminals;
 using DSLKIT.Parser;
 using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
@@ -17,6 +18,11 @@ namespace DSLKIT.GrammarExamples.MsSql
     public static class ModernMsSqlGrammarExample
     {
         private static readonly Lazy<IGrammar> GrammarCache = new(BuildGrammarCore);
+        private static readonly RegExpTerminal ControlLineTerminal = new(
+            "SqlServerControlLine",
+            @"\G.+",
+            previewChar: null,
+            flags: TermFlags.None);
 
         public static IGrammar BuildGrammar()
         {
@@ -25,6 +31,36 @@ namespace DSLKIT.GrammarExamples.MsSql
 
         public static ParseResult ParseScript(string source)
         {
+            ArgumentNullException.ThrowIfNull(source);
+
+            var segments = SqlServerScriptPreprocessor.Split(source);
+            if (segments.Count > 1 || (segments.Count == 1 && segments[0].Kind != SqlScriptSegmentKind.Batch))
+            {
+                var childNodes = new List<ParseTreeNode>(segments.Count);
+                foreach (var segment in segments)
+                {
+                    if (segment.Kind == SqlScriptSegmentKind.Batch)
+                    {
+                        var batchParseResult = ParseScript(segment.Text);
+                        if (!batchParseResult.IsSuccess)
+                        {
+                            return OffsetParseError(batchParseResult, segment.StartPosition);
+                        }
+
+                        if (batchParseResult.ParseTree != null)
+                        {
+                            childNodes.Add(batchParseResult.ParseTree);
+                        }
+
+                        continue;
+                    }
+
+                    childNodes.Add(CreateControlNode(segment));
+                }
+
+                return CreateCompositeParseResult(childNodes);
+            }
+
             var grammar = BuildGrammar();
             var lexer = new Lexer.Lexer(CreateLexerSettings(grammar));
             var parser = new SyntaxParser(grammar);
@@ -88,6 +124,50 @@ namespace DSLKIT.GrammarExamples.MsSql
             }
 
             return settings;
+        }
+
+        private static ParseResult OffsetParseError(ParseResult parseResult, int startPosition)
+        {
+            if (parseResult.Error == null)
+            {
+                return parseResult;
+            }
+
+            return new ParseResult
+            {
+                Error = parseResult.Error with
+                {
+                    ErrorPosition = parseResult.Error.ErrorPosition + startPosition
+                }
+            };
+        }
+
+        private static ParseResult CreateCompositeParseResult(IReadOnlyList<ParseTreeNode> childNodes)
+        {
+            var scriptDocument = new NonTerminal("ScriptDocument");
+            var production = new Production(scriptDocument, childNodes.Select(child => child.Term).ToList());
+            var parseTree = new NonTerminalNode(scriptDocument, production, childNodes);
+            return new ParseResult
+            {
+                ParseTree = parseTree
+            };
+        }
+
+        private static NonTerminalNode CreateControlNode(SqlScriptSegment segment)
+        {
+            var nodeName = segment.Kind == SqlScriptSegmentKind.BatchSeparator
+                ? "BatchSeparator"
+                : "SqlcmdCommand";
+            var token = new Token(
+                segment.StartPosition,
+                segment.Text.Length,
+                segment.Text,
+                segment.Text,
+                ControlLineTerminal);
+            var terminalNode = new TerminalNode(token);
+            var nonTerminal = new NonTerminal(nodeName);
+            var production = new Production(nonTerminal, [terminalNode.Term]);
+            return new NonTerminalNode(nonTerminal, production, [terminalNode]);
         }
 
         private static IReadOnlyList<IToken> BuildSignificantTokensWithTrivia(IReadOnlyList<IToken> rawTokens)
@@ -166,14 +246,6 @@ namespace DSLKIT.GrammarExamples.MsSql
                 previewChar: '$',
                 flags: TermFlags.Identifier);
 
-            // SQLCMD preprocessor directives: :r, :setvar, :on error exit, etc.
-            // Matched as a single token per line to keep parser logic simple.
-            var sqlcmdPreprocessorCommand = new RegExpTerminal(
-                "SqlcmdPreprocessorCommand",
-                @"\G:[a-z_][a-z0-9_]*(?:[ \t][^\r\n]*)?",
-                previewChar: ':',
-                flags: TermFlags.None);
-
             // Combined terminal for "FOR SYSTEM_TIME" to reduce ambiguity with FOR JSON/XML/BROWSE.
             var forSystemTime = new RegExpTerminal(
                 "FOR_SYSTEM_TIME",
@@ -219,7 +291,6 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .AddTerminal(number)
                 .AddTerminal(stringLiteral)
                 .AddTerminal(sqlcmdVariable)
-                .AddTerminal(sqlcmdPreprocessorCommand)
                 .AddTerminal(forSystemTime)
                 .AddTerminal(forPath)
                 .AddTerminal(withCheckOption)
@@ -401,7 +472,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             var loopControlStatement = gb.NT("LoopControlStatement");
             var gotoStatement = gb.NT("GotoStatement");
             var labelStatement = gb.NT("LabelStatement");
-            var sqlcmdPreprocessorStatement = gb.NT("SqlcmdPreprocessorStatement");
             var createRoleStatement = gb.NT("CreateRoleStatement");
             var createSchemaStatement = gb.NT("CreateSchemaStatement");
             var schemaNameClause = gb.NT("SchemaNameClause");
@@ -566,11 +636,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             var queryIntersectExpression = gb.NT("QueryIntersectExpression");
             var setOperator = gb.NT("SetOperator");
             var queryPrimary = gb.NT("QueryPrimary");
-            var queryPrimaryTail = gb.NT("QueryPrimaryTail");
-            var queryPrimaryOrderByAndOffsetOpt = gb.NT("QueryPrimaryOrderByAndOffsetOpt");
-            var queryPrimaryForOpt = gb.NT("QueryPrimaryForOpt");
-            var queryPrimaryOptionOpt = gb.NT("QueryPrimaryOptionOpt");
-            var parenQueryPrimaryOrderByAndOffsetOpt = gb.NT("ParenQueryPrimaryOrderByAndOffsetOpt");
+            var queryExpressionTail = gb.NT("QueryExpressionTail");
+            var queryExpressionOrderByAndOffsetOpt = gb.NT("QueryExpressionOrderByAndOffsetOpt");
+            var queryExpressionForOpt = gb.NT("QueryExpressionForOpt");
+            var queryExpressionOptionOpt = gb.NT("QueryExpressionOptionOpt");
             var querySpecification = gb.NT("QuerySpecification");
             var selectCore = gb.NT("SelectCore");
             var selectCorePrefix = gb.NT("SelectCorePrefix");
@@ -662,7 +731,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 gb.Seq(statementList, statementSeparatorList, statement),
                 gb.Seq(statementList, statementNoLeadingWith));
             gb.Rule("StatementSeparatorList").Plus(statementSeparator);
-            gb.Rule("StatementSeparator").OneOf(";", "GO", gb.Seq("GO", number)); // GO N (batch repeat)
+            gb.Rule("StatementSeparator").OneOf(";");
             gb.Rule("Statement").OneOf(statementNoLeadingWith, leadingWithStatement);
             gb.Rule("StatementNoLeadingWith").OneOf(
                 queryStatementNoLeadingWith,
@@ -683,7 +752,6 @@ namespace DSLKIT.GrammarExamples.MsSql
                 gotoStatement,
                 labelStatement,
                 executeStatement,
-                sqlcmdPreprocessorStatement,
                 useStatement,
                 createProcStatement,
                 createFunctionStatement,
@@ -742,12 +810,9 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Rule("QueryStatement").OneOf(
                 queryExpression,
-                gb.Seq(withClause, queryExpression),
-                gb.Seq(queryExpression, optionClause),
-                gb.Seq(withClause, queryExpression, optionClause));
+                gb.Seq(withClause, queryExpression));
             gb.Rule("QueryStatementNoLeadingWith").OneOf(
-                queryExpression,
-                gb.Seq(queryExpression, optionClause));
+                queryExpression);
             gb.Prod("UpdateStatement").Is("UPDATE", tableFactor, "SET", updateSetList);
             gb.Prod("UpdateStatement").Is("UPDATE", tableFactor, "SET", updateSetList, "WHERE", searchCondition);
             gb.Prod("UpdateStatement").Is("UPDATE", tableFactor, "SET", updateSetList, "FROM", tableSourceList);
@@ -948,7 +1013,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("GotoStatement").Is("GOTO", identifierTerm);
             gb.Prod("LabelStatement").Is(identifierTerm, ":");
             gb.Prod("LabelStatement").Is(identifierTerm, ":", statement);
-            gb.Prod("SqlcmdPreprocessorStatement").Is(sqlcmdPreprocessorCommand);
 
             gb.Prod("DeclareStatement").Is("DECLARE", declareItemList);
             gb.Prod("DeclareStatement").Is("DECLARE", declareTableVariable);
@@ -1827,7 +1891,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CteDefinition").Is(identifierTerm, "AS", "(", queryExpression, ")");
             gb.Prod("CteDefinition").Is(identifierTerm, "(", identifierList, ")", "AS", "(", queryExpression, ")");
 
-            gb.Prod("QueryExpression").Is(queryUnionExpression);
+            gb.Prod("QueryExpression").Is(queryUnionExpression, queryExpressionTail);
             gb.Prod("QueryUnionExpression").Is(queryIntersectExpression);
             gb.Prod("QueryUnionExpression").Is(queryUnionExpression, setOperator, queryIntersectExpression);
             gb.Prod("QueryIntersectExpression").Is(queryPrimary);
@@ -1838,15 +1902,13 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .Or("UNION", "ALL")
                 .OrKeywords("EXCEPT");
 
-            gb.Prod("QueryPrimary").Is(querySpecification, queryPrimaryTail);
-            gb.Prod("QueryPrimaryTail").Is(queryPrimaryOrderByAndOffsetOpt, queryPrimaryForOpt, queryPrimaryOptionOpt);
-            gb.Opt(queryPrimaryOrderByAndOffsetOpt, orderByClause);
-            gb.Prod("QueryPrimaryOrderByAndOffsetOpt").Is(orderByClause, offsetFetchClause);
-            gb.Opt(queryPrimaryForOpt, forClause);
-            gb.Opt(queryPrimaryOptionOpt, optionClause);
-            gb.Prod("QueryPrimary").Is("(", queryExpression, ")", parenQueryPrimaryOrderByAndOffsetOpt);
-            gb.Opt(parenQueryPrimaryOrderByAndOffsetOpt, orderByClause);
-            gb.Prod("ParenQueryPrimaryOrderByAndOffsetOpt").Is(orderByClause, offsetFetchClause);
+            gb.Prod("QueryExpressionTail").Is(queryExpressionOrderByAndOffsetOpt, queryExpressionForOpt, queryExpressionOptionOpt);
+            gb.Opt(queryExpressionOrderByAndOffsetOpt, orderByClause);
+            gb.Prod("QueryExpressionOrderByAndOffsetOpt").Is(orderByClause, offsetFetchClause);
+            gb.Opt(queryExpressionForOpt, forClause);
+            gb.Opt(queryExpressionOptionOpt, optionClause);
+            gb.Prod("QueryPrimary").Is(querySpecification);
+            gb.Prod("QueryPrimary").Is("(", queryExpression, ")");
 
             gb.Rule("ForClause")
                 .CanBe("FOR", "BROWSE")

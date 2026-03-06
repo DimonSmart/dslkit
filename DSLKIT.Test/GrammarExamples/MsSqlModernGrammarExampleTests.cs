@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using DSLKIT.GrammarExamples.MsSql;
+using DSLKIT.Parser;
 using FluentAssertions;
 using Xunit;
 
@@ -74,7 +75,10 @@ namespace DSLKIT.Test.GrammarExamples
         [Fact]
         public void ParseScript_ShouldParseUseStatement()
         {
-            const string script = "USE [Clinic]; GO";
+            const string script = """
+                USE [Clinic];
+                GO
+                """;
 
             var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
 
@@ -85,7 +89,47 @@ namespace DSLKIT.Test.GrammarExamples
         [Fact]
         public void ParseScript_ShouldParseCreateSchema_BasicAndAuthorization()
         {
-            const string script = "CREATE SCHEMA ext; GO CREATE SCHEMA [sales] AUTHORIZATION [dbo];";
+            const string script = """
+                CREATE SCHEMA ext;
+                GO
+                CREATE SCHEMA [sales] AUTHORIZATION [dbo];
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldRejectInlineGoBatchSeparator()
+        {
+            const string script = "USE [Clinic]; GO";
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeFalse("GO must be recognized only as a dedicated-line batch separator.");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseGoBatchRepeat_OnDedicatedLine()
+        {
+            const string script = """
+                SELECT 1;
+                GO 5
+                SELECT 2;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldTreatGoAsIdentifier_InsideBatch()
+        {
+            const string script = "SELECT GO AS GoToken;";
 
             var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
 
@@ -676,6 +720,16 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldRejectInlineSqlcmdPreprocessorCommand()
+        {
+            const string script = "PRINT N'before'; :setvar JobOwner sa";
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeFalse("SQLCMD commands must be recognized only as dedicated-line control commands.");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseGotoAndLabelStatements()
         {
             const string script = """
@@ -839,6 +893,78 @@ namespace DSLKIT.Test.GrammarExamples
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldAttachSetOperatorOrderBy_ToQueryExpression()
+        {
+            const string script = """
+                SELECT 1 AS X
+                UNION
+                SELECT 2 AS X
+                ORDER BY 1;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+            parseResult.ParseTree.Should().NotBeNull();
+
+            var orderByPath = FindNonTerminalPath(parseResult.ParseTree!, "OrderByClause");
+
+            orderByPath.Should().NotBeNull();
+            var orderByPathText = string.Join(" > ", orderByPath!);
+            orderByPathText.Should().Contain("QueryExpression > QueryExpressionTail > QueryExpressionOrderByAndOffsetOpt > OrderByClause");
+            orderByPathText.Should().NotContain("QueryPrimary");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldAttachSetOperatorForClause_ToQueryExpression()
+        {
+            const string script = """
+                SELECT 1 AS X
+                UNION
+                SELECT 2 AS X
+                FOR XML AUTO;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+            parseResult.ParseTree.Should().NotBeNull();
+
+            var forClausePath = FindNonTerminalPath(parseResult.ParseTree!, "ForClause");
+
+            forClausePath.Should().NotBeNull();
+            var forClausePathText = string.Join(" > ", forClausePath!);
+            forClausePathText.Should().Contain("QueryExpression > QueryExpressionTail > QueryExpressionForOpt > ForClause");
+            forClausePathText.Should().NotContain("QueryPrimary");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldAttachSetOperatorOption_ToQueryExpression()
+        {
+            const string script = """
+                SELECT 1 AS X
+                UNION
+                SELECT 2 AS X
+                OPTION (RECOMPILE);
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+            parseResult.ParseTree.Should().NotBeNull();
+
+            var optionClausePath = FindNonTerminalPath(parseResult.ParseTree!, "OptionClause");
+
+            optionClausePath.Should().NotBeNull();
+            var optionClausePathText = string.Join(" > ", optionClausePath!);
+            optionClausePathText.Should().Contain("QueryExpression > QueryExpressionTail > QueryExpressionOptionOpt > OptionClause");
+            optionClausePathText.Should().NotContain("QueryPrimary");
         }
 
         [Fact]
@@ -1086,6 +1212,32 @@ namespace DSLKIT.Test.GrammarExamples
 
             repositoryRoot = string.Empty;
             return false;
+        }
+
+        private static IReadOnlyList<string> FindNonTerminalPath(ParseTreeNode rootNode, string nonTerminalName)
+        {
+            if (rootNode is not NonTerminalNode rootNonTerminalNode)
+            {
+                return null;
+            }
+
+            if (string.Equals(rootNonTerminalNode.NonTerminal.Name, nonTerminalName, StringComparison.Ordinal))
+            {
+                return [rootNonTerminalNode.NonTerminal.Name];
+            }
+
+            foreach (var childNode in rootNonTerminalNode.Children)
+            {
+                var childPath = FindNonTerminalPath(childNode, nonTerminalName);
+                if (childPath == null)
+                {
+                    continue;
+                }
+
+                return [rootNonTerminalNode.NonTerminal.Name, .. childPath];
+            }
+
+            return null;
         }
     }
 }
