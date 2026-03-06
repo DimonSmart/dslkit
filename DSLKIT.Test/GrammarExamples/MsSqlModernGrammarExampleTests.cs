@@ -211,6 +211,18 @@ namespace DSLKIT.Test.GrammarExamples
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
 
+        [Theory]
+        [InlineData("SELECT 1 WHERE 1;")]
+        [InlineData("SELECT 1 WHERE SomeColumn IN OtherColumn;")]
+        [InlineData("SELECT 1 WHERE SomeColumn IS 5;")]
+        public void ParseScript_ShouldRejectScalarExpressionsAsSearchConditions(string script)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeFalse(
+                $"script '{script}' should not parse because WHERE requires a predicate.");
+        }
+
         [Fact]
         public void ParseScript_ShouldParseUpdateWithFromAndWhere()
         {

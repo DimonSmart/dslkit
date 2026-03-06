@@ -595,15 +595,12 @@ namespace DSLKIT.GrammarExamples.MsSql
             var offsetFetchClause = gb.NT("OffsetFetchClause");
             var searchCondition = gb.NT("SearchCondition");
             var expression = gb.NT("Expression");
-            var logicalOrExpression = gb.NT("LogicalOrExpression");
-            var logicalAndExpression = gb.NT("LogicalAndExpression");
-            var logicalNotExpression = gb.NT("LogicalNotExpression");
-            var comparisonExpression = gb.NT("ComparisonExpression");
+            var booleanOrExpression = gb.NT("BooleanOrExpression");
+            var booleanAndExpression = gb.NT("BooleanAndExpression");
+            var booleanNotExpression = gb.NT("BooleanNotExpression");
+            var booleanPrimary = gb.NT("BooleanPrimary");
             var comparisonOperator = gb.NT("ComparisonOperator");
-            var likeOperator = gb.NT("LikeOperator");
-            var inOperator = gb.NT("InOperator");
-            var isOperator = gb.NT("IsOperator");
-            var betweenOperator = gb.NT("BetweenOperator");
+            var inPredicateValue = gb.NT("InPredicateValue");
             var additiveExpression = gb.NT("AdditiveExpression");
             var multiplicativeExpression = gb.NT("MultiplicativeExpression");
             var unaryExpression = gb.NT("UnaryExpression");
@@ -618,6 +615,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var frameBoundary = gb.NT("FrameBoundary");
             var functionCall = gb.NT("FunctionCall");
             var functionArgumentList = gb.NT("FunctionArgumentList");
+            var iifArgumentList = gb.NT("IifArgumentList");
             var literal = gb.NT("Literal");
             var unicodeStringLiteral = gb.NT("UnicodeStringLiteral");
             var caseExpression = gb.NT("CaseExpression");
@@ -2014,26 +2012,36 @@ namespace DSLKIT.GrammarExamples.MsSql
                 "ROWS",
                 "ONLY");
 
-            gb.Prod("SearchCondition").Is(expression);
+            gb.Prod("SearchCondition").Is(booleanOrExpression);
 
-            gb.Prod("Expression").Is(logicalOrExpression);
+            gb.Prod("Expression").Is(additiveExpression);
 
-            gb.Prod("LogicalOrExpression").Is(logicalAndExpression);
-            gb.Prod("LogicalOrExpression").Is(logicalOrExpression, "OR", logicalAndExpression);
+            gb.Prod("BooleanOrExpression").Is(booleanAndExpression);
+            gb.Prod("BooleanOrExpression").Is(booleanOrExpression, "OR", booleanAndExpression);
 
-            gb.Prod("LogicalAndExpression").Is(logicalNotExpression);
-            gb.Prod("LogicalAndExpression").Is(logicalAndExpression, "AND", logicalNotExpression);
+            gb.Prod("BooleanAndExpression").Is(booleanNotExpression);
+            gb.Prod("BooleanAndExpression").Is(booleanAndExpression, "AND", booleanNotExpression);
 
-            gb.Prod("LogicalNotExpression").Is(comparisonExpression);
-            gb.Prod("LogicalNotExpression").Is("NOT", logicalNotExpression);
+            gb.Prod("BooleanNotExpression").Is(booleanPrimary);
+            gb.Prod("BooleanNotExpression").Is("NOT", booleanNotExpression);
 
-            gb.Prod("ComparisonExpression").Is(additiveExpression);
-            gb.Prod("ComparisonExpression").Is(additiveExpression, comparisonOperator, additiveExpression);
-            gb.Prod("ComparisonExpression").Is(additiveExpression, likeOperator, additiveExpression);
-            gb.Prod("ComparisonExpression").Is(additiveExpression, likeOperator, additiveExpression, "ESCAPE", additiveExpression);
-            gb.Prod("ComparisonExpression").Is(additiveExpression, inOperator, additiveExpression);
-            gb.Prod("ComparisonExpression").Is(additiveExpression, isOperator, additiveExpression);
-            gb.Prod("ComparisonExpression").Is(additiveExpression, betweenOperator, additiveExpression, "AND", additiveExpression);
+            gb.Prod("BooleanPrimary").Is("(", searchCondition, ")");
+            gb.Prod("BooleanPrimary").Is(additiveExpression, comparisonOperator, additiveExpression);
+            gb.Prod("BooleanPrimary").Is(additiveExpression, "LIKE", additiveExpression);
+            gb.Prod("BooleanPrimary").Is(additiveExpression, "LIKE", additiveExpression, "ESCAPE", additiveExpression);
+            gb.Prod("BooleanPrimary").Is(additiveExpression, "NOT", "LIKE", additiveExpression);
+            gb.Prod("BooleanPrimary").Is(additiveExpression, "NOT", "LIKE", additiveExpression, "ESCAPE", additiveExpression);
+            gb.Prod("BooleanPrimary").Is(additiveExpression, "IN", inPredicateValue);
+            gb.Prod("BooleanPrimary").Is(additiveExpression, "NOT", "IN", inPredicateValue);
+            gb.Prod("BooleanPrimary").Is(additiveExpression, "IS", "NULL");
+            gb.Prod("BooleanPrimary").Is(additiveExpression, "IS", "NOT", "NULL");
+            gb.Prod("BooleanPrimary").Is(additiveExpression, "BETWEEN", additiveExpression, "AND", additiveExpression);
+            gb.Prod("BooleanPrimary").Is(additiveExpression, "NOT", "BETWEEN", additiveExpression, "AND", additiveExpression);
+            gb.Prod("BooleanPrimary").Is("EXISTS", "(", queryExpression, ")");
+            gb.Prod("BooleanPrimary").Is("MATCH", "(", matchGraphPattern, ")");
+
+            gb.Prod("InPredicateValue").Is("(", expressionList, ")");
+            gb.Prod("InPredicateValue").Is("(", queryExpression, ")");
 
             gb.Rule("ComparisonOperator")
                 .CanBe("=")
@@ -2043,20 +2051,6 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .Or("<=")
                 .Or(">")
                 .Or(">=");
-
-            gb.Rule("LikeOperator")
-                .CanBe("LIKE")
-                .Or("NOT", "LIKE");
-
-            gb.Rule("InOperator")
-                .CanBe("IN")
-                .Or("NOT", "IN");
-
-            gb.Prod("IsOperator").Is("IS");
-            gb.Prod("IsOperator").Is("IS", "NOT");
-
-            gb.Prod("BetweenOperator").Is("BETWEEN");
-            gb.Prod("BetweenOperator").Is("NOT", "BETWEEN");
 
             gb.Prod("AdditiveExpression").Is(multiplicativeExpression);
             gb.Prod("AdditiveExpression").Is(additiveExpression, "+", multiplicativeExpression);
@@ -2089,8 +2083,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("PrimaryExpression").Is("(", expression, ")");
             gb.Prod("PrimaryExpression").Is("(", expressionList, ")");
             gb.Prod("PrimaryExpression").Is("(", queryExpression, ")");
-            gb.Prod("PrimaryExpression").Is("EXISTS", "(", queryExpression, ")");
-            gb.Prod("PrimaryExpression").Is("NOT", "EXISTS", "(", queryExpression, ")");
             gb.Prod("PrimaryExpression").Is(caseExpression);
             // LANGUAGE language_term used in full-text function calls (FREETEXTTABLE, CONTAINSTABLE, etc.)
             gb.Prod("PrimaryExpression").Is("LANGUAGE", primaryExpression);
@@ -2111,7 +2103,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("FunctionCall").Is("RIGHT", "(", functionArgumentList, ")");
             gb.Prod("FunctionCall").Is("COALESCE", "(", functionArgumentList, ")");
             gb.Prod("FunctionCall").Is("NULLIF", "(", functionArgumentList, ")");
-            gb.Prod("FunctionCall").Is("IIF", "(", functionArgumentList, ")");
+            gb.Prod("FunctionCall").Is("IIF", "(", iifArgumentList, ")");
             gb.Prod("FunctionCall").Is("UPDATE", "(", functionArgumentList, ")");
             gb.Prod("FunctionCall").Is("NEXT", identifierTerm, "FOR", qualifiedName);
             // OPENROWSET(BULK ...) special form
@@ -2124,6 +2116,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("OpenRowsetBulkOption").Is(identifierTerm, "=", expression);
             gb.Prod("FunctionArgumentList").Is(expression);
             gb.Prod("FunctionArgumentList").Is(functionArgumentList, ",", expression);
+            gb.Prod("IifArgumentList").Is(searchCondition, ",", expression, ",", expression);
             gb.Prod("GraphWithinGroupClause").Is("WITHIN", "GROUP", "(", "GRAPH", "PATH", ")");
             gb.Prod("GraphWithinGroupClause").Is("WITHIN", "GROUP", "(", "ORDER", "BY", orderItemList, ")");
 
@@ -2161,6 +2154,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CaseExpression").Is("CASE", expression, caseWhenList, "ELSE", expression, "END");
             gb.Prod("CaseWhenList").Is(caseWhen);
             gb.Prod("CaseWhenList").Is(caseWhenList, caseWhen);
+            gb.Prod("CaseWhen").Is("WHEN", searchCondition, "THEN", expression);
             gb.Prod("CaseWhen").Is("WHEN", expression, "THEN", expression);
 
             gb.Prod("ExpressionList").Is(expression);
@@ -2394,8 +2388,7 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod("CheckpointStatement").Is("CHECKPOINT");
 
-            // SQL Graph: MATCH search condition (as PrimaryExpression so AND works after it)
-            gb.Prod("PrimaryExpression").Is("MATCH", "(", matchGraphPattern, ")");
+            // SQL Graph: MATCH is a search condition predicate and is handled by BooleanPrimary.
             gb.Prod("MatchGraphPattern").Is(matchGraphPath);
             gb.Prod("MatchGraphPattern").Is("SHORTEST_PATH", "(", matchGraphShortestPath, ")");
             gb.Prod("MatchGraphPattern").Is(matchGraphPattern, "AND", matchGraphPath);
