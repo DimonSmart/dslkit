@@ -591,7 +591,17 @@ namespace DSLKIT.GrammarExamples.MsSql
             var createTableAsSelectStatement = gb.NT("CreateTableAsSelectStatement");
             var alterDatabaseStatement = gb.NT("AlterDatabaseStatement");
             var alterDatabaseSetOption = gb.NT("AlterDatabaseSetOption");
-            var alterDatabaseSetWord = gb.NT("AlterDatabaseSetWord");
+            var alterDatabaseSetOnOffOption = gb.NT("AlterDatabaseSetOnOffOption");
+            var alterDatabaseSetEqualsOnOffOption = gb.NT("AlterDatabaseSetEqualsOnOffOption");
+            var alterDatabaseSetModeOption = gb.NT("AlterDatabaseSetModeOption");
+            var alterDatabaseTerminationClause = gb.NT("AlterDatabaseTerminationClause");
+            var alterDatabaseTerminationOpt = gb.NT("AlterDatabaseTerminationOpt");
+            var alterDatabaseRecoveryModel = gb.NT("AlterDatabaseRecoveryModel");
+            var alterDatabasePageVerifyMode = gb.NT("AlterDatabasePageVerifyMode");
+            var alterDatabaseCursorDefaultMode = gb.NT("AlterDatabaseCursorDefaultMode");
+            var alterDatabaseParameterizationMode = gb.NT("AlterDatabaseParameterizationMode");
+            var alterDatabaseTargetRecoveryUnit = gb.NT("AlterDatabaseTargetRecoveryUnit");
+            var alterDatabaseDelayedDurabilityMode = gb.NT("AlterDatabaseDelayedDurabilityMode");
             var declareCursorStatement = gb.NT("DeclareCursorStatement");
             var cursorOptionList = gb.NT("CursorOptionList");
             var cursorOption = gb.NT("CursorOption");
@@ -1031,16 +1041,29 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("DeleteQueryHintList").Is(deleteQueryHint);
             gb.Prod("DeleteQueryHintList").Is(deleteQueryHintList, ",", deleteQueryHint);
             gb.Prod("DeleteQueryHint").Is(deleteQueryHintName);
-            gb.Prod("DeleteQueryHint").Is(deleteQueryHintName, expression);
-            gb.Prod("DeleteQueryHint").Is(deleteQueryHintName, "=", expression);
-            gb.Prod("DeleteQueryHint").Is(deleteQueryHintName, "(", expressionList, ")");
-            gb.Prod("DeleteQueryHint").Is(deleteQueryHintName, deleteQueryHintName);
-            gb.Prod("DeleteQueryHint").Is(deleteQueryHintName, deleteQueryHintName, "(", expressionList, ")");
-            gb.Prod("DeleteQueryHint").Is(qualifiedName);
-            gb.Prod("DeleteQueryHint").Is(qualifiedName, "(", expressionList, ")");
+            gb.Prod("DeleteQueryHint").Is("MAXDOP", expression);
+            gb.Prod("DeleteQueryHint").Is("MAXDOP", "=", expression);
+            gb.Prod("DeleteQueryHint").Is("MAXRECURSION", expression);
+            gb.Prod("DeleteQueryHint").Is("MAXRECURSION", "=", expression);
+            gb.Prod("DeleteQueryHint").Is("QUERYTRACEON", expression);
+            gb.Prod("DeleteQueryHint").Is("MIN_GRANT_PERCENT", "=", expression);
+            gb.Prod("DeleteQueryHint").Is("MAX_GRANT_PERCENT", "=", expression);
+            gb.Prod("DeleteQueryHint").Is("LABEL", "=", expression);
+            gb.Prod("DeleteQueryHint").Is("USE", "HINT", "(", expressionList, ")");
+            gb.Prod("DeleteQueryHint").Is("HASH", "JOIN");
+            gb.Prod("DeleteQueryHint").Is("MERGE", "JOIN");
+            gb.Prod("DeleteQueryHint").Is("LOOP", "JOIN");
+            gb.Prod("DeleteQueryHint").Is("HASH", "GROUP");
+            gb.Prod("DeleteQueryHint").Is("ORDER", "GROUP");
+            gb.Prod("DeleteQueryHint").Is("MERGE", "UNION");
+            gb.Prod("DeleteQueryHint").Is("HASH", "UNION");
+            gb.Prod("DeleteQueryHint").Is("CONCAT", "UNION");
+            gb.Prod("DeleteQueryHint").Is("FORCE", "ORDER");
+            gb.Prod("DeleteQueryHint").Is("KEEP", "PLAN");
+            gb.Prod("DeleteQueryHint").Is("KEEPFIXED", "PLAN");
+            gb.Prod("DeleteQueryHint").Is("ROBUST", "PLAN");
             gb.Rule(deleteQueryHintName)
-                .CanBe(identifierTerm)
-                .OrKeywords("RECOMPILE", "MAXDOP", "USE", "JOIN", "ORDER");
+                .Keywords("RECOMPILE", "IGNORE_NONCLUSTERED_COLUMNSTORE_INDEX");
 
             gb.Prod("OptionClause").Is("OPTION", "(", deleteQueryHintList, ")");
 
@@ -1427,13 +1450,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("GrantPermissionItem").Is(grantPermission, "(", identifierList, ")");
 
             gb.Prod("GrantPermission").Is(grantPermissionWord);
-            gb.Prod("GrantPermission").Is(grantPermissionWord, grantPermissionWord);
-            gb.Prod("GrantPermission").Is(grantPermissionWord, grantPermissionWord, grantPermissionWord);
-            gb.Prod("GrantPermission").Is(grantPermissionWord, grantPermissionWord, grantPermissionWord, grantPermissionWord);
+            gb.Prod("GrantPermission").Is("VIEW", "DEFINITION");
+            gb.Prod("GrantPermission").Is("TAKE", "OWNERSHIP");
+            gb.Prod("GrantPermission").Is("CREATE", "ANY", "SCHEMA");
+            gb.Prod("GrantPermission").Is("VIEW", "ANY", "COLUMN", "MASTER", "KEY", "DEFINITION");
+            gb.Prod("GrantPermission").Is("VIEW", "ANY", "COLUMN", "ENCRYPTION", "KEY", "DEFINITION");
 
             gb.Rule(grantPermissionWord)
-                .CanBe(strictIdentifierTerm)
-                .OrKeywords(
+                .Keywords(
                     "SELECT",
                     "INSERT",
                     "UPDATE",
@@ -1443,21 +1467,9 @@ namespace DSLKIT.GrammarExamples.MsSql
                     "CONNECT",
                     "ALTER",
                     "CONTROL",
-                    "VIEW",
-                    "DEFINITION",
-                    "TAKE",
-                    "OWNERSHIP",
                     "IMPERSONATE",
                     "RECEIVE",
-                    "SEND",
-                    "CREATE",
-                    "ANY",
-                    "SCHEMA",
-                    "DATABASE",
-                    "OBJECT",
-                    "ROLE",
-                    "LOGIN",
-                    "USER");
+                    "SEND");
 
             gb.Prod("GrantOnClause").Is("ON", grantSecurable);
             gb.Prod("GrantOnClause").Is("ON", grantClassType, "::", grantSecurable);
@@ -1480,8 +1492,17 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("GrantStatement").Is("GRANT", grantPermissionSet, "TO", grantPrincipalList, "WITH", "GRANT", "OPTION", "AS", grantPrincipal);
             gb.Prod("GrantStatement").Is("GRANT", grantPermissionSet, grantOnClause, "TO", grantPrincipalList, "WITH", "GRANT", "OPTION", "AS", grantPrincipal);
 
-            gb.Prod("DbccCommand").Is(strictIdentifierTerm);
-            gb.Prod("DbccCommand").Is(strictQualifiedName);
+            gb.Rule("DbccCommand").Keywords(
+                "CHECKDB",
+                "DROPCLEANBUFFERS",
+                "TRACESTATUS",
+                "FREEPROCCACHE",
+                "SHRINKFILE",
+                "PDW_SHOWSPACEUSED",
+                "LOGINFO",
+                "TRACEON",
+                "PAGE",
+                "WRITEPAGE");
             gb.Prod("DbccStatement").Is("DBCC", dbccCommand);
             gb.Prod("DbccStatement").Is("DBCC", dbccCommand, "(", dbccParamList, ")");
             gb.Prod("DbccStatement").Is("DBCC", dbccCommand, "WITH", dbccOptionList);
@@ -1496,9 +1517,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("DbccOption").Is(dbccOptionName);
             gb.Prod("DbccOption").Is(dbccOptionName, "=", dbccOptionValue);
             gb.Rule("DbccOptionName")
-                .CanBe(strictIdentifierTerm)
-                .Or(strictQualifiedName)
-                .OrKeywords("MAXDOP");
+                .Keywords("NO_INFOMSGS", "ALL_ERRORMSGS", "MAXDOP", "TABLERESULTS");
             gb.Rule("DbccOptionValue")
                 .CanBe(expression)
                 .Or(strictIdentifierTerm)
@@ -2574,7 +2593,10 @@ namespace DSLKIT.GrammarExamples.MsSql
                 "SETS",
                 "PIVOT",
                 "UNPIVOT",
+                "LABEL",
                 "LANGUAGE",
+                "SECONDS",
+                "MINUTES",
                 "GRAPH");
 
             gb.Prod("TruncateStatement").Is("TRUNCATE", "TABLE", qualifiedName);
@@ -2585,18 +2607,73 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("AlterDatabaseStatement").Is("ALTER", "DATABASE", identifierTerm, "SET", alterDatabaseSetOption);
             gb.Prod("AlterDatabaseStatement").Is("ALTER", "DATABASE", "SCOPED", "CONFIGURATION", "CLEAR", identifierTerm);
             gb.Prod("AlterDatabaseStatement").Is("ALTER", "DATABASE", "SCOPED", "CONFIGURATION", "SET", identifierTerm, "=", expression);
-            gb.Rule(alterDatabaseSetWord)
-                .CanBe(strictIdentifierTerm)
-                .OrKeywords("CHECKSUM", "FULL", "NONE");
-            gb.Prod("AlterDatabaseSetOption").Is(alterDatabaseSetWord, alterDatabaseSetWord);
-            gb.Prod("AlterDatabaseSetOption").Is(alterDatabaseSetWord, alterDatabaseSetWord, alterDatabaseSetWord);
-            gb.Prod("AlterDatabaseSetOption").Is(alterDatabaseSetWord, alterDatabaseSetWord, "WITH", alterDatabaseSetWord);
-            gb.Prod("AlterDatabaseSetOption").Is(alterDatabaseSetWord, "=", expression);
-            gb.Prod("AlterDatabaseSetOption").Is(alterDatabaseSetWord, "=", "ON");
-            gb.Prod("AlterDatabaseSetOption").Is(alterDatabaseSetWord, "=", "OFF");
-            gb.Prod("AlterDatabaseSetOption").Is(alterDatabaseSetWord, "=", "ON", "(", indexOptionList, ")");
-            gb.Prod("AlterDatabaseSetOption").Is(alterDatabaseSetWord, "=", "OFF", "(", indexOptionList, ")");
-            gb.Prod("AlterDatabaseSetOption").Is(alterDatabaseSetWord, "(", indexOptionList, ")");
+            gb.Rule(alterDatabaseSetOnOffOption).Keywords(
+                "ALLOW_SNAPSHOT_ISOLATION",
+                "AUTO_CREATE_STATISTICS",
+                "AUTO_UPDATE_STATISTICS",
+                "AUTO_UPDATE_STATISTICS_ASYNC",
+                "ANSI_NULL_DEFAULT",
+                "ANSI_NULLS",
+                "ANSI_PADDING",
+                "ANSI_WARNINGS",
+                "ARITHABORT",
+                "AUTO_CLOSE",
+                "AUTO_SHRINK",
+                "CONCAT_NULL_YIELDS_NULL",
+                "CURSOR_CLOSE_ON_COMMIT",
+                "DATE_CORRELATION_OPTIMIZATION",
+                "DB_CHAINING",
+                "HONOR_BROKER_PRIORITY",
+                "QUOTED_IDENTIFIER",
+                "NUMERIC_ROUNDABORT",
+                "READ_COMMITTED_SNAPSHOT",
+                "RECURSIVE_TRIGGERS",
+                "TRUSTWORTHY");
+            gb.Rule(alterDatabaseSetEqualsOnOffOption).Keywords(
+                "MEMORY_OPTIMIZED_ELEVATE_TO_SNAPSHOT");
+            gb.Rule(alterDatabaseSetModeOption).Keywords(
+                "READ_ONLY",
+                "READ_WRITE",
+                "SINGLE_USER",
+                "RESTRICTED_USER",
+                "MULTI_USER",
+                "ENABLE_BROKER",
+                "DISABLE_BROKER",
+                "NEW_BROKER",
+                "ERROR_BROKER_CONVERSATIONS");
+            gb.Rule(alterDatabaseRecoveryModel).Keywords("FULL", "SIMPLE", "BULK_LOGGED");
+            gb.Rule(alterDatabasePageVerifyMode).Keywords("CHECKSUM", "NONE", "TORN_PAGE_DETECTION");
+            gb.Rule(alterDatabaseCursorDefaultMode).Keywords("LOCAL", "GLOBAL");
+            gb.Rule(alterDatabaseParameterizationMode).Keywords("SIMPLE", "FORCED");
+            gb.Rule(alterDatabaseTargetRecoveryUnit).Keywords("SECONDS", "MINUTES");
+            gb.Rule(alterDatabaseDelayedDurabilityMode).Keywords("DISABLED", "ALLOWED", "FORCED");
+            gb.Rule("AlterDatabaseTerminationClause").OneOf(
+                gb.Seq("WITH", "NO_WAIT"),
+                gb.Seq("WITH", "ROLLBACK", "IMMEDIATE"),
+                gb.Seq("WITH", "ROLLBACK", "AFTER", expression));
+            gb.Opt(alterDatabaseTerminationOpt, alterDatabaseTerminationClause);
+
+            gb.Prod("AlterDatabaseSetOption").Is(alterDatabaseSetModeOption);
+            gb.Prod("AlterDatabaseSetOption").Is(alterDatabaseSetOnOffOption, "ON", alterDatabaseTerminationOpt);
+            gb.Prod("AlterDatabaseSetOption").Is(alterDatabaseSetOnOffOption, "OFF", alterDatabaseTerminationOpt);
+            gb.Prod("AlterDatabaseSetOption").Is(alterDatabaseSetEqualsOnOffOption, "=", "ON");
+            gb.Prod("AlterDatabaseSetOption").Is(alterDatabaseSetEqualsOnOffOption, "=", "OFF");
+            gb.Prod("AlterDatabaseSetOption").Is("COMPATIBILITY_LEVEL", "=", expression);
+            gb.Prod("AlterDatabaseSetOption").Is("RECOVERY", alterDatabaseRecoveryModel);
+            gb.Prod("AlterDatabaseSetOption").Is("PAGE_VERIFY", alterDatabasePageVerifyMode);
+            gb.Prod("AlterDatabaseSetOption").Is("CURSOR_DEFAULT", alterDatabaseCursorDefaultMode);
+            gb.Prod("AlterDatabaseSetOption").Is("PARAMETERIZATION", alterDatabaseParameterizationMode);
+            gb.Prod("AlterDatabaseSetOption").Is("TARGET_RECOVERY_TIME", "=", expression, alterDatabaseTargetRecoveryUnit);
+            gb.Prod("AlterDatabaseSetOption").Is("DELAYED_DURABILITY", "=", alterDatabaseDelayedDurabilityMode);
+            gb.Prod("AlterDatabaseSetOption").Is("QUERY_STORE", "CLEAR");
+            gb.Prod("AlterDatabaseSetOption").Is("QUERY_STORE", "CLEAR", "ALL");
+            gb.Prod("AlterDatabaseSetOption").Is("QUERY_STORE", "=", "ON");
+            gb.Prod("AlterDatabaseSetOption").Is("QUERY_STORE", "=", "OFF");
+            gb.Prod("AlterDatabaseSetOption").Is("QUERY_STORE", "(", indexOptionList, ")");
+            gb.Prod("AlterDatabaseSetOption").Is("QUERY_STORE", "=", "ON", "(", indexOptionList, ")");
+            gb.Prod("AlterDatabaseSetOption").Is("QUERY_STORE", "=", "OFF", "(", indexOptionList, ")");
+            gb.Prod("AlterDatabaseSetOption").Is("AUTOMATIC_TUNING", "(", indexOptionList, ")");
+            gb.Prod("AlterDatabaseSetOption").Is("FILESTREAM", "(", indexOptionList, ")");
 
             // DECLARE CURSOR
             gb.Rule("DeclareCursorStatement").OneOf(

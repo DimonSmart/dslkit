@@ -585,6 +585,49 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseOptionClause_CommonHints()
+        {
+            const string script = """
+                SELECT 1
+                OPTION (
+                    RECOMPILE,
+                    MAXDOP 1,
+                    QUERYTRACEON 9481,
+                    MAXRECURSION 25,
+                    MIN_GRANT_PERCENT = 20,
+                    LABEL = 'unit-test',
+                    USE HINT('DISALLOW_BATCH_MODE'),
+                    LOOP JOIN,
+                    IGNORE_NONCLUSTERED_COLUMNSTORE_INDEX
+                );
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseAlterDatabase_CommonSetForms()
+        {
+            const string script = """
+                ALTER DATABASE CURRENT SET COMPATIBILITY_LEVEL = 130;
+                ALTER DATABASE CURRENT SET MEMORY_OPTIMIZED_ELEVATE_TO_SNAPSHOT = ON;
+                ALTER DATABASE CURRENT SET QUERY_STORE CLEAR ALL;
+                ALTER DATABASE [AdventureWorks] SET AUTO_UPDATE_STATISTICS OFF WITH NO_WAIT;
+                ALTER DATABASE [AdventureWorks] SET READ_COMMITTED_SNAPSHOT ON WITH ROLLBACK IMMEDIATE;
+                ALTER DATABASE [AdventureWorks] SET CURSOR_DEFAULT GLOBAL;
+                ALTER DATABASE [AdventureWorks] SET PAGE_VERIFY CHECKSUM;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseCreateAlterTableAndIndex_Variants()
         {
             const string script = """
@@ -1397,8 +1440,12 @@ namespace DSLKIT.Test.GrammarExamples
                 ("ALTER TABLE dbo.T ALTER COLUMN Email ADD ENCRYPTED WITH (ONLINE = ON)", "ENCRYPTED WITH must not accept index options"),
                 ("SET GRAPH NODE ON", "SET should not accept arbitrary keyword soup"),
                 ("ALTER DATABASE Sales SET GRAPH NODE", "ALTER DATABASE SET should not accept arbitrary keyword soup"),
+                ("ALTER DATABASE Sales SET Foo Bar", "ALTER DATABASE SET should not accept arbitrary option names"),
                 ("GRANT GRAPH NODE TO [app_role]", "GRANT should not accept arbitrary keyword soup"),
                 ("DBCC CHECKDB (0) WITH GRAPH = NODE", "DBCC options should not accept arbitrary keyword soup"),
+                ("DBCC Banana (0)", "DBCC should not accept arbitrary command names"),
+                ("SELECT 1 OPTION (GRAPH NODE)", "OPTION() should not accept arbitrary keyword soup"),
+                ("SELECT 1 OPTION (Banana 1)", "OPTION() should not accept arbitrary hint names"),
                 ("BULK INSERT dbo.T FROM 'x.csv' WITH (INDEX = 1, ONLINE = ON)", "BULK INSERT must not accept index options"),
                 ("CREATE EXTERNAL TABLE dbo.ExtT (ID int) WITH (INDEX = 1)", "CREATE EXTERNAL TABLE must not accept table hints"),
                 ("CREATE EXTERNAL DATA SOURCE MyStorage WITH (ONLINE = ON)", "CREATE EXTERNAL DATA SOURCE must not accept index options"),
