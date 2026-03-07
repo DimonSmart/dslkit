@@ -302,6 +302,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var statementSeparatorList = gb.NT("StatementSeparatorList");
             var statement = gb.NT("Statement");
             var statementNoLeadingWith = gb.NT("StatementNoLeadingWith");
+            var implicitStatementNoLeadingWith = gb.NT("ImplicitStatementNoLeadingWith");
             var leadingWithStatement = gb.NT("LeadingWithStatement");
             var queryStatement = gb.NT("QueryStatement");
             var queryStatementNoLeadingWith = gb.NT("QueryStatementNoLeadingWith");
@@ -467,6 +468,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var loopControlStatement = gb.NT("LoopControlStatement");
             var gotoStatement = gb.NT("GotoStatement");
             var labelStatement = gb.NT("LabelStatement");
+            var labelOnlyStatement = gb.NT("LabelOnlyStatement");
             var createRoleStatement = gb.NT("CreateRoleStatement");
             var createSchemaStatement = gb.NT("CreateSchemaStatement");
             var schemaNameClause = gb.NT("SchemaNameClause");
@@ -736,7 +738,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule("StatementList").OneOf(
                 statement,
                 gb.Seq(statementList, statementSeparatorList, statement),
-                gb.Seq(statementList, statementNoLeadingWith));
+                gb.Seq(statementList, implicitStatementNoLeadingWith));
             gb.Rule("StatementSeparatorList").Plus(statementSeparator);
             gb.Rule("StatementSeparator").OneOf(";");
             gb.Rule("Statement").OneOf(statementNoLeadingWith, leadingWithStatement);
@@ -758,6 +760,70 @@ namespace DSLKIT.GrammarExamples.MsSql
                 loopControlStatement,
                 gotoStatement,
                 labelStatement,
+                executeStatement,
+                useStatement,
+                createProcStatement,
+                createFunctionStatement,
+                grantStatement,
+                dbccStatement,
+                dropProcStatement,
+                dropTableStatement,
+                dropViewStatement,
+                dropIndexStatement,
+                dropStatisticsStatement,
+                dropDatabaseStatement,
+                createRoleStatement,
+                createSchemaStatement,
+                createViewStatement,
+                createTableStatement,
+                alterTableStatement,
+                createIndexStatement,
+                alterIndexStatement,
+                createDatabaseStatement,
+                createTriggerStatement,
+                dropTriggerStatement,
+                tryCatchStatement,
+                truncateStatement,
+                createTableAsSelectStatement,
+                alterDatabaseStatement,
+                declareCursorStatement,
+                cursorOperationStatement,
+                waitforStatement,
+                createLoginStatement,
+                bulkInsertStatement,
+                checkpointStatement,
+                createUserStatement,
+                createStatisticsStatement,
+                updateStatisticsStatement,
+                dropTypeStatement,
+                dropColumnEncryptionKeyStatement,
+                revertStatement,
+                dropEventSessionStatement,
+                createTypeStatement,
+                createSecurityPolicyStatement,
+                alterSecurityPolicyStatement,
+                createExternalTableStatement,
+                createExternalDataSourceStatement,
+                mergeStatement);
+            // Only allow omitted separators before statements with a keyword-led start.
+            gb.Rule("ImplicitStatementNoLeadingWith").OneOf(
+                queryStatementNoLeadingWith,
+                updateStatement,
+                insertStatement,
+                deleteStatement,
+                ifStatement,
+                beginEndStatement,
+                whileStatement,
+                setStatement,
+                printStatement,
+                declareStatement,
+                returnStatement,
+                transactionStatement,
+                raiserrorStatement,
+                throwStatement,
+                loopControlStatement,
+                gotoStatement,
+                labelOnlyStatement,
                 executeStatement,
                 useStatement,
                 createProcStatement,
@@ -1018,8 +1084,8 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .CanBe("BREAK")
                 .OrKeywords("CONTINUE");
             gb.Prod("GotoStatement").Is("GOTO", identifierTerm);
-            gb.Prod("LabelStatement").Is(identifierTerm, ":");
-            gb.Prod("LabelStatement").Is(identifierTerm, ":", statement);
+            gb.Prod("LabelOnlyStatement").Is(identifierTerm, ":");
+            gb.Prod("LabelStatement").Is(labelOnlyStatement);
 
             gb.Prod("DeclareStatement").Is("DECLARE", declareItemList);
             gb.Prod("DeclareStatement").Is("DECLARE", declareTableVariable);
@@ -1442,7 +1508,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("ProcStatementList").Is(statement);
             gb.Prod("ProcStatementList").Is(statementSeparatorList, statement);
             gb.Prod("ProcStatementList").Is(procStatementList, ";", statement);
-            gb.Prod("ProcStatementList").Is(procStatementList, statementNoLeadingWith);
+            gb.Prod("ProcStatementList").Is(procStatementList, implicitStatementNoLeadingWith);
 
             gb.Prod("TryCatchStatement").Is(
                 "BEGIN", "TRY",
@@ -1998,6 +2064,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 EmptyTerm.Empty,
                 gb.Seq("FROM", tableSourceList),
                 selectCoreIntoClause);
+            gb.Prod("SelectCoreIntoClause").Is("INTO", qualifiedName);
             gb.Prod("SelectCoreIntoClause").Is("INTO", qualifiedName, "FROM", tableSourceList);
             gb.Prod("SelectCore").Is("SELECT", selectCorePrefix, selectList, selectCoreTail);
 
@@ -2211,7 +2278,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("PrimaryExpression").Is(functionCall, graphWithinGroupClause);
             gb.Prod("PrimaryExpression").Is("CAST", "(", expression, "AS", typeSpec, ")");
             gb.Prod("PrimaryExpression").Is("(", expression, ")");
-            gb.Prod("PrimaryExpression").Is("(", expressionList, ")");
             gb.Prod("PrimaryExpression").Is("(", queryExpression, ")");
             gb.Prod("PrimaryExpression").Is(caseExpression);
             // LANGUAGE language_term used in full-text function calls (FREETEXTTABLE, CONTAINSTABLE, etc.)

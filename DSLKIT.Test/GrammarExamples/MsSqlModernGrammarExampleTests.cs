@@ -1254,6 +1254,57 @@ namespace DSLKIT.Test.GrammarExamples
             r608.IsSuccess.Should().BeTrue($"608 failed at {r608.Error?.ErrorPosition}: {r608.Error?.Message}");
         }
 
+        [Fact]
+        public void ParseScript_ShouldParseParenthesizedScalarExpressions()
+        {
+            const string script = """
+                SELECT (1) AS SingleValue;
+                SELECT ((1)) AS NestedValue;
+                SELECT CAST((1) AS INT) AS CastValue;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseSelectIntoTempTable_WithoutFromClause()
+        {
+            const string script = """
+                SELECT 1 INTO #t;
+                SELECT (1) INTO #u WHERE 1 = 1;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseTryCatchBodies_WithImplicitKeywordBoundaries()
+        {
+            const string script = """
+                BEGIN TRY
+                    DECLARE @message NVARCHAR(100)
+                    SET @message = N'work'
+                    PRINT @message;
+                END TRY
+                BEGIN CATCH
+                    DECLARE @error_message NVARCHAR(4000)
+                    SET @error_message = ERROR_MESSAGE()
+                    PRINT @error_message;
+                END CATCH;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
         private static string ResolveScriptsRoot()
         {
             var outputPath = Path.Combine(AppContext.BaseDirectory, "GrammarExamples", "TestData", "MsSql", "Valid");
