@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DSLKIT.Formatting;
 using DSLKIT.Lexer;
+using DSLKIT.NonTerminals;
 using DSLKIT.Parser;
 using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
@@ -16,18 +17,19 @@ namespace DSLKIT.GrammarExamples.MsSql
     /// </summary>
     public static class ModernMsSqlGrammarExample
     {
-        private static readonly Lazy<IGrammar> GrammarCache = new(BuildGrammarCore);
+        private static readonly Lazy<GrammarResources> GrammarCache = new(CreateGrammarResources);
 
         public static IGrammar BuildGrammar()
         {
-            return GrammarCache.Value;
+            return GrammarCache.Value.Grammar;
         }
 
         public static ParseResult ParseBatch(string source)
         {
             ArgumentNullException.ThrowIfNull(source);
 
-            var grammar = BuildGrammar();
+            var grammarResources = GrammarCache.Value;
+            var grammar = grammarResources.Grammar;
             var lexer = new Lexer.Lexer(CreateLexerSettings(grammar));
             var parser = new SyntaxParser(grammar);
 
@@ -49,23 +51,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             // counts as a valid, empty script — build an empty Script parse tree.
             // Note: the lexer always appends an EofToken (TermFlags.None) which is NOT
             // filtered as trivia, so a comment-only file yields tokens=[EofToken] (count=1).
-            if (tokens.Count == 0 || (tokens.Count == 1 && tokens[0].Terminal == grammar.Eof))
+            // EOF is excluded from significant tokens, so trivia-only batches land here.
+            if (tokens.Count == 0)
             {
-                var scriptNonTerminal = grammar.NonTerminals.First(nt => nt.Name == "Script");
-                var emptyProduction = grammar.Productions
-                    .First(p => p.LeftNonTerminal == scriptNonTerminal
-                        && p.ProductionDefinition.Count == 1
-                        && p.ProductionDefinition[0] is DSLKIT.SpecialTerms.EmptyTerm);
-                var scriptNode = new NonTerminalNode(scriptNonTerminal, emptyProduction, []);
-                var startNonTerminal = grammar.Root;
-                var startProduction = grammar.Productions.First(p => p.LeftNonTerminal == startNonTerminal);
-                var startNode = new NonTerminalNode(startNonTerminal, startProduction, [scriptNode]);
-                return new ParseResult
-                {
-                    ParseTree = startNode,
-                    Productions = [grammar.Productions.ToList().IndexOf(startProduction),
-                                   grammar.Productions.ToList().IndexOf(emptyProduction)]
-                };
+                return CreateEmptyScriptParseResult(grammarResources);
             }
 
             return parser.Parse(tokens);
@@ -198,12 +187,20 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             foreach (var token in rawTokens)
             {
-                var terminalFlags = token.Terminal?.Flags;
-                var isTriviaToken = terminalFlags == TermFlags.Space ||
-                    terminalFlags == TermFlags.Comment;
-                if (isTriviaToken)
+                if (IsTriviaToken(token))
                 {
                     pendingTrivia.Add(token);
+                    continue;
+                }
+
+                if (token.Terminal is IEofTerminal)
+                {
+                    if (pendingTrivia.Count > 0 && significantTokens.Count > 0)
+                    {
+                        significantTokens[^1] = WithTrailingTrivia(significantTokens[^1], pendingTrivia);
+                        pendingTrivia.Clear();
+                    }
+
                     continue;
                 }
 
@@ -213,7 +210,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                     continue;
                 }
 
-                var tokenWithLeadingTrivia = token.WithTrivia(new FormattingTrivia(pendingTrivia.ToList(), []));
+                var tokenWithLeadingTrivia = WithLeadingTrivia(token, pendingTrivia);
                 significantTokens.Add(tokenWithLeadingTrivia);
                 pendingTrivia.Clear();
             }
@@ -224,9 +221,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             }
 
             var lastToken = significantTokens[^1];
-            var trivia = lastToken.Trivia;
-            var tokenWithTrailingTrivia = lastToken.WithTrivia(new FormattingTrivia(trivia.LeadingTrivia, pendingTrivia.ToList()));
-            significantTokens[^1] = tokenWithTrailingTrivia;
+            significantTokens[^1] = WithTrailingTrivia(lastToken, pendingTrivia);
             return significantTokens;
         }
 
@@ -640,6 +635,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var fetchDirection = gb.NT("FetchDirection");
             var fetchTargetList = gb.NT("FetchTargetList");
             var waitforStatement = gb.NT("WaitforStatement");
+            var waitforTimeValue = gb.NT("WaitforTimeValue");
             var createLoginStatement = gb.NT("CreateLoginStatement");
             var createLoginPasswordSpec = gb.NT("CreateLoginPasswordSpec");
             var createLoginOptionList = gb.NT("CreateLoginOptionList");
@@ -2302,7 +2298,10 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod("QuerySpecificationWhereClause").Is("WHERE", searchCondition);
             gb.Opt(querySpecificationHavingOpt, "HAVING", searchCondition);
-            gb.Opt(querySpecificationGroupByWithOpt, "WITH", identifierTerm);
+            gb.Rule(querySpecificationGroupByWithOpt).OneOf(
+                EmptyTerm.Empty,
+                gb.Seq("WITH", "ROLLUP"),
+                gb.Seq("WITH", "CUBE"));
             gb.Prod("QuerySpecificationGroupByExpressionList").Is(expressionList, querySpecificationGroupByWithOpt);
             gb.Prod("QuerySpecificationGroupByGroupingSets").Is("GROUPING", "SETS", "(", groupingSetList, ")");
             gb.Rule("QuerySpecificationGroupByClause").OneOf(
@@ -2887,9 +2886,13 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule("FetchTargetList").SeparatedBy(",", variableReference);
 
             // WAITFOR
+            gb.Rule(waitforTimeValue).OneOf(
+                stringLiteral,
+                unicodeStringLiteral,
+                variableReference);
             gb.Rule("WaitforStatement").OneOf(
-                gb.Seq("WAITFOR", "DELAY", expression),
-                gb.Seq("WAITFOR", "TIME", expression));
+                gb.Seq("WAITFOR", "DELAY", waitforTimeValue),
+                gb.Seq("WAITFOR", "TIME", waitforTimeValue));
 
             // CREATE LOGIN
             gb.Prod("CreateLoginStatement").Is("CREATE", "LOGIN", identifierTerm, "WITH", createLoginPasswordSpec);
@@ -3135,6 +3138,81 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             return gb.BuildGrammar("Start");
         }
+
+        private static GrammarResources CreateGrammarResources()
+        {
+            var grammar = BuildGrammarCore();
+            var productions = grammar.Productions.ToList();
+            var startProduction = productions.First(p => p.LeftNonTerminal == grammar.Root);
+            if (startProduction.ProductionDefinition.Count != 1 ||
+                startProduction.ProductionDefinition[0] is not INonTerminal scriptNonTerminal)
+            {
+                throw new InvalidOperationException("Unexpected SQL grammar root shape.");
+            }
+
+            var emptyScriptProduction = productions
+                .First(p => p.LeftNonTerminal == scriptNonTerminal &&
+                    p.ProductionDefinition.Count == 1 &&
+                    p.ProductionDefinition[0] is EmptyTerm);
+
+            return new GrammarResources(
+                grammar,
+                startProduction,
+                emptyScriptProduction,
+                productions.IndexOf(startProduction),
+                productions.IndexOf(emptyScriptProduction));
+        }
+
+        private static ParseResult CreateEmptyScriptParseResult(GrammarResources grammarResources)
+        {
+            var scriptNode = new NonTerminalNode(
+                grammarResources.EmptyScriptProduction.LeftNonTerminal,
+                grammarResources.EmptyScriptProduction,
+                []);
+            var startNode = new NonTerminalNode(
+                grammarResources.StartProduction.LeftNonTerminal,
+                grammarResources.StartProduction,
+                [scriptNode]);
+
+            return new ParseResult
+            {
+                ParseTree = startNode,
+                Productions =
+                [
+                    grammarResources.StartProductionIndex,
+                    grammarResources.EmptyScriptProductionIndex
+                ]
+            };
+        }
+
+        private static bool IsTriviaToken(IToken token)
+        {
+            var terminalFlags = token.Terminal?.Flags;
+            return terminalFlags == TermFlags.Space || terminalFlags == TermFlags.Comment;
+        }
+
+        private static IToken WithLeadingTrivia(IToken token, IEnumerable<IToken> leadingTrivia)
+        {
+            var trivia = token.Trivia;
+            return token.WithTrivia(new FormattingTrivia(
+                [.. trivia.LeadingTrivia, .. leadingTrivia],
+                trivia.TrailingTrivia));
+        }
+
+        private static IToken WithTrailingTrivia(IToken token, IEnumerable<IToken> trailingTrivia)
+        {
+            var trivia = token.Trivia;
+            return token.WithTrivia(new FormattingTrivia(
+                trivia.LeadingTrivia,
+                [.. trivia.TrailingTrivia, .. trailingTrivia]));
+        }
+
+        private sealed record GrammarResources(
+            IGrammar Grammar,
+            Production StartProduction,
+            Production EmptyScriptProduction,
+            int StartProductionIndex,
+            int EmptyScriptProductionIndex);
     }
 }
 

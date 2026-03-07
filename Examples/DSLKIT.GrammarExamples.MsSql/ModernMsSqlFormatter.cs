@@ -23,7 +23,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             {
                 if (segment is SqlBatchDocumentNode batchNode)
                 {
-                    var batchResult = TryFormatBatch(batchNode.ParseResult, formattingOptions, batchNode.StartPosition);
+                    var batchResult = TryFormatBatch(
+                        batchNode.ParseResult,
+                        formattingOptions,
+                        batchNode.Text,
+                        batchNode.StartPosition);
                     if (!batchResult.IsSuccess)
                     {
                         return batchResult;
@@ -50,7 +54,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             return SqlFormattingResult.Success(formattedScript);
         }
 
-        private static SqlFormattingResult TryFormatBatch(ParseResult parseResult, SqlFormattingOptions options, int startPosition = 0)
+        private static SqlFormattingResult TryFormatBatch(
+            ParseResult parseResult,
+            SqlFormattingOptions options,
+            string sourceText,
+            int startPosition = 0)
         {
             if (!parseResult.IsSuccess || parseResult.ParseTree == null)
             {
@@ -68,9 +76,35 @@ namespace DSLKIT.GrammarExamples.MsSql
                 return SqlFormattingResult.Failure(parseResult.Error?.ToString() ?? "Parse failed.");
             }
 
+            if (!HasTerminalNodes(parseResult.ParseTree))
+            {
+                return SqlFormattingResult.Success(
+                    string.IsNullOrWhiteSpace(sourceText)
+                        ? string.Empty
+                        : TrimTrailingLineBreaks(sourceText));
+            }
+
             var formattingVisitor = new SqlFormattingVisitor(options);
             formattingVisitor.Visit(parseResult.ParseTree);
             return SqlFormattingResult.Success(formattingVisitor.GetFormattedSql());
+        }
+
+        private static bool HasTerminalNodes(ParseTreeNode node)
+        {
+            if (node is TerminalNode)
+            {
+                return true;
+            }
+
+            foreach (var childNode in node.Children)
+            {
+                if (HasTerminalNodes(childNode))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static string TrimTrailingLineBreaks(string? text)

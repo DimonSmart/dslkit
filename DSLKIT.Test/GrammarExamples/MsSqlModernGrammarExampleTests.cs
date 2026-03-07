@@ -356,6 +356,20 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldRejectGroupBy_WithUnknownLegacyModifier()
+        {
+            const string script = """
+                SELECT a
+                FROM dbo.T
+                GROUP BY a WITH BANANA;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse("GROUP BY WITH should only accept legacy ROLLUP/CUBE modifiers.");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseUpdateWithFromAndWhere()
         {
             const string script = """
@@ -700,6 +714,16 @@ namespace DSLKIT.Test.GrammarExamples
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Theory]
+        [InlineData("WAITFOR DELAY 1 + 1;")]
+        [InlineData("WAITFOR TIME DATEADD(HOUR, 1, GETDATE());")]
+        public void ParseScript_ShouldRejectWaitfor_WithArbitraryExpressions(string script)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse("WAITFOR DELAY/TIME should not accept arbitrary scalar expressions.");
         }
 
         [Fact]
@@ -1209,6 +1233,27 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldAttachTrailingCommentBeforeEof_ToLastSignificantToken()
+        {
+            const string script = "SELECT 1 -- tail";
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+            parseResult.ParseTree.Should().NotBeNull();
+
+            var terminalNodes = GetTerminalNodes(parseResult.ParseTree!);
+            var lastTerminal = terminalNodes.Last();
+
+            lastTerminal.Token.OriginalString.Should().Be("1");
+            lastTerminal.Token.Trivia.TrailingTrivia
+                .Select(token => token.OriginalString)
+                .Should()
+                .Contain("-- tail");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseOpenJsonWithClause()
         {
             const string script = """
@@ -1272,6 +1317,53 @@ namespace DSLKIT.Test.GrammarExamples
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldKeepIntersectInsideRightBranch_OfUnionExpression()
+        {
+            const string script = """
+                SELECT 1 AS X
+                UNION
+                SELECT 2 AS X
+                INTERSECT
+                SELECT 2 AS X;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+            parseResult.ParseTree.Should().NotBeNull();
+
+            var intersectPath = FindTerminalPaths(parseResult.ParseTree!, "INTERSECT").Single();
+
+            CountPathSegment(intersectPath, "QueryUnionExpression").Should().Be(1);
+            string.Join(" > ", intersectPath)
+                .Should()
+                .Contain("QueryExpression > QueryUnionExpression > QueryIntersectExpression");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldKeepExceptLeftAssociative_InUnionChain()
+        {
+            const string script = """
+                SELECT 1 AS X
+                EXCEPT
+                SELECT 2 AS X
+                UNION
+                SELECT 3 AS X;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+            parseResult.ParseTree.Should().NotBeNull();
+
+            var exceptPath = FindTerminalPaths(parseResult.ParseTree!, "EXCEPT").Single();
+
+            CountPathSegment(exceptPath, "QueryUnionExpression").Should().Be(2);
         }
 
         [Fact]
@@ -1373,6 +1465,24 @@ namespace DSLKIT.Test.GrammarExamples
             var r1 = ModernMsSqlGrammarExample.ParseBatch(
                 "IF @x < 500 SET @c = 'A'; ELSE IF @x < 1000 SET @c = 'B'; ELSE SET @c = 'C'");
             r1.IsSuccess.Should().BeTrue($"IF SET; ELSE IF: {r1.Error?.ErrorPosition}: {r1.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldBindElseToNearestIf_InElseIfChain()
+        {
+            const string script = "IF @x < 500 SET @c = 'A'; ELSE IF @x < 1000 SET @c = 'B'; ELSE SET @c = 'C'";
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+            parseResult.ParseTree.Should().NotBeNull();
+
+            var elsePaths = FindTerminalPaths(parseResult.ParseTree!, "ELSE");
+            elsePaths.Should().HaveCount(2);
+
+            CountPathSegment(elsePaths[0], "IfStatement").Should().Be(1);
+            CountPathSegment(elsePaths[1], "IfStatement").Should().Be(2);
         }
 
         [Fact]
@@ -1848,6 +1958,46 @@ namespace DSLKIT.Test.GrammarExamples
             }
 
             return null;
+        }
+
+        private static IReadOnlyList<IReadOnlyList<string>> FindTerminalPaths(ParseTreeNode rootNode, string tokenText)
+        {
+            var paths = new List<IReadOnlyList<string>>();
+            FindTerminalPaths(rootNode, tokenText, [], paths);
+            return paths;
+        }
+
+        private static void FindTerminalPaths(
+            ParseTreeNode node,
+            string tokenText,
+            IReadOnlyList<string> path,
+            List<IReadOnlyList<string>> output)
+        {
+            if (node is TerminalNode terminalNode)
+            {
+                if (string.Equals(terminalNode.Token.OriginalString, tokenText, StringComparison.OrdinalIgnoreCase))
+                {
+                    output.Add([.. path, terminalNode.Token.OriginalString.ToUpperInvariant()]);
+                }
+
+                return;
+            }
+
+            if (node is not NonTerminalNode nonTerminalNode)
+            {
+                return;
+            }
+
+            var nextPath = path.Append(nonTerminalNode.NonTerminal.Name).ToArray();
+            foreach (var childNode in nonTerminalNode.Children)
+            {
+                FindTerminalPaths(childNode, tokenText, nextPath, output);
+            }
+        }
+
+        private static int CountPathSegment(IReadOnlyList<string> path, string segment)
+        {
+            return path.Count(item => string.Equals(item, segment, StringComparison.Ordinal));
         }
     }
 }

@@ -532,6 +532,34 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void TryFormat_ShouldPreserveTrailingCommentBeforeEof()
+        {
+            const string sourceSql = "select 1 -- tail";
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, new SqlFormattingOptions
+            {
+                KeywordCase = SqlKeywordCase.Upper
+            });
+
+            result.IsSuccess.Should().BeTrue();
+
+            var formattedSql = NormalizeLineEndings(result.FormattedSql!);
+            NormalizeSql(formattedSql).Should().Be(NormalizeSql("SELECT 1 -- tail"));
+            formattedSql.Should().Contain("-- tail");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldPreserveCommentOnlyBatch()
+        {
+            const string sourceSql = "-- comment only batch";
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql);
+
+            result.IsSuccess.Should().BeTrue();
+            NormalizeLineEndings(result.FormattedSql!).Should().Be(sourceSql);
+        }
+
+        [Fact]
         public void TryFormat_ShouldPreserveCommentsInsideSplitMultiKeywordConstructs()
         {
             const string sourceSql = """
