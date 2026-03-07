@@ -1123,6 +1123,22 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseSetOptions_WithContextualKeywords()
+        {
+            const string script = """
+                SET LANGUAGE us_english;
+                SET ROWCOUNT 10;
+                SET STATISTICS IO ON;
+                SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseMultiRowValues_InInsertAndTableConstructor()
         {
             const string script = """
@@ -1199,15 +1215,21 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
-        public void ParseScript_ShouldRejectOverAcceptedCreateTableAndWithClauseForms()
+        public void ParseScript_ShouldRejectOverAcceptedRescueForms()
         {
             var invalidScripts = new (string Script, string Reason)[]
             {
                 ("CREATE TABLE dbo.T (ID int, PRIMARY KEY)", "table-level PRIMARY KEY requires a column list"),
                 ("CREATE TABLE dbo.T (ID int, CONSTRAINT FK_X FOREIGN KEY REFERENCES dbo.S (SID))", "table-level FOREIGN KEY requires a local column list"),
                 ("CREATE TABLE dbo.T (ID int INDEX IX_T (ID))", "inline INDEX without a comma must not be accepted in the generic CREATE TABLE path"),
+                ("CREATE TABLE dbo.T (ID int GRAPH NODE)", "CREATE TABLE column options must not accept arbitrary keyword soup"),
+                ("CREATE TABLE dbo.T (ID int) WITH (GRAPH = NODE)", "CREATE TABLE WITH options must not accept arbitrary keyword soup"),
                 ("ALTER TABLE dbo.T ALTER COLUMN Email ADD MASKED WITH (ONLINE = ON)", "MASKED WITH must not accept index options"),
                 ("ALTER TABLE dbo.T ALTER COLUMN Email ADD ENCRYPTED WITH (ONLINE = ON)", "ENCRYPTED WITH must not accept index options"),
+                ("SET GRAPH NODE ON", "SET should not accept arbitrary keyword soup"),
+                ("ALTER DATABASE Sales SET GRAPH NODE", "ALTER DATABASE SET should not accept arbitrary keyword soup"),
+                ("GRANT GRAPH NODE TO [app_role]", "GRANT should not accept arbitrary keyword soup"),
+                ("DBCC CHECKDB (0) WITH GRAPH = NODE", "DBCC options should not accept arbitrary keyword soup"),
                 ("BULK INSERT dbo.T FROM 'x.csv' WITH (INDEX = 1, ONLINE = ON)", "BULK INSERT must not accept index options"),
                 ("CREATE EXTERNAL TABLE dbo.ExtT (ID int) WITH (INDEX = 1)", "CREATE EXTERNAL TABLE must not accept table hints"),
                 ("CREATE EXTERNAL DATA SOURCE MyStorage WITH (ONLINE = ON)", "CREATE EXTERNAL DATA SOURCE must not accept index options")
