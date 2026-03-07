@@ -337,6 +337,25 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseGroupBy_WithRollupAndCube()
+        {
+            const string script = """
+                SELECT a
+                FROM dbo.T
+                GROUP BY a WITH ROLLUP;
+
+                SELECT a, b
+                FROM dbo.T
+                GROUP BY a, b WITH CUBE;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseUpdateWithFromAndWhere()
         {
             const string script = """
