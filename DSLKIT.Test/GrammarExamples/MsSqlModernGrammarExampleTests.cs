@@ -1593,6 +1593,122 @@ namespace DSLKIT.Test.GrammarExamples
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
 
+        [Fact]
+        public void ParseScript_ShouldParseCreateTrigger_ForDmlAndServerEvents()
+        {
+            const string script = """
+                CREATE TRIGGER dbo.trCustomerAudit
+                ON dbo.Customers
+                AFTER INSERT
+                AS
+                BEGIN
+                    PRINT N'audit';
+                END;
+
+                CREATE TRIGGER dbo.trServerLogon
+                ON ALL SERVER
+                FOR LOGON
+                AS
+                BEGIN
+                    PRINT N'logon';
+                END;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldRejectCreateTrigger_WithContextualKeywordEvent()
+        {
+            const string script = """
+                CREATE TRIGGER dbo.trBad
+                ON dbo.Customers
+                AFTER PATH
+                AS
+                BEGIN
+                    PRINT N'bad';
+                END;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse("trigger events should not accept unrelated contextual keywords.");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseSecurityPolicy_WithKnownOptions()
+        {
+            const string script = """
+                CREATE SECURITY POLICY dbo.CustomerFilter
+                    ADD FILTER PREDICATE dbo.fn_FilterPredicate(TenantId) ON dbo.Customers
+                WITH (STATE = ON, SCHEMABINDING = OFF);
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldRejectSecurityPolicy_WithUnknownOptionName()
+        {
+            const string script = """
+                CREATE SECURITY POLICY dbo.CustomerFilter
+                    ADD FILTER PREDICATE dbo.fn_FilterPredicate(TenantId) ON dbo.Customers
+                WITH (GRAPH = ON);
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse("security policy WITH options should only accept known names.");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldRejectExternalObjects_WhenFeatureDisabled()
+        {
+            const string script = """
+                CREATE EXTERNAL DATA SOURCE MyStorage
+                WITH (TYPE = BLOB_STORAGE, LOCATION = 'https://example.com/path');
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script, MsSqlDialectFeatures.SqlServerCore);
+
+            parseResult.IsSuccess.Should().BeFalse("external objects should be gated behind ExternalObjects feature.");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseCreateTableAsSelect_WhenSynapseFeaturesEnabled()
+        {
+            const string script = """
+                CREATE TABLE dbo.Stage
+                AS
+                SELECT 1 AS Id;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script, MsSqlDialectFeatures.All);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldRejectSynapseExtensions_WhenFeatureDisabled()
+        {
+            const string script = """
+                CREATE TABLE dbo.Stage
+                AS
+                SELECT 1 AS Id;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script, MsSqlDialectFeatures.SqlServerCore);
+
+            parseResult.IsSuccess.Should().BeFalse("CTAS should be gated behind SynapseExtensions feature.");
+        }
+
         public static IEnumerable<object[]> ValidSqlScripts()
         {
             var scriptsRoot = ResolveScriptsRoot();

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using DSLKIT.Formatting;
@@ -11,24 +12,43 @@ using DSLKIT.Tokens;
 
 namespace DSLKIT.GrammarExamples.MsSql
 {
+    [Flags]
+    public enum MsSqlDialectFeatures
+    {
+        SqlServerCore = 1,
+        ExternalObjects = 2,
+        SynapseExtensions = 4,
+        All = SqlServerCore | ExternalObjects | SynapseExtensions
+    }
+
     /// <summary>
     /// SQL Server 2022 / Azure SQL query-language grammar subset.
     /// Focus: SELECT, CTE, joins, set operators, window functions and CASE.
     /// </summary>
     public static class ModernMsSqlGrammarExample
     {
-        private static readonly Lazy<GrammarResources> GrammarCache = new(CreateGrammarResources);
+        private static readonly ConcurrentDictionary<MsSqlDialectFeatures, Lazy<GrammarResources>> GrammarCache = new();
 
         public static IGrammar BuildGrammar()
         {
-            return GrammarCache.Value.Grammar;
+            return BuildGrammar(MsSqlDialectFeatures.All);
+        }
+
+        public static IGrammar BuildGrammar(MsSqlDialectFeatures dialectFeatures)
+        {
+            return GetGrammarResources(dialectFeatures).Grammar;
         }
 
         public static ParseResult ParseBatch(string source)
         {
+            return ParseBatch(source, MsSqlDialectFeatures.All);
+        }
+
+        public static ParseResult ParseBatch(string source, MsSqlDialectFeatures dialectFeatures)
+        {
             ArgumentNullException.ThrowIfNull(source);
 
-            var grammarResources = GrammarCache.Value;
+            var grammarResources = GetGrammarResources(dialectFeatures);
             var grammar = grammarResources.Grammar;
             var lexer = new Lexer.Lexer(CreateLexerSettings(grammar));
             var parser = new SyntaxParser(grammar);
@@ -62,12 +82,17 @@ namespace DSLKIT.GrammarExamples.MsSql
 
         public static SqlScriptDocumentParseResult ParseDocument(string source)
         {
+            return ParseDocument(source, MsSqlDialectFeatures.All);
+        }
+
+        public static SqlScriptDocumentParseResult ParseDocument(string source, MsSqlDialectFeatures dialectFeatures)
+        {
             ArgumentNullException.ThrowIfNull(source);
 
             var segments = SqlServerScriptPreprocessor.Split(source);
             if (segments.Count == 0)
             {
-                var emptyBatchParseResult = ParseBatch(source);
+                var emptyBatchParseResult = ParseBatch(source, dialectFeatures);
                 if (!emptyBatchParseResult.IsSuccess)
                 {
                     return new SqlScriptDocumentParseResult
@@ -98,7 +123,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             {
                 if (segment.Kind == SqlScriptSegmentKind.Batch)
                 {
-                    var batchParseResult = ParseBatch(segment.Text);
+                    var batchParseResult = ParseBatch(segment.Text, dialectFeatures);
                     if (!batchParseResult.IsSuccess)
                     {
                         return new SqlScriptDocumentParseResult
@@ -225,7 +250,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             return significantTokens;
         }
 
-        private static IGrammar BuildGrammarCore()
+        private static IGrammar BuildGrammarCore(MsSqlDialectFeatures dialectFeatures)
         {
             var identifier = new IdentifierTerminal(allowDot: false);
 
@@ -673,6 +698,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var securityPolicyClause = gb.NT("SecurityPolicyClause");
             var securityPolicyOptionList = gb.NT("SecurityPolicyOptionList");
             var securityPolicyOption = gb.NT("SecurityPolicyOption");
+            var securityPolicyOptionName = gb.NT("SecurityPolicyOptionName");
             var createExternalTableStatement = gb.NT("CreateExternalTableStatement");
             var externalTableOptionList = gb.NT("ExternalTableOptionList");
             var createExternalDataSourceStatement = gb.NT("CreateExternalDataSourceStatement");
@@ -786,8 +812,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             var forXmlMode = gb.NT("ForXmlMode");
             var forXmlOptionList = gb.NT("ForXmlOptionList");
             var forXmlOption = gb.NT("ForXmlOption");
-            object[] statementNoLeadingWithAlternatives =
-            [
+            var statementNoLeadingWithAlternatives = new List<object>
+            {
                 queryStatementNoLeadingWith,
                 updateStatement,
                 insertStatement,
@@ -829,7 +855,6 @@ namespace DSLKIT.GrammarExamples.MsSql
                 dropTriggerStatement,
                 tryCatchStatement,
                 truncateStatement,
-                createTableAsSelectStatement,
                 alterDatabaseStatement,
                 declareCursorStatement,
                 cursorOperationStatement,
@@ -847,12 +872,21 @@ namespace DSLKIT.GrammarExamples.MsSql
                 createTypeStatement,
                 createSecurityPolicyStatement,
                 alterSecurityPolicyStatement,
-                createExternalTableStatement,
-                createExternalDataSourceStatement,
                 mergeStatement
-            ];
-            object[] implicitStatementNoLeadingWithAlternatives =
-            [
+            };
+            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.SynapseExtensions))
+            {
+                statementNoLeadingWithAlternatives.Add(createTableAsSelectStatement);
+            }
+
+            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.ExternalObjects))
+            {
+                statementNoLeadingWithAlternatives.Add(createExternalTableStatement);
+                statementNoLeadingWithAlternatives.Add(createExternalDataSourceStatement);
+            }
+
+            var implicitStatementNoLeadingWithAlternatives = new List<object>
+            {
                 implicitQueryStatementNoLeadingWith,
                 updateStatement,
                 insertStatement,
@@ -894,7 +928,6 @@ namespace DSLKIT.GrammarExamples.MsSql
                 dropTriggerStatement,
                 tryCatchStatement,
                 truncateStatement,
-                createTableAsSelectStatement,
                 alterDatabaseStatement,
                 declareCursorStatement,
                 cursorOperationStatement,
@@ -912,10 +945,18 @@ namespace DSLKIT.GrammarExamples.MsSql
                 createTypeStatement,
                 createSecurityPolicyStatement,
                 alterSecurityPolicyStatement,
-                createExternalTableStatement,
-                createExternalDataSourceStatement,
                 mergeStatement
-            ];
+            };
+            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.SynapseExtensions))
+            {
+                implicitStatementNoLeadingWithAlternatives.Add(createTableAsSelectStatement);
+            }
+
+            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.ExternalObjects))
+            {
+                implicitStatementNoLeadingWithAlternatives.Add(createExternalTableStatement);
+                implicitStatementNoLeadingWithAlternatives.Add(createExternalDataSourceStatement);
+            }
             var createFunctionPreludeStatementNoLeadingWithAlternatives = statementNoLeadingWithAlternatives
                 .Where(alternative => !ReferenceEquals(alternative, returnStatement))
                 .ToArray();
@@ -942,9 +983,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule("StatementSeparatorList").Plus(statementSeparator);
             gb.Rule("StatementSeparator").OneOf(";");
             gb.Rule("Statement").OneOf(statementNoLeadingWith, leadingWithStatement);
-            gb.Rule("StatementNoLeadingWith").OneOf(statementNoLeadingWithAlternatives);
+            gb.Rule("StatementNoLeadingWith").OneOf([.. statementNoLeadingWithAlternatives]);
             // Only allow omitted separators before statements with a keyword-led start.
-            gb.Rule("ImplicitStatementNoLeadingWith").OneOf(implicitStatementNoLeadingWithAlternatives);
+            gb.Rule("ImplicitStatementNoLeadingWith").OneOf([.. implicitStatementNoLeadingWithAlternatives]);
             gb.Rule("LeadingWithStatement").OneOf(
                 gb.Seq(withClause, queryExpression),
                 gb.Seq(withClause, queryExpression, optionClause),
@@ -1579,17 +1620,24 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("GrantStatement").Is("GRANT", grantPermissionSet, "TO", grantPrincipalList, "WITH", "GRANT", "OPTION", "AS", grantPrincipal);
             gb.Prod("GrantStatement").Is("GRANT", grantPermissionSet, grantOnClause, "TO", grantPrincipalList, "WITH", "GRANT", "OPTION", "AS", grantPrincipal);
 
-            gb.Rule("DbccCommand").Keywords(
+            var dbccCommandNames = new List<string>
+            {
                 "CHECKDB",
                 "DROPCLEANBUFFERS",
                 "TRACESTATUS",
                 "FREEPROCCACHE",
                 "SHRINKFILE",
-                "PDW_SHOWSPACEUSED",
                 "LOGINFO",
                 "TRACEON",
                 "PAGE",
-                "WRITEPAGE");
+                "WRITEPAGE"
+            };
+            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.SynapseExtensions))
+            {
+                dbccCommandNames.Add("PDW_SHOWSPACEUSED");
+            }
+
+            gb.Rule("DbccCommand").Keywords([.. dbccCommandNames]);
             gb.Prod("DbccStatement").Is("DBCC", dbccCommand);
             gb.Prod("DbccStatement").Is("DBCC", dbccCommand, "(", dbccParamList, ")");
             gb.Prod("DbccStatement").Is("DBCC", dbccCommand, "WITH", dbccOptionList);
@@ -1661,41 +1709,21 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("DropDatabaseStatement").Is("DROP", "DATABASE", identifierTerm);
             gb.Prod("DropDatabaseStatement").Is("DROP", "DATABASE", dropIfExistsClause, identifierTerm);
 
-            gb.Prod("CreateTriggerHead").Is("CREATE", "TRIGGER");
-            gb.Prod("CreateTriggerHead").Is("CREATE", "OR", "ALTER", "TRIGGER");
-            gb.Prod("CreateTriggerHead").Is("ALTER", "TRIGGER");
-
-            gb.Prod("CreateTriggerFireClause").Is("FOR", createTriggerEventList);
-            gb.Prod("CreateTriggerFireClause").Is("AFTER", createTriggerEventList);
-            gb.Prod("CreateTriggerFireClause").Is("INSTEAD", "OF", createTriggerEventList);
-
-            gb.Prod("CreateTriggerEventList").Is(createTriggerEvent);
-            gb.Prod("CreateTriggerEventList").Is(createTriggerEventList, ",", createTriggerEvent);
-            gb.Rule(createTriggerEvent)
-                .CanBe(identifierTerm) // DDL events: CREATE_TABLE, LOGON, etc.
-                .OrKeywords("INSERT", "UPDATE", "DELETE");
-
-            gb.Prod("CreateTriggerWithOptionList").Is(createTriggerWithOption);
-            gb.Prod("CreateTriggerWithOptionList").Is(createTriggerWithOptionList, ",", createTriggerWithOption);
-            gb.Rule(createTriggerWithOption)
-                .CanBe(createProcExecuteAsClause)
-                .OrKeywords("ENCRYPTION", "SCHEMABINDING", "NATIVE_COMPILATION");
-
-            // DML trigger: ON table [WITH opts] fireClause [NOT FOR REPLICATION] AS body
-            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, "ON", qualifiedName, createTriggerFireClause, "AS", createProcBodyBlock);
-            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, "ON", qualifiedName, "WITH", createTriggerWithOptionList, createTriggerFireClause, "AS", createProcBodyBlock);
-            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, "ON", qualifiedName, createTriggerFireClause, "NOT", "FOR", "REPLICATION", "AS", createProcBodyBlock);
-            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, "ON", qualifiedName, "WITH", createTriggerWithOptionList, createTriggerFireClause, "NOT", "FOR", "REPLICATION", "AS", createProcBodyBlock);
-            // DDL trigger: ON ALL SERVER | DATABASE
-            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, "ON", "ALL", "SERVER", createTriggerFireClause, "AS", createProcBodyBlock);
-            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, "ON", "DATABASE", createTriggerFireClause, "AS", createProcBodyBlock);
-            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, "ON", "ALL", "SERVER", "WITH", createTriggerWithOptionList, createTriggerFireClause, "AS", createProcBodyBlock);
-            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, "ON", "DATABASE", "WITH", createTriggerWithOptionList, createTriggerFireClause, "AS", createProcBodyBlock);
-
-            gb.Prod("DropTriggerStatement").Is("DROP", "TRIGGER", qualifiedName);
-            gb.Prod("DropTriggerStatement").Is("DROP", "TRIGGER", dropIfExistsClause, qualifiedName);
-            gb.Prod("DropTriggerStatement").Is("DROP", "TRIGGER", qualifiedName, "ON", "DATABASE");
-            gb.Prod("DropTriggerStatement").Is("DROP", "TRIGGER", dropIfExistsClause, qualifiedName, "ON", "DATABASE");
+            BuildTriggerGrammar(
+                gb,
+                createTriggerHead,
+                createTriggerFireClause,
+                createTriggerEventList,
+                createTriggerEvent,
+                createTriggerWithOptionList,
+                createTriggerWithOption,
+                createTriggerStatement,
+                createProcExecuteAsClause,
+                createProcBodyBlock,
+                strictIdentifierTerm,
+                qualifiedName,
+                dropTriggerStatement,
+                dropIfExistsClause);
             gb.Prod("DropTriggerStatement").Is("DROP", "TRIGGER", qualifiedName, "ON", "ALL", "SERVER");
             gb.Prod("DropTriggerStatement").Is("DROP", "TRIGGER", dropIfExistsClause, qualifiedName, "ON", "ALL", "SERVER");
 
@@ -3061,12 +3089,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("MatchGraphStepChain").Is(matchGraphStep);
             gb.Prod("MatchGraphStepChain").Is(matchGraphStepChain, matchGraphStep);
 
-            // PREDICT ML function
-            gb.Prod("FunctionCall").Is("PREDICT", "(", predictArgList, ")");
-            gb.Prod("PredictArgList").Is(predictArg);
-            gb.Prod("PredictArgList").Is(predictArgList, ",", predictArg);
-            gb.Prod("PredictArg").Is(identifierTerm, "=", expression);
-            gb.Prod("PredictArg").Is(identifierTerm, "=", expression, "AS", identifierTerm);
+            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.SynapseExtensions))
+            {
+                gb.Prod("FunctionCall").Is("PREDICT", "(", predictArgList, ")");
+                gb.Prod("PredictArgList").Is(predictArg);
+                gb.Prod("PredictArgList").Is(predictArgList, ",", predictArg);
+                gb.Prod("PredictArg").Is(identifierTerm, "=", expression);
+                gb.Prod("PredictArg").Is(identifierTerm, "=", expression, "AS", identifierTerm);
+            }
 
             gb.Prod("StrictQualifiedName").Is(strictIdentifierTerm);
             gb.Prod("StrictQualifiedName").Is(strictQualifiedName, ".", strictIdentifierTerm);
@@ -3076,72 +3106,45 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("QualifiedName").Is(qualifiedName, ".", graphColumnRef);
             gb.Prod("QualifiedName").Is(qualifiedName, ".", ".", identifierTerm); // double-dot: master..table
 
-            // CREATE/ALTER SECURITY POLICY
-            gb.Prod("CreateSecurityPolicyStatement").Is("CREATE", "SECURITY", "POLICY", qualifiedName, securityPolicyClauseList);
-            gb.Prod("CreateSecurityPolicyStatement").Is("CREATE", "SECURITY", "POLICY", qualifiedName, securityPolicyClauseList, "WITH", "(", securityPolicyOptionList, ")");
-            gb.Prod("AlterSecurityPolicyStatement").Is("ALTER", "SECURITY", "POLICY", qualifiedName, securityPolicyClauseList);
-            gb.Prod("AlterSecurityPolicyStatement").Is("ALTER", "SECURITY", "POLICY", qualifiedName, securityPolicyClauseList, "WITH", "(", securityPolicyOptionList, ")");
-            gb.Prod("SecurityPolicyClauseList").Is(securityPolicyClause);
-            gb.Prod("SecurityPolicyClauseList").Is(securityPolicyClauseList, ",", securityPolicyClause);
-            gb.Rule("SecurityPolicyClause")
-                .CanBe("ADD", "FILTER", "PREDICATE", functionCall, "ON", qualifiedName)
-                .Or("ADD", "BLOCK", "PREDICATE", functionCall, "ON", qualifiedName)
-                .Or("DROP", "FILTER", "PREDICATE", "ON", qualifiedName)
-                .Or("DROP", "BLOCK", "PREDICATE", "ON", qualifiedName);
-            gb.Prod("SecurityPolicyOptionList").Is(securityPolicyOption);
-            gb.Prod("SecurityPolicyOptionList").Is(securityPolicyOptionList, ",", securityPolicyOption);
-            gb.Prod("SecurityPolicyOption").Is(identifierTerm, "=", "ON");
-            gb.Prod("SecurityPolicyOption").Is(identifierTerm, "=", "OFF");
-            gb.Prod("SecurityPolicyOption").Is(identifierTerm, "=", expression);
+            BuildSecurityPolicyGrammar(
+                gb,
+                createSecurityPolicyStatement,
+                alterSecurityPolicyStatement,
+                securityPolicyClauseList,
+                securityPolicyClause,
+                securityPolicyOptionList,
+                securityPolicyOption,
+                securityPolicyOptionName,
+                functionCall,
+                qualifiedName);
 
-            // CREATE EXTERNAL TABLE
-            gb.Prod("CreateExternalTableStatement").Is("CREATE", "EXTERNAL", "TABLE", qualifiedName, "(", createTableElementList, ")");
-            gb.Prod("CreateExternalTableStatement").Is("CREATE", "EXTERNAL", "TABLE", qualifiedName, "(", createTableElementList, ")", "WITH", "(", externalTableOptionList, ")");
-            gb.Prod("ExternalTableOptionList").Is("LOCATION", "=", namedOptionValue);
-            gb.Prod("ExternalTableOptionList").Is("DATA_SOURCE", "=", namedOptionValue);
-            gb.Prod("ExternalTableOptionList").Is("FILE_FORMAT", "=", namedOptionValue);
-            gb.Prod("ExternalTableOptionList").Is("REJECT_TYPE", "=", namedOptionValue);
-            gb.Prod("ExternalTableOptionList").Is("REJECT_VALUE", "=", namedOptionValue);
-            gb.Prod("ExternalTableOptionList").Is("REJECT_SAMPLE_VALUE", "=", namedOptionValue);
-            gb.Prod("ExternalTableOptionList").Is("DISTRIBUTION", "=", namedOptionValue);
-            gb.Prod("ExternalTableOptionList").Is("SCHEMA_NAME", "=", namedOptionValue);
-            gb.Prod("ExternalTableOptionList").Is("OBJECT_NAME", "=", namedOptionValue);
-            gb.Prod("ExternalTableOptionList").Is(externalTableOptionList, ",", "LOCATION", "=", namedOptionValue);
-            gb.Prod("ExternalTableOptionList").Is(externalTableOptionList, ",", "DATA_SOURCE", "=", namedOptionValue);
-            gb.Prod("ExternalTableOptionList").Is(externalTableOptionList, ",", "FILE_FORMAT", "=", namedOptionValue);
-            gb.Prod("ExternalTableOptionList").Is(externalTableOptionList, ",", "REJECT_TYPE", "=", namedOptionValue);
-            gb.Prod("ExternalTableOptionList").Is(externalTableOptionList, ",", "REJECT_VALUE", "=", namedOptionValue);
-            gb.Prod("ExternalTableOptionList").Is(externalTableOptionList, ",", "REJECT_SAMPLE_VALUE", "=", namedOptionValue);
-            gb.Prod("ExternalTableOptionList").Is(externalTableOptionList, ",", "DISTRIBUTION", "=", namedOptionValue);
-            gb.Prod("ExternalTableOptionList").Is(externalTableOptionList, ",", "SCHEMA_NAME", "=", namedOptionValue);
-            gb.Prod("ExternalTableOptionList").Is(externalTableOptionList, ",", "OBJECT_NAME", "=", namedOptionValue);
-
-            // CREATE EXTERNAL DATA SOURCE name WITH (TYPE=..., LOCATION=..., ...)
-            gb.Prod("CreateExternalDataSourceStatement").Is("CREATE", "EXTERNAL", "DATA", "SOURCE", identifierTerm, "WITH", "(", externalDataSourceOptionList, ")");
-            gb.Prod("CreateExternalDataSourceStatement").Is("CREATE", "EXTERNAL", "DATA", "SOURCE", qualifiedName, "WITH", "(", externalDataSourceOptionList, ")");
-            gb.Prod("ExternalDataSourceOptionList").Is("TYPE", "=", namedOptionValue);
-            gb.Prod("ExternalDataSourceOptionList").Is("LOCATION", "=", namedOptionValue);
-            gb.Prod("ExternalDataSourceOptionList").Is("RESOURCE_MANAGER_LOCATION", "=", namedOptionValue);
-            gb.Prod("ExternalDataSourceOptionList").Is("DATABASE_NAME", "=", namedOptionValue);
-            gb.Prod("ExternalDataSourceOptionList").Is("SHARD_MAP_NAME", "=", namedOptionValue);
-            gb.Prod("ExternalDataSourceOptionList").Is("CREDENTIAL", "=", namedOptionValue);
-            gb.Prod("ExternalDataSourceOptionList").Is("CONNECTION_OPTIONS", "=", namedOptionValue);
-            gb.Prod("ExternalDataSourceOptionList").Is("PUSHDOWN", "=", namedOptionValue);
-            gb.Prod("ExternalDataSourceOptionList").Is(externalDataSourceOptionList, ",", "TYPE", "=", namedOptionValue);
-            gb.Prod("ExternalDataSourceOptionList").Is(externalDataSourceOptionList, ",", "LOCATION", "=", namedOptionValue);
-            gb.Prod("ExternalDataSourceOptionList").Is(externalDataSourceOptionList, ",", "RESOURCE_MANAGER_LOCATION", "=", namedOptionValue);
-            gb.Prod("ExternalDataSourceOptionList").Is(externalDataSourceOptionList, ",", "DATABASE_NAME", "=", namedOptionValue);
-            gb.Prod("ExternalDataSourceOptionList").Is(externalDataSourceOptionList, ",", "SHARD_MAP_NAME", "=", namedOptionValue);
-            gb.Prod("ExternalDataSourceOptionList").Is(externalDataSourceOptionList, ",", "CREDENTIAL", "=", namedOptionValue);
-            gb.Prod("ExternalDataSourceOptionList").Is(externalDataSourceOptionList, ",", "CONNECTION_OPTIONS", "=", namedOptionValue);
-            gb.Prod("ExternalDataSourceOptionList").Is(externalDataSourceOptionList, ",", "PUSHDOWN", "=", namedOptionValue);
+            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.ExternalObjects))
+            {
+                BuildExternalObjectGrammar(
+                    gb,
+                    createExternalTableStatement,
+                    externalTableOptionList,
+                    createExternalDataSourceStatement,
+                    externalDataSourceOptionList,
+                    qualifiedName,
+                    identifierTerm,
+                    createTableElementList,
+                    namedOptionValue);
+            }
 
             return gb.BuildGrammar("Start");
         }
 
-        private static GrammarResources CreateGrammarResources()
+        private static GrammarResources GetGrammarResources(MsSqlDialectFeatures dialectFeatures)
         {
-            var grammar = BuildGrammarCore();
+            return GrammarCache.GetOrAdd(
+                dialectFeatures,
+                static features => new Lazy<GrammarResources>(() => CreateGrammarResources(features))).Value;
+        }
+
+        private static GrammarResources CreateGrammarResources(MsSqlDialectFeatures dialectFeatures)
+        {
+            var grammar = BuildGrammarCore(dialectFeatures);
             var productions = grammar.Productions.ToList();
             var startProduction = productions.First(p => p.LeftNonTerminal == grammar.Root);
             if (startProduction.ProductionDefinition.Count != 1 ||
@@ -3161,6 +3164,147 @@ namespace DSLKIT.GrammarExamples.MsSql
                 emptyScriptProduction,
                 productions.IndexOf(startProduction),
                 productions.IndexOf(emptyScriptProduction));
+        }
+
+        private static void BuildTriggerGrammar(
+            GrammarBuilder gb,
+            INonTerminal createTriggerHead,
+            INonTerminal createTriggerFireClause,
+            INonTerminal createTriggerEventList,
+            INonTerminal createTriggerEvent,
+            INonTerminal createTriggerWithOptionList,
+            INonTerminal createTriggerWithOption,
+            INonTerminal createTriggerStatement,
+            INonTerminal createProcExecuteAsClause,
+            INonTerminal createProcBodyBlock,
+            INonTerminal strictIdentifierTerm,
+            INonTerminal qualifiedName,
+            INonTerminal dropTriggerStatement,
+            INonTerminal dropIfExistsClause)
+        {
+            gb.Prod("CreateTriggerHead").Is("CREATE", "TRIGGER");
+            gb.Prod("CreateTriggerHead").Is("CREATE", "OR", "ALTER", "TRIGGER");
+            gb.Prod("CreateTriggerHead").Is("ALTER", "TRIGGER");
+
+            gb.Prod("CreateTriggerFireClause").Is("FOR", createTriggerEventList);
+            gb.Prod("CreateTriggerFireClause").Is("AFTER", createTriggerEventList);
+            gb.Prod("CreateTriggerFireClause").Is("INSTEAD", "OF", createTriggerEventList);
+
+            gb.Prod("CreateTriggerEventList").Is(createTriggerEvent);
+            gb.Prod("CreateTriggerEventList").Is(createTriggerEventList, ",", createTriggerEvent);
+            gb.Rule(createTriggerEvent)
+                .CanBe(strictIdentifierTerm)
+                .OrKeywords("INSERT", "UPDATE", "DELETE");
+
+            gb.Prod("CreateTriggerWithOptionList").Is(createTriggerWithOption);
+            gb.Prod("CreateTriggerWithOptionList").Is(createTriggerWithOptionList, ",", createTriggerWithOption);
+            gb.Rule(createTriggerWithOption)
+                .CanBe(createProcExecuteAsClause)
+                .OrKeywords("ENCRYPTION", "SCHEMABINDING", "NATIVE_COMPILATION");
+
+            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, "ON", qualifiedName, createTriggerFireClause, "AS", createProcBodyBlock);
+            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, "ON", qualifiedName, "WITH", createTriggerWithOptionList, createTriggerFireClause, "AS", createProcBodyBlock);
+            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, "ON", qualifiedName, createTriggerFireClause, "NOT", "FOR", "REPLICATION", "AS", createProcBodyBlock);
+            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, "ON", qualifiedName, "WITH", createTriggerWithOptionList, createTriggerFireClause, "NOT", "FOR", "REPLICATION", "AS", createProcBodyBlock);
+            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, "ON", "ALL", "SERVER", createTriggerFireClause, "AS", createProcBodyBlock);
+            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, "ON", "DATABASE", createTriggerFireClause, "AS", createProcBodyBlock);
+            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, "ON", "ALL", "SERVER", "WITH", createTriggerWithOptionList, createTriggerFireClause, "AS", createProcBodyBlock);
+            gb.Prod("CreateTriggerStatement").Is(createTriggerHead, qualifiedName, "ON", "DATABASE", "WITH", createTriggerWithOptionList, createTriggerFireClause, "AS", createProcBodyBlock);
+
+            gb.Prod("DropTriggerStatement").Is("DROP", "TRIGGER", qualifiedName);
+            gb.Prod("DropTriggerStatement").Is("DROP", "TRIGGER", dropIfExistsClause, qualifiedName);
+            gb.Prod("DropTriggerStatement").Is("DROP", "TRIGGER", qualifiedName, "ON", "DATABASE");
+            gb.Prod("DropTriggerStatement").Is("DROP", "TRIGGER", dropIfExistsClause, qualifiedName, "ON", "DATABASE");
+        }
+
+        private static void BuildSecurityPolicyGrammar(
+            GrammarBuilder gb,
+            INonTerminal createSecurityPolicyStatement,
+            INonTerminal alterSecurityPolicyStatement,
+            INonTerminal securityPolicyClauseList,
+            INonTerminal securityPolicyClause,
+            INonTerminal securityPolicyOptionList,
+            INonTerminal securityPolicyOption,
+            INonTerminal securityPolicyOptionName,
+            INonTerminal functionCall,
+            INonTerminal qualifiedName)
+        {
+            gb.Prod("CreateSecurityPolicyStatement").Is("CREATE", "SECURITY", "POLICY", qualifiedName, securityPolicyClauseList);
+            gb.Prod("CreateSecurityPolicyStatement").Is("CREATE", "SECURITY", "POLICY", qualifiedName, securityPolicyClauseList, "WITH", "(", securityPolicyOptionList, ")");
+            gb.Prod("AlterSecurityPolicyStatement").Is("ALTER", "SECURITY", "POLICY", qualifiedName, securityPolicyClauseList);
+            gb.Prod("AlterSecurityPolicyStatement").Is("ALTER", "SECURITY", "POLICY", qualifiedName, securityPolicyClauseList, "WITH", "(", securityPolicyOptionList, ")");
+            gb.Prod("SecurityPolicyClauseList").Is(securityPolicyClause);
+            gb.Prod("SecurityPolicyClauseList").Is(securityPolicyClauseList, ",", securityPolicyClause);
+            gb.Rule("SecurityPolicyClause")
+                .CanBe("ADD", "FILTER", "PREDICATE", functionCall, "ON", qualifiedName)
+                .Or("ADD", "BLOCK", "PREDICATE", functionCall, "ON", qualifiedName)
+                .Or("DROP", "FILTER", "PREDICATE", "ON", qualifiedName)
+                .Or("DROP", "BLOCK", "PREDICATE", "ON", qualifiedName);
+            gb.Rule(securityPolicyOptionName).Keywords("STATE", "SCHEMABINDING");
+            gb.Prod("SecurityPolicyOptionList").Is(securityPolicyOption);
+            gb.Prod("SecurityPolicyOptionList").Is(securityPolicyOptionList, ",", securityPolicyOption);
+            gb.Prod("SecurityPolicyOption").Is(securityPolicyOptionName, "=", "ON");
+            gb.Prod("SecurityPolicyOption").Is(securityPolicyOptionName, "=", "OFF");
+        }
+
+        private static void BuildExternalObjectGrammar(
+            GrammarBuilder gb,
+            INonTerminal createExternalTableStatement,
+            INonTerminal externalTableOptionList,
+            INonTerminal createExternalDataSourceStatement,
+            INonTerminal externalDataSourceOptionList,
+            INonTerminal qualifiedName,
+            INonTerminal identifierTerm,
+            INonTerminal createTableElementList,
+            INonTerminal namedOptionValue)
+        {
+            gb.Prod("CreateExternalTableStatement").Is("CREATE", "EXTERNAL", "TABLE", qualifiedName, "(", createTableElementList, ")");
+            gb.Prod("CreateExternalTableStatement").Is("CREATE", "EXTERNAL", "TABLE", qualifiedName, "(", createTableElementList, ")", "WITH", "(", externalTableOptionList, ")");
+            DefineNamedOptionList(
+                gb,
+                externalTableOptionList,
+                namedOptionValue,
+                "LOCATION",
+                "DATA_SOURCE",
+                "FILE_FORMAT",
+                "REJECT_TYPE",
+                "REJECT_VALUE",
+                "REJECT_SAMPLE_VALUE",
+                "DISTRIBUTION",
+                "SCHEMA_NAME",
+                "OBJECT_NAME");
+
+            gb.Prod("CreateExternalDataSourceStatement").Is("CREATE", "EXTERNAL", "DATA", "SOURCE", identifierTerm, "WITH", "(", externalDataSourceOptionList, ")");
+            gb.Prod("CreateExternalDataSourceStatement").Is("CREATE", "EXTERNAL", "DATA", "SOURCE", qualifiedName, "WITH", "(", externalDataSourceOptionList, ")");
+            DefineNamedOptionList(
+                gb,
+                externalDataSourceOptionList,
+                namedOptionValue,
+                "TYPE",
+                "LOCATION",
+                "RESOURCE_MANAGER_LOCATION",
+                "DATABASE_NAME",
+                "SHARD_MAP_NAME",
+                "CREDENTIAL",
+                "CONNECTION_OPTIONS",
+                "PUSHDOWN");
+        }
+
+        private static void DefineNamedOptionList(
+            GrammarBuilder gb,
+            INonTerminal list,
+            INonTerminal namedOptionValue,
+            params string[] optionNames)
+        {
+            foreach (var optionName in optionNames)
+            {
+                gb.Prod(list.Name).Is(optionName, "=", namedOptionValue);
+            }
+
+            foreach (var optionName in optionNames)
+            {
+                gb.Prod(list.Name).Is(list, ",", optionName, "=", namedOptionValue);
+            }
         }
 
         private static ParseResult CreateEmptyScriptParseResult(GrammarResources grammarResources)
@@ -3189,6 +3333,11 @@ namespace DSLKIT.GrammarExamples.MsSql
         {
             var terminalFlags = token.Terminal?.Flags;
             return terminalFlags == TermFlags.Space || terminalFlags == TermFlags.Comment;
+        }
+
+        private static bool HasFeature(MsSqlDialectFeatures dialectFeatures, MsSqlDialectFeatures feature)
+        {
+            return (dialectFeatures & feature) == feature;
         }
 
         private static IToken WithLeadingTrivia(IToken token, IEnumerable<IToken> leadingTrivia)
