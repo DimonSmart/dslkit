@@ -747,6 +747,24 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldRejectInvalidCreateFunctionBodyShapes()
+        {
+            var invalidScripts = new (string Script, string Reason)[]
+            {
+                ("CREATE FUNCTION dbo.f(@x int) RETURNS int AS RETURN SELECT 1;", "scalar functions must use a block body"),
+                ("CREATE FUNCTION dbo.f(@x int) RETURNS int AS RETURN (SELECT 1);", "scalar functions must not use inline table-valued RETURN syntax"),
+                ("CREATE FUNCTION dbo.f(@x int) RETURNS TABLE AS BEGIN RETURN; END;", "inline table-valued functions must return a query expression"),
+                ("CREATE FUNCTION dbo.f(@x int) RETURNS @t TABLE (Id int) AS RETURN SELECT 1 AS Id;", "multi-statement table-valued functions must use a block body")
+            };
+
+            foreach (var (script, reason) in invalidScripts)
+            {
+                var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+                parseResult.IsSuccess.Should().BeFalse(reason);
+            }
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseExecuteStatement_Variants()
         {
             const string script = """
@@ -1306,6 +1324,23 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseXmlMethods_OnColumnReferences()
+        {
+            const string script = """
+                SELECT XmlCol.value('(/x)[1]', 'int')
+                FROM dbo.T;
+
+                SELECT t.XmlCol.query('/root')
+                FROM dbo.T AS t;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseDerivedTableUnpivot()
         {
             const string script = """
@@ -1328,10 +1363,31 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseBaseTablePivot()
+        {
+            const string script = """
+                SELECT p.[2024]
+                FROM dbo.Sales AS s
+                PIVOT
+                (
+                    SUM(Amount) FOR Yr IN ([2024])
+                ) AS p;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldRejectOverAcceptedRescueForms()
         {
             var invalidScripts = new (string Script, string Reason)[]
             {
+                ("CREATE PROCEDURE dbo.p(@x int) AS SELECT 1", "CREATE PROCEDURE must not accept outer parentheses around the full parameter list"),
+                ("CREATE PROCEDURE dbo.p AS EXTERNAL Foo A.B.C", "CLR procedures require EXTERNAL NAME"),
+                ("CREATE INDEX IX_T ON dbo.T", "rowstore CREATE INDEX requires a key list"),
                 ("CREATE TABLE dbo.T (ID int, PRIMARY KEY)", "table-level PRIMARY KEY requires a column list"),
                 ("CREATE TABLE dbo.T (ID int, CONSTRAINT FK_X FOREIGN KEY REFERENCES dbo.S (SID))", "table-level FOREIGN KEY requires a local column list"),
                 ("CREATE TABLE dbo.T (ID int INDEX IX_T (ID))", "inline INDEX without a comma must not be accepted in the generic CREATE TABLE path"),
@@ -1346,7 +1402,9 @@ namespace DSLKIT.Test.GrammarExamples
                 ("BULK INSERT dbo.T FROM 'x.csv' WITH (INDEX = 1, ONLINE = ON)", "BULK INSERT must not accept index options"),
                 ("CREATE EXTERNAL TABLE dbo.ExtT (ID int) WITH (INDEX = 1)", "CREATE EXTERNAL TABLE must not accept table hints"),
                 ("CREATE EXTERNAL DATA SOURCE MyStorage WITH (ONLINE = ON)", "CREATE EXTERNAL DATA SOURCE must not accept index options"),
-                ("CREATE TABLE dbo.Documents AS FILETABLE (DocumentName NVARCHAR(260))", "FILETABLE must not accept user-defined column lists")
+                ("CREATE TABLE dbo.Documents AS FILETABLE (DocumentName NVARCHAR(260))", "FILETABLE must not accept user-defined column lists"),
+                ("CREATE DATABASE Sales ON (foo = SalesData, bar = 'C:\\data\\sales.mdf')", "database filespecs require NAME and FILENAME keywords"),
+                ("DECLARE c CURSOR GRAPH NODE FOR SELECT 1", "DECLARE CURSOR must not accept arbitrary identifier soup as cursor options")
             };
 
             foreach (var (script, reason) in invalidScripts)
