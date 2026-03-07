@@ -560,8 +560,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var createDatabaseClause = gb.NT("CreateDatabaseClause");
             var createDatabaseContainmentClause = gb.NT("CreateDatabaseContainmentClause");
             var createDatabaseOnClause = gb.NT("CreateDatabaseOnClause");
-            var createDatabaseOnItemList = gb.NT("CreateDatabaseOnItemList");
-            var createDatabaseOnItem = gb.NT("CreateDatabaseOnItem");
+            var createDatabaseOnFilespecSequence = gb.NT("CreateDatabaseOnFilespecSequence");
             var createDatabaseFilespecList = gb.NT("CreateDatabaseFilespecList");
             var createDatabaseFilegroup = gb.NT("CreateDatabaseFilegroup");
             var createDatabaseCollateClause = gb.NT("CreateDatabaseCollateClause");
@@ -678,6 +677,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             var temporalClause = gb.NT("TemporalClause");
             var pivotClause = gb.NT("PivotClause");
             var pivotValueList = gb.NT("PivotValueList");
+            var unpivotClause = gb.NT("UnpivotClause");
+            var unpivotColumnList = gb.NT("UnpivotColumnList");
             var openJsonCall = gb.NT("OpenJsonCall");
             var openJsonWithClause = gb.NT("OpenJsonWithClause");
             var openJsonColumnList = gb.NT("OpenJsonColumnList");
@@ -1599,9 +1600,11 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod("CreateTableFileTableClause").Is("AS", "FILETABLE");
             gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")");
-            gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, createTableFileTableClause, "(", createTableElementList, ")");
+            gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, createTableFileTableClause);
+            gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, createTableFileTableClause, createIndexFileStreamClause);
+            gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, createTableFileTableClause, createTableOptions);
+            gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, createTableFileTableClause, createIndexFileStreamClause, createTableOptions);
             gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", createTableTailClauseList);
-            gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, createTableFileTableClause, "(", createTableElementList, ")", createTableTailClauseList);
             // SQL Graph node/edge tables
             gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", "AS", "EDGE");
             gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", "AS", "NODE");
@@ -1613,6 +1616,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateTableTailClause").Is(createTableOptions);
             gb.Prod("CreateTableTailClause").Is(createTableOnClause);
             gb.Prod("CreateTableTailClause").Is(createTableTextImageClause);
+            gb.Prod("CreateTableTailClause").Is(createIndexFileStreamClause);
 
             gb.Prod("CreateTableElementList").Is(createTableElement);
             gb.Prod("CreateTableElementList").Is(createTableElementList, ",", createTableElement);
@@ -1906,21 +1910,21 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateDatabaseContainmentClause").Is("CONTAINMENT", "=", "NONE");
             gb.Prod("CreateDatabaseContainmentClause").Is("CONTAINMENT", "=", "PARTIAL");
 
-            gb.Prod("CreateDatabaseOnClause").Is("ON", createDatabaseOnItemList);
-            gb.Prod("CreateDatabaseOnItemList").Is(createDatabaseOnItem);
-            gb.Prod("CreateDatabaseOnItemList").Is(createDatabaseOnItemList, ",", createDatabaseOnItem);
-            gb.Prod("CreateDatabaseOnItem").Is(createDatabaseFilespecList);
-            gb.Prod("CreateDatabaseOnItem").Is("PRIMARY", createDatabaseFilespecList);
-            gb.Prod("CreateDatabaseOnItem").Is(createDatabaseFilegroup);
-            gb.Prod("CreateDatabaseOnItem").Is("LOG", "ON", createDatabaseFilespecList);
+            gb.Prod("CreateDatabaseOnClause").Is("ON", createDatabaseOnFilespecSequence);
+            gb.Prod("CreateDatabaseOnClause").Is("ON", "PRIMARY", createDatabaseOnFilespecSequence);
+            gb.Prod("CreateDatabaseOnFilespecSequence").Is(createDatabaseFilespec);
+            gb.Prod("CreateDatabaseOnFilespecSequence").Is(createDatabaseFilespec, ",", createDatabaseOnFilespecSequence);
+            gb.Prod("CreateDatabaseOnFilespecSequence").Is(createDatabaseFilespec, ",", createDatabaseFilegroup);
+            gb.Prod("CreateDatabaseOnFilespecSequence").Is(createDatabaseFilespec, ",", "LOG", "ON", createDatabaseFilespecList);
 
             gb.Prod("CreateDatabaseFilespecList").Is(createDatabaseFilespec);
+            gb.Prod("CreateDatabaseFilespecList").Is(createDatabaseFilespecList, ",", createDatabaseFilespec);
 
-            gb.Prod("CreateDatabaseFilegroup").Is("FILEGROUP", identifierTerm, createDatabaseFilespecList);
-            gb.Prod("CreateDatabaseFilegroup").Is("FILEGROUP", identifierTerm, "DEFAULT", createDatabaseFilespecList);
-            gb.Prod("CreateDatabaseFilegroup").Is("FILEGROUP", identifierTerm, "CONTAINS", "FILESTREAM", createDatabaseFilespecList);
-            gb.Prod("CreateDatabaseFilegroup").Is("FILEGROUP", identifierTerm, "CONTAINS", "FILESTREAM", "DEFAULT", createDatabaseFilespecList);
-            gb.Prod("CreateDatabaseFilegroup").Is("FILEGROUP", identifierTerm, "CONTAINS", "MEMORY_OPTIMIZED_DATA", createDatabaseFilespecList);
+            gb.Prod("CreateDatabaseFilegroup").Is("FILEGROUP", identifierTerm, createDatabaseOnFilespecSequence);
+            gb.Prod("CreateDatabaseFilegroup").Is("FILEGROUP", identifierTerm, "DEFAULT", createDatabaseOnFilespecSequence);
+            gb.Prod("CreateDatabaseFilegroup").Is("FILEGROUP", identifierTerm, "CONTAINS", "FILESTREAM", createDatabaseOnFilespecSequence);
+            gb.Prod("CreateDatabaseFilegroup").Is("FILEGROUP", identifierTerm, "CONTAINS", "FILESTREAM", "DEFAULT", createDatabaseOnFilespecSequence);
+            gb.Prod("CreateDatabaseFilegroup").Is("FILEGROUP", identifierTerm, "CONTAINS", "MEMORY_OPTIMIZED_DATA", createDatabaseOnFilespecSequence);
 
             gb.Prod("CreateDatabaseCollateClause").Is("COLLATE", identifierTerm);
 
@@ -2172,6 +2176,13 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("PivotClause").Is(functionCall, "FOR", identifierTerm, "IN", "(", pivotValueList, ")");
             gb.Prod("PivotValueList").Is(expression);
             gb.Prod("PivotValueList").Is(pivotValueList, ",", expression);
+            gb.Prod("TableFactor").Is("(", queryExpression, ")", "AS", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", identifierTerm);
+            gb.Prod("TableFactor").Is("(", queryExpression, ")", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", identifierTerm);
+            gb.Prod("TableFactor").Is("(", queryExpression, ")", "AS", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
+            gb.Prod("TableFactor").Is("(", queryExpression, ")", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
+            gb.Prod("UnpivotClause").Is(identifierTerm, "FOR", identifierTerm, "IN", "(", unpivotColumnList, ")");
+            gb.Prod("UnpivotColumnList").Is(identifierTerm);
+            gb.Prod("UnpivotColumnList").Is(unpivotColumnList, ",", identifierTerm);
             gb.Prod("TableFactor").Is("(", "VALUES", rowValueList, ")", "AS", identifierTerm);
             gb.Prod("TableFactor").Is("(", "VALUES", rowValueList, ")", identifierTerm);
             gb.Prod("TableFactor").Is("(", "VALUES", rowValueList, ")", "AS", identifierTerm, "(", insertColumnList, ")");

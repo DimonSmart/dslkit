@@ -62,6 +62,46 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseCreateDatabase_WithMultipleFilespecsInSingleList()
+        {
+            const string script = """
+                CREATE DATABASE SalesArchive
+                ON
+                (
+                    NAME = SalesArchiveData1,
+                    FILENAME = 'C:\data\archive1.mdf'
+                ),
+                (
+                    NAME = SalesArchiveData2,
+                    FILENAME = 'C:\data\archive2.ndf'
+                );
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseCreateTable_AsFileTable()
+        {
+            const string script = """
+                CREATE TABLE dbo.Documents AS FILETABLE
+                WITH
+                (
+                    FILETABLE_DIRECTORY = 'Documents',
+                    FILETABLE_COLLATE_FILENAME = database_default
+                );
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseCreateRole_WithAuthorization()
         {
             const string script = "CREATE ROLE [Plains Sales] AUTHORIZATION [dbo];";
@@ -1247,6 +1287,28 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseDerivedTableUnpivot()
+        {
+            const string script = """
+                SELECT src.EmployeeId, src.QuarterName, src.SalesAmount
+                FROM
+                (
+                    SELECT EmployeeId, Q1, Q2, Q3, Q4
+                    FROM dbo.SalesByQuarter
+                ) AS d
+                UNPIVOT
+                (
+                    SalesAmount FOR QuarterName IN (Q1, Q2, Q3, Q4)
+                ) AS src;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldRejectOverAcceptedRescueForms()
         {
             var invalidScripts = new (string Script, string Reason)[]
@@ -1264,7 +1326,8 @@ namespace DSLKIT.Test.GrammarExamples
                 ("DBCC CHECKDB (0) WITH GRAPH = NODE", "DBCC options should not accept arbitrary keyword soup"),
                 ("BULK INSERT dbo.T FROM 'x.csv' WITH (INDEX = 1, ONLINE = ON)", "BULK INSERT must not accept index options"),
                 ("CREATE EXTERNAL TABLE dbo.ExtT (ID int) WITH (INDEX = 1)", "CREATE EXTERNAL TABLE must not accept table hints"),
-                ("CREATE EXTERNAL DATA SOURCE MyStorage WITH (ONLINE = ON)", "CREATE EXTERNAL DATA SOURCE must not accept index options")
+                ("CREATE EXTERNAL DATA SOURCE MyStorage WITH (ONLINE = ON)", "CREATE EXTERNAL DATA SOURCE must not accept index options"),
+                ("CREATE TABLE dbo.Documents AS FILETABLE (DocumentName NVARCHAR(260))", "FILETABLE must not accept user-defined column lists")
             };
 
             foreach (var (script, reason) in invalidScripts)
