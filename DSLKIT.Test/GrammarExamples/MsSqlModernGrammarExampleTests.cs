@@ -15,7 +15,7 @@ namespace DSLKIT.Test.GrammarExamples
         [MemberData(nameof(ValidSqlScripts))]
         public void ParseScript_ShouldParseModernMsSqlExamples(string scriptName, string scriptText)
         {
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(scriptText);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(scriptText);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script '{scriptName}' should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -55,7 +55,7 @@ namespace DSLKIT.Test.GrammarExamples
                 GO
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseDocument(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -77,7 +77,7 @@ namespace DSLKIT.Test.GrammarExamples
                 );
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseDocument(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -95,7 +95,7 @@ namespace DSLKIT.Test.GrammarExamples
                 );
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseDocument(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -106,7 +106,7 @@ namespace DSLKIT.Test.GrammarExamples
         {
             const string script = "CREATE ROLE [Plains Sales] AUTHORIZATION [dbo];";
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseDocument(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -120,7 +120,7 @@ namespace DSLKIT.Test.GrammarExamples
                 GO
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseDocument(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -135,7 +135,7 @@ namespace DSLKIT.Test.GrammarExamples
                 CREATE SCHEMA [sales] AUTHORIZATION [dbo];
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseDocument(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -146,7 +146,7 @@ namespace DSLKIT.Test.GrammarExamples
         {
             const string script = "USE [Clinic]; GO";
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseDocument(script);
 
             parseResult.IsSuccess.Should().BeFalse("GO must be recognized only as a dedicated-line batch separator.");
         }
@@ -160,7 +160,7 @@ namespace DSLKIT.Test.GrammarExamples
                 SELECT 2;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseDocument(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -171,7 +171,7 @@ namespace DSLKIT.Test.GrammarExamples
         {
             const string script = "SELECT GO AS GoToken;";
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseDocument(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -192,7 +192,7 @@ namespace DSLKIT.Test.GrammarExamples
                 CREATE VIEW dbo.vTest AS SELECT 1 AS A;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseDocument(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -207,7 +207,7 @@ namespace DSLKIT.Test.GrammarExamples
                 END;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseDocument(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -240,7 +240,7 @@ namespace DSLKIT.Test.GrammarExamples
                 FROM @OrdersToProcess;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -266,7 +266,7 @@ namespace DSLKIT.Test.GrammarExamples
                     SET Qty = Qty + 1;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -285,7 +285,7 @@ namespace DSLKIT.Test.GrammarExamples
                 FROM cte;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeFalse("CTE after another statement requires ';' before WITH in SQL Server.");
             parseResult.Error?.Message.Should().Contain("WITH");
@@ -304,7 +304,7 @@ namespace DSLKIT.Test.GrammarExamples
                 FROM cte;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -317,7 +317,7 @@ namespace DSLKIT.Test.GrammarExamples
         [InlineData("SELECT 1 WHERE SomeColumn IS OtherColumn + 1;")]
         public void ParseScript_ShouldRejectScalarExpressionsAsSearchConditions(string script)
         {
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeFalse(
                 $"script '{script}' should not parse because WHERE requires a predicate.");
@@ -330,7 +330,7 @@ namespace DSLKIT.Test.GrammarExamples
         [InlineData("SELECT 1 WHERE SomeColumn IS NOT NULL;")]
         public void ParseScript_ShouldParseStructuredSearchPredicates(string script)
         {
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script '{script}' should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -349,7 +349,7 @@ namespace DSLKIT.Test.GrammarExamples
                 GROUP BY a, b WITH CUBE;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -380,7 +380,7 @@ namespace DSLKIT.Test.GrammarExamples
                 WHERE c.ValidTo = @EndOfTime;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -409,7 +409,7 @@ namespace DSLKIT.Test.GrammarExamples
                 WHERE c.IsActive = 0;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -440,7 +440,7 @@ namespace DSLKIT.Test.GrammarExamples
                 WHERE CURRENT OF GLOBAL CurDelete;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -458,7 +458,7 @@ namespace DSLKIT.Test.GrammarExamples
                 END;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -478,7 +478,7 @@ namespace DSLKIT.Test.GrammarExamples
                 FROM src;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -499,7 +499,7 @@ namespace DSLKIT.Test.GrammarExamples
                 WITH CHECK OPTION;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -513,7 +513,7 @@ namespace DSLKIT.Test.GrammarExamples
                 	drop procedure "dbo"."SalesByCategory"
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -530,7 +530,7 @@ namespace DSLKIT.Test.GrammarExamples
                 FROM dbo.Flags;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -548,7 +548,7 @@ namespace DSLKIT.Test.GrammarExamples
                 DROP STATISTICS dbo.Orders.Stat_OrderDate, [dbo].[Orders].[_WA_Sys_00000001];
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -563,7 +563,7 @@ namespace DSLKIT.Test.GrammarExamples
                 GRANT CONNECT ON DATABASE::[Clinic] TO [reader];
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -578,7 +578,7 @@ namespace DSLKIT.Test.GrammarExamples
                 DBCC TRACESTATUS (0) WITH NO_INFOMSGS;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -602,7 +602,7 @@ namespace DSLKIT.Test.GrammarExamples
                 );
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -621,7 +621,7 @@ namespace DSLKIT.Test.GrammarExamples
                 ALTER DATABASE [AdventureWorks] SET PAGE_VERIFY CHECKSUM;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -681,7 +681,7 @@ namespace DSLKIT.Test.GrammarExamples
                 ALTER INDEX IX_Company_Email2 ON dbo.Company ABORT;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -696,7 +696,7 @@ namespace DSLKIT.Test.GrammarExamples
                 WAITFOR TIME '23:59:00';
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -716,7 +716,7 @@ namespace DSLKIT.Test.GrammarExamples
                 PERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo);
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -733,7 +733,7 @@ namespace DSLKIT.Test.GrammarExamples
                 CREATE LOGIN asym_login FROM ASYMMETRIC KEY asymAuth;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -756,7 +756,7 @@ namespace DSLKIT.Test.GrammarExamples
                 FROM OPENROWSET(BULK 'C:\temp\data.bin', SINGLE_BLOB) AS bin;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -782,7 +782,7 @@ namespace DSLKIT.Test.GrammarExamples
                 END;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -806,7 +806,7 @@ namespace DSLKIT.Test.GrammarExamples
                 END;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -829,7 +829,7 @@ namespace DSLKIT.Test.GrammarExamples
                        END [Beginning of Quarter Label Short];
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -858,7 +858,7 @@ namespace DSLKIT.Test.GrammarExamples
                 END;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -890,7 +890,7 @@ namespace DSLKIT.Test.GrammarExamples
                 END;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -913,7 +913,7 @@ namespace DSLKIT.Test.GrammarExamples
 
             foreach (var (script, reason) in invalidScripts)
             {
-                var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+                var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
                 parseResult.IsSuccess.Should().BeFalse(reason);
             }
         }
@@ -931,7 +931,7 @@ namespace DSLKIT.Test.GrammarExamples
                 OPTION (RECOMPILE);
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -947,7 +947,7 @@ namespace DSLKIT.Test.GrammarExamples
                 WHEN MATCHED THEN DELETE;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeFalse("MERGE target must be a target table, not a derived table.");
         }
@@ -965,7 +965,7 @@ namespace DSLKIT.Test.GrammarExamples
                 EXECUTE (N'SELECT * FROM dbo.T WHERE Id = ?', @policy_id OUTPUT) AT DATA_SOURCE [RemoteSource];
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -983,7 +983,7 @@ namespace DSLKIT.Test.GrammarExamples
                     @script = N'SELECT 1';
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1001,7 +1001,7 @@ namespace DSLKIT.Test.GrammarExamples
                 IF NOT EXISTS (SELECT 1 FROM dbo.Info) INSERT dbo.Info VALUES ($(DefaultDataPath));
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1017,7 +1017,7 @@ namespace DSLKIT.Test.GrammarExamples
                 PRINT N'after sqlcmd preprocessor commands';
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseDocument(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1028,9 +1028,32 @@ namespace DSLKIT.Test.GrammarExamples
         {
             const string script = "PRINT N'before'; :setvar JobOwner sa";
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeFalse("SQLCMD commands must be recognized only as dedicated-line control commands.");
+        }
+
+        [Fact]
+        public void ParseDocument_ShouldSplitBatchesAndControlLinesIntoTypedSegments()
+        {
+            const string script = """
+                SELECT 1;
+                GO 5
+                :setvar JobOwner sa
+                PRINT N'after';
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseDocument(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+            parseResult.Document.Should().NotBeNull();
+            parseResult.Document!.Segments.Should().HaveCount(4);
+            parseResult.Document.Segments[0].Should().BeOfType<SqlBatchDocumentNode>();
+            parseResult.Document.Segments[1].Should().BeOfType<SqlBatchSeparatorDocumentNode>();
+            parseResult.Document.Segments[2].Should().BeOfType<SqlcmdCommandDocumentNode>();
+            parseResult.Document.Segments[3].Should().BeOfType<SqlBatchDocumentNode>();
+            ((SqlBatchSeparatorDocumentNode)parseResult.Document.Segments[1]).RepeatCount.Should().Be(5);
         }
 
         [Fact]
@@ -1044,7 +1067,7 @@ namespace DSLKIT.Test.GrammarExamples
                 EndSave:
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1058,7 +1081,7 @@ namespace DSLKIT.Test.GrammarExamples
                     SELECT 1;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1075,7 +1098,7 @@ namespace DSLKIT.Test.GrammarExamples
                 CROSS APPLY EvaluationResults.nodes('//TargetQueryExpression') AS Res(Expr);
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1103,7 +1126,7 @@ namespace DSLKIT.Test.GrammarExamples
                   AND P1.ProductID = 2;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1131,7 +1154,7 @@ namespace DSLKIT.Test.GrammarExamples
                 FROM Product FOR SYSTEM_TIME AS OF @date AS p;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1152,7 +1175,7 @@ namespace DSLKIT.Test.GrammarExamples
                 FROM Product FOR /*path-before*/ PATH p;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1198,7 +1221,7 @@ namespace DSLKIT.Test.GrammarExamples
                 ) AS j;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1212,7 +1235,7 @@ namespace DSLKIT.Test.GrammarExamples
                 FROM dbo.SomeTvf(@x) WITH (a INT);
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeFalse("OPENJSON WITH (...) must not be accepted on arbitrary function calls.");
         }
@@ -1229,7 +1252,7 @@ namespace DSLKIT.Test.GrammarExamples
                 );
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeFalse("OPENJSON column paths should be string literals in the strict grammar.");
         }
@@ -1245,7 +1268,7 @@ namespace DSLKIT.Test.GrammarExamples
                 SELECT 2 AS X;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1261,7 +1284,7 @@ namespace DSLKIT.Test.GrammarExamples
                 ORDER BY 1;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1285,7 +1308,7 @@ namespace DSLKIT.Test.GrammarExamples
                 FOR XML AUTO;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1309,7 +1332,7 @@ namespace DSLKIT.Test.GrammarExamples
                 OPTION (RECOMPILE);
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1332,7 +1355,7 @@ namespace DSLKIT.Test.GrammarExamples
                 WHERE A = 1 OR B = 2 AND C + 3 * D > 10;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1342,12 +1365,12 @@ namespace DSLKIT.Test.GrammarExamples
         public void ParseScript_ShouldParseIfWithElse_InsideProcBody()
         {
             // Simple IF DELETE ELSE TRUNCATE (was failing before epsilon fix, should now work)
-            var r0 = ModernMsSqlGrammarExample.ParseScript(
+            var r0 = ModernMsSqlGrammarExample.ParseBatch(
                 "IF (1=1) DELETE dbo.T ELSE TRUNCATE TABLE dbo.T");
             r0.IsSuccess.Should().BeTrue($"DELETE ELSE TRUNCATE: {r0.Error?.ErrorPosition}: {r0.Error?.Message}");
 
             // Pattern from 4401.sql: IF cond SET val; ELSE IF cond SET val; ELSE SET val
-            var r1 = ModernMsSqlGrammarExample.ParseScript(
+            var r1 = ModernMsSqlGrammarExample.ParseBatch(
                 "IF @x < 500 SET @c = 'A'; ELSE IF @x < 1000 SET @c = 'B'; ELSE SET @c = 'C'");
             r1.IsSuccess.Should().BeTrue($"IF SET; ELSE IF: {r1.Error?.ErrorPosition}: {r1.Error?.Message}");
         }
@@ -1365,7 +1388,7 @@ namespace DSLKIT.Test.GrammarExamples
                 FROM dbo.Sales;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1390,7 +1413,7 @@ namespace DSLKIT.Test.GrammarExamples
                 END;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1413,7 +1436,7 @@ namespace DSLKIT.Test.GrammarExamples
                 SET IDENTITY_INSERT SimpleTable OFF;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1429,7 +1452,7 @@ namespace DSLKIT.Test.GrammarExamples
                 SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1454,7 +1477,7 @@ namespace DSLKIT.Test.GrammarExamples
                 SELECT a.a FROM a;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1474,7 +1497,7 @@ namespace DSLKIT.Test.GrammarExamples
         [Fact]
         public void ParseScript_ShouldRejectMemoryOptimizedInlineIndexWithoutDedicatedContext()
         {
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(
                 "CREATE TABLE dbo.T ([RowID] bigint NOT NULL\nINDEX [IX] NONCLUSTERED HASH ([RowID]) WITH (BUCKET_COUNT=100000)) WITH (MEMORY_OPTIMIZED=ON)");
             parseResult.IsSuccess.Should().BeFalse("no-comma inline INDEX remains disabled until there is a dedicated memory-optimized CREATE TABLE branch.");
         }
@@ -1505,7 +1528,7 @@ namespace DSLKIT.Test.GrammarExamples
                 );
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1522,7 +1545,7 @@ namespace DSLKIT.Test.GrammarExamples
                 FROM dbo.T AS t;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1544,7 +1567,7 @@ namespace DSLKIT.Test.GrammarExamples
                 ) AS src;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1562,7 +1585,7 @@ namespace DSLKIT.Test.GrammarExamples
                 ) AS p;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1613,7 +1636,7 @@ namespace DSLKIT.Test.GrammarExamples
 
             foreach (var (script, reason) in invalidScripts)
             {
-                var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+                var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
                 parseResult.IsSuccess.Should().BeFalse(reason);
             }
         }
@@ -1626,7 +1649,7 @@ namespace DSLKIT.Test.GrammarExamples
                 return;
             }
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(sql1575);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(sql1575);
             parseResult.IsSuccess.Should().BeTrue($"1575.sql failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
 
@@ -1634,12 +1657,12 @@ namespace DSLKIT.Test.GrammarExamples
         public void ParseScript_ShouldParseExternalDataSourceAnd608_DiagnosticFiles()
         {
             // 5080: CREATE EXTERNAL DATA SOURCE with WITH clause
-            var r5080a = ModernMsSqlGrammarExample.ParseScript(
+            var r5080a = ModernMsSqlGrammarExample.ParseBatch(
                 "CREATE EXTERNAL DATA SOURCE MyStorage WITH (TYPE = BLOB_STORAGE, LOCATION = 'https://example.com/path')");
             r5080a.IsSuccess.Should().BeTrue($"5080a failed at {r5080a.Error?.ErrorPosition}: {r5080a.Error?.Message}");
 
             // 608: FREETEXTTABLE with * and LANGUAGE param
-            var r608a = ModernMsSqlGrammarExample.ParseScript(
+            var r608a = ModernMsSqlGrammarExample.ParseBatch(
                 "SELECT * FROM t INNER JOIN FREETEXTTABLE(dbo.T, *, @s, LANGUAGE @lang) AS k ON t.id = k.[KEY]");
             r608a.IsSuccess.Should().BeTrue($"608a failed at {r608a.Error?.ErrorPosition}: {r608a.Error?.Message}");
 
@@ -1648,7 +1671,7 @@ namespace DSLKIT.Test.GrammarExamples
                 return;
             }
 
-            var r608 = ModernMsSqlGrammarExample.ParseScript(sql608);
+            var r608 = ModernMsSqlGrammarExample.ParseBatch(sql608);
             r608.IsSuccess.Should().BeTrue($"608 failed at {r608.Error?.ErrorPosition}: {r608.Error?.Message}");
         }
 
@@ -1661,7 +1684,7 @@ namespace DSLKIT.Test.GrammarExamples
                 SELECT CAST((1) AS INT) AS CastValue;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1675,7 +1698,7 @@ namespace DSLKIT.Test.GrammarExamples
                 SELECT (1) INTO #u WHERE 1 = 1;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1697,7 +1720,7 @@ namespace DSLKIT.Test.GrammarExamples
                 END CATCH;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
@@ -1717,7 +1740,7 @@ namespace DSLKIT.Test.GrammarExamples
                 END CATCH;
                 """;
 
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");

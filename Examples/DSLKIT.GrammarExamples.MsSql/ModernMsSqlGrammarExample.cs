@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using DSLKIT.Formatting;
 using DSLKIT.Lexer;
-using DSLKIT.NonTerminals;
 using DSLKIT.Parser;
 using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
@@ -18,48 +17,15 @@ namespace DSLKIT.GrammarExamples.MsSql
     public static class ModernMsSqlGrammarExample
     {
         private static readonly Lazy<IGrammar> GrammarCache = new(BuildGrammarCore);
-        private static readonly RegExpTerminal ControlLineTerminal = new(
-            "SqlServerControlLine",
-            @"\G.+",
-            previewChar: null,
-            flags: TermFlags.None);
 
         public static IGrammar BuildGrammar()
         {
             return GrammarCache.Value;
         }
 
-        public static ParseResult ParseScript(string source)
+        public static ParseResult ParseBatch(string source)
         {
             ArgumentNullException.ThrowIfNull(source);
-
-            var segments = SqlServerScriptPreprocessor.Split(source);
-            if (segments.Count > 1 || (segments.Count == 1 && segments[0].Kind != SqlScriptSegmentKind.Batch))
-            {
-                var childNodes = new List<ParseTreeNode>(segments.Count);
-                foreach (var segment in segments)
-                {
-                    if (segment.Kind == SqlScriptSegmentKind.Batch)
-                    {
-                        var batchParseResult = ParseScript(segment.Text);
-                        if (!batchParseResult.IsSuccess)
-                        {
-                            return OffsetParseError(batchParseResult, segment.StartPosition);
-                        }
-
-                        if (batchParseResult.ParseTree != null)
-                        {
-                            childNodes.Add(batchParseResult.ParseTree);
-                        }
-
-                        continue;
-                    }
-
-                    childNodes.Add(CreateControlNode(segment));
-                }
-
-                return CreateCompositeParseResult(childNodes);
-            }
 
             var grammar = BuildGrammar();
             var lexer = new Lexer.Lexer(CreateLexerSettings(grammar));
@@ -105,9 +71,92 @@ namespace DSLKIT.GrammarExamples.MsSql
             return parser.Parse(tokens);
         }
 
-        public static void ParseScriptOrThrow(string source)
+        public static SqlScriptDocumentParseResult ParseDocument(string source)
         {
-            var parseResult = ParseScript(source);
+            ArgumentNullException.ThrowIfNull(source);
+
+            var segments = SqlServerScriptPreprocessor.Split(source);
+            if (segments.Count == 0)
+            {
+                var emptyBatchParseResult = ParseBatch(source);
+                if (!emptyBatchParseResult.IsSuccess)
+                {
+                    return new SqlScriptDocumentParseResult
+                    {
+                        Error = emptyBatchParseResult.Error
+                    };
+                }
+
+                return new SqlScriptDocumentParseResult
+                {
+                    Document = new SqlScriptDocument
+                    {
+                        Segments =
+                        [
+                            new SqlBatchDocumentNode
+                            {
+                                StartPosition = 0,
+                                Text = source,
+                                ParseResult = emptyBatchParseResult
+                            }
+                        ]
+                    }
+                };
+            }
+
+            var documentNodes = new List<SqlScriptDocumentNode>(segments.Count);
+            foreach (var segment in segments)
+            {
+                if (segment.Kind == SqlScriptSegmentKind.Batch)
+                {
+                    var batchParseResult = ParseBatch(segment.Text);
+                    if (!batchParseResult.IsSuccess)
+                    {
+                        return new SqlScriptDocumentParseResult
+                        {
+                            Error = OffsetParseError(batchParseResult, segment.StartPosition).Error
+                        };
+                    }
+
+                    documentNodes.Add(new SqlBatchDocumentNode
+                    {
+                        StartPosition = segment.StartPosition,
+                        Text = segment.Text,
+                        ParseResult = batchParseResult
+                    });
+                    continue;
+                }
+
+                if (segment.Kind == SqlScriptSegmentKind.BatchSeparator)
+                {
+                    documentNodes.Add(new SqlBatchSeparatorDocumentNode
+                    {
+                        StartPosition = segment.StartPosition,
+                        Text = segment.Text,
+                        RepeatCount = segment.BatchRepeatCount
+                    });
+                    continue;
+                }
+
+                documentNodes.Add(new SqlcmdCommandDocumentNode
+                {
+                    StartPosition = segment.StartPosition,
+                    Text = segment.Text
+                });
+            }
+
+            return new SqlScriptDocumentParseResult
+            {
+                Document = new SqlScriptDocument
+                {
+                    Segments = documentNodes
+                }
+            };
+        }
+
+        public static void ParseBatchOrThrow(string source)
+        {
+            var parseResult = ParseBatch(source);
             if (!parseResult.IsSuccess)
             {
                 throw new InvalidOperationException(
@@ -140,34 +189,6 @@ namespace DSLKIT.GrammarExamples.MsSql
                     ErrorPosition = parseResult.Error.ErrorPosition + startPosition
                 }
             };
-        }
-
-        private static ParseResult CreateCompositeParseResult(IReadOnlyList<ParseTreeNode> childNodes)
-        {
-            var scriptDocument = new NonTerminal("ScriptDocument");
-            var production = new Production(scriptDocument, childNodes.Select(child => child.Term).ToList());
-            var parseTree = new NonTerminalNode(scriptDocument, production, childNodes);
-            return new ParseResult
-            {
-                ParseTree = parseTree
-            };
-        }
-
-        private static NonTerminalNode CreateControlNode(SqlScriptSegment segment)
-        {
-            var nodeName = segment.Kind == SqlScriptSegmentKind.BatchSeparator
-                ? "BatchSeparator"
-                : "SqlcmdCommand";
-            var token = new Token(
-                segment.StartPosition,
-                segment.Text.Length,
-                segment.Text,
-                segment.Text,
-                ControlLineTerminal);
-            var terminalNode = new TerminalNode(token);
-            var nonTerminal = new NonTerminal(nodeName);
-            var production = new Production(nonTerminal, [terminalNode.Term]);
-            return new NonTerminalNode(nonTerminal, production, [terminalNode]);
         }
 
         private static IReadOnlyList<IToken> BuildSignificantTokensWithTrivia(IReadOnlyList<IToken> rawTokens)

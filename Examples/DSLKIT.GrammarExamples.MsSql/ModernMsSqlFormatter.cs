@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DSLKIT.GrammarExamples.MsSql.Formatting;
+using DSLKIT.Parser;
 
 namespace DSLKIT.GrammarExamples.MsSql
 {
@@ -11,23 +12,18 @@ namespace DSLKIT.GrammarExamples.MsSql
             ArgumentNullException.ThrowIfNull(source);
 
             var formattingOptions = options ?? new SqlFormattingOptions();
-            var segments = SqlServerScriptPreprocessor.Split(source);
-            if (segments.Count == 0)
+            var documentParseResult = ModernMsSqlGrammarExample.ParseDocument(source);
+            if (!documentParseResult.IsSuccess || documentParseResult.Document == null)
             {
-                return TryFormatBatch(source, formattingOptions);
+                return SqlFormattingResult.Failure(documentParseResult.Error?.ToString() ?? "Parse failed.");
             }
 
-            if (segments.Count == 1 && segments[0].Kind == SqlScriptSegmentKind.Batch)
+            var formattedSegments = new List<string>(documentParseResult.Document.Segments.Count);
+            foreach (var segment in documentParseResult.Document.Segments)
             {
-                return TryFormatBatch(segments[0].Text, formattingOptions);
-            }
-
-            var formattedSegments = new List<string>(segments.Count);
-            foreach (var segment in segments)
-            {
-                if (segment.Kind == SqlScriptSegmentKind.Batch)
+                if (segment is SqlBatchDocumentNode batchNode)
                 {
-                    var batchResult = TryFormatBatch(segment.Text, formattingOptions, segment.StartPosition);
+                    var batchResult = TryFormatBatch(batchNode.ParseResult, formattingOptions, batchNode.StartPosition);
                     if (!batchResult.IsSuccess)
                     {
                         return batchResult;
@@ -54,9 +50,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             return SqlFormattingResult.Success(formattedScript);
         }
 
-        private static SqlFormattingResult TryFormatBatch(string source, SqlFormattingOptions options, int startPosition = 0)
+        private static SqlFormattingResult TryFormatBatch(ParseResult parseResult, SqlFormattingOptions options, int startPosition = 0)
         {
-            var parseResult = ModernMsSqlGrammarExample.ParseScript(source);
             if (!parseResult.IsSuccess || parseResult.ParseTree == null)
             {
                 if (parseResult.Error != null)

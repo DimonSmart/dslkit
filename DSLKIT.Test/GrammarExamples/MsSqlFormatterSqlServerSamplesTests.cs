@@ -80,7 +80,7 @@ namespace DSLKIT.Test.GrammarExamples
 
                     try
                     {
-                        var parseResult = ModernMsSqlGrammarExample.ParseScript(batch.Text);
+                        var parseResult = ModernMsSqlGrammarExample.ParseBatch(batch.Text);
                         if (!parseResult.IsSuccess || parseResult.ParseTree == null)
                         {
                             failed.Add(SqlScriptRunResult.CreateFailure(

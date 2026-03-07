@@ -4,10 +4,12 @@ This folder documents `DSLKIT.GrammarExamples.MsSql` and the SQL formatter that 
 
 ## Formatting Flow
 
-1. `ModernMsSqlFormatter.TryFormat(...)` calls `ModernMsSqlGrammarExample.ParseScript(...)`.
-2. If parsing fails, formatter returns `SqlFormattingResult.Failure(...)` with parser error text.
-3. If parsing succeeds, formatter runs `SqlFormattingVisitor` over the parse tree.
-4. `SqlFormattingVisitor` emits formatted SQL through `IndentedSqlTextWriter`.
+1. `ModernMsSqlFormatter.TryFormat(...)` calls `ModernMsSqlGrammarExample.ParseDocument(...)`.
+2. Document parsing splits the input into SQL batches and control lines such as `GO` and SQLCMD commands.
+3. Each batch is parsed with `ModernMsSqlGrammarExample.ParseBatch(...)`.
+4. If any batch fails, formatter returns `SqlFormattingResult.Failure(...)` with parser error text.
+5. If parsing succeeds, formatter runs `SqlFormattingVisitor` over each batch parse tree.
+6. `SqlFormattingVisitor` emits formatted SQL through `IndentedSqlTextWriter`.
 
 ## Visitor Pattern Usage
 

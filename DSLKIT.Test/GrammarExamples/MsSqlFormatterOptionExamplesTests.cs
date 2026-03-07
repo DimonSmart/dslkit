@@ -18,7 +18,7 @@ namespace DSLKIT.Test.GrammarExamples
                 $"option example '{optionId}' should format, but failed with: {result.ErrorMessage}");
             result.FormattedSql.Should().NotBeNullOrWhiteSpace();
 
-            var reparsed = ModernMsSqlGrammarExample.ParseScript(result.FormattedSql!);
+            var reparsed = ModernMsSqlGrammarExample.ParseBatch(result.FormattedSql!);
             reparsed.IsSuccess.Should().BeTrue(
                 $"formatted SQL for option '{optionId}' should parse, but failed with: {reparsed.Error}");
         }

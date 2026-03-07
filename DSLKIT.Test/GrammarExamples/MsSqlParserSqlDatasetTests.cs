@@ -65,8 +65,8 @@ namespace DSLKIT.Test.GrammarExamples
                 selectFilesCount++;
                 try
                 {
-                    var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
-                    if (parseResult.IsSuccess && parseResult.ParseTree != null)
+                    var parseResult = ModernMsSqlGrammarExample.ParseDocument(script);
+                    if (parseResult.IsSuccess && parseResult.Document != null)
                     {
                         successfulFiles.Add(relativePath);
                         continue;
