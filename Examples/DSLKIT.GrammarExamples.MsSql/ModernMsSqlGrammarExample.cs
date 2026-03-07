@@ -769,27 +769,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             var forXmlMode = gb.NT("ForXmlMode");
             var forXmlOptionList = gb.NT("ForXmlOptionList");
             var forXmlOption = gb.NT("ForXmlOption");
-
-            gb.Rule("Start").CanBe(script);
-            gb.Rule("Script").OneOf(
-                statementList,
-                gb.Seq(statementList, statementSeparatorList),
-                gb.Seq(statementSeparatorList, statementList),
-                gb.Seq(statementSeparatorList, statementList, statementSeparatorList),
-                statementSeparatorList,
-                EmptyTerm.Empty);
-            gb.Rule("StatementList").OneOf(
-                statement,
-                gb.Seq(statementList, statementSeparatorList, statement),
-                gb.Seq(statementList, implicitStatementNoLeadingWith));
-            gb.Rule("StatementListOpt").OneOf(
-                EmptyTerm.Empty,
-                statementList,
-                gb.Seq(statementList, statementSeparatorList));
-            gb.Rule("StatementSeparatorList").Plus(statementSeparator);
-            gb.Rule("StatementSeparator").OneOf(";");
-            gb.Rule("Statement").OneOf(statementNoLeadingWith, leadingWithStatement);
-            gb.Rule("StatementNoLeadingWith").OneOf(
+            object[] statementNoLeadingWithAlternatives =
+            [
                 queryStatementNoLeadingWith,
                 updateStatement,
                 insertStatement,
@@ -851,9 +832,10 @@ namespace DSLKIT.GrammarExamples.MsSql
                 alterSecurityPolicyStatement,
                 createExternalTableStatement,
                 createExternalDataSourceStatement,
-                mergeStatement);
-            // Only allow omitted separators before statements with a keyword-led start.
-            gb.Rule("ImplicitStatementNoLeadingWith").OneOf(
+                mergeStatement
+            ];
+            object[] implicitStatementNoLeadingWithAlternatives =
+            [
                 implicitQueryStatementNoLeadingWith,
                 updateStatement,
                 insertStatement,
@@ -915,7 +897,37 @@ namespace DSLKIT.GrammarExamples.MsSql
                 alterSecurityPolicyStatement,
                 createExternalTableStatement,
                 createExternalDataSourceStatement,
-                mergeStatement);
+                mergeStatement
+            ];
+            var createFunctionPreludeStatementNoLeadingWithAlternatives = statementNoLeadingWithAlternatives
+                .Where(alternative => !ReferenceEquals(alternative, returnStatement))
+                .ToArray();
+            var createFunctionImplicitPreludeStatementNoLeadingWithAlternatives = implicitStatementNoLeadingWithAlternatives
+                .Where(alternative => !ReferenceEquals(alternative, returnStatement))
+                .ToArray();
+
+            gb.Rule("Start").CanBe(script);
+            gb.Rule("Script").OneOf(
+                statementList,
+                gb.Seq(statementList, statementSeparatorList),
+                gb.Seq(statementSeparatorList, statementList),
+                gb.Seq(statementSeparatorList, statementList, statementSeparatorList),
+                statementSeparatorList,
+                EmptyTerm.Empty);
+            gb.Rule("StatementList").OneOf(
+                statement,
+                gb.Seq(statementList, statementSeparatorList, statement),
+                gb.Seq(statementList, implicitStatementNoLeadingWith));
+            gb.Rule("StatementListOpt").OneOf(
+                EmptyTerm.Empty,
+                statementList,
+                gb.Seq(statementList, statementSeparatorList));
+            gb.Rule("StatementSeparatorList").Plus(statementSeparator);
+            gb.Rule("StatementSeparator").OneOf(";");
+            gb.Rule("Statement").OneOf(statementNoLeadingWith, leadingWithStatement);
+            gb.Rule("StatementNoLeadingWith").OneOf(statementNoLeadingWithAlternatives);
+            // Only allow omitted separators before statements with a keyword-led start.
+            gb.Rule("ImplicitStatementNoLeadingWith").OneOf(implicitStatementNoLeadingWithAlternatives);
             gb.Rule("LeadingWithStatement").OneOf(
                 gb.Seq(withClause, queryExpression),
                 gb.Seq(withClause, queryExpression, optionClause),
@@ -1418,130 +1430,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule(createFunctionPreludeStatement).OneOf(
                 createFunctionPreludeStatementNoLeadingWith,
                 leadingWithStatement);
-            gb.Rule(createFunctionPreludeStatementNoLeadingWith).OneOf(
-                queryStatementNoLeadingWith,
-                updateStatement,
-                insertStatement,
-                deleteStatement,
-                ifStatement,
-                beginEndStatement,
-                whileStatement,
-                setStatement,
-                printStatement,
-                declareStatement,
-                transactionStatement,
-                raiserrorStatement,
-                throwStatement,
-                loopControlStatement,
-                gotoStatement,
-                labelStatement,
-                executeStatement,
-                useStatement,
-                createProcStatement,
-                createFunctionStatement,
-                grantStatement,
-                dbccStatement,
-                dropProcStatement,
-                dropTableStatement,
-                dropViewStatement,
-                dropIndexStatement,
-                dropStatisticsStatement,
-                dropDatabaseStatement,
-                createRoleStatement,
-                createSchemaStatement,
-                createViewStatement,
-                createTableStatement,
-                alterTableStatement,
-                createIndexStatement,
-                alterIndexStatement,
-                createDatabaseStatement,
-                createTriggerStatement,
-                dropTriggerStatement,
-                tryCatchStatement,
-                truncateStatement,
-                createTableAsSelectStatement,
-                alterDatabaseStatement,
-                declareCursorStatement,
-                cursorOperationStatement,
-                waitforStatement,
-                createLoginStatement,
-                bulkInsertStatement,
-                checkpointStatement,
-                createUserStatement,
-                createStatisticsStatement,
-                updateStatisticsStatement,
-                dropTypeStatement,
-                dropColumnEncryptionKeyStatement,
-                revertStatement,
-                dropEventSessionStatement,
-                createTypeStatement,
-                createSecurityPolicyStatement,
-                alterSecurityPolicyStatement,
-                createExternalTableStatement,
-                createExternalDataSourceStatement,
-                mergeStatement);
-            gb.Rule(createFunctionImplicitPreludeStatementNoLeadingWith).OneOf(
-                implicitQueryStatementNoLeadingWith,
-                updateStatement,
-                insertStatement,
-                deleteStatement,
-                ifStatement,
-                beginEndStatement,
-                whileStatement,
-                setStatement,
-                printStatement,
-                declareStatement,
-                transactionStatement,
-                raiserrorStatement,
-                throwStatement,
-                loopControlStatement,
-                gotoStatement,
-                labelOnlyStatement,
-                executeStatement,
-                useStatement,
-                createProcStatement,
-                createFunctionStatement,
-                grantStatement,
-                dbccStatement,
-                dropProcStatement,
-                dropTableStatement,
-                dropViewStatement,
-                dropIndexStatement,
-                dropStatisticsStatement,
-                dropDatabaseStatement,
-                createRoleStatement,
-                createSchemaStatement,
-                createViewStatement,
-                createTableStatement,
-                alterTableStatement,
-                createIndexStatement,
-                alterIndexStatement,
-                createDatabaseStatement,
-                createTriggerStatement,
-                dropTriggerStatement,
-                tryCatchStatement,
-                truncateStatement,
-                createTableAsSelectStatement,
-                alterDatabaseStatement,
-                declareCursorStatement,
-                cursorOperationStatement,
-                waitforStatement,
-                createLoginStatement,
-                bulkInsertStatement,
-                checkpointStatement,
-                createUserStatement,
-                createStatisticsStatement,
-                updateStatisticsStatement,
-                dropTypeStatement,
-                dropColumnEncryptionKeyStatement,
-                revertStatement,
-                dropEventSessionStatement,
-                createTypeStatement,
-                createSecurityPolicyStatement,
-                alterSecurityPolicyStatement,
-                createExternalTableStatement,
-                createExternalDataSourceStatement,
-                mergeStatement);
+            gb.Rule(createFunctionPreludeStatementNoLeadingWith).OneOf(createFunctionPreludeStatementNoLeadingWithAlternatives);
+            gb.Rule(createFunctionImplicitPreludeStatementNoLeadingWith).OneOf(createFunctionImplicitPreludeStatementNoLeadingWithAlternatives);
             gb.Rule(createFunctionPreludeStatementList).OneOf(
                 createFunctionPreludeStatement,
                 gb.Seq(createFunctionPreludeStatementList, statementSeparatorList, createFunctionPreludeStatement),
