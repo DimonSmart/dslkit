@@ -688,6 +688,21 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseRaiserrorAndWaitforStatements()
+        {
+            const string script = """
+                RAISERROR (N'busy', 16, 1) WITH NOWAIT, SETERROR;
+                WAITFOR DELAY '00:00:01';
+                WAITFOR TIME '23:59:00';
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseCreateProcedure_WithOptionsAndParameters()
         {
             const string script = """
@@ -1436,6 +1451,8 @@ namespace DSLKIT.Test.GrammarExamples
                 ("CREATE TABLE dbo.T (ID int INDEX IX_T (ID))", "inline INDEX without a comma must not be accepted in the generic CREATE TABLE path"),
                 ("CREATE TABLE dbo.T (ID int GRAPH NODE)", "CREATE TABLE column options must not accept arbitrary keyword soup"),
                 ("CREATE TABLE dbo.T (ID int) WITH (GRAPH = NODE)", "CREATE TABLE WITH options must not accept arbitrary keyword soup"),
+                ("CREATE TABLE dbo.T (ID int WITH (FILLFACTOR = 90))", "column definitions must not accept generic WITH(index options)"),
+                ("CREATE TABLE dbo.T (ID int) WITH (Foo = Bar)", "CREATE TABLE WITH options must not accept arbitrary identifiers"),
                 ("ALTER TABLE dbo.T ALTER COLUMN Email ADD MASKED WITH (ONLINE = ON)", "MASKED WITH must not accept index options"),
                 ("ALTER TABLE dbo.T ALTER COLUMN Email ADD ENCRYPTED WITH (ONLINE = ON)", "ENCRYPTED WITH must not accept index options"),
                 ("SET GRAPH NODE ON", "SET should not accept arbitrary keyword soup"),
@@ -1446,6 +1463,10 @@ namespace DSLKIT.Test.GrammarExamples
                 ("DBCC Banana (0)", "DBCC should not accept arbitrary command names"),
                 ("SELECT 1 OPTION (GRAPH NODE)", "OPTION() should not accept arbitrary keyword soup"),
                 ("SELECT 1 OPTION (Banana 1)", "OPTION() should not accept arbitrary hint names"),
+                ("CREATE INDEX IX_T ON dbo.T (ID) WITH (Banana = 1)", "index WITH options must not accept arbitrary names"),
+                ("RAISERROR (N'oops', 16, 1) WITH GRAPH", "RAISERROR WITH must not accept arbitrary identifiers"),
+                ("WAITFOR GRAPH 1", "WAITFOR must not accept arbitrary command names"),
+                ("PRINT N'before'\n(SELECT 1);", "implicit statement boundaries must not treat parenthesized queries as keyword-led statements"),
                 ("BULK INSERT dbo.T FROM 'x.csv' WITH (INDEX = 1, ONLINE = ON)", "BULK INSERT must not accept index options"),
                 ("CREATE EXTERNAL TABLE dbo.ExtT (ID int) WITH (INDEX = 1)", "CREATE EXTERNAL TABLE must not accept table hints"),
                 ("CREATE EXTERNAL DATA SOURCE MyStorage WITH (ONLINE = ON)", "CREATE EXTERNAL DATA SOURCE must not accept index options"),
@@ -1537,6 +1558,26 @@ namespace DSLKIT.Test.GrammarExamples
                     DECLARE @error_message NVARCHAR(4000)
                     SET @error_message = ERROR_MESSAGE()
                     PRINT @error_message;
+                END CATCH;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseImplicitSelectAfterKeywordLedStatement()
+        {
+            const string script = """
+                BEGIN TRY
+                    DECLARE @message NVARCHAR(100)
+                    SET @message = N'work'
+                    SELECT @message AS MessageText
+                END TRY
+                BEGIN CATCH
+                    PRINT ERROR_MESSAGE();
                 END CATCH;
                 """;
 

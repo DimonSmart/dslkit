@@ -470,6 +470,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var raiserrorStatement = gb.NT("RaiserrorStatement");
             var raiserrorArgList = gb.NT("RaiserrorArgList");
             var raiserrorWithOptionList = gb.NT("RaiserrorWithOptionList");
+            var raiserrorWithOption = gb.NT("RaiserrorWithOption");
             var throwStatement = gb.NT("ThrowStatement");
             var loopControlStatement = gb.NT("LoopControlStatement");
             var gotoStatement = gb.NT("GotoStatement");
@@ -512,6 +513,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var createTableOptions = gb.NT("CreateTableOptions");
             var createTableOptionList = gb.NT("CreateTableOptionList");
             var createTableOption = gb.NT("CreateTableOption");
+            var createTableDurabilityMode = gb.NT("CreateTableDurabilityMode");
             var createTableOnClause = gb.NT("CreateTableOnClause");
             var createTableTextImageClause = gb.NT("CreateTableTextImageClause");
             var alterTableStatement = gb.NT("AlterTableStatement");
@@ -659,6 +661,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             var xmlNamespaceItem = gb.NT("XmlNamespaceItem");
             var cteDefinitionList = gb.NT("CteDefinitionList");
             var cteDefinition = gb.NT("CteDefinition");
+            var implicitQueryStatementNoLeadingWith = gb.NT("ImplicitQueryStatementNoLeadingWith");
+            var implicitQueryExpression = gb.NT("ImplicitQueryExpression");
+            var implicitQueryUnionExpression = gb.NT("ImplicitQueryUnionExpression");
+            var implicitQueryIntersectExpression = gb.NT("ImplicitQueryIntersectExpression");
             var queryExpression = gb.NT("QueryExpression");
             var queryUnionExpression = gb.NT("QueryUnionExpression");
             var queryIntersectExpression = gb.NT("QueryIntersectExpression");
@@ -834,7 +840,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 mergeStatement);
             // Only allow omitted separators before statements with a keyword-led start.
             gb.Rule("ImplicitStatementNoLeadingWith").OneOf(
-                queryStatementNoLeadingWith,
+                implicitQueryStatementNoLeadingWith,
                 updateStatement,
                 insertStatement,
                 deleteStatement,
@@ -913,6 +919,8 @@ namespace DSLKIT.GrammarExamples.MsSql
                 gb.Seq(withClause, queryExpression));
             gb.Rule("QueryStatementNoLeadingWith").OneOf(
                 queryExpression);
+            gb.Rule("ImplicitQueryStatementNoLeadingWith").OneOf(
+                implicitQueryExpression);
             gb.Prod("UpdateStatement").Is("UPDATE", tableFactor, "SET", updateSetList);
             gb.Prod("UpdateStatement").Is("UPDATE", tableFactor, "SET", updateSetList, "WHERE", searchCondition);
             gb.Prod("UpdateStatement").Is("UPDATE", tableFactor, "SET", updateSetList, "FROM", tableSourceList);
@@ -1153,8 +1161,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("RaiserrorStatement").Is("RAISERROR", "(", raiserrorArgList, ")", "WITH", raiserrorWithOptionList);
             gb.Prod("RaiserrorArgList").Is(expression);
             gb.Prod("RaiserrorArgList").Is(raiserrorArgList, ",", expression);
-            gb.Prod("RaiserrorWithOptionList").Is(identifierTerm);
-            gb.Prod("RaiserrorWithOptionList").Is(raiserrorWithOptionList, ",", identifierTerm);
+            gb.Prod("RaiserrorWithOptionList").Is(raiserrorWithOption);
+            gb.Prod("RaiserrorWithOptionList").Is(raiserrorWithOptionList, ",", raiserrorWithOption);
+            gb.Rule(raiserrorWithOption).Keywords("LOG", "NOWAIT", "SETERROR");
 
             gb.Rule(throwStatement)
                 .CanBe("THROW")
@@ -1738,7 +1747,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateTableColumnOption").Is("CHECK", "(", searchCondition, ")");
             gb.Prod("CreateTableColumnOption").Is("REFERENCES", qualifiedName);
             gb.Prod("CreateTableColumnOption").Is("REFERENCES", qualifiedName, "(", identifierList, ")");
-            gb.Prod("CreateTableColumnOption").Is("WITH", "(", indexOptionList, ")");
             gb.Prod("CreateTableColumnOption").Is("CONSTRAINT", strictIdentifierTerm, createTableColumnConstraintBody);
             gb.Prod("CreateTableColumnOption").Is(createTableColumnLooseOptionWord);
             gb.Prod("CreateTableColumnOption").Is(createTableColumnLooseOptionWord, createTableColumnLooseOptionWord);
@@ -1819,12 +1827,12 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateTableOptions").Is("WITH", "(", createTableOptionList, ")");
             gb.Prod("CreateTableOptionList").Is(createTableOption);
             gb.Prod("CreateTableOptionList").Is(createTableOptionList, ",", createTableOption);
-            gb.Prod("CreateTableOption").Is("MEMORY_OPTIMIZED", "=", indexOptionValue);
-            gb.Prod("CreateTableOption").Is(strictIdentifierTerm, "=", indexOptionValue);
-            gb.Prod("CreateTableOption").Is(strictQualifiedName, "=", indexOptionValue);
-            gb.Prod("CreateTableOption").Is(strictIdentifierTerm);
-            gb.Prod("CreateTableOption").Is(strictIdentifierTerm, strictIdentifierTerm);
+            gb.Prod("CreateTableOption").Is("MEMORY_OPTIMIZED", "=", indexOnOffValue);
+            gb.Prod("CreateTableOption").Is("DURABILITY", "=", createTableDurabilityMode);
+            gb.Prod("CreateTableOption").Is("FILETABLE_DIRECTORY", "=", namedOptionValue);
+            gb.Prod("CreateTableOption").Is("FILETABLE_COLLATE_FILENAME", "=", namedOptionValue);
             gb.Prod("CreateTableOption").Is("CLUSTERED", "COLUMNSTORE", "INDEX");
+            gb.Rule(createTableDurabilityMode).Keywords("SCHEMA_AND_DATA", "SCHEMA_ONLY");
             gb.Prod("CreateTableOnClause").Is("ON", indexStorageTarget);
             gb.Prod("CreateTableTextImageClause").Is("TEXTIMAGE_ON", indexStorageTarget);
 
@@ -1914,22 +1922,40 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("IndexOption").Is(indexOptionName, "(", indexOptionList, ")");
             gb.Prod("IndexOption").Is(indexOptionName, "=", indexOptionValue, "ON", "PARTITIONS", "(", indexPartitionList, ")");
 
-            gb.Prod("IndexOptionName").Is(identifierTerm);
             gb.Rule(indexOptionName)
-                .CanBe(qualifiedName)
-                .OrKeywords("FUNCTION", "ONLINE", "MAXDOP");
+                .CanBe("PAD_INDEX")
+                .Or("FILLFACTOR")
+                .Or("SORT_IN_TEMPDB")
+                .Or("IGNORE_DUP_KEY")
+                .Or("STATISTICS_NORECOMPUTE")
+                .Or("STATISTICS_INCREMENTAL")
+                .Or("DROP_EXISTING")
+                .Or("ONLINE")
+                .Or("ALLOW_ROW_LOCKS")
+                .Or("ALLOW_PAGE_LOCKS")
+                .Or("OPTIMIZE_FOR_SEQUENTIAL_KEY")
+                .Or("MAXDOP")
+                .Or("MAX_DURATION")
+                .Or("DATA_COMPRESSION")
+                .Or("XML_COMPRESSION")
+                .Or("COMPRESSION_DELAY")
+                .Or("WAIT_AT_LOW_PRIORITY")
+                .Or("ABORT_AFTER_WAIT")
+                .Or("BUCKET_COUNT")
+                .Or("COMPRESS_ALL_ROW_GROUPS")
+                .Or("LOB_COMPACTION")
+                .Or("RESUMABLE");
 
             gb.Prod("IndexOptionValue").Is(expression);
             gb.Prod("IndexOptionValue").Is(indexOnOffValue);
-            gb.Prod("IndexOptionValue").Is(identifierTerm);
             gb.Prod("IndexOptionValue").Is("NONE");
             gb.Prod("IndexOptionValue").Is("SELF");
+            gb.Prod("IndexOptionValue").Is("BLOCKERS");
             gb.Prod("IndexOptionValue").Is("ROW");
             gb.Prod("IndexOptionValue").Is("PAGE");
             gb.Prod("IndexOptionValue").Is("COLUMNSTORE");
             gb.Prod("IndexOptionValue").Is("COLUMNSTORE_ARCHIVE");
-            gb.Prod("IndexOptionValue").Is(expression, identifierTerm);
-            gb.Prod("IndexOptionValue").Is(identifierTerm, identifierTerm);
+            gb.Prod("IndexOptionValue").Is(expression, "MINUTES");
             gb.Prod("IndexOptionValue").Is(indexOnOffValue, "(", indexOptionList, ")");
             gb.Prod("IndexOptionValue").Is("(", indexOptionList, ")");
             gb.Rule(indexOnOffValue).Keywords("ON", "OFF");
@@ -2112,6 +2138,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CteDefinition").Is(identifierTerm, "AS", "(", queryExpression, ")");
             gb.Prod("CteDefinition").Is(identifierTerm, "(", identifierList, ")", "AS", "(", queryExpression, ")");
 
+            gb.Prod("ImplicitQueryExpression").Is(implicitQueryUnionExpression, queryExpressionTail);
+            gb.Prod("ImplicitQueryUnionExpression").Is(implicitQueryIntersectExpression);
+            gb.Prod("ImplicitQueryUnionExpression").Is(implicitQueryUnionExpression, setOperator, queryIntersectExpression);
+            gb.Prod("ImplicitQueryIntersectExpression").Is(querySpecification);
+            gb.Prod("ImplicitQueryIntersectExpression").Is(implicitQueryIntersectExpression, "INTERSECT", queryPrimary);
             gb.Prod("QueryExpression").Is(queryUnionExpression, queryExpressionTail);
             gb.Prod("QueryUnionExpression").Is(queryIntersectExpression);
             gb.Prod("QueryUnionExpression").Is(queryUnionExpression, setOperator, queryIntersectExpression);
@@ -2719,7 +2750,6 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             // WAITFOR
             gb.Rule("WaitforStatement").OneOf(
-                gb.Seq("WAITFOR", identifierTerm, expression),
                 gb.Seq("WAITFOR", "DELAY", expression),
                 gb.Seq("WAITFOR", "TIME", expression));
 
