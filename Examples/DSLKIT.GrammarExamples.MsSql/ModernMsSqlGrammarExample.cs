@@ -495,7 +495,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             var createTableColumnDefinition = gb.NT("CreateTableColumnDefinition");
             var createTableColumnOptionList = gb.NT("CreateTableColumnOptionList");
             var createTableColumnOption = gb.NT("CreateTableColumnOption");
-            var createTableColumnLooseOptionWord = gb.NT("CreateTableColumnLooseOptionWord");
             var createTableComputedColumn = gb.NT("CreateTableComputedColumn");
             var createTableColumnSet = gb.NT("CreateTableColumnSet");
             var createTableConstraint = gb.NT("CreateTableConstraint");
@@ -613,8 +612,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             var fetchTargetList = gb.NT("FetchTargetList");
             var waitforStatement = gb.NT("WaitforStatement");
             var createLoginStatement = gb.NT("CreateLoginStatement");
+            var createLoginPasswordSpec = gb.NT("CreateLoginPasswordSpec");
             var createLoginOptionList = gb.NT("CreateLoginOptionList");
             var createLoginOption = gb.NT("CreateLoginOption");
+            var createLoginWindowsOptionList = gb.NT("CreateLoginWindowsOptionList");
+            var createLoginWindowsOption = gb.NT("CreateLoginWindowsOption");
             var bulkInsertStatement = gb.NT("BulkInsertStatement");
             var bulkInsertOptionList = gb.NT("BulkInsertOptionList");
             var checkpointStatement = gb.NT("CheckpointStatement");
@@ -1722,9 +1724,6 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod("CreateTableColumnDefinition").Is(identifierTerm, typeSpec);
             gb.Prod("CreateTableColumnDefinition").Is(identifierTerm, typeSpec, createTableColumnOptionList);
-            gb.Rule(createTableColumnLooseOptionWord)
-                .CanBe(strictIdentifierTerm)
-                .OrKeywords("FILESTREAM");
             gb.Prod("CreateTableColumnOptionList").Is(createTableColumnOption);
             gb.Prod("CreateTableColumnOptionList").Is(createTableColumnOptionList, createTableColumnOption);
             gb.Prod("CreateTableColumnOption").Is("NULL");
@@ -1736,11 +1735,24 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateTableColumnOption").Is("ROWGUIDCOL");
             gb.Prod("CreateTableColumnOption").Is("COLUMN_SET");
             gb.Prod("CreateTableColumnOption").Is("FOR", "ALL_SPARSE_COLUMNS");
+            gb.Prod("CreateTableColumnOption").Is("FILESTREAM");
             gb.Prod("CreateTableColumnOption").Is("DEFAULT", expression);
             gb.Prod("CreateTableColumnOption").Is("DEFAULT", "(", expression, ")");
             gb.Prod("CreateTableColumnOption").Is("IDENTITY");
             gb.Prod("CreateTableColumnOption").Is("IDENTITY", "(", expression, ",", expression, ")");
             gb.Prod("CreateTableColumnOption").Is("COLLATE", strictIdentifierTerm);
+            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "ROW", "START");
+            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "ROW", "START", "HIDDEN");
+            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "ROW", "END");
+            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "ROW", "END", "HIDDEN");
+            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "TRANSACTION_ID", "START");
+            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "TRANSACTION_ID", "START", "HIDDEN");
+            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "TRANSACTION_ID", "END");
+            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "TRANSACTION_ID", "END", "HIDDEN");
+            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "SEQUENCE_NUMBER", "START");
+            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "SEQUENCE_NUMBER", "START", "HIDDEN");
+            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "SEQUENCE_NUMBER", "END");
+            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "SEQUENCE_NUMBER", "END", "HIDDEN");
             gb.Prod("CreateTableColumnOption").Is("MASKED", "WITH", "(", maskingOptionList, ")");
             gb.Prod("CreateTableColumnOption").Is("ENCRYPTED", "WITH", "(", encryptionOptionList, ")");
             gb.Prod("CreateTableColumnOption").Is("NOT", "FOR", "REPLICATION");
@@ -1748,10 +1760,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateTableColumnOption").Is("REFERENCES", qualifiedName);
             gb.Prod("CreateTableColumnOption").Is("REFERENCES", qualifiedName, "(", identifierList, ")");
             gb.Prod("CreateTableColumnOption").Is("CONSTRAINT", strictIdentifierTerm, createTableColumnConstraintBody);
-            gb.Prod("CreateTableColumnOption").Is(createTableColumnLooseOptionWord);
-            gb.Prod("CreateTableColumnOption").Is(createTableColumnLooseOptionWord, createTableColumnLooseOptionWord);
-            gb.Prod("CreateTableColumnOption").Is(strictQualifiedName, "(", expressionList, ")");
-            gb.Prod("CreateTableColumnOption").Is(createTableColumnLooseOptionWord, "(", expressionList, ")");
 
             gb.Prod("CreateTableComputedColumn").Is(identifierTerm, "AS", expression);
             gb.Prod("CreateTableComputedColumn").Is(identifierTerm, "AS", expression, createTableColumnOptionList);
@@ -2471,12 +2479,28 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("FunctionCall").Is("NEXT", identifierTerm, "FOR", qualifiedName);
             // OPENROWSET(BULK ...) special form
             gb.Prod("FunctionCall").Is("OPENROWSET", "(", openRowsetBulk, ")");
-            gb.Prod("OpenRowsetBulk").Is("BULK", expression, ",", identifierTerm);  // BULK 'file', SINGLE_BLOB
             gb.Prod("OpenRowsetBulk").Is("BULK", expression, ",", openRowsetBulkOptionList);
             gb.Prod("OpenRowsetBulkOptionList").Is(openRowsetBulkOption);
             gb.Prod("OpenRowsetBulkOptionList").Is(openRowsetBulkOptionList, ",", openRowsetBulkOption);
-            gb.Prod("OpenRowsetBulkOption").Is(identifierTerm);
-            gb.Prod("OpenRowsetBulkOption").Is(identifierTerm, "=", expression);
+            gb.Prod("OpenRowsetBulkOption").Is("SINGLE_BLOB");
+            gb.Prod("OpenRowsetBulkOption").Is("SINGLE_CLOB");
+            gb.Prod("OpenRowsetBulkOption").Is("SINGLE_NCLOB");
+            gb.Prod("OpenRowsetBulkOption").Is("DATA_SOURCE", "=", namedOptionValue);
+            gb.Prod("OpenRowsetBulkOption").Is("CODEPAGE", "=", namedOptionValue);
+            gb.Prod("OpenRowsetBulkOption").Is("DATAFILETYPE", "=", namedOptionValue);
+            gb.Prod("OpenRowsetBulkOption").Is("FORMAT", "=", namedOptionValue);
+            gb.Prod("OpenRowsetBulkOption").Is("FORMATFILE", "=", namedOptionValue);
+            gb.Prod("OpenRowsetBulkOption").Is("FORMATFILE_DATA_SOURCE", "=", namedOptionValue);
+            gb.Prod("OpenRowsetBulkOption").Is("FIELDTERMINATOR", "=", namedOptionValue);
+            gb.Prod("OpenRowsetBulkOption").Is("FIELDQUOTE", "=", namedOptionValue);
+            gb.Prod("OpenRowsetBulkOption").Is("ROWTERMINATOR", "=", namedOptionValue);
+            gb.Prod("OpenRowsetBulkOption").Is("FIRSTROW", "=", namedOptionValue);
+            gb.Prod("OpenRowsetBulkOption").Is("LASTROW", "=", namedOptionValue);
+            gb.Prod("OpenRowsetBulkOption").Is("MAXERRORS", "=", namedOptionValue);
+            gb.Prod("OpenRowsetBulkOption").Is("ERRORFILE", "=", namedOptionValue);
+            gb.Prod("OpenRowsetBulkOption").Is("ERRORFILE_DATA_SOURCE", "=", namedOptionValue);
+            gb.Prod("OpenRowsetBulkOption").Is("ROWS_PER_BATCH", "=", namedOptionValue);
+            gb.Prod("OpenRowsetBulkOption").Is("ORDER", "(", createTableKeyColumnList, ")");
             gb.Prod("FunctionArgumentList").Is(expression);
             gb.Prod("FunctionArgumentList").Is(functionArgumentList, ",", expression);
             gb.Prod("IifArgumentList").Is(searchCondition, ",", expression, ",", expression);
@@ -2626,6 +2650,40 @@ namespace DSLKIT.GrammarExamples.MsSql
                 "UNPIVOT",
                 "LABEL",
                 "LANGUAGE",
+                "GENERATED",
+                "ALWAYS",
+                "HIDDEN",
+                "TRANSACTION_ID",
+                "SEQUENCE_NUMBER",
+                "WINDOWS",
+                "PROVIDER",
+                "CERTIFICATE",
+                "ASYMMETRIC",
+                "SID",
+                "DEFAULT_DATABASE",
+                "DEFAULT_LANGUAGE",
+                "CHECK_EXPIRATION",
+                "CHECK_POLICY",
+                "CREDENTIAL",
+                "HASHED",
+                "MUST_CHANGE",
+                "OBJECT_ID",
+                "SINGLE_BLOB",
+                "SINGLE_CLOB",
+                "SINGLE_NCLOB",
+                "CODEPAGE",
+                "DATAFILETYPE",
+                "FORMATFILE",
+                "FORMATFILE_DATA_SOURCE",
+                "FIELDTERMINATOR",
+                "FIELDQUOTE",
+                "ROWTERMINATOR",
+                "FIRSTROW",
+                "LASTROW",
+                "MAXERRORS",
+                "ERRORFILE",
+                "ERRORFILE_DATA_SOURCE",
+                "ROWS_PER_BATCH",
                 "SECONDS",
                 "MINUTES",
                 "GRAPH");
@@ -2754,11 +2812,28 @@ namespace DSLKIT.GrammarExamples.MsSql
                 gb.Seq("WAITFOR", "TIME", expression));
 
             // CREATE LOGIN
-            gb.Prod("CreateLoginStatement").Is("CREATE", "LOGIN", identifierTerm, "WITH", createLoginOptionList);
+            gb.Prod("CreateLoginStatement").Is("CREATE", "LOGIN", identifierTerm, "WITH", createLoginPasswordSpec);
+            gb.Prod("CreateLoginStatement").Is("CREATE", "LOGIN", identifierTerm, "WITH", createLoginPasswordSpec, ",", createLoginOptionList);
+            gb.Prod("CreateLoginStatement").Is("CREATE", "LOGIN", identifierTerm, "FROM", "WINDOWS");
+            gb.Prod("CreateLoginStatement").Is("CREATE", "LOGIN", identifierTerm, "FROM", "WINDOWS", "WITH", createLoginWindowsOptionList);
+            gb.Prod("CreateLoginStatement").Is("CREATE", "LOGIN", identifierTerm, "FROM", "EXTERNAL", "PROVIDER");
+            gb.Prod("CreateLoginStatement").Is("CREATE", "LOGIN", identifierTerm, "FROM", "EXTERNAL", "PROVIDER", "WITH", "OBJECT_ID", "=", stringLiteral);
+            gb.Prod("CreateLoginStatement").Is("CREATE", "LOGIN", identifierTerm, "FROM", "CERTIFICATE", identifierTerm);
+            gb.Prod("CreateLoginStatement").Is("CREATE", "LOGIN", identifierTerm, "FROM", "ASYMMETRIC", "KEY", identifierTerm);
+            gb.Prod("CreateLoginPasswordSpec").Is("PASSWORD", "=", expression);
+            gb.Prod("CreateLoginPasswordSpec").Is("PASSWORD", "=", expression, "HASHED");
+            gb.Prod("CreateLoginPasswordSpec").Is("PASSWORD", "=", expression, "MUST_CHANGE");
+            gb.Prod("CreateLoginPasswordSpec").Is("PASSWORD", "=", expression, "HASHED", "MUST_CHANGE");
             gb.Rule("CreateLoginOptionList").SeparatedBy(",", createLoginOption);
-            gb.Prod("CreateLoginOption").Is(identifierTerm, "=", expression);
-            gb.Prod("CreateLoginOption").Is(identifierTerm, "=", "ON");
-            gb.Prod("CreateLoginOption").Is(identifierTerm, "=", "OFF");
+            gb.Prod("CreateLoginOption").Is("SID", "=", expression);
+            gb.Prod("CreateLoginOption").Is("DEFAULT_DATABASE", "=", namedOptionValue);
+            gb.Prod("CreateLoginOption").Is("DEFAULT_LANGUAGE", "=", namedOptionValue);
+            gb.Prod("CreateLoginOption").Is("CHECK_EXPIRATION", "=", indexOnOffValue);
+            gb.Prod("CreateLoginOption").Is("CHECK_POLICY", "=", indexOnOffValue);
+            gb.Prod("CreateLoginOption").Is("CREDENTIAL", "=", namedOptionValue);
+            gb.Rule("CreateLoginWindowsOptionList").SeparatedBy(",", createLoginWindowsOption);
+            gb.Prod("CreateLoginWindowsOption").Is("DEFAULT_DATABASE", "=", namedOptionValue);
+            gb.Prod("CreateLoginWindowsOption").Is("DEFAULT_LANGUAGE", "=", namedOptionValue);
 
             gb.Prod("CreateUserStatement").Is("CREATE", "USER", identifierTerm, "FOR", "LOGIN", identifierTerm);
             gb.Prod("CreateUserStatement").Is("CREATE", "USER", identifierTerm, "WITHOUT", "LOGIN");

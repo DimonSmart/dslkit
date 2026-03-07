@@ -703,6 +703,66 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseCreateTable_WithFilestreamAndGeneratedAlwaysColumns()
+        {
+            const string script = """
+                CREATE TABLE dbo.DocumentTimeline
+                (
+                    RowGuid UNIQUEIDENTIFIER ROWGUIDCOL NOT NULL UNIQUE,
+                    Payload VARBINARY(MAX) FILESTREAM NULL,
+                    ValidFrom DATETIME2 GENERATED ALWAYS AS ROW START HIDDEN NOT NULL,
+                    ValidTo DATETIME2 GENERATED ALWAYS AS ROW END HIDDEN NOT NULL
+                )
+                PERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo);
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseCreateLogin_Variants()
+        {
+            const string script = """
+                CREATE LOGIN app_sql WITH PASSWORD = N'P@ssw0rd!', CHECK_POLICY = ON, CHECK_EXPIRATION = OFF, DEFAULT_DATABASE = master, DEFAULT_LANGUAGE = us_english;
+                CREATE LOGIN [domain\service-account] FROM WINDOWS WITH DEFAULT_DATABASE = master, DEFAULT_LANGUAGE = us_english;
+                CREATE LOGIN entra_user FROM EXTERNAL PROVIDER WITH OBJECT_ID = '11111111-1111-1111-1111-111111111111';
+                CREATE LOGIN cert_login FROM CERTIFICATE certAuth;
+                CREATE LOGIN asym_login FROM ASYMMETRIC KEY asymAuth;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseOpenRowsetBulk_Variants()
+        {
+            const string script = """
+                SELECT src.BulkColumn
+                FROM OPENROWSET(
+                    BULK 'C:\temp\data.csv',
+                    FORMAT = 'CSV',
+                    FIRSTROW = 2,
+                    FIELDTERMINATOR = ',',
+                    ROWTERMINATOR = '0x0a'
+                ) AS src;
+
+                SELECT bin.BulkColumn
+                FROM OPENROWSET(BULK 'C:\temp\data.bin', SINGLE_BLOB) AS bin;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseCreateProcedure_WithOptionsAndParameters()
         {
             const string script = """
@@ -1451,6 +1511,8 @@ namespace DSLKIT.Test.GrammarExamples
                 ("CREATE TABLE dbo.T (ID int INDEX IX_T (ID))", "inline INDEX without a comma must not be accepted in the generic CREATE TABLE path"),
                 ("CREATE TABLE dbo.T (ID int GRAPH NODE)", "CREATE TABLE column options must not accept arbitrary keyword soup"),
                 ("CREATE TABLE dbo.T (ID int) WITH (GRAPH = NODE)", "CREATE TABLE WITH options must not accept arbitrary keyword soup"),
+                ("CREATE TABLE dbo.T (ID int Foo Bar)", "CREATE TABLE column options must not accept arbitrary identifier pairs"),
+                ("CREATE TABLE dbo.T (ID int Foo(1))", "CREATE TABLE column options must not accept arbitrary identifier-call patterns"),
                 ("CREATE TABLE dbo.T (ID int WITH (FILLFACTOR = 90))", "column definitions must not accept generic WITH(index options)"),
                 ("CREATE TABLE dbo.T (ID int) WITH (Foo = Bar)", "CREATE TABLE WITH options must not accept arbitrary identifiers"),
                 ("ALTER TABLE dbo.T ALTER COLUMN Email ADD MASKED WITH (ONLINE = ON)", "MASKED WITH must not accept index options"),
@@ -1464,9 +1526,13 @@ namespace DSLKIT.Test.GrammarExamples
                 ("SELECT 1 OPTION (GRAPH NODE)", "OPTION() should not accept arbitrary keyword soup"),
                 ("SELECT 1 OPTION (Banana 1)", "OPTION() should not accept arbitrary hint names"),
                 ("CREATE INDEX IX_T ON dbo.T (ID) WITH (Banana = 1)", "index WITH options must not accept arbitrary names"),
+                ("CREATE LOGIN app_login WITH GRAPH = ON", "CREATE LOGIN WITH must not accept arbitrary option names"),
+                ("CREATE LOGIN app_login FROM WINDOWS WITH CHECK_POLICY = ON", "Windows CREATE LOGIN must not accept SQL-only option names"),
                 ("RAISERROR (N'oops', 16, 1) WITH GRAPH", "RAISERROR WITH must not accept arbitrary identifiers"),
                 ("WAITFOR GRAPH 1", "WAITFOR must not accept arbitrary command names"),
                 ("PRINT N'before'\n(SELECT 1);", "implicit statement boundaries must not treat parenthesized queries as keyword-led statements"),
+                ("SELECT * FROM OPENROWSET(BULK 'x', GRAPH = 1) AS src", "OPENROWSET(BULK) must not accept arbitrary option names"),
+                ("SELECT * FROM OPENROWSET(BULK 'x', GRAPH) AS src", "OPENROWSET(BULK) must not accept arbitrary standalone identifiers"),
                 ("BULK INSERT dbo.T FROM 'x.csv' WITH (INDEX = 1, ONLINE = ON)", "BULK INSERT must not accept index options"),
                 ("CREATE EXTERNAL TABLE dbo.ExtT (ID int) WITH (INDEX = 1)", "CREATE EXTERNAL TABLE must not accept table hints"),
                 ("CREATE EXTERNAL DATA SOURCE MyStorage WITH (ONLINE = ON)", "CREATE EXTERNAL DATA SOURCE must not accept index options"),
