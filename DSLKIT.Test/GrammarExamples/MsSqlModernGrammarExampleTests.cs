@@ -865,6 +865,38 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseCreateFunction_WithPreludeStatementsBeforeRequiredReturn()
+        {
+            const string script = """
+                CREATE FUNCTION dbo.ufn_AddOne(@value INT)
+                RETURNS INT
+                AS
+                BEGIN
+                    DECLARE @result INT = @value;
+                    SET @result = @result + 1
+                    RETURN @result;
+                END;
+
+                CREATE FUNCTION dbo.ufn_Numbers(@value INT)
+                RETURNS @items TABLE
+                (
+                    ItemValue INT NOT NULL
+                )
+                AS
+                BEGIN
+                    INSERT INTO @items (ItemValue)
+                    VALUES (@value)
+                    RETURN;
+                END;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldRejectInvalidCreateFunctionBodyShapes()
         {
             var invalidScripts = new (string Script, string Reason)[]
@@ -872,7 +904,11 @@ namespace DSLKIT.Test.GrammarExamples
                 ("CREATE FUNCTION dbo.f(@x int) RETURNS int AS RETURN SELECT 1;", "scalar functions must use a block body"),
                 ("CREATE FUNCTION dbo.f(@x int) RETURNS int AS RETURN (SELECT 1);", "scalar functions must not use inline table-valued RETURN syntax"),
                 ("CREATE FUNCTION dbo.f(@x int) RETURNS TABLE AS BEGIN RETURN; END;", "inline table-valued functions must return a query expression"),
-                ("CREATE FUNCTION dbo.f(@x int) RETURNS @t TABLE (Id int) AS RETURN SELECT 1 AS Id;", "multi-statement table-valued functions must use a block body")
+                ("CREATE FUNCTION dbo.f(@x int) RETURNS @t TABLE (Id int) AS RETURN SELECT 1 AS Id;", "multi-statement table-valued functions must use a block body"),
+                ("CREATE FUNCTION dbo.f(@x int) RETURNS int AS BEGIN SELECT 1; END;", "scalar functions must end with RETURN <expression>"),
+                ("CREATE FUNCTION dbo.f(@x int) RETURNS int AS BEGIN RETURN; END;", "scalar functions must not use bare RETURN"),
+                ("CREATE FUNCTION dbo.f(@x int) RETURNS @t TABLE (Id int) AS BEGIN INSERT INTO @t VALUES (1); END;", "multi-statement table-valued functions must end with RETURN"),
+                ("CREATE FUNCTION dbo.f(@x int) RETURNS @t TABLE (Id int) AS BEGIN RETURN 1; END;", "multi-statement table-valued functions must use bare RETURN")
             };
 
             foreach (var (script, reason) in invalidScripts)
@@ -880,6 +916,40 @@ namespace DSLKIT.Test.GrammarExamples
                 var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
                 parseResult.IsSuccess.Should().BeFalse(reason);
             }
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseMerge_WithOutputAndOption()
+        {
+            const string script = """
+                MERGE TOP (10) PERCENT INTO dbo.Target AS tgt
+                USING (SELECT 1 AS Id) AS src
+                ON tgt.Id = src.Id
+                WHEN MATCHED THEN UPDATE SET tgt.Id = src.Id
+                WHEN NOT MATCHED THEN INSERT (Id) VALUES (src.Id)
+                OUTPUT inserted.Id
+                OPTION (RECOMPILE);
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldRejectMerge_WithNonTableTarget()
+        {
+            const string script = """
+                MERGE (SELECT 1 AS Id) AS tgt
+                USING dbo.Source AS src
+                ON tgt.Id = src.Id
+                WHEN MATCHED THEN DELETE;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeFalse("MERGE target must be a target table, not a derived table.");
         }
 
         [Fact]

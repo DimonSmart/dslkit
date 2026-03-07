@@ -393,6 +393,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             var createFunctionWithClause = gb.NT("CreateFunctionWithClause");
             var createFunctionOptionList = gb.NT("CreateFunctionOptionList");
             var createFunctionOption = gb.NT("CreateFunctionOption");
+            var createFunctionPreludeStatement = gb.NT("CreateFunctionPreludeStatement");
+            var createFunctionPreludeStatementNoLeadingWith = gb.NT("CreateFunctionPreludeStatementNoLeadingWith");
+            var createFunctionImplicitPreludeStatementNoLeadingWith = gb.NT("CreateFunctionImplicitPreludeStatementNoLeadingWith");
+            var createFunctionPreludeStatementList = gb.NT("CreateFunctionPreludeStatementList");
+            var createFunctionPreludeBeforeReturnOpt = gb.NT("CreateFunctionPreludeBeforeReturnOpt");
+            var createFunctionBodyTrailingSeparatorsOpt = gb.NT("CreateFunctionBodyTrailingSeparatorsOpt");
+            var createFunctionScalarReturnStatement = gb.NT("CreateFunctionScalarReturnStatement");
+            var createFunctionTableVariableReturnStatement = gb.NT("CreateFunctionTableVariableReturnStatement");
             var createFunctionScalarBody = gb.NT("CreateFunctionScalarBody");
             var createFunctionInlineTableBody = gb.NT("CreateFunctionInlineTableBody");
             var createFunctionTableVariableBody = gb.NT("CreateFunctionTableVariableBody");
@@ -653,6 +661,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             var createExternalDataSourceStatement = gb.NT("CreateExternalDataSourceStatement");
             var externalDataSourceOptionList = gb.NT("ExternalDataSourceOptionList");
             var mergeStatement = gb.NT("MergeStatement");
+            var mergeTargetTable = gb.NT("MergeTargetTable");
+            var mergeSourceTable = gb.NT("MergeSourceTable");
+            var mergeOutputClauseOpt = gb.NT("MergeOutputClauseOpt");
+            var mergeOptionClauseOpt = gb.NT("MergeOptionClauseOpt");
             var mergeWhenList = gb.NT("MergeWhenList");
             var mergeWhen = gb.NT("MergeWhen");
             var mergeMatchedAction = gb.NT("MergeMatchedAction");
@@ -1403,20 +1415,177 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .Or("INLINE", "=", "ON")
                 .Or("INLINE", "=", "OFF");
 
-            gb.Prod("CreateFunctionScalarBody").Is("AS", "BEGIN", statementList, "END");
-            gb.Prod("CreateFunctionScalarBody").Is("AS", "BEGIN", statementList, statementSeparatorList, "END");
-            gb.Prod("CreateFunctionScalarBody").Is("BEGIN", statementList, "END");
-            gb.Prod("CreateFunctionScalarBody").Is("BEGIN", statementList, statementSeparatorList, "END");
+            gb.Rule(createFunctionPreludeStatement).OneOf(
+                createFunctionPreludeStatementNoLeadingWith,
+                leadingWithStatement);
+            gb.Rule(createFunctionPreludeStatementNoLeadingWith).OneOf(
+                queryStatementNoLeadingWith,
+                updateStatement,
+                insertStatement,
+                deleteStatement,
+                ifStatement,
+                beginEndStatement,
+                whileStatement,
+                setStatement,
+                printStatement,
+                declareStatement,
+                transactionStatement,
+                raiserrorStatement,
+                throwStatement,
+                loopControlStatement,
+                gotoStatement,
+                labelStatement,
+                executeStatement,
+                useStatement,
+                createProcStatement,
+                createFunctionStatement,
+                grantStatement,
+                dbccStatement,
+                dropProcStatement,
+                dropTableStatement,
+                dropViewStatement,
+                dropIndexStatement,
+                dropStatisticsStatement,
+                dropDatabaseStatement,
+                createRoleStatement,
+                createSchemaStatement,
+                createViewStatement,
+                createTableStatement,
+                alterTableStatement,
+                createIndexStatement,
+                alterIndexStatement,
+                createDatabaseStatement,
+                createTriggerStatement,
+                dropTriggerStatement,
+                tryCatchStatement,
+                truncateStatement,
+                createTableAsSelectStatement,
+                alterDatabaseStatement,
+                declareCursorStatement,
+                cursorOperationStatement,
+                waitforStatement,
+                createLoginStatement,
+                bulkInsertStatement,
+                checkpointStatement,
+                createUserStatement,
+                createStatisticsStatement,
+                updateStatisticsStatement,
+                dropTypeStatement,
+                dropColumnEncryptionKeyStatement,
+                revertStatement,
+                dropEventSessionStatement,
+                createTypeStatement,
+                createSecurityPolicyStatement,
+                alterSecurityPolicyStatement,
+                createExternalTableStatement,
+                createExternalDataSourceStatement,
+                mergeStatement);
+            gb.Rule(createFunctionImplicitPreludeStatementNoLeadingWith).OneOf(
+                implicitQueryStatementNoLeadingWith,
+                updateStatement,
+                insertStatement,
+                deleteStatement,
+                ifStatement,
+                beginEndStatement,
+                whileStatement,
+                setStatement,
+                printStatement,
+                declareStatement,
+                transactionStatement,
+                raiserrorStatement,
+                throwStatement,
+                loopControlStatement,
+                gotoStatement,
+                labelOnlyStatement,
+                executeStatement,
+                useStatement,
+                createProcStatement,
+                createFunctionStatement,
+                grantStatement,
+                dbccStatement,
+                dropProcStatement,
+                dropTableStatement,
+                dropViewStatement,
+                dropIndexStatement,
+                dropStatisticsStatement,
+                dropDatabaseStatement,
+                createRoleStatement,
+                createSchemaStatement,
+                createViewStatement,
+                createTableStatement,
+                alterTableStatement,
+                createIndexStatement,
+                alterIndexStatement,
+                createDatabaseStatement,
+                createTriggerStatement,
+                dropTriggerStatement,
+                tryCatchStatement,
+                truncateStatement,
+                createTableAsSelectStatement,
+                alterDatabaseStatement,
+                declareCursorStatement,
+                cursorOperationStatement,
+                waitforStatement,
+                createLoginStatement,
+                bulkInsertStatement,
+                checkpointStatement,
+                createUserStatement,
+                createStatisticsStatement,
+                updateStatisticsStatement,
+                dropTypeStatement,
+                dropColumnEncryptionKeyStatement,
+                revertStatement,
+                dropEventSessionStatement,
+                createTypeStatement,
+                createSecurityPolicyStatement,
+                alterSecurityPolicyStatement,
+                createExternalTableStatement,
+                createExternalDataSourceStatement,
+                mergeStatement);
+            gb.Rule(createFunctionPreludeStatementList).OneOf(
+                createFunctionPreludeStatement,
+                gb.Seq(createFunctionPreludeStatementList, statementSeparatorList, createFunctionPreludeStatement),
+                gb.Seq(createFunctionPreludeStatementList, createFunctionImplicitPreludeStatementNoLeadingWith));
+            gb.Rule(createFunctionPreludeBeforeReturnOpt).OneOf(
+                EmptyTerm.Empty,
+                createFunctionPreludeStatementList,
+                gb.Seq(createFunctionPreludeStatementList, statementSeparatorList));
+            gb.Opt(createFunctionBodyTrailingSeparatorsOpt, statementSeparatorList);
+            gb.Prod("CreateFunctionScalarReturnStatement").Is("RETURN", expression);
+            gb.Prod("CreateFunctionTableVariableReturnStatement").Is("RETURN");
+
+            gb.Prod("CreateFunctionScalarBody").Is(
+                "AS",
+                "BEGIN",
+                createFunctionPreludeBeforeReturnOpt,
+                createFunctionScalarReturnStatement,
+                createFunctionBodyTrailingSeparatorsOpt,
+                "END");
+            gb.Prod("CreateFunctionScalarBody").Is(
+                "BEGIN",
+                createFunctionPreludeBeforeReturnOpt,
+                createFunctionScalarReturnStatement,
+                createFunctionBodyTrailingSeparatorsOpt,
+                "END");
             gb.Prod("CreateFunctionInlineTableBody").Is("AS", "RETURN", queryExpression);
             gb.Prod("CreateFunctionInlineTableBody").Is("AS", "RETURN", "(", queryExpression, ")");
             gb.Prod("CreateFunctionInlineTableBody").Is("AS", "RETURN", "(", withClause, queryExpression, ")");
             gb.Prod("CreateFunctionInlineTableBody").Is("RETURN", queryExpression);
             gb.Prod("CreateFunctionInlineTableBody").Is("RETURN", "(", queryExpression, ")");
             gb.Prod("CreateFunctionInlineTableBody").Is("RETURN", "(", withClause, queryExpression, ")");
-            gb.Prod("CreateFunctionTableVariableBody").Is("AS", "BEGIN", statementList, "END");
-            gb.Prod("CreateFunctionTableVariableBody").Is("AS", "BEGIN", statementList, statementSeparatorList, "END");
-            gb.Prod("CreateFunctionTableVariableBody").Is("BEGIN", statementList, "END");
-            gb.Prod("CreateFunctionTableVariableBody").Is("BEGIN", statementList, statementSeparatorList, "END");
+            gb.Prod("CreateFunctionTableVariableBody").Is(
+                "AS",
+                "BEGIN",
+                createFunctionPreludeBeforeReturnOpt,
+                createFunctionTableVariableReturnStatement,
+                createFunctionBodyTrailingSeparatorsOpt,
+                "END");
+            gb.Prod("CreateFunctionTableVariableBody").Is(
+                "BEGIN",
+                createFunctionPreludeBeforeReturnOpt,
+                createFunctionTableVariableReturnStatement,
+                createFunctionBodyTrailingSeparatorsOpt,
+                "END");
 
             gb.Prod("CreateFunctionStatement").Is(
                 createFunctionHead,
@@ -2873,11 +3042,22 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateTypeStatement").Is("CREATE", "TYPE", qualifiedName, "FROM", typeSpec);
 
             // MERGE DML statement
+            gb.Prod("MergeTargetTable").Is(qualifiedName);
+            gb.Prod("MergeTargetTable").Is(qualifiedName, "AS", identifierTerm);
+            gb.Prod("MergeTargetTable").Is(qualifiedName, identifierTerm);
+            gb.Prod("MergeTargetTable").Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")");
+            gb.Prod("MergeTargetTable").Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")", "AS", identifierTerm);
+            gb.Prod("MergeTargetTable").Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")", identifierTerm);
+            gb.Prod("MergeSourceTable").Is(tableSource);
+            gb.Opt(mergeOutputClauseOpt, deleteOutputClause);
+            gb.Opt(mergeOptionClauseOpt, optionClause);
             gb.Rule("MergeStatement").OneOf(
-                gb.Seq("MERGE", tableFactor, "USING", tableFactor, "ON", searchCondition, mergeWhenList),
-                gb.Seq("MERGE", "INTO", tableFactor, "USING", tableFactor, "ON", searchCondition, mergeWhenList),
-                gb.Seq("MERGE", "TOP", topValue, tableFactor, "USING", tableFactor, "ON", searchCondition, mergeWhenList),
-                gb.Seq("MERGE", "TOP", topValue, "INTO", tableFactor, "USING", tableFactor, "ON", searchCondition, mergeWhenList));
+                gb.Seq("MERGE", mergeTargetTable, "USING", mergeSourceTable, "ON", searchCondition, mergeWhenList, mergeOutputClauseOpt, mergeOptionClauseOpt),
+                gb.Seq("MERGE", "INTO", mergeTargetTable, "USING", mergeSourceTable, "ON", searchCondition, mergeWhenList, mergeOutputClauseOpt, mergeOptionClauseOpt),
+                gb.Seq("MERGE", "TOP", topValue, mergeTargetTable, "USING", mergeSourceTable, "ON", searchCondition, mergeWhenList, mergeOutputClauseOpt, mergeOptionClauseOpt),
+                gb.Seq("MERGE", "TOP", topValue, "PERCENT", mergeTargetTable, "USING", mergeSourceTable, "ON", searchCondition, mergeWhenList, mergeOutputClauseOpt, mergeOptionClauseOpt),
+                gb.Seq("MERGE", "TOP", topValue, "INTO", mergeTargetTable, "USING", mergeSourceTable, "ON", searchCondition, mergeWhenList, mergeOutputClauseOpt, mergeOptionClauseOpt),
+                gb.Seq("MERGE", "TOP", topValue, "PERCENT", "INTO", mergeTargetTable, "USING", mergeSourceTable, "ON", searchCondition, mergeWhenList, mergeOutputClauseOpt, mergeOptionClauseOpt));
             gb.Rule("MergeWhenList").Plus(mergeWhen);
             gb.Rule("MergeWhen").OneOf(
                 gb.Seq("WHEN", "MATCHED", "THEN", mergeMatchedAction),
