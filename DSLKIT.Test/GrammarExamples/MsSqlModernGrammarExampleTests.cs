@@ -1048,6 +1048,24 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldRejectSqlcmdPreprocessorCommands_WhenFeatureDisabled()
+        {
+            const string script = """
+                :setvar JobOwner sa
+                PRINT N'after sqlcmd preprocessor commands';
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseDocument(
+                script,
+                MsSqlDialectFeatures.SqlServerCore |
+                MsSqlDialectFeatures.ExternalObjects |
+                MsSqlDialectFeatures.SynapseExtensions |
+                MsSqlDialectFeatures.GraphExtensions);
+
+            parseResult.IsSuccess.Should().BeFalse("sqlcmd preprocessing should be disabled when SqlCmdPreprocessing is not enabled.");
+        }
+
+        [Fact]
         public void ParseScript_ShouldRejectInlineSqlcmdPreprocessorCommand()
         {
             const string script = "PRINT N'before'; :setvar JobOwner sa";
@@ -1154,6 +1172,25 @@ namespace DSLKIT.Test.GrammarExamples
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldRejectSqlGraphSyntax_WhenFeatureDisabled()
+        {
+            const string script = """
+                SELECT *
+                FROM PRODUCT P1, PRODUCT FOR PATH P2, ISPARTOF FOR PATH IPO
+                WHERE MATCH(SHORTEST_PATH(P1(-(IPO)->P2)+));
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(
+                script,
+                MsSqlDialectFeatures.SqlServerCore |
+                MsSqlDialectFeatures.ExternalObjects |
+                MsSqlDialectFeatures.SynapseExtensions |
+                MsSqlDialectFeatures.SqlCmdPreprocessing);
+
+            parseResult.IsSuccess.Should().BeFalse("graph syntax should be gated behind GraphExtensions.");
         }
 
         [Fact]

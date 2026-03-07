@@ -28,7 +28,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             @"^\s*:[a-z_][a-z0-9_]*(?:[ \t].*)?$",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
-        public static IReadOnlyList<SqlScriptSegment> Split(string source)
+        public static IReadOnlyList<SqlScriptSegment> Split(string source, bool enableSqlcmdCommands = true)
         {
             ArgumentNullException.ThrowIfNull(source);
 
@@ -39,7 +39,7 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             foreach (var line in EnumerateLines(source))
             {
-                if (TryCreateControlSegment(line, out var controlSegment))
+                if (TryCreateControlSegment(line, enableSqlcmdCommands, out var controlSegment))
                 {
                     FlushBatch(segments, currentBatchBuilder, currentBatchStart, hasBatchLines);
                     hasBatchLines = false;
@@ -80,7 +80,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             currentBatchBuilder.Clear();
         }
 
-        private static bool TryCreateControlSegment(LineInfo line, out SqlScriptSegment segment)
+        private static bool TryCreateControlSegment(LineInfo line, bool enableSqlcmdCommands, out SqlScriptSegment segment)
         {
             if (TryParseGoSeparator(line.Text, out var batchRepeatCount))
             {
@@ -92,7 +92,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 return true;
             }
 
-            if (IsSqlcmdCommandLine(line.Text))
+            if (enableSqlcmdCommands && IsSqlcmdCommandLine(line.Text))
             {
                 segment = new SqlScriptSegment(
                     SqlScriptSegmentKind.SqlcmdCommand,

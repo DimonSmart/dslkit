@@ -18,7 +18,9 @@ namespace DSLKIT.GrammarExamples.MsSql
         SqlServerCore = 1,
         ExternalObjects = 2,
         SynapseExtensions = 4,
-        All = SqlServerCore | ExternalObjects | SynapseExtensions
+        GraphExtensions = 8,
+        SqlCmdPreprocessing = 16,
+        All = SqlServerCore | ExternalObjects | SynapseExtensions | GraphExtensions | SqlCmdPreprocessing
     }
 
     /// <summary>
@@ -89,7 +91,9 @@ namespace DSLKIT.GrammarExamples.MsSql
         {
             ArgumentNullException.ThrowIfNull(source);
 
-            var segments = SqlServerScriptPreprocessor.Split(source);
+            var segments = SqlServerScriptPreprocessor.Split(
+                source,
+                HasFeature(dialectFeatures, MsSqlDialectFeatures.SqlCmdPreprocessing));
             if (segments.Count == 0)
             {
                 var emptyBatchParseResult = ParseBatch(source, dialectFeatures);
@@ -329,8 +333,11 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .AddTerminal(sqlcmdVariable)
                 .AddTerminal(forSystemTimeStart)
                 .AddTerminal(forPathStart)
-                .AddTerminal(withCheckOptionStart)
-                .AddTerminal(graphColumnRef);
+                .AddTerminal(withCheckOptionStart);
+            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.GraphExtensions))
+            {
+                gb.AddTerminal(graphColumnRef);
+            }
 
             // Resolve known LALR(1) ambiguities explicitly.
             gb.OnShiftReduce("IfStatement", "ELSE", Resolve.Shift); // dangling ELSE binds to nearest IF
@@ -1047,8 +1054,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("InsertTarget").Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")", "(", insertColumnList, ")");
             gb.Prod("InsertColumnList").Is(identifierTerm);
             gb.Prod("InsertColumnList").Is(insertColumnList, ",", identifierTerm);
-            gb.Prod("InsertColumnList").Is(graphColumnRef);
-            gb.Prod("InsertColumnList").Is(insertColumnList, ",", graphColumnRef);
+            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.GraphExtensions))
+            {
+                gb.Prod("InsertColumnList").Is(graphColumnRef);
+                gb.Prod("InsertColumnList").Is(insertColumnList, ",", graphColumnRef);
+            }
             gb.Prod("InsertValueList").Is(expression);
             gb.Prod("InsertValueList").Is(insertValueList, ",", expression);
             gb.Prod("RowValue").Is("(", insertValueList, ")");
@@ -1805,11 +1815,13 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, createTableFileTableClause, createTableOptions);
             gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, createTableFileTableClause, createIndexFileStreamClause, createTableOptions);
             gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", createTableTailClauseList);
-            // SQL Graph node/edge tables
-            gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", "AS", "EDGE");
-            gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", "AS", "NODE");
-            gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", createTableTailClauseList, "AS", "EDGE");
-            gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", createTableTailClauseList, "AS", "NODE");
+            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.GraphExtensions))
+            {
+                gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", "AS", "EDGE");
+                gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", "AS", "NODE");
+                gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", createTableTailClauseList, "AS", "EDGE");
+                gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", createTableTailClauseList, "AS", "NODE");
+            }
             gb.Prod("CreateTableTailClauseList").Is(createTableTailClause);
             gb.Prod("CreateTableTailClauseList").Is(createTableTailClauseList, createTableTailClause);
             gb.Prod("CreateTableTailClause").Is(createTablePeriodClause);
@@ -2370,8 +2382,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("TableFactor").Is(qualifiedName);
             gb.Prod("TableFactor").Is(qualifiedName, "AS", identifierTerm);
             gb.Prod("TableFactor").Is(qualifiedName, identifierTerm);
-            gb.Prod("TableFactor").Is(qualifiedName, forPathStart, "PATH");
-            gb.Prod("TableFactor").Is(qualifiedName, forPathStart, "PATH", identifierTerm);
+            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.GraphExtensions))
+            {
+                gb.Prod("TableFactor").Is(qualifiedName, forPathStart, "PATH");
+                gb.Prod("TableFactor").Is(qualifiedName, forPathStart, "PATH", identifierTerm);
+            }
             gb.Prod("TableFactor").Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")");
             gb.Prod("TableFactor").Is(qualifiedName, "AS", identifierTerm, "WITH", "(", tableHintLimitedList, ")");
             gb.Prod("TableFactor").Is(qualifiedName, identifierTerm, "WITH", "(", tableHintLimitedList, ")");
@@ -2513,7 +2528,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("BooleanPrimary").Is(additiveExpression, "BETWEEN", additiveExpression, "AND", additiveExpression);
             gb.Prod("BooleanPrimary").Is(additiveExpression, "NOT", "BETWEEN", additiveExpression, "AND", additiveExpression);
             gb.Prod("BooleanPrimary").Is("EXISTS", "(", queryExpression, ")");
-            gb.Prod("BooleanPrimary").Is("MATCH", "(", matchGraphPattern, ")");
+            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.GraphExtensions))
+            {
+                gb.Prod("BooleanPrimary").Is("MATCH", "(", matchGraphPattern, ")");
+            }
 
             gb.Prod("InPredicateValue").Is("(", expressionList, ")");
             gb.Prod("InPredicateValue").Is("(", queryExpression, ")");
@@ -2551,7 +2569,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("PrimaryExpression").Is(unicodeStringLiteral);
             gb.Prod("PrimaryExpression").Is(sqlcmdVariable);
             gb.Prod("PrimaryExpression").Is(variableReference);
-            gb.Prod("PrimaryExpression").Is(graphColumnRef);
+            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.GraphExtensions))
+            {
+                gb.Prod("PrimaryExpression").Is(graphColumnRef);
+            }
             gb.Prod("PrimaryExpression").Is(qualifiedName);
             gb.Prod("PrimaryExpression").Is(functionCall);
             gb.Prod("PrimaryExpression").Is(functionCall, overClause);
@@ -2611,7 +2632,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("FunctionArgumentList").Is(expression);
             gb.Prod("FunctionArgumentList").Is(functionArgumentList, ",", expression);
             gb.Prod("IifArgumentList").Is(searchCondition, ",", expression, ",", expression);
-            gb.Prod("GraphWithinGroupClause").Is("WITHIN", "GROUP", "(", "GRAPH", "PATH", ")");
+            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.GraphExtensions))
+            {
+                gb.Prod("GraphWithinGroupClause").Is("WITHIN", "GROUP", "(", "GRAPH", "PATH", ")");
+            }
             gb.Prod("GraphWithinGroupClause").Is("WITHIN", "GROUP", "(", "ORDER", "BY", orderItemList, ")");
 
             gb.Prod("OverClause").Is("OVER", "(", overSpec, ")");
@@ -2983,111 +3007,51 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("CreateTypeStatement").Is("CREATE", "TYPE", qualifiedName, "AS", tableTypeDefinition);
             gb.Prod("CreateTypeStatement").Is("CREATE", "TYPE", qualifiedName, "FROM", typeSpec);
 
-            // MERGE DML statement
-            gb.Prod("MergeTargetTable").Is(qualifiedName);
-            gb.Prod("MergeTargetTable").Is(qualifiedName, "AS", identifierTerm);
-            gb.Prod("MergeTargetTable").Is(qualifiedName, identifierTerm);
-            gb.Prod("MergeTargetTable").Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")");
-            gb.Prod("MergeTargetTable").Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")", "AS", identifierTerm);
-            gb.Prod("MergeTargetTable").Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")", identifierTerm);
-            gb.Prod("MergeSourceTable").Is(tableSource);
-            gb.Opt(mergeOutputClauseOpt, deleteOutputClause);
-            gb.Opt(mergeOptionClauseOpt, optionClause);
-            gb.Rule("MergeStatement").OneOf(
-                gb.Seq("MERGE", mergeTargetTable, "USING", mergeSourceTable, "ON", searchCondition, mergeWhenList, mergeOutputClauseOpt, mergeOptionClauseOpt),
-                gb.Seq("MERGE", "INTO", mergeTargetTable, "USING", mergeSourceTable, "ON", searchCondition, mergeWhenList, mergeOutputClauseOpt, mergeOptionClauseOpt),
-                gb.Seq("MERGE", "TOP", topValue, mergeTargetTable, "USING", mergeSourceTable, "ON", searchCondition, mergeWhenList, mergeOutputClauseOpt, mergeOptionClauseOpt),
-                gb.Seq("MERGE", "TOP", topValue, "PERCENT", mergeTargetTable, "USING", mergeSourceTable, "ON", searchCondition, mergeWhenList, mergeOutputClauseOpt, mergeOptionClauseOpt),
-                gb.Seq("MERGE", "TOP", topValue, "INTO", mergeTargetTable, "USING", mergeSourceTable, "ON", searchCondition, mergeWhenList, mergeOutputClauseOpt, mergeOptionClauseOpt),
-                gb.Seq("MERGE", "TOP", topValue, "PERCENT", "INTO", mergeTargetTable, "USING", mergeSourceTable, "ON", searchCondition, mergeWhenList, mergeOutputClauseOpt, mergeOptionClauseOpt));
-            gb.Rule("MergeWhenList").Plus(mergeWhen);
-            gb.Rule("MergeWhen").OneOf(
-                gb.Seq("WHEN", "MATCHED", "THEN", mergeMatchedAction),
-                gb.Seq("WHEN", "MATCHED", "AND", searchCondition, "THEN", mergeMatchedAction),
-                gb.Seq("WHEN", "NOT", "MATCHED", "THEN", mergeNotMatchedAction),
-                gb.Seq("WHEN", "NOT", "MATCHED", "AND", searchCondition, "THEN", mergeNotMatchedAction),
-                gb.Seq("WHEN", "NOT", "MATCHED", "BY", "TARGET", "THEN", mergeNotMatchedAction),
-                gb.Seq("WHEN", "NOT", "MATCHED", "BY", "TARGET", "AND", searchCondition, "THEN", mergeNotMatchedAction),
-                gb.Seq("WHEN", "NOT", "MATCHED", "BY", "SOURCE", "THEN", mergeMatchedAction),
-                gb.Seq("WHEN", "NOT", "MATCHED", "BY", "SOURCE", "AND", searchCondition, "THEN", mergeMatchedAction));
-            gb.Rule("MergeMatchedAction").OneOf(
-                gb.Seq("UPDATE", "SET", updateSetList),
-                "DELETE");
-            gb.Rule("MergeNotMatchedAction").OneOf(
-                gb.Seq("INSERT", "(", insertColumnList, ")", "VALUES", "(", insertValueList, ")"),
-                gb.Seq("INSERT", "VALUES", "(", insertValueList, ")"),
-                gb.Seq("INSERT", "(", insertColumnList, ")", "DEFAULT", "VALUES"),
-                gb.Seq("INSERT", "DEFAULT", "VALUES"));
+            BuildMergeGrammar(
+                gb,
+                mergeTargetTable,
+                mergeSourceTable,
+                mergeOutputClauseOpt,
+                mergeOptionClauseOpt,
+                mergeWhenList,
+                mergeWhen,
+                mergeMatchedAction,
+                mergeNotMatchedAction,
+                qualifiedName,
+                identifierTerm,
+                tableHintLimitedList,
+                tableSource,
+                deleteOutputClause,
+                optionClause,
+                topValue,
+                searchCondition,
+                updateSetList,
+                insertColumnList,
+                insertValueList);
 
-            // BULK INSERT
-            gb.Prod("BulkInsertStatement").Is("BULK", "INSERT", qualifiedName, "FROM", expression);
-            gb.Prod("BulkInsertStatement").Is("BULK", "INSERT", qualifiedName, "FROM", expression, "WITH", "(", bulkInsertOptionList, ")");
-            gb.Prod("BulkInsertOptionList").Is("CHECK_CONSTRAINTS");
-            gb.Prod("BulkInsertOptionList").Is("KEEPIDENTITY");
-            gb.Prod("BulkInsertOptionList").Is("KEEPNULLS");
-            gb.Prod("BulkInsertOptionList").Is("TABLOCK");
-            gb.Prod("BulkInsertOptionList").Is("FIRE_TRIGGERS");
-            gb.Prod("BulkInsertOptionList").Is("CODEPAGE", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is("DATAFILETYPE", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is("DATA_SOURCE", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is("ERRORFILE", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is("ERRORFILE_DATA_SOURCE", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is("FIRSTROW", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is("FORMAT", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is("FIELDQUOTE", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is("FORMATFILE", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is("FORMATFILE_DATA_SOURCE", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is("KILOBYTES_PER_BATCH", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is("LASTROW", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is("MAXERRORS", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is("ROWS_PER_BATCH", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is("ROWTERMINATOR", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is("FIELDTERMINATOR", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is("BATCHSIZE", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is("ORDER", "(", createTableKeyColumnList, ")");
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "CHECK_CONSTRAINTS");
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "KEEPIDENTITY");
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "KEEPNULLS");
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "TABLOCK");
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "FIRE_TRIGGERS");
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "CODEPAGE", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "DATAFILETYPE", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "DATA_SOURCE", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "ERRORFILE", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "ERRORFILE_DATA_SOURCE", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "FIRSTROW", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "FORMAT", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "FIELDQUOTE", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "FORMATFILE", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "FORMATFILE_DATA_SOURCE", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "KILOBYTES_PER_BATCH", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "LASTROW", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "MAXERRORS", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "ROWS_PER_BATCH", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "ROWTERMINATOR", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "FIELDTERMINATOR", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "BATCHSIZE", "=", namedOptionValue);
-            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "ORDER", "(", createTableKeyColumnList, ")");
+            BuildBulkInsertGrammar(
+                gb,
+                bulkInsertOptionList,
+                qualifiedName,
+                expression,
+                namedOptionValue,
+                createTableKeyColumnList);
 
             gb.Prod("CheckpointStatement").Is("CHECKPOINT");
 
-            // SQL Graph: MATCH is a search condition predicate and is handled by BooleanPrimary.
-            gb.Prod("MatchGraphPattern").Is(matchGraphPath);
-            gb.Prod("MatchGraphPattern").Is("SHORTEST_PATH", "(", matchGraphShortestPath, ")");
-            gb.Prod("MatchGraphPattern").Is(matchGraphPattern, "AND", matchGraphPath);
-            gb.Prod("MatchGraphPattern").Is(matchGraphPattern, "AND", "SHORTEST_PATH", "(", matchGraphShortestPath, ")");
-            gb.Prod("MatchGraphShortestPath").Is(matchGraphShortestPathBody);
-            gb.Prod("MatchGraphShortestPath").Is(matchGraphShortestPathBody, "+");
-            gb.Prod("MatchGraphShortestPath").Is(matchGraphShortestPathBody, "{", number, ",", number, "}");
-            gb.Prod("MatchGraphPath").Is(identifierTerm);
-            gb.Prod("MatchGraphPath").Is(identifierTerm, matchGraphStepChain);
-            gb.Prod("MatchGraphShortestPathBody").Is(identifierTerm, "(", matchGraphStepChain, ")");
-            gb.Rule(matchGraphStep)
-                .CanBe("-", "(", identifierTerm, ")", "-", ">", identifierTerm)
-                .Or("<", "-", "(", identifierTerm, ")", "-", identifierTerm)
-                .Or("-", "(", identifierTerm, ")", "-", identifierTerm);
-            gb.Prod("MatchGraphStepChain").Is(matchGraphStep);
-            gb.Prod("MatchGraphStepChain").Is(matchGraphStepChain, matchGraphStep);
+            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.GraphExtensions))
+            {
+                BuildGraphGrammar(
+                    gb,
+                    matchGraphPattern,
+                    matchGraphPath,
+                    matchGraphStep,
+                    matchGraphStepChain,
+                    matchGraphShortestPath,
+                    matchGraphShortestPathBody,
+                    identifierTerm,
+                    number);
+            }
 
             if (HasFeature(dialectFeatures, MsSqlDialectFeatures.SynapseExtensions))
             {
@@ -3103,7 +3067,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("StrictQualifiedName").Is(strictQualifiedName, ".", ".", strictIdentifierTerm); // double-dot: master..table
             gb.Prod("QualifiedName").Is(identifierTerm);
             gb.Prod("QualifiedName").Is(qualifiedName, ".", identifierTerm);
-            gb.Prod("QualifiedName").Is(qualifiedName, ".", graphColumnRef);
+            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.GraphExtensions))
+            {
+                gb.Prod("QualifiedName").Is(qualifiedName, ".", graphColumnRef);
+            }
             gb.Prod("QualifiedName").Is(qualifiedName, ".", ".", identifierTerm); // double-dot: master..table
 
             BuildSecurityPolicyGrammar(
@@ -3217,6 +3184,93 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("DropTriggerStatement").Is("DROP", "TRIGGER", dropIfExistsClause, qualifiedName, "ON", "DATABASE");
         }
 
+        private static void BuildGraphGrammar(
+            GrammarBuilder gb,
+            INonTerminal matchGraphPattern,
+            INonTerminal matchGraphPath,
+            INonTerminal matchGraphStep,
+            INonTerminal matchGraphStepChain,
+            INonTerminal matchGraphShortestPath,
+            INonTerminal matchGraphShortestPathBody,
+            INonTerminal identifierTerm,
+            ITerminal number)
+        {
+            gb.Prod("MatchGraphPattern").Is(matchGraphPath);
+            gb.Prod("MatchGraphPattern").Is("SHORTEST_PATH", "(", matchGraphShortestPath, ")");
+            gb.Prod("MatchGraphPattern").Is(matchGraphPattern, "AND", matchGraphPath);
+            gb.Prod("MatchGraphPattern").Is(matchGraphPattern, "AND", "SHORTEST_PATH", "(", matchGraphShortestPath, ")");
+            gb.Prod("MatchGraphShortestPath").Is(matchGraphShortestPathBody);
+            gb.Prod("MatchGraphShortestPath").Is(matchGraphShortestPathBody, "+");
+            gb.Prod("MatchGraphShortestPath").Is(matchGraphShortestPathBody, "{", number, ",", number, "}");
+            gb.Prod("MatchGraphPath").Is(identifierTerm);
+            gb.Prod("MatchGraphPath").Is(identifierTerm, matchGraphStepChain);
+            gb.Prod("MatchGraphShortestPathBody").Is(identifierTerm, "(", matchGraphStepChain, ")");
+            gb.Rule(matchGraphStep)
+                .CanBe("-", "(", identifierTerm, ")", "-", ">", identifierTerm)
+                .Or("<", "-", "(", identifierTerm, ")", "-", identifierTerm)
+                .Or("-", "(", identifierTerm, ")", "-", identifierTerm);
+            gb.Prod("MatchGraphStepChain").Is(matchGraphStep);
+            gb.Prod("MatchGraphStepChain").Is(matchGraphStepChain, matchGraphStep);
+        }
+
+        private static void BuildMergeGrammar(
+            GrammarBuilder gb,
+            INonTerminal mergeTargetTable,
+            INonTerminal mergeSourceTable,
+            INonTerminal mergeOutputClauseOpt,
+            INonTerminal mergeOptionClauseOpt,
+            INonTerminal mergeWhenList,
+            INonTerminal mergeWhen,
+            INonTerminal mergeMatchedAction,
+            INonTerminal mergeNotMatchedAction,
+            INonTerminal qualifiedName,
+            INonTerminal identifierTerm,
+            INonTerminal tableHintLimitedList,
+            INonTerminal tableSource,
+            INonTerminal deleteOutputClause,
+            INonTerminal optionClause,
+            INonTerminal topValue,
+            INonTerminal searchCondition,
+            INonTerminal updateSetList,
+            INonTerminal insertColumnList,
+            INonTerminal insertValueList)
+        {
+            gb.Prod("MergeTargetTable").Is(qualifiedName);
+            gb.Prod("MergeTargetTable").Is(qualifiedName, "AS", identifierTerm);
+            gb.Prod("MergeTargetTable").Is(qualifiedName, identifierTerm);
+            gb.Prod("MergeTargetTable").Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")");
+            gb.Prod("MergeTargetTable").Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")", "AS", identifierTerm);
+            gb.Prod("MergeTargetTable").Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")", identifierTerm);
+            gb.Prod("MergeSourceTable").Is(tableSource);
+            gb.Opt(mergeOutputClauseOpt, deleteOutputClause);
+            gb.Opt(mergeOptionClauseOpt, optionClause);
+            gb.Rule("MergeStatement").OneOf(
+                gb.Seq("MERGE", mergeTargetTable, "USING", mergeSourceTable, "ON", searchCondition, mergeWhenList, mergeOutputClauseOpt, mergeOptionClauseOpt),
+                gb.Seq("MERGE", "INTO", mergeTargetTable, "USING", mergeSourceTable, "ON", searchCondition, mergeWhenList, mergeOutputClauseOpt, mergeOptionClauseOpt),
+                gb.Seq("MERGE", "TOP", topValue, mergeTargetTable, "USING", mergeSourceTable, "ON", searchCondition, mergeWhenList, mergeOutputClauseOpt, mergeOptionClauseOpt),
+                gb.Seq("MERGE", "TOP", topValue, "PERCENT", mergeTargetTable, "USING", mergeSourceTable, "ON", searchCondition, mergeWhenList, mergeOutputClauseOpt, mergeOptionClauseOpt),
+                gb.Seq("MERGE", "TOP", topValue, "INTO", mergeTargetTable, "USING", mergeSourceTable, "ON", searchCondition, mergeWhenList, mergeOutputClauseOpt, mergeOptionClauseOpt),
+                gb.Seq("MERGE", "TOP", topValue, "PERCENT", "INTO", mergeTargetTable, "USING", mergeSourceTable, "ON", searchCondition, mergeWhenList, mergeOutputClauseOpt, mergeOptionClauseOpt));
+            gb.Rule("MergeWhenList").Plus(mergeWhen);
+            gb.Rule("MergeWhen").OneOf(
+                gb.Seq("WHEN", "MATCHED", "THEN", mergeMatchedAction),
+                gb.Seq("WHEN", "MATCHED", "AND", searchCondition, "THEN", mergeMatchedAction),
+                gb.Seq("WHEN", "NOT", "MATCHED", "THEN", mergeNotMatchedAction),
+                gb.Seq("WHEN", "NOT", "MATCHED", "AND", searchCondition, "THEN", mergeNotMatchedAction),
+                gb.Seq("WHEN", "NOT", "MATCHED", "BY", "TARGET", "THEN", mergeNotMatchedAction),
+                gb.Seq("WHEN", "NOT", "MATCHED", "BY", "TARGET", "AND", searchCondition, "THEN", mergeNotMatchedAction),
+                gb.Seq("WHEN", "NOT", "MATCHED", "BY", "SOURCE", "THEN", mergeMatchedAction),
+                gb.Seq("WHEN", "NOT", "MATCHED", "BY", "SOURCE", "AND", searchCondition, "THEN", mergeMatchedAction));
+            gb.Rule("MergeMatchedAction").OneOf(
+                gb.Seq("UPDATE", "SET", updateSetList),
+                "DELETE");
+            gb.Rule("MergeNotMatchedAction").OneOf(
+                gb.Seq("INSERT", "(", insertColumnList, ")", "VALUES", "(", insertValueList, ")"),
+                gb.Seq("INSERT", "VALUES", "(", insertValueList, ")"),
+                gb.Seq("INSERT", "(", insertColumnList, ")", "DEFAULT", "VALUES"),
+                gb.Seq("INSERT", "DEFAULT", "VALUES"));
+        }
+
         private static void BuildSecurityPolicyGrammar(
             GrammarBuilder gb,
             INonTerminal createSecurityPolicyStatement,
@@ -3290,6 +3344,44 @@ namespace DSLKIT.GrammarExamples.MsSql
                 "PUSHDOWN");
         }
 
+        private static void BuildBulkInsertGrammar(
+            GrammarBuilder gb,
+            INonTerminal bulkInsertOptionList,
+            INonTerminal qualifiedName,
+            INonTerminal expression,
+            INonTerminal namedOptionValue,
+            INonTerminal createTableKeyColumnList)
+        {
+            gb.Prod("BulkInsertStatement").Is("BULK", "INSERT", qualifiedName, "FROM", expression);
+            gb.Prod("BulkInsertStatement").Is("BULK", "INSERT", qualifiedName, "FROM", expression, "WITH", "(", bulkInsertOptionList, ")");
+            DefineKeywordAndNamedOptionList(
+                gb,
+                bulkInsertOptionList,
+                namedOptionValue,
+                ["CHECK_CONSTRAINTS", "KEEPIDENTITY", "KEEPNULLS", "TABLOCK", "FIRE_TRIGGERS"],
+                [
+                    "CODEPAGE",
+                    "DATAFILETYPE",
+                    "DATA_SOURCE",
+                    "ERRORFILE",
+                    "ERRORFILE_DATA_SOURCE",
+                    "FIRSTROW",
+                    "FORMAT",
+                    "FIELDQUOTE",
+                    "FORMATFILE",
+                    "FORMATFILE_DATA_SOURCE",
+                    "KILOBYTES_PER_BATCH",
+                    "LASTROW",
+                    "MAXERRORS",
+                    "ROWS_PER_BATCH",
+                    "ROWTERMINATOR",
+                    "FIELDTERMINATOR",
+                    "BATCHSIZE"
+                ]);
+            gb.Prod("BulkInsertOptionList").Is("ORDER", "(", createTableKeyColumnList, ")");
+            gb.Prod("BulkInsertOptionList").Is(bulkInsertOptionList, ",", "ORDER", "(", createTableKeyColumnList, ")");
+        }
+
         private static void DefineNamedOptionList(
             GrammarBuilder gb,
             INonTerminal list,
@@ -3302,6 +3394,34 @@ namespace DSLKIT.GrammarExamples.MsSql
             }
 
             foreach (var optionName in optionNames)
+            {
+                gb.Prod(list.Name).Is(list, ",", optionName, "=", namedOptionValue);
+            }
+        }
+
+        private static void DefineKeywordAndNamedOptionList(
+            GrammarBuilder gb,
+            INonTerminal list,
+            INonTerminal namedOptionValue,
+            IEnumerable<string> keywordOptionNames,
+            IEnumerable<string> namedOptionNames)
+        {
+            foreach (var optionName in keywordOptionNames)
+            {
+                gb.Prod(list.Name).Is(optionName);
+            }
+
+            foreach (var optionName in namedOptionNames)
+            {
+                gb.Prod(list.Name).Is(optionName, "=", namedOptionValue);
+            }
+
+            foreach (var optionName in keywordOptionNames)
+            {
+                gb.Prod(list.Name).Is(list, ",", optionName);
+            }
+
+            foreach (var optionName in namedOptionNames)
             {
                 gb.Prod(list.Name).Is(list, ",", optionName, "=", namedOptionValue);
             }
