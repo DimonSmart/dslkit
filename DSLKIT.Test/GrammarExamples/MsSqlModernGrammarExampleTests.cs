@@ -159,6 +159,21 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseEmptyBeginEndBlock()
+        {
+            const string script = """
+                IF 1 = 1
+                BEGIN
+                END;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseDeclareTableVariable_WithAndWithoutAs()
         {
             const string script = """
@@ -437,6 +452,23 @@ namespace DSLKIT.Test.GrammarExamples
             const string script = """
                 if exists (select * from sysobjects where id = object_id('dbo.SalesByCategory') and sysstat & 0xf = 4)
                 	drop procedure "dbo"."SalesByCategory"
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseScript(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseBitwiseOrAndXorExpressions()
+        {
+            const string script = """
+                SELECT a | b AS BitwiseOrResult
+                FROM dbo.Flags;
+
+                SELECT a ^ b AS BitwiseXorResult
+                FROM dbo.Flags;
                 """;
 
             var parseResult = ModernMsSqlGrammarExample.ParseScript(script);

@@ -298,6 +298,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.OnShiftReduce("QueryIntersectExpression", "INTERSECT", Resolve.Reduce);
             var script = gb.NT("Script");
             var statementList = gb.NT("StatementList");
+            var statementListOpt = gb.NT("StatementListOpt");
             var statementSeparator = gb.NT("StatementSeparator");
             var statementSeparatorList = gb.NT("StatementSeparatorList");
             var statement = gb.NT("Statement");
@@ -745,6 +746,10 @@ namespace DSLKIT.GrammarExamples.MsSql
                 statement,
                 gb.Seq(statementList, statementSeparatorList, statement),
                 gb.Seq(statementList, implicitStatementNoLeadingWith));
+            gb.Rule("StatementListOpt").OneOf(
+                EmptyTerm.Empty,
+                statementList,
+                gb.Seq(statementList, statementSeparatorList));
             gb.Rule("StatementSeparatorList").Plus(statementSeparator);
             gb.Rule("StatementSeparator").OneOf(";");
             gb.Rule("Statement").OneOf(statementNoLeadingWith, leadingWithStatement);
@@ -1038,8 +1043,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("IfStatement").Is("IF", searchCondition, ifBranchStatement);
             gb.Prod("IfStatement").Is("IF", searchCondition, ifBranchStatement, "ELSE", ifBranchStatement);
             gb.Prod("IfStatement").Is("IF", searchCondition, ifBranchStatement, "ELSE", ifStatement);
-            gb.Prod("BeginEndStatement").Is("BEGIN", statementList, "END");
-            gb.Prod("BeginEndStatement").Is("BEGIN", statementList, statementSeparatorList, "END");
+            gb.Prod("BeginEndStatement").Is("BEGIN", statementListOpt, "END");
             gb.Prod("WhileStatement").Is("WHILE", searchCondition, statement);
 
             gb.Rule(setOptionName)
@@ -2273,6 +2277,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("AdditiveExpression").Is(additiveExpression, "+", multiplicativeExpression);
             gb.Prod("AdditiveExpression").Is(additiveExpression, "-", multiplicativeExpression);
             gb.Prod("AdditiveExpression").Is(additiveExpression, "&", multiplicativeExpression);
+            gb.Prod("AdditiveExpression").Is(additiveExpression, "|", multiplicativeExpression);
+            gb.Prod("AdditiveExpression").Is(additiveExpression, "^", multiplicativeExpression);
 
             gb.Prod("MultiplicativeExpression").Is(unaryExpression);
             gb.Prod("MultiplicativeExpression").Is(multiplicativeExpression, "*", unaryExpression);
