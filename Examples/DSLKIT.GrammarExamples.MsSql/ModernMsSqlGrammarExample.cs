@@ -822,157 +822,82 @@ namespace DSLKIT.GrammarExamples.MsSql
             var forXmlMode = gb.NT("ForXmlMode");
             var forXmlOptionList = gb.NT("ForXmlOptionList");
             var forXmlOption = gb.NT("ForXmlOption");
-            var statementNoLeadingWithAlternatives = new List<object>
-            {
-                queryStatementNoLeadingWith,
-                updateStatement,
-                insertStatement,
-                deleteStatement,
-                ifStatement,
-                beginEndStatement,
-                whileStatement,
-                setStatement,
-                printStatement,
-                declareStatement,
-                returnStatement,
-                transactionStatement,
-                raiserrorStatement,
-                throwStatement,
-                loopControlStatement,
-                gotoStatement,
-                labelStatement,
-                executeStatement,
-                useStatement,
-                createProcStatement,
-                createFunctionStatement,
-                grantStatement,
-                dbccStatement,
-                dropProcStatement,
-                dropTableStatement,
-                dropViewStatement,
-                dropIndexStatement,
-                dropStatisticsStatement,
-                dropDatabaseStatement,
-                createRoleStatement,
-                createSchemaStatement,
-                createViewStatement,
-                createTableStatement,
-                alterTableStatement,
-                createIndexStatement,
-                alterIndexStatement,
-                createDatabaseStatement,
-                createTriggerStatement,
-                dropTriggerStatement,
-                tryCatchStatement,
-                truncateStatement,
-                alterDatabaseStatement,
-                declareCursorStatement,
-                cursorOperationStatement,
-                waitforStatement,
-                createLoginStatement,
-                bulkInsertStatement,
-                checkpointStatement,
-                createUserStatement,
-                createStatisticsStatement,
-                updateStatisticsStatement,
-                dropTypeStatement,
-                dropColumnEncryptionKeyStatement,
-                revertStatement,
-                dropEventSessionStatement,
-                createTypeStatement,
-                createSecurityPolicyStatement,
-                alterSecurityPolicyStatement,
-                mergeStatement
-            };
+            var statementRegistry = new MsSqlStatementRegistry();
+            statementRegistry.Add(queryStatementNoLeadingWith, implicitQueryStatementNoLeadingWith);
+            statementRegistry.Add(updateStatement);
+            statementRegistry.Add(insertStatement);
+            statementRegistry.Add(deleteStatement);
+            statementRegistry.Add(ifStatement);
+            statementRegistry.Add(beginEndStatement);
+            statementRegistry.Add(whileStatement);
+            statementRegistry.Add(setStatement);
+            statementRegistry.Add(printStatement);
+            statementRegistry.Add(declareStatement);
+            statementRegistry.Add(returnStatement, allowedInFunctionPrelude: false);
+            statementRegistry.Add(transactionStatement);
+            statementRegistry.Add(raiserrorStatement);
+            statementRegistry.Add(throwStatement);
+            statementRegistry.Add(loopControlStatement);
+            statementRegistry.Add(gotoStatement);
+            statementRegistry.Add(labelStatement, labelOnlyStatement);
+            statementRegistry.Add(executeStatement);
+            statementRegistry.Add(useStatement);
+            statementRegistry.Add(createProcStatement);
+            statementRegistry.Add(createFunctionStatement);
+            statementRegistry.Add(grantStatement);
+            statementRegistry.Add(dbccStatement);
+            statementRegistry.Add(dropProcStatement);
+            statementRegistry.Add(dropTableStatement);
+            statementRegistry.Add(dropViewStatement);
+            statementRegistry.Add(dropIndexStatement);
+            statementRegistry.Add(dropStatisticsStatement);
+            statementRegistry.Add(dropDatabaseStatement);
+            statementRegistry.Add(createRoleStatement);
+            statementRegistry.Add(createSchemaStatement);
+            statementRegistry.Add(createViewStatement);
+            statementRegistry.Add(createTableStatement);
+            statementRegistry.Add(alterTableStatement);
+            statementRegistry.Add(createIndexStatement);
+            statementRegistry.Add(alterIndexStatement);
+            statementRegistry.Add(createDatabaseStatement);
+            statementRegistry.Add(createTriggerStatement);
+            statementRegistry.Add(dropTriggerStatement);
+            statementRegistry.Add(tryCatchStatement);
+            statementRegistry.Add(truncateStatement);
+            statementRegistry.Add(alterDatabaseStatement);
+            statementRegistry.Add(declareCursorStatement);
+            statementRegistry.Add(cursorOperationStatement);
+            statementRegistry.Add(waitforStatement);
+            statementRegistry.Add(createLoginStatement);
+            statementRegistry.Add(bulkInsertStatement);
+            statementRegistry.Add(checkpointStatement);
+            statementRegistry.Add(createUserStatement);
+            statementRegistry.Add(createStatisticsStatement);
+            statementRegistry.Add(updateStatisticsStatement);
+            statementRegistry.Add(dropTypeStatement);
+            statementRegistry.Add(dropColumnEncryptionKeyStatement);
+            statementRegistry.Add(revertStatement);
+            statementRegistry.Add(dropEventSessionStatement);
+            statementRegistry.Add(createTypeStatement);
+            statementRegistry.Add(createSecurityPolicyStatement);
+            statementRegistry.Add(alterSecurityPolicyStatement);
+            statementRegistry.Add(mergeStatement);
+
             if (HasFeature(dialectFeatures, MsSqlDialectFeatures.SynapseExtensions))
             {
-                statementNoLeadingWithAlternatives.Add(createTableAsSelectStatement);
+                statementRegistry.Add(createTableAsSelectStatement);
             }
 
             if (HasFeature(dialectFeatures, MsSqlDialectFeatures.ExternalObjects))
             {
-                statementNoLeadingWithAlternatives.Add(createExternalTableStatement);
-                statementNoLeadingWithAlternatives.Add(createExternalDataSourceStatement);
+                statementRegistry.Add(createExternalTableStatement);
+                statementRegistry.Add(createExternalDataSourceStatement);
             }
 
-            var implicitStatementNoLeadingWithAlternatives = new List<object>
-            {
-                implicitQueryStatementNoLeadingWith,
-                updateStatement,
-                insertStatement,
-                deleteStatement,
-                ifStatement,
-                beginEndStatement,
-                whileStatement,
-                setStatement,
-                printStatement,
-                declareStatement,
-                returnStatement,
-                transactionStatement,
-                raiserrorStatement,
-                throwStatement,
-                loopControlStatement,
-                gotoStatement,
-                labelOnlyStatement,
-                executeStatement,
-                useStatement,
-                createProcStatement,
-                createFunctionStatement,
-                grantStatement,
-                dbccStatement,
-                dropProcStatement,
-                dropTableStatement,
-                dropViewStatement,
-                dropIndexStatement,
-                dropStatisticsStatement,
-                dropDatabaseStatement,
-                createRoleStatement,
-                createSchemaStatement,
-                createViewStatement,
-                createTableStatement,
-                alterTableStatement,
-                createIndexStatement,
-                alterIndexStatement,
-                createDatabaseStatement,
-                createTriggerStatement,
-                dropTriggerStatement,
-                tryCatchStatement,
-                truncateStatement,
-                alterDatabaseStatement,
-                declareCursorStatement,
-                cursorOperationStatement,
-                waitforStatement,
-                createLoginStatement,
-                bulkInsertStatement,
-                checkpointStatement,
-                createUserStatement,
-                createStatisticsStatement,
-                updateStatisticsStatement,
-                dropTypeStatement,
-                dropColumnEncryptionKeyStatement,
-                revertStatement,
-                dropEventSessionStatement,
-                createTypeStatement,
-                createSecurityPolicyStatement,
-                alterSecurityPolicyStatement,
-                mergeStatement
-            };
-            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.SynapseExtensions))
-            {
-                implicitStatementNoLeadingWithAlternatives.Add(createTableAsSelectStatement);
-            }
-
-            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.ExternalObjects))
-            {
-                implicitStatementNoLeadingWithAlternatives.Add(createExternalTableStatement);
-                implicitStatementNoLeadingWithAlternatives.Add(createExternalDataSourceStatement);
-            }
-            var createFunctionPreludeStatementNoLeadingWithAlternatives = statementNoLeadingWithAlternatives
-                .Where(alternative => !ReferenceEquals(alternative, returnStatement))
-                .ToArray();
-            var createFunctionImplicitPreludeStatementNoLeadingWithAlternatives = implicitStatementNoLeadingWithAlternatives
-                .Where(alternative => !ReferenceEquals(alternative, returnStatement))
-                .ToArray();
+            var statementNoLeadingWithAlternatives = statementRegistry.CreateTopLevelAlternatives();
+            var implicitStatementNoLeadingWithAlternatives = statementRegistry.CreateImplicitAlternatives();
+            var createFunctionPreludeStatementNoLeadingWithAlternatives = statementRegistry.CreateFunctionPreludeAlternatives();
+            var createFunctionImplicitPreludeStatementNoLeadingWithAlternatives = statementRegistry.CreateFunctionImplicitPreludeAlternatives();
 
             void BuildQueryExpressionGrammar()
             {

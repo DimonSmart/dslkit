@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using DSLKIT.GrammarExamples.MsSql;
 using DSLKIT.Parser;
+using DSLKIT.Terminals;
 using FluentAssertions;
 using Xunit;
 
@@ -1133,17 +1134,19 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
-        public void BuildGrammar_ShouldExposeExpectedResolvedShiftReduceConflicts()
+        public void BuildGrammar_ShouldBuildConflictInventoryFromParserDiagnostics()
         {
             var grammar = ModernMsSqlGrammarExample.BuildGrammar();
+            var inventory = BuildConflictInventory(grammar.ActionAndGotoTable.Conflicts);
 
-            var conflictSet = grammar.ActionAndGotoTable.Conflicts
-                .Where(conflict => conflict.Kind == ParserConflictKind.ShiftReduce && conflict.Resolution != null)
-                .Select(conflict => $"{conflict.Kind}:{conflict.TerminalName}:{conflict.Resolution}")
-                .OrderBy(conflict => conflict)
-                .ToArray();
-
-            conflictSet.Should().Equal("ShiftReduce:ELSE:Shift");
+            inventory.Should().ContainSingle(item =>
+                item.Kind == ParserConflictKind.ShiftReduce &&
+                item.TerminalName == "ELSE" &&
+                item.Resolution == Resolve.Shift);
+            inventory.Should().Contain(item =>
+                item.Kind == ParserConflictKind.ShiftReduce &&
+                item.Resolution == null);
+            inventory.Should().Contain(item => item.Kind == ParserConflictKind.ReduceReduce);
         }
 
         [Fact]
@@ -2318,9 +2321,35 @@ namespace DSLKIT.Test.GrammarExamples
             }
         }
 
+        private static IReadOnlyList<ConflictInventoryItem> BuildConflictInventory(IEnumerable<ParserConflict> conflicts)
+        {
+            return conflicts
+                .GroupBy(conflict => new
+                {
+                    conflict.Kind,
+                    conflict.TerminalName,
+                    conflict.Resolution
+                })
+                .Select(group => new ConflictInventoryItem(
+                    group.Key.Kind,
+                    group.Key.TerminalName,
+                    group.Key.Resolution,
+                    group.Count()))
+                .OrderBy(item => item.Kind)
+                .ThenBy(item => item.TerminalName, StringComparer.Ordinal)
+                .ThenBy(item => item.Resolution?.ToString(), StringComparer.Ordinal)
+                .ToArray();
+        }
+
         private static int CountPathSegment(IReadOnlyList<string> path, string segment)
         {
             return path.Count(item => string.Equals(item, segment, StringComparison.Ordinal));
         }
+
+        private sealed record ConflictInventoryItem(
+            ParserConflictKind Kind,
+            string TerminalName,
+            Resolve? Resolution,
+            int Count);
     }
 }
