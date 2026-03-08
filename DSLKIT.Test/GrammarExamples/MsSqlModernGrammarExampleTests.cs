@@ -914,6 +914,27 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseTypeSpec_WithMaxArguments()
+        {
+            const string script = """
+                DECLARE @payload VARBINARY(MAX);
+                DECLARE @text NVARCHAR(MAX);
+
+                CREATE FUNCTION dbo.ufn_Echo(@value NVARCHAR(MAX))
+                RETURNS NVARCHAR(MAX)
+                AS
+                BEGIN
+                    RETURN @value;
+                END;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseCreateFunction_WithPreludeStatementsBeforeRequiredReturn()
         {
             const string script = """
@@ -954,6 +975,9 @@ namespace DSLKIT.Test.GrammarExamples
                 ("CREATE FUNCTION dbo.f(@x int) RETURNS int AS RETURN (SELECT 1);", "scalar functions must not use inline table-valued RETURN syntax"),
                 ("CREATE FUNCTION dbo.f(@x int) RETURNS TABLE AS BEGIN RETURN; END;", "inline table-valued functions must return a query expression"),
                 ("CREATE FUNCTION dbo.f(@x int) RETURNS @t TABLE (Id int) AS RETURN SELECT 1 AS Id;", "multi-statement table-valued functions must use a block body"),
+                ("CREATE FUNCTION dbo.f(@x int) RETURNS int BEGIN RETURN 1; END", "scalar functions require AS before BEGIN"),
+                ("CREATE FUNCTION dbo.f(@x int) RETURNS TABLE RETURN SELECT 1 AS Id", "inline table-valued functions require AS before RETURN"),
+                ("CREATE FUNCTION dbo.f(@x int) RETURNS @t TABLE (Id int) BEGIN RETURN; END", "multi-statement table-valued functions require AS before BEGIN"),
                 ("CREATE FUNCTION dbo.f(@x int) RETURNS int AS BEGIN SELECT 1; END;", "scalar functions must end with RETURN <expression>"),
                 ("CREATE FUNCTION dbo.f(@x int) RETURNS int AS BEGIN RETURN; END;", "scalar functions must not use bare RETURN"),
                 ("CREATE FUNCTION dbo.f(@x int) RETURNS @t TABLE (Id int) AS BEGIN INSERT INTO @t VALUES (1); END;", "multi-statement table-valued functions must end with RETURN"),
@@ -1091,6 +1115,21 @@ namespace DSLKIT.Test.GrammarExamples
             parseResult.IsSuccess.Should().Be(
                 shouldSucceed,
                 $"sqlcmd preprocessing support should be {shouldSucceed} for {dialectFeatures}.");
+        }
+
+        [Fact]
+        public void BuildGrammar_ShouldIgnoreSqlcmdPreprocessing_InGrammarCache()
+        {
+            var grammarWithSqlcmd = ModernMsSqlGrammarExample.BuildGrammar(MsSqlDialectFeatures.All);
+            var grammarWithoutSqlcmd = ModernMsSqlGrammarExample.BuildGrammar(
+                MsSqlDialectFeatures.SqlServerCore |
+                MsSqlDialectFeatures.ExternalObjects |
+                MsSqlDialectFeatures.SynapseExtensions |
+                MsSqlDialectFeatures.GraphExtensions);
+
+            grammarWithSqlcmd.Should().BeSameAs(
+                grammarWithoutSqlcmd,
+                "SqlCmdPreprocessing changes document splitting, but not the batch grammar.");
         }
 
         [Fact]

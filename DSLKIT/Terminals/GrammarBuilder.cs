@@ -244,6 +244,16 @@ namespace DSLKIT.Terminals
             return new ProductionBuilder(this, ruleName);
         }
 
+        public ProductionBuilder Prod(INonTerminal nonTerminal)
+        {
+            if (nonTerminal == null)
+            {
+                throw new ArgumentNullException(nameof(nonTerminal));
+            }
+
+            return Prod(nonTerminal.Name);
+        }
+
         public GrammarRuleBuilder Rule(string ruleName)
         {
             if (string.IsNullOrWhiteSpace(ruleName))
