@@ -764,6 +764,31 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseUpdateStatistics_WithKnownOptions()
+        {
+            const string script = """
+                UPDATE STATISTICS dbo.Customers IX_Customers_Name
+                WITH FULLSCAN, NORECOMPUTE, SAMPLE 20 PERCENT, MAXDOP = 2, AUTO_DROP = ON, ROWCOUNT = 10, PAGECOUNT = 2;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Theory]
+        [InlineData("UPDATE STATISTICS dbo.Customers WITH GRAPH = ON;")]
+        [InlineData("UPDATE STATISTICS dbo.Customers WITH Banana;")]
+        [InlineData("UPDATE STATISTICS dbo.Customers WITH SAMPLE 20;")]
+        public void ParseScript_ShouldRejectUpdateStatistics_WithUnknownOrMalformedOptions(string script)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse("UPDATE STATISTICS WITH should only accept the known option forms.");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseOpenRowsetBulk_Variants()
         {
             const string script = """
@@ -1047,6 +1072,27 @@ namespace DSLKIT.Test.GrammarExamples
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
 
+        [Theory]
+        [InlineData(MsSqlDialectFeatures.SqlServerCore, false)]
+        [InlineData(MsSqlDialectFeatures.SqlServerCore | MsSqlDialectFeatures.GraphExtensions, false)]
+        [InlineData(MsSqlDialectFeatures.SqlServerCore | MsSqlDialectFeatures.SqlCmdPreprocessing, true)]
+        [InlineData(MsSqlDialectFeatures.All, true)]
+        public void ParseDocument_ShouldRespectSqlcmdFeature_AcrossDialectMatrix(
+            MsSqlDialectFeatures dialectFeatures,
+            bool shouldSucceed)
+        {
+            const string script = """
+                :setvar JobOwner sa
+                PRINT N'after sqlcmd preprocessor commands';
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseDocument(script, dialectFeatures);
+
+            parseResult.IsSuccess.Should().Be(
+                shouldSucceed,
+                $"sqlcmd preprocessing support should be {shouldSucceed} for {dialectFeatures}.");
+        }
+
         [Fact]
         public void ParseScript_ShouldRejectSqlcmdPreprocessorCommands_WhenFeatureDisabled()
         {
@@ -1116,6 +1162,35 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldParseCursorStatements()
+        {
+            const string script = """
+                DECLARE c CURSOR LOCAL FAST_FORWARD FOR SELECT 1 AS Id;
+                OPEN c;
+                FETCH NEXT FROM c;
+                CLOSE c;
+                DEALLOCATE c;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Theory]
+        [InlineData("DECLARE GRAPH CURSOR FOR SELECT 1;")]
+        [InlineData("OPEN GRAPH;")]
+        [InlineData("GOTO GRAPH;")]
+        [InlineData("GRAPH: PRINT 1;")]
+        public void ParseScript_ShouldRejectProceduralIdentifiers_WithContextualKeywords(string script)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse("procedural identifiers should not accept unrelated contextual keywords.");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseSystemFunctionWithDoubleColonPrefix()
         {
             const string script = """
@@ -1174,6 +1249,28 @@ namespace DSLKIT.Test.GrammarExamples
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
 
+        [Theory]
+        [InlineData(MsSqlDialectFeatures.SqlServerCore, false)]
+        [InlineData(MsSqlDialectFeatures.SqlServerCore | MsSqlDialectFeatures.GraphExtensions, true)]
+        [InlineData(MsSqlDialectFeatures.SqlServerCore | MsSqlDialectFeatures.SqlCmdPreprocessing, false)]
+        [InlineData(MsSqlDialectFeatures.All, true)]
+        public void ParseScript_ShouldRespectGraphFeature_AcrossDialectMatrix(
+            MsSqlDialectFeatures dialectFeatures,
+            bool shouldSucceed)
+        {
+            const string script = """
+                SELECT *
+                FROM PRODUCT P1, PRODUCT FOR PATH P2, ISPARTOF FOR PATH IPO
+                WHERE MATCH(SHORTEST_PATH(P1(-(IPO)->P2)+));
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script, dialectFeatures);
+
+            parseResult.IsSuccess.Should().Be(
+                shouldSucceed,
+                $"graph syntax support should be {shouldSucceed} for {dialectFeatures}.");
+        }
+
         [Fact]
         public void ParseScript_ShouldRejectSqlGraphSyntax_WhenFeatureDisabled()
         {
@@ -1191,6 +1288,26 @@ namespace DSLKIT.Test.GrammarExamples
                 MsSqlDialectFeatures.SqlCmdPreprocessing);
 
             parseResult.IsSuccess.Should().BeFalse("graph syntax should be gated behind GraphExtensions.");
+        }
+
+        [Theory]
+        [InlineData(MsSqlDialectFeatures.SqlServerCore)]
+        [InlineData(MsSqlDialectFeatures.SqlServerCore | MsSqlDialectFeatures.GraphExtensions)]
+        [InlineData(MsSqlDialectFeatures.SqlServerCore | MsSqlDialectFeatures.SqlCmdPreprocessing)]
+        [InlineData(MsSqlDialectFeatures.All)]
+        public void ParseScript_ShouldParseCoreQuery_AcrossDialectMatrix(MsSqlDialectFeatures dialectFeatures)
+        {
+            const string script = """
+                SELECT TOP (1) 1 AS Id
+                FROM dbo.T
+                WHERE 1 = 1
+                ORDER BY Id;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script, dialectFeatures);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"core query grammar should remain available for {dialectFeatures}, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
 
         [Fact]
