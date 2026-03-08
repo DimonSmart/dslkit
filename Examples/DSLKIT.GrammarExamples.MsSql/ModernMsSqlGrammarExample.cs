@@ -377,15 +377,15 @@ namespace DSLKIT.GrammarExamples.MsSql
             var deleteStatementTailNoOutput = gb.NT("DeleteStatementTailNoOutput");
             var deleteStatementTailNoFrom = gb.NT("DeleteStatementTailNoFrom");
             var deleteOptionOpt = gb.NT("DeleteOptionOpt");
-            var deleteOutputClause = gb.NT("DeleteOutputClause");
-            var deleteOutputTarget = gb.NT("DeleteOutputTarget");
-            var deleteOutputIntoColumnListOpt = gb.NT("DeleteOutputIntoColumnListOpt");
+            var dmlOutputClause = gb.NT("DeleteOutputClause");
+            var dmlOutputTarget = gb.NT("DeleteOutputTarget");
+            var dmlOutputIntoColumnListOpt = gb.NT("DeleteOutputIntoColumnListOpt");
             var deleteSourceFromClause = gb.NT("DeleteSourceFromClause");
             var deleteWhereClause = gb.NT("DeleteWhereClause");
-            var deleteOptionClause = gb.NT("DeleteOptionClause");
-            var deleteQueryHintList = gb.NT("DeleteQueryHintList");
-            var deleteQueryHint = gb.NT("DeleteQueryHint");
-            var deleteQueryHintName = gb.NT("DeleteQueryHintName");
+            var queryOptionClause = gb.NT("DeleteOptionClause");
+            var queryHintList = gb.NT("DeleteQueryHintList");
+            var queryHint = gb.NT("DeleteQueryHint");
+            var queryHintName = gb.NT("DeleteQueryHintName");
             var optionClause = gb.NT("OptionClause");
             var ifStatement = gb.NT("IfStatement");
             var ifBranchStatement = gb.NT("IfBranchStatement");
@@ -1152,15 +1152,15 @@ namespace DSLKIT.GrammarExamples.MsSql
                 deleteStatementTailNoOutput,
                 deleteStatementTailNoFrom,
                 deleteOptionOpt,
-                deleteOutputClause,
-                deleteOutputTarget,
-                deleteOutputIntoColumnListOpt,
+                dmlOutputClause,
+                dmlOutputTarget,
+                dmlOutputIntoColumnListOpt,
                 deleteSourceFromClause,
                 deleteWhereClause,
-                deleteOptionClause,
-                deleteQueryHintList,
-                deleteQueryHint,
-                deleteQueryHintName,
+                queryOptionClause,
+                queryHintList,
+                queryHint,
+                queryHintName,
                 optionClause,
                 executeStatement);
 
@@ -1478,7 +1478,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 identifierTerm,
                 tableHintLimitedList,
                 tableSource,
-                deleteOutputClause,
+                dmlOutputClause,
                 optionClause,
                 topValue,
                 searchCondition,

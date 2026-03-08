@@ -29,15 +29,15 @@ namespace DSLKIT.GrammarExamples.MsSql
             INonTerminal deleteStatementTailNoOutput,
             INonTerminal deleteStatementTailNoFrom,
             INonTerminal deleteOptionOpt,
-            INonTerminal deleteOutputClause,
-            INonTerminal deleteOutputTarget,
-            INonTerminal deleteOutputIntoColumnListOpt,
+            INonTerminal dmlOutputClause,
+            INonTerminal dmlOutputTarget,
+            INonTerminal dmlOutputIntoColumnListOpt,
             INonTerminal deleteSourceFromClause,
             INonTerminal deleteWhereClause,
-            INonTerminal deleteOptionClause,
-            INonTerminal deleteQueryHintList,
-            INonTerminal deleteQueryHint,
-            INonTerminal deleteQueryHintName,
+            INonTerminal queryOptionClause,
+            INonTerminal queryHintList,
+            INonTerminal queryHint,
+            INonTerminal queryHintName,
             INonTerminal optionClause,
             INonTerminal executeStatement)
         {
@@ -81,8 +81,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(insertStatement).Is("INSERT", insertTarget, "VALUES", rowValueList);
             gb.Prod(insertStatement).Is("INSERT", insertTarget, executeStatement);
             gb.Prod(insertStatement).Is("INSERT", insertTarget, queryExpression);
-            gb.Prod(insertStatement).Is("INSERT", insertTarget, deleteOutputClause, "VALUES", rowValueList);
-            gb.Prod(insertStatement).Is("INSERT", insertTarget, deleteOutputClause, queryExpression);
+            gb.Prod(insertStatement).Is("INSERT", insertTarget, dmlOutputClause, "VALUES", rowValueList);
+            gb.Prod(insertStatement).Is("INSERT", insertTarget, dmlOutputClause, queryExpression);
             gb.Prod(insertTarget).Is("INTO", qualifiedName);
             gb.Prod(insertTarget).Is(qualifiedName);
             gb.Prod(insertTarget).Is("INTO", qualifiedName, "(", insertColumnList, ")");
@@ -145,19 +145,19 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .CanBe(identifierTerm)
                 .OrKeywords("INDEX");
 
-            gb.Prod(deleteStatementTail).Is(deleteOutputClause, deleteStatementTailNoOutput);
+            gb.Prod(deleteStatementTail).Is(dmlOutputClause, deleteStatementTailNoOutput);
             gb.Prod(deleteStatementTail).Is(deleteStatementTailNoOutput);
             gb.Prod(deleteStatementTailNoOutput).Is(deleteSourceFromClause, deleteStatementTailNoFrom);
             gb.Prod(deleteStatementTailNoOutput).Is(deleteStatementTailNoFrom);
             gb.Prod(deleteStatementTailNoFrom).Is(deleteWhereClause, deleteOptionOpt);
             gb.Prod(deleteStatementTailNoFrom).Is(deleteOptionOpt);
-            gb.Opt(deleteOptionOpt, deleteOptionClause);
+            gb.Opt(deleteOptionOpt, queryOptionClause);
 
-            gb.Prod(deleteOutputClause).Is("OUTPUT", selectItemList);
-            gb.Prod(deleteOutputClause).Is("OUTPUT", selectItemList, "INTO", deleteOutputTarget, deleteOutputIntoColumnListOpt);
-            gb.Prod(deleteOutputTarget).Is(qualifiedName);
-            gb.Prod(deleteOutputTarget).Is(variableReference);
-            gb.Opt(deleteOutputIntoColumnListOpt, "(", identifierList, ")");
+            gb.Prod(dmlOutputClause).Is("OUTPUT", selectItemList);
+            gb.Prod(dmlOutputClause).Is("OUTPUT", selectItemList, "INTO", dmlOutputTarget, dmlOutputIntoColumnListOpt);
+            gb.Prod(dmlOutputTarget).Is(qualifiedName);
+            gb.Prod(dmlOutputTarget).Is(variableReference);
+            gb.Opt(dmlOutputIntoColumnListOpt, "(", identifierList, ")");
 
             gb.Prod(deleteSourceFromClause).Is("FROM", tableSourceList);
 
@@ -168,35 +168,35 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .Or("WHERE", "CURRENT", "OF", "GLOBAL", identifierTerm)
                 .Or("WHERE", "CURRENT", "OF", "GLOBAL", variableReference);
 
-            gb.Prod(deleteOptionClause).Is("OPTION", "(", deleteQueryHintList, ")");
-            gb.Prod(deleteQueryHintList).Is(deleteQueryHint);
-            gb.Prod(deleteQueryHintList).Is(deleteQueryHintList, ",", deleteQueryHint);
-            gb.Prod(deleteQueryHint).Is(deleteQueryHintName);
-            gb.Prod(deleteQueryHint).Is("MAXDOP", expression);
-            gb.Prod(deleteQueryHint).Is("MAXDOP", "=", expression);
-            gb.Prod(deleteQueryHint).Is("MAXRECURSION", expression);
-            gb.Prod(deleteQueryHint).Is("MAXRECURSION", "=", expression);
-            gb.Prod(deleteQueryHint).Is("QUERYTRACEON", expression);
-            gb.Prod(deleteQueryHint).Is("MIN_GRANT_PERCENT", "=", expression);
-            gb.Prod(deleteQueryHint).Is("MAX_GRANT_PERCENT", "=", expression);
-            gb.Prod(deleteQueryHint).Is("LABEL", "=", expression);
-            gb.Prod(deleteQueryHint).Is("USE", "HINT", "(", expressionList, ")");
-            gb.Prod(deleteQueryHint).Is("HASH", "JOIN");
-            gb.Prod(deleteQueryHint).Is("MERGE", "JOIN");
-            gb.Prod(deleteQueryHint).Is("LOOP", "JOIN");
-            gb.Prod(deleteQueryHint).Is("HASH", "GROUP");
-            gb.Prod(deleteQueryHint).Is("ORDER", "GROUP");
-            gb.Prod(deleteQueryHint).Is("MERGE", "UNION");
-            gb.Prod(deleteQueryHint).Is("HASH", "UNION");
-            gb.Prod(deleteQueryHint).Is("CONCAT", "UNION");
-            gb.Prod(deleteQueryHint).Is("FORCE", "ORDER");
-            gb.Prod(deleteQueryHint).Is("KEEP", "PLAN");
-            gb.Prod(deleteQueryHint).Is("KEEPFIXED", "PLAN");
-            gb.Prod(deleteQueryHint).Is("ROBUST", "PLAN");
-            gb.Rule(deleteQueryHintName)
+            gb.Prod(queryOptionClause).Is("OPTION", "(", queryHintList, ")");
+            gb.Prod(queryHintList).Is(queryHint);
+            gb.Prod(queryHintList).Is(queryHintList, ",", queryHint);
+            gb.Prod(queryHint).Is(queryHintName);
+            gb.Prod(queryHint).Is("MAXDOP", expression);
+            gb.Prod(queryHint).Is("MAXDOP", "=", expression);
+            gb.Prod(queryHint).Is("MAXRECURSION", expression);
+            gb.Prod(queryHint).Is("MAXRECURSION", "=", expression);
+            gb.Prod(queryHint).Is("QUERYTRACEON", expression);
+            gb.Prod(queryHint).Is("MIN_GRANT_PERCENT", "=", expression);
+            gb.Prod(queryHint).Is("MAX_GRANT_PERCENT", "=", expression);
+            gb.Prod(queryHint).Is("LABEL", "=", expression);
+            gb.Prod(queryHint).Is("USE", "HINT", "(", expressionList, ")");
+            gb.Prod(queryHint).Is("HASH", "JOIN");
+            gb.Prod(queryHint).Is("MERGE", "JOIN");
+            gb.Prod(queryHint).Is("LOOP", "JOIN");
+            gb.Prod(queryHint).Is("HASH", "GROUP");
+            gb.Prod(queryHint).Is("ORDER", "GROUP");
+            gb.Prod(queryHint).Is("MERGE", "UNION");
+            gb.Prod(queryHint).Is("HASH", "UNION");
+            gb.Prod(queryHint).Is("CONCAT", "UNION");
+            gb.Prod(queryHint).Is("FORCE", "ORDER");
+            gb.Prod(queryHint).Is("KEEP", "PLAN");
+            gb.Prod(queryHint).Is("KEEPFIXED", "PLAN");
+            gb.Prod(queryHint).Is("ROBUST", "PLAN");
+            gb.Rule(queryHintName)
                 .Keywords("RECOMPILE", "IGNORE_NONCLUSTERED_COLUMNSTORE_INDEX");
 
-            gb.Prod(optionClause).Is("OPTION", "(", deleteQueryHintList, ")");
+            gb.Prod(optionClause).Is("OPTION", "(", queryHintList, ")");
         }
     }
 }

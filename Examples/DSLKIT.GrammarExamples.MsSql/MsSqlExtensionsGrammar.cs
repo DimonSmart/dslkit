@@ -100,7 +100,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             INonTerminal identifierTerm,
             INonTerminal tableHintLimitedList,
             INonTerminal tableSource,
-            INonTerminal deleteOutputClause,
+            INonTerminal dmlOutputClause,
             INonTerminal optionClause,
             INonTerminal topValue,
             INonTerminal searchCondition,
@@ -115,7 +115,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(mergeTargetTable).Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")", "AS", identifierTerm);
             gb.Prod(mergeTargetTable).Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")", identifierTerm);
             gb.Prod(mergeSourceTable).Is(tableSource);
-            gb.Opt(mergeOutputClauseOpt, deleteOutputClause);
+            gb.Opt(mergeOutputClauseOpt, dmlOutputClause);
             gb.Opt(mergeOptionClauseOpt, optionClause);
             gb.Rule("MergeStatement").OneOf(
                 gb.Seq("MERGE", mergeTargetTable, "USING", mergeSourceTable, "ON", searchCondition, mergeWhenList, mergeOutputClauseOpt, mergeOptionClauseOpt),
