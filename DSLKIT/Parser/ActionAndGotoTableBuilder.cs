@@ -207,8 +207,21 @@ namespace DSLKIT.Parser
                         {
                             if (existingAction is ShiftAction)
                             {
-                                if (TryResolveShiftReduceConflict(terminal, mergedRow.Production, out var resolution) &&
-                                    resolution == Resolve.Reduce)
+                                var hasResolution = TryResolveShiftReduceConflict(
+                                    terminal,
+                                    mergedRow.Production,
+                                    out var resolution);
+                                var existingActionText = existingAction.ToString() ?? existingAction.GetType().Name;
+
+                                actionAndGotoTable.MutableConflicts.Add(new ParserConflict(
+                                    ParserConflictKind.ShiftReduce,
+                                    mergedRow.FinalSet.SetNumber,
+                                    terminal.Name,
+                                    existingActionText,
+                                    reduceAction.ToString(),
+                                    hasResolution ? resolution : null));
+
+                                if (hasResolution && resolution == Resolve.Reduce)
                                 {
                                     actionAndGotoTable.MutableActionTable[key] = reduceAction;
                                 }
@@ -217,12 +230,20 @@ namespace DSLKIT.Parser
                             }
 
                             var conflictType = "reduce/reduce";
+                            var reduceReduceExistingActionText = existingAction.ToString() ?? existingAction.GetType().Name;
 
                             System.Diagnostics.Debug.WriteLine(
                                 $"Conflict detected: {conflictType} conflict for terminal '{terminal.Name}' " +
                                 $"in state {mergedRow.FinalSet.SetNumber}. " +
                                 $"Existing: {existingAction}, New: {reduceAction}. " +
                                 $"Merged from {mergedRow.PreMergedRules.Count} rules.");
+
+                            actionAndGotoTable.MutableConflicts.Add(new ParserConflict(
+                                ParserConflictKind.ReduceReduce,
+                                mergedRow.FinalSet.SetNumber,
+                                terminal.Name,
+                                reduceReduceExistingActionText,
+                                reduceAction.ToString()));
 
                             continue;
                         }

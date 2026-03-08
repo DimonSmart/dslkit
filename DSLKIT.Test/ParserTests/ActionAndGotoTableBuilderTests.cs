@@ -107,6 +107,10 @@ namespace DSLKIT.Test.ParserTests
 
             // Should not throw, conflicts are handled gracefully
             grammar.ActionAndGotoTable.Should().NotBeNull();
+            grammar.ActionAndGotoTable.Conflicts.Should().Contain(conflict =>
+                conflict.Kind == ParserConflictKind.ShiftReduce &&
+                conflict.TerminalName == "+" &&
+                conflict.Resolution == null);
         }
 
         [Fact]
@@ -163,6 +167,10 @@ namespace DSLKIT.Test.ParserTests
             reduceOnPlusWithRule.Should().BeGreaterThan(
                 reduceOnPlusWithoutRule,
                 "local OnShiftReduce rule should force reduce for configured non-terminal/lookahead pair");
+            grammarWithLocalRule.ActionAndGotoTable.Conflicts.Should().ContainSingle(conflict =>
+                conflict.Kind == ParserConflictKind.ShiftReduce &&
+                conflict.TerminalName == "+" &&
+                conflict.Resolution == Resolve.Reduce);
         }
 
         [Fact]

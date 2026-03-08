@@ -13,11 +13,14 @@ namespace DSLKIT.Parser
             new(ParserKeyComparers.TermBySet);
         private readonly Dictionary<KeyValuePair<INonTerminal, RuleSet>, RuleSet> _gotoTable =
             new(ParserKeyComparers.NonTerminalBySet);
+        private readonly List<ParserConflict> _conflicts = [];
 
         public IReadOnlyDictionary<KeyValuePair<ITerm, RuleSet>, IActionItem> ActionTable => _actionTable;
         public IReadOnlyDictionary<KeyValuePair<INonTerminal, RuleSet>, RuleSet> GotoTable => _gotoTable;
+        public IReadOnlyList<ParserConflict> Conflicts => _conflicts;
         internal Dictionary<KeyValuePair<ITerm, RuleSet>, IActionItem> MutableActionTable => _actionTable;
         internal Dictionary<KeyValuePair<INonTerminal, RuleSet>, RuleSet> MutableGotoTable => _gotoTable;
+        internal IList<ParserConflict> MutableConflicts => _conflicts;
 
         public ActionAndGotoTable(INonTerminal root)
         {

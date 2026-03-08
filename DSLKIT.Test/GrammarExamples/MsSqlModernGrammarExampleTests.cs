@@ -1133,6 +1133,20 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void BuildGrammar_ShouldExposeExpectedResolvedShiftReduceConflicts()
+        {
+            var grammar = ModernMsSqlGrammarExample.BuildGrammar();
+
+            var conflictSet = grammar.ActionAndGotoTable.Conflicts
+                .Where(conflict => conflict.Kind == ParserConflictKind.ShiftReduce && conflict.Resolution != null)
+                .Select(conflict => $"{conflict.Kind}:{conflict.TerminalName}:{conflict.Resolution}")
+                .OrderBy(conflict => conflict)
+                .ToArray();
+
+            conflictSet.Should().Equal("ShiftReduce:ELSE:Shift");
+        }
+
+        [Fact]
         public void ParseScript_ShouldRejectSqlcmdPreprocessorCommands_WhenFeatureDisabled()
         {
             const string script = """
