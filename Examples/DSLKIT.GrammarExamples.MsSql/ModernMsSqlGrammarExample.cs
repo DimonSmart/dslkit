@@ -1093,97 +1093,97 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             void BuildTableSourceGrammar()
             {
-                gb.Rule("TableSourceList").SeparatedBy(",", tableSource);
-                gb.Prod("TableSource").Is(tableFactor);
-                gb.Prod("TableSource").Is(tableSource, joinPart);
-                gb.Prod("TableFactor").Is(qualifiedName);
-                gb.Prod("TableFactor").Is(qualifiedName, "AS", identifierTerm);
-                gb.Prod("TableFactor").Is(qualifiedName, identifierTerm);
+                gb.Rule(tableSourceList).SeparatedBy(",", tableSource);
+                gb.Prod(tableSource).Is(tableFactor);
+                gb.Prod(tableSource).Is(tableSource, joinPart);
+                gb.Prod(tableFactor).Is(qualifiedName);
+                gb.Prod(tableFactor).Is(qualifiedName, "AS", identifierTerm);
+                gb.Prod(tableFactor).Is(qualifiedName, identifierTerm);
                 if (HasFeature(dialectFeatures, MsSqlDialectFeatures.GraphExtensions))
                 {
-                    gb.Prod("TableFactor").Is(qualifiedName, forPathStart, "PATH");
-                    gb.Prod("TableFactor").Is(qualifiedName, forPathStart, "PATH", identifierTerm);
+                    gb.Prod(tableFactor).Is(qualifiedName, forPathStart, "PATH");
+                    gb.Prod(tableFactor).Is(qualifiedName, forPathStart, "PATH", identifierTerm);
                 }
-                gb.Prod("TableFactor").Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")");
-                gb.Prod("TableFactor").Is(qualifiedName, "AS", identifierTerm, "WITH", "(", tableHintLimitedList, ")");
-                gb.Prod("TableFactor").Is(qualifiedName, identifierTerm, "WITH", "(", tableHintLimitedList, ")");
-                gb.Prod("TableFactor").Is(qualifiedName, temporalClause);
-                gb.Prod("TableFactor").Is(qualifiedName, temporalClause, "AS", identifierTerm);
-                gb.Prod("TableFactor").Is(qualifiedName, temporalClause, identifierTerm);
-                gb.Rule("TemporalClause").OneOf(
+                gb.Prod(tableFactor).Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")");
+                gb.Prod(tableFactor).Is(qualifiedName, "AS", identifierTerm, "WITH", "(", tableHintLimitedList, ")");
+                gb.Prod(tableFactor).Is(qualifiedName, identifierTerm, "WITH", "(", tableHintLimitedList, ")");
+                gb.Prod(tableFactor).Is(qualifiedName, temporalClause);
+                gb.Prod(tableFactor).Is(qualifiedName, temporalClause, "AS", identifierTerm);
+                gb.Prod(tableFactor).Is(qualifiedName, temporalClause, identifierTerm);
+                gb.Rule(temporalClause).OneOf(
                     gb.Seq(forSystemTimeStart, "SYSTEM_TIME", "AS", "OF", additiveExpression),
                     gb.Seq(forSystemTimeStart, "SYSTEM_TIME", "ALL"),
                     gb.Seq(forSystemTimeStart, "SYSTEM_TIME", "BETWEEN", additiveExpression, "AND", additiveExpression),
                     gb.Seq(forSystemTimeStart, "SYSTEM_TIME", "FROM", additiveExpression, "TO", additiveExpression),
                     gb.Seq(forSystemTimeStart, "SYSTEM_TIME", "CONTAINED", "IN", "(", additiveExpression, ",", additiveExpression, ")"));
-                gb.Prod("TableFactor").Is(variableReference);
-                gb.Prod("TableFactor").Is(variableReference, "AS", identifierTerm);
-                gb.Prod("TableFactor").Is(variableReference, identifierTerm);
-                gb.Prod("TableFactor").Is(functionCall);
-                gb.Prod("TableFactor").Is(functionCall, "AS", identifierTerm);
-                gb.Prod("TableFactor").Is(functionCall, identifierTerm);
-                gb.Prod("TableFactor").Is(functionCall, "AS", identifierTerm, "(", insertColumnList, ")");
-                gb.Prod("TableFactor").Is(functionCall, identifierTerm, "(", insertColumnList, ")");
-                gb.Prod("TableFactor").Is(openJsonCall);
-                gb.Prod("TableFactor").Is(openJsonCall, "AS", identifierTerm);
-                gb.Prod("TableFactor").Is(openJsonCall, identifierTerm);
-                gb.Prod("TableFactor").Is("(", queryExpression, ")", "AS", identifierTerm);
-                gb.Prod("TableFactor").Is("(", queryExpression, ")", identifierTerm);
-                gb.Prod("TableFactor").Is("(", queryExpression, ")", "AS", identifierTerm, "(", insertColumnList, ")");
-                gb.Prod("TableFactor").Is("(", queryExpression, ")", identifierTerm, "(", insertColumnList, ")");
-                gb.Prod("TableFactor").Is("(", queryExpression, ")", "AS", identifierTerm, "PIVOT", "(", pivotClause, ")", "AS", identifierTerm);
-                gb.Prod("TableFactor").Is("(", queryExpression, ")", identifierTerm, "PIVOT", "(", pivotClause, ")", "AS", identifierTerm);
-                gb.Prod("TableFactor").Is("(", queryExpression, ")", "AS", identifierTerm, "PIVOT", "(", pivotClause, ")", identifierTerm);
-                gb.Prod("TableFactor").Is("(", queryExpression, ")", identifierTerm, "PIVOT", "(", pivotClause, ")", identifierTerm);
-                gb.Prod("TableFactor").Is(qualifiedName, "PIVOT", "(", pivotClause, ")", "AS", identifierTerm);
-                gb.Prod("TableFactor").Is(qualifiedName, "AS", identifierTerm, "PIVOT", "(", pivotClause, ")", "AS", identifierTerm);
-                gb.Prod("TableFactor").Is(qualifiedName, identifierTerm, "PIVOT", "(", pivotClause, ")", "AS", identifierTerm);
-                gb.Prod("TableFactor").Is(qualifiedName, "PIVOT", "(", pivotClause, ")", identifierTerm);
-                gb.Prod("TableFactor").Is(qualifiedName, "AS", identifierTerm, "PIVOT", "(", pivotClause, ")", identifierTerm);
-                gb.Prod("TableFactor").Is(qualifiedName, identifierTerm, "PIVOT", "(", pivotClause, ")", identifierTerm);
-                gb.Prod("PivotClause").Is(functionCall, "FOR", identifierTerm, "IN", "(", pivotValueList, ")");
-                gb.Prod("PivotValueList").Is(expression);
-                gb.Prod("PivotValueList").Is(pivotValueList, ",", expression);
-                gb.Prod("TableFactor").Is("(", queryExpression, ")", "AS", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", identifierTerm);
-                gb.Prod("TableFactor").Is("(", queryExpression, ")", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", identifierTerm);
-                gb.Prod("TableFactor").Is("(", queryExpression, ")", "AS", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
-                gb.Prod("TableFactor").Is("(", queryExpression, ")", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
-                gb.Prod("TableFactor").Is(qualifiedName, "UNPIVOT", "(", unpivotClause, ")", "AS", identifierTerm);
-                gb.Prod("TableFactor").Is(qualifiedName, "AS", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", identifierTerm);
-                gb.Prod("TableFactor").Is(qualifiedName, identifierTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", identifierTerm);
-                gb.Prod("TableFactor").Is(qualifiedName, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
-                gb.Prod("TableFactor").Is(qualifiedName, "AS", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
-                gb.Prod("TableFactor").Is(qualifiedName, identifierTerm, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
-                gb.Prod("UnpivotClause").Is(identifierTerm, "FOR", identifierTerm, "IN", "(", unpivotColumnList, ")");
-                gb.Prod("UnpivotColumnList").Is(identifierTerm);
-                gb.Prod("UnpivotColumnList").Is(unpivotColumnList, ",", identifierTerm);
-                gb.Prod("TableFactor").Is("(", "VALUES", rowValueList, ")", "AS", identifierTerm);
-                gb.Prod("TableFactor").Is("(", "VALUES", rowValueList, ")", identifierTerm);
-                gb.Prod("TableFactor").Is("(", "VALUES", rowValueList, ")", "AS", identifierTerm, "(", insertColumnList, ")");
-                gb.Prod("TableFactor").Is("(", "VALUES", rowValueList, ")", identifierTerm, "(", insertColumnList, ")");
-                gb.Prod("TableFactor").Is("(", tableSource, ")");
-                gb.Prod("TableFactor").Is("(", tableSource, ")", "AS", identifierTerm);
-                gb.Prod("TableFactor").Is("(", tableSource, ")", identifierTerm);
+                gb.Prod(tableFactor).Is(variableReference);
+                gb.Prod(tableFactor).Is(variableReference, "AS", identifierTerm);
+                gb.Prod(tableFactor).Is(variableReference, identifierTerm);
+                gb.Prod(tableFactor).Is(functionCall);
+                gb.Prod(tableFactor).Is(functionCall, "AS", identifierTerm);
+                gb.Prod(tableFactor).Is(functionCall, identifierTerm);
+                gb.Prod(tableFactor).Is(functionCall, "AS", identifierTerm, "(", insertColumnList, ")");
+                gb.Prod(tableFactor).Is(functionCall, identifierTerm, "(", insertColumnList, ")");
+                gb.Prod(tableFactor).Is(openJsonCall);
+                gb.Prod(tableFactor).Is(openJsonCall, "AS", identifierTerm);
+                gb.Prod(tableFactor).Is(openJsonCall, identifierTerm);
+                gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", identifierTerm);
+                gb.Prod(tableFactor).Is("(", queryExpression, ")", identifierTerm);
+                gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", identifierTerm, "(", insertColumnList, ")");
+                gb.Prod(tableFactor).Is("(", queryExpression, ")", identifierTerm, "(", insertColumnList, ")");
+                gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", identifierTerm, "PIVOT", "(", pivotClause, ")", "AS", identifierTerm);
+                gb.Prod(tableFactor).Is("(", queryExpression, ")", identifierTerm, "PIVOT", "(", pivotClause, ")", "AS", identifierTerm);
+                gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", identifierTerm, "PIVOT", "(", pivotClause, ")", identifierTerm);
+                gb.Prod(tableFactor).Is("(", queryExpression, ")", identifierTerm, "PIVOT", "(", pivotClause, ")", identifierTerm);
+                gb.Prod(tableFactor).Is(qualifiedName, "PIVOT", "(", pivotClause, ")", "AS", identifierTerm);
+                gb.Prod(tableFactor).Is(qualifiedName, "AS", identifierTerm, "PIVOT", "(", pivotClause, ")", "AS", identifierTerm);
+                gb.Prod(tableFactor).Is(qualifiedName, identifierTerm, "PIVOT", "(", pivotClause, ")", "AS", identifierTerm);
+                gb.Prod(tableFactor).Is(qualifiedName, "PIVOT", "(", pivotClause, ")", identifierTerm);
+                gb.Prod(tableFactor).Is(qualifiedName, "AS", identifierTerm, "PIVOT", "(", pivotClause, ")", identifierTerm);
+                gb.Prod(tableFactor).Is(qualifiedName, identifierTerm, "PIVOT", "(", pivotClause, ")", identifierTerm);
+                gb.Prod(pivotClause).Is(functionCall, "FOR", identifierTerm, "IN", "(", pivotValueList, ")");
+                gb.Prod(pivotValueList).Is(expression);
+                gb.Prod(pivotValueList).Is(pivotValueList, ",", expression);
+                gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", identifierTerm);
+                gb.Prod(tableFactor).Is("(", queryExpression, ")", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", identifierTerm);
+                gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
+                gb.Prod(tableFactor).Is("(", queryExpression, ")", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
+                gb.Prod(tableFactor).Is(qualifiedName, "UNPIVOT", "(", unpivotClause, ")", "AS", identifierTerm);
+                gb.Prod(tableFactor).Is(qualifiedName, "AS", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", identifierTerm);
+                gb.Prod(tableFactor).Is(qualifiedName, identifierTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", identifierTerm);
+                gb.Prod(tableFactor).Is(qualifiedName, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
+                gb.Prod(tableFactor).Is(qualifiedName, "AS", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
+                gb.Prod(tableFactor).Is(qualifiedName, identifierTerm, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
+                gb.Prod(unpivotClause).Is(identifierTerm, "FOR", identifierTerm, "IN", "(", unpivotColumnList, ")");
+                gb.Prod(unpivotColumnList).Is(identifierTerm);
+                gb.Prod(unpivotColumnList).Is(unpivotColumnList, ",", identifierTerm);
+                gb.Prod(tableFactor).Is("(", "VALUES", rowValueList, ")", "AS", identifierTerm);
+                gb.Prod(tableFactor).Is("(", "VALUES", rowValueList, ")", identifierTerm);
+                gb.Prod(tableFactor).Is("(", "VALUES", rowValueList, ")", "AS", identifierTerm, "(", insertColumnList, ")");
+                gb.Prod(tableFactor).Is("(", "VALUES", rowValueList, ")", identifierTerm, "(", insertColumnList, ")");
+                gb.Prod(tableFactor).Is("(", tableSource, ")");
+                gb.Prod(tableFactor).Is("(", tableSource, ")", "AS", identifierTerm);
+                gb.Prod(tableFactor).Is("(", tableSource, ")", identifierTerm);
 
-                gb.Prod("OpenJsonCall").Is("OPENJSON", "(", functionArgumentList, ")");
-                gb.Prod("OpenJsonCall").Is("OPENJSON", "(", functionArgumentList, ")", openJsonWithClause);
-                gb.Prod("OpenJsonWithClause").Is("WITH", "(", openJsonColumnList, ")");
-                gb.Prod("OpenJsonColumnList").Is(openJsonColumnDef);
-                gb.Prod("OpenJsonColumnList").Is(openJsonColumnList, ",", openJsonColumnDef);
-                gb.Prod("OpenJsonColumnDef").Is(identifierTerm, typeSpec);
-                gb.Prod("OpenJsonPath").Is(stringLiteral);
-                gb.Prod("OpenJsonPath").Is(unicodeStringLiteral);
-                gb.Prod("OpenJsonColumnDef").Is(identifierTerm, typeSpec, openJsonPath);
-                gb.Prod("OpenJsonColumnDef").Is(identifierTerm, typeSpec, "AS", "JSON");
-                gb.Prod("OpenJsonColumnDef").Is(identifierTerm, typeSpec, openJsonPath, "AS", "JSON");
+                gb.Prod(openJsonCall).Is("OPENJSON", "(", functionArgumentList, ")");
+                gb.Prod(openJsonCall).Is("OPENJSON", "(", functionArgumentList, ")", openJsonWithClause);
+                gb.Prod(openJsonWithClause).Is("WITH", "(", openJsonColumnList, ")");
+                gb.Prod(openJsonColumnList).Is(openJsonColumnDef);
+                gb.Prod(openJsonColumnList).Is(openJsonColumnList, ",", openJsonColumnDef);
+                gb.Prod(openJsonColumnDef).Is(identifierTerm, typeSpec);
+                gb.Prod(openJsonPath).Is(stringLiteral);
+                gb.Prod(openJsonPath).Is(unicodeStringLiteral);
+                gb.Prod(openJsonColumnDef).Is(identifierTerm, typeSpec, openJsonPath);
+                gb.Prod(openJsonColumnDef).Is(identifierTerm, typeSpec, "AS", "JSON");
+                gb.Prod(openJsonColumnDef).Is(identifierTerm, typeSpec, openJsonPath, "AS", "JSON");
 
-                gb.Prod("JoinPart").Is("JOIN", tableFactor, "ON", searchCondition);
-                gb.Prod("JoinPart").Is(joinType, "JOIN", tableFactor, "ON", searchCondition);
-                gb.Prod("JoinPart").Is("CROSS", "JOIN", tableFactor);
-                gb.Prod("JoinPart").Is("CROSS", "APPLY", tableFactor);
-                gb.Prod("JoinPart").Is("OUTER", "APPLY", tableFactor);
+                gb.Prod(joinPart).Is("JOIN", tableFactor, "ON", searchCondition);
+                gb.Prod(joinPart).Is(joinType, "JOIN", tableFactor, "ON", searchCondition);
+                gb.Prod(joinPart).Is("CROSS", "JOIN", tableFactor);
+                gb.Prod(joinPart).Is("CROSS", "APPLY", tableFactor);
+                gb.Prod(joinPart).Is("OUTER", "APPLY", tableFactor);
 
-                gb.Rule("JoinType")
+                gb.Rule(joinType)
                     .CanBe("INNER")
                     .Or("INNER", "HASH")
                     .Or("INNER", "LOOP")
@@ -2097,113 +2097,113 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule(createViewOptionList).SeparatedBy(",", createViewOption);
             gb.Rule(createViewOption).Keywords("ENCRYPTION", "SCHEMABINDING", "VIEW_METADATA");
 
-            gb.Prod("CreateTableFileTableClause").Is("AS", "FILETABLE");
-            gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")");
-            gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, createTableFileTableClause);
-            gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, createTableFileTableClause, createIndexFileStreamClause);
-            gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, createTableFileTableClause, createTableOptions);
-            gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, createTableFileTableClause, createIndexFileStreamClause, createTableOptions);
-            gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", createTableTailClauseList);
+            gb.Prod(createTableFileTableClause).Is("AS", "FILETABLE");
+            gb.Prod(createTableStatement).Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")");
+            gb.Prod(createTableStatement).Is("CREATE", "TABLE", qualifiedName, createTableFileTableClause);
+            gb.Prod(createTableStatement).Is("CREATE", "TABLE", qualifiedName, createTableFileTableClause, createIndexFileStreamClause);
+            gb.Prod(createTableStatement).Is("CREATE", "TABLE", qualifiedName, createTableFileTableClause, createTableOptions);
+            gb.Prod(createTableStatement).Is("CREATE", "TABLE", qualifiedName, createTableFileTableClause, createIndexFileStreamClause, createTableOptions);
+            gb.Prod(createTableStatement).Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", createTableTailClauseList);
             if (HasFeature(dialectFeatures, MsSqlDialectFeatures.GraphExtensions))
             {
-                gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", "AS", "EDGE");
-                gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", "AS", "NODE");
-                gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", createTableTailClauseList, "AS", "EDGE");
-                gb.Prod("CreateTableStatement").Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", createTableTailClauseList, "AS", "NODE");
+                gb.Prod(createTableStatement).Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", "AS", "EDGE");
+                gb.Prod(createTableStatement).Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", "AS", "NODE");
+                gb.Prod(createTableStatement).Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", createTableTailClauseList, "AS", "EDGE");
+                gb.Prod(createTableStatement).Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", createTableTailClauseList, "AS", "NODE");
             }
-            gb.Prod("CreateTableTailClauseList").Is(createTableTailClause);
-            gb.Prod("CreateTableTailClauseList").Is(createTableTailClauseList, createTableTailClause);
-            gb.Prod("CreateTableTailClause").Is(createTablePeriodClause);
-            gb.Prod("CreateTableTailClause").Is(createTableOptions);
-            gb.Prod("CreateTableTailClause").Is(createTableOnClause);
-            gb.Prod("CreateTableTailClause").Is(createTableTextImageClause);
-            gb.Prod("CreateTableTailClause").Is(createIndexFileStreamClause);
+            gb.Prod(createTableTailClauseList).Is(createTableTailClause);
+            gb.Prod(createTableTailClauseList).Is(createTableTailClauseList, createTableTailClause);
+            gb.Prod(createTableTailClause).Is(createTablePeriodClause);
+            gb.Prod(createTableTailClause).Is(createTableOptions);
+            gb.Prod(createTableTailClause).Is(createTableOnClause);
+            gb.Prod(createTableTailClause).Is(createTableTextImageClause);
+            gb.Prod(createTableTailClause).Is(createIndexFileStreamClause);
 
-            gb.Prod("CreateTableElementList").Is(createTableElement);
-            gb.Prod("CreateTableElementList").Is(createTableElementList, ",", createTableElement);
-            gb.Prod("CreateTableElement").Is(createTableColumnDefinition);
-            gb.Prod("CreateTableElement").Is(createTableComputedColumn);
-            gb.Prod("CreateTableElement").Is(createTableColumnSet);
-            gb.Prod("CreateTableElement").Is(createTableConstraint);
-            gb.Prod("CreateTableElement").Is(createTableTableIndex);
+            gb.Prod(createTableElementList).Is(createTableElement);
+            gb.Prod(createTableElementList).Is(createTableElementList, ",", createTableElement);
+            gb.Prod(createTableElement).Is(createTableColumnDefinition);
+            gb.Prod(createTableElement).Is(createTableComputedColumn);
+            gb.Prod(createTableElement).Is(createTableColumnSet);
+            gb.Prod(createTableElement).Is(createTableConstraint);
+            gb.Prod(createTableElement).Is(createTableTableIndex);
 
-            gb.Prod("CreateTableColumnDefinition").Is(identifierTerm, typeSpec);
-            gb.Prod("CreateTableColumnDefinition").Is(identifierTerm, typeSpec, createTableColumnOptionList);
-            gb.Prod("CreateTableColumnOptionList").Is(createTableColumnOption);
-            gb.Prod("CreateTableColumnOptionList").Is(createTableColumnOptionList, createTableColumnOption);
-            gb.Prod("CreateTableColumnOption").Is("NULL");
-            gb.Prod("CreateTableColumnOption").Is("NOT", "NULL");
-            gb.Prod("CreateTableColumnOption").Is("PRIMARY", "KEY");
-            gb.Prod("CreateTableColumnOption").Is("UNIQUE");
-            gb.Prod("CreateTableColumnOption").Is("SPARSE");
-            gb.Prod("CreateTableColumnOption").Is("PERSISTED");
-            gb.Prod("CreateTableColumnOption").Is("ROWGUIDCOL");
-            gb.Prod("CreateTableColumnOption").Is("COLUMN_SET");
-            gb.Prod("CreateTableColumnOption").Is("FOR", "ALL_SPARSE_COLUMNS");
-            gb.Prod("CreateTableColumnOption").Is("FILESTREAM");
-            gb.Prod("CreateTableColumnOption").Is("DEFAULT", expression);
-            gb.Prod("CreateTableColumnOption").Is("DEFAULT", "(", expression, ")");
-            gb.Prod("CreateTableColumnOption").Is("IDENTITY");
-            gb.Prod("CreateTableColumnOption").Is("IDENTITY", "(", expression, ",", expression, ")");
-            gb.Prod("CreateTableColumnOption").Is("COLLATE", strictIdentifierTerm);
-            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "ROW", "START");
-            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "ROW", "START", "HIDDEN");
-            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "ROW", "END");
-            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "ROW", "END", "HIDDEN");
-            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "TRANSACTION_ID", "START");
-            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "TRANSACTION_ID", "START", "HIDDEN");
-            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "TRANSACTION_ID", "END");
-            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "TRANSACTION_ID", "END", "HIDDEN");
-            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "SEQUENCE_NUMBER", "START");
-            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "SEQUENCE_NUMBER", "START", "HIDDEN");
-            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "SEQUENCE_NUMBER", "END");
-            gb.Prod("CreateTableColumnOption").Is("GENERATED", "ALWAYS", "AS", "SEQUENCE_NUMBER", "END", "HIDDEN");
-            gb.Prod("CreateTableColumnOption").Is("MASKED", "WITH", "(", maskingOptionList, ")");
-            gb.Prod("CreateTableColumnOption").Is("ENCRYPTED", "WITH", "(", encryptionOptionList, ")");
-            gb.Prod("CreateTableColumnOption").Is("NOT", "FOR", "REPLICATION");
-            gb.Prod("CreateTableColumnOption").Is("CHECK", "(", searchCondition, ")");
-            gb.Prod("CreateTableColumnOption").Is("REFERENCES", qualifiedName);
-            gb.Prod("CreateTableColumnOption").Is("REFERENCES", qualifiedName, "(", identifierList, ")");
-            gb.Prod("CreateTableColumnOption").Is("CONSTRAINT", strictIdentifierTerm, createTableColumnConstraintBody);
+            gb.Prod(createTableColumnDefinition).Is(identifierTerm, typeSpec);
+            gb.Prod(createTableColumnDefinition).Is(identifierTerm, typeSpec, createTableColumnOptionList);
+            gb.Prod(createTableColumnOptionList).Is(createTableColumnOption);
+            gb.Prod(createTableColumnOptionList).Is(createTableColumnOptionList, createTableColumnOption);
+            gb.Prod(createTableColumnOption).Is("NULL");
+            gb.Prod(createTableColumnOption).Is("NOT", "NULL");
+            gb.Prod(createTableColumnOption).Is("PRIMARY", "KEY");
+            gb.Prod(createTableColumnOption).Is("UNIQUE");
+            gb.Prod(createTableColumnOption).Is("SPARSE");
+            gb.Prod(createTableColumnOption).Is("PERSISTED");
+            gb.Prod(createTableColumnOption).Is("ROWGUIDCOL");
+            gb.Prod(createTableColumnOption).Is("COLUMN_SET");
+            gb.Prod(createTableColumnOption).Is("FOR", "ALL_SPARSE_COLUMNS");
+            gb.Prod(createTableColumnOption).Is("FILESTREAM");
+            gb.Prod(createTableColumnOption).Is("DEFAULT", expression);
+            gb.Prod(createTableColumnOption).Is("DEFAULT", "(", expression, ")");
+            gb.Prod(createTableColumnOption).Is("IDENTITY");
+            gb.Prod(createTableColumnOption).Is("IDENTITY", "(", expression, ",", expression, ")");
+            gb.Prod(createTableColumnOption).Is("COLLATE", strictIdentifierTerm);
+            gb.Prod(createTableColumnOption).Is("GENERATED", "ALWAYS", "AS", "ROW", "START");
+            gb.Prod(createTableColumnOption).Is("GENERATED", "ALWAYS", "AS", "ROW", "START", "HIDDEN");
+            gb.Prod(createTableColumnOption).Is("GENERATED", "ALWAYS", "AS", "ROW", "END");
+            gb.Prod(createTableColumnOption).Is("GENERATED", "ALWAYS", "AS", "ROW", "END", "HIDDEN");
+            gb.Prod(createTableColumnOption).Is("GENERATED", "ALWAYS", "AS", "TRANSACTION_ID", "START");
+            gb.Prod(createTableColumnOption).Is("GENERATED", "ALWAYS", "AS", "TRANSACTION_ID", "START", "HIDDEN");
+            gb.Prod(createTableColumnOption).Is("GENERATED", "ALWAYS", "AS", "TRANSACTION_ID", "END");
+            gb.Prod(createTableColumnOption).Is("GENERATED", "ALWAYS", "AS", "TRANSACTION_ID", "END", "HIDDEN");
+            gb.Prod(createTableColumnOption).Is("GENERATED", "ALWAYS", "AS", "SEQUENCE_NUMBER", "START");
+            gb.Prod(createTableColumnOption).Is("GENERATED", "ALWAYS", "AS", "SEQUENCE_NUMBER", "START", "HIDDEN");
+            gb.Prod(createTableColumnOption).Is("GENERATED", "ALWAYS", "AS", "SEQUENCE_NUMBER", "END");
+            gb.Prod(createTableColumnOption).Is("GENERATED", "ALWAYS", "AS", "SEQUENCE_NUMBER", "END", "HIDDEN");
+            gb.Prod(createTableColumnOption).Is("MASKED", "WITH", "(", maskingOptionList, ")");
+            gb.Prod(createTableColumnOption).Is("ENCRYPTED", "WITH", "(", encryptionOptionList, ")");
+            gb.Prod(createTableColumnOption).Is("NOT", "FOR", "REPLICATION");
+            gb.Prod(createTableColumnOption).Is("CHECK", "(", searchCondition, ")");
+            gb.Prod(createTableColumnOption).Is("REFERENCES", qualifiedName);
+            gb.Prod(createTableColumnOption).Is("REFERENCES", qualifiedName, "(", identifierList, ")");
+            gb.Prod(createTableColumnOption).Is("CONSTRAINT", strictIdentifierTerm, createTableColumnConstraintBody);
 
-            gb.Prod("CreateTableComputedColumn").Is(identifierTerm, "AS", expression);
-            gb.Prod("CreateTableComputedColumn").Is(identifierTerm, "AS", expression, createTableColumnOptionList);
+            gb.Prod(createTableComputedColumn).Is(identifierTerm, "AS", expression);
+            gb.Prod(createTableComputedColumn).Is(identifierTerm, "AS", expression, createTableColumnOptionList);
 
-            gb.Prod("CreateTableColumnSet").Is(identifierTerm, typeSpec, "COLUMN_SET", "FOR", "ALL_SPARSE_COLUMNS");
+            gb.Prod(createTableColumnSet).Is(identifierTerm, typeSpec, "COLUMN_SET", "FOR", "ALL_SPARSE_COLUMNS");
 
-            gb.Prod("CreateTableConstraint").Is(createTableTableConstraintBody);
-            gb.Prod("CreateTableConstraint").Is("CONSTRAINT", identifierTerm, createTableTableConstraintBody);
+            gb.Prod(createTableConstraint).Is(createTableTableConstraintBody);
+            gb.Prod(createTableConstraint).Is("CONSTRAINT", identifierTerm, createTableTableConstraintBody);
 
-            gb.Prod("CreateTableColumnConstraintBody").Is("PRIMARY", "KEY");
-            gb.Prod("CreateTableColumnConstraintBody").Is("PRIMARY", "KEY", createTableColumnKeyClusterType);
-            gb.Prod("CreateTableColumnConstraintBody").Is("UNIQUE");
-            gb.Prod("CreateTableColumnConstraintBody").Is("UNIQUE", createTableColumnKeyClusterType);
-            gb.Prod("CreateTableColumnConstraintBody").Is("CHECK", "(", searchCondition, ")");
-            gb.Prod("CreateTableColumnConstraintBody").Is("FOREIGN", "KEY", "REFERENCES", qualifiedName);
-            gb.Prod("CreateTableColumnConstraintBody").Is("FOREIGN", "KEY", "REFERENCES", qualifiedName, "(", identifierList, ")");
-            gb.Prod("CreateTableColumnConstraintBody").Is("REFERENCES", qualifiedName);
-            gb.Prod("CreateTableColumnConstraintBody").Is("REFERENCES", qualifiedName, "(", identifierList, ")");
-            gb.Prod("CreateTableColumnConstraintBody").Is("DEFAULT", expression);
-            gb.Prod("CreateTableColumnConstraintBody").Is("DEFAULT", "(", expression, ")");
+            gb.Prod(createTableColumnConstraintBody).Is("PRIMARY", "KEY");
+            gb.Prod(createTableColumnConstraintBody).Is("PRIMARY", "KEY", createTableColumnKeyClusterType);
+            gb.Prod(createTableColumnConstraintBody).Is("UNIQUE");
+            gb.Prod(createTableColumnConstraintBody).Is("UNIQUE", createTableColumnKeyClusterType);
+            gb.Prod(createTableColumnConstraintBody).Is("CHECK", "(", searchCondition, ")");
+            gb.Prod(createTableColumnConstraintBody).Is("FOREIGN", "KEY", "REFERENCES", qualifiedName);
+            gb.Prod(createTableColumnConstraintBody).Is("FOREIGN", "KEY", "REFERENCES", qualifiedName, "(", identifierList, ")");
+            gb.Prod(createTableColumnConstraintBody).Is("REFERENCES", qualifiedName);
+            gb.Prod(createTableColumnConstraintBody).Is("REFERENCES", qualifiedName, "(", identifierList, ")");
+            gb.Prod(createTableColumnConstraintBody).Is("DEFAULT", expression);
+            gb.Prod(createTableColumnConstraintBody).Is("DEFAULT", "(", expression, ")");
 
-            gb.Prod("CreateTableTableConstraintBody").Is("PRIMARY", "KEY", "(", createTableKeyColumnList, ")");
-            gb.Prod("CreateTableTableConstraintBody").Is("PRIMARY", "KEY", "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")");
-            gb.Prod("CreateTableTableConstraintBody").Is("PRIMARY", "KEY", "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
-            gb.Prod("CreateTableTableConstraintBody").Is("PRIMARY", "KEY", createTableConstraintClusterType, "(", createTableKeyColumnList, ")");
-            gb.Prod("CreateTableTableConstraintBody").Is("PRIMARY", "KEY", createTableConstraintClusterType, "(", createTableKeyColumnList, ")", "ON", indexStorageTarget);
-            gb.Prod("CreateTableTableConstraintBody").Is("PRIMARY", "KEY", "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
-            gb.Prod("CreateTableTableConstraintBody").Is("PRIMARY", "KEY", createTableConstraintClusterType, "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
-            gb.Prod("CreateTableTableConstraintBody").Is("PRIMARY", "KEY", createTableConstraintClusterType, "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")", "ON", indexStorageTarget);
-            gb.Prod("CreateTableTableConstraintBody").Is("UNIQUE", "(", createTableKeyColumnList, ")");
-            gb.Prod("CreateTableTableConstraintBody").Is("UNIQUE", createTableConstraintClusterType, "(", createTableKeyColumnList, ")");
-            gb.Prod("CreateTableTableConstraintBody").Is("UNIQUE", "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
-            gb.Prod("CreateTableTableConstraintBody").Is("UNIQUE", createTableConstraintClusterType, "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
-            gb.Prod("CreateTableTableConstraintBody").Is("UNIQUE", createTableConstraintClusterType, "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")", "ON", indexStorageTarget);
-            gb.Prod("CreateTableTableConstraintBody").Is("CHECK", "(", searchCondition, ")");
-            gb.Prod("CreateTableTableConstraintBody").Is("FOREIGN", "KEY", "(", identifierList, ")", "REFERENCES", qualifiedName);
-            gb.Prod("CreateTableTableConstraintBody").Is("FOREIGN", "KEY", "(", identifierList, ")", "REFERENCES", qualifiedName, "(", identifierList, ")");
-            gb.Prod("CreateTableTableConstraintBody").Is("DEFAULT", expression, "FOR", identifierTerm);
-            gb.Prod("CreateTableTableConstraintBody").Is("DEFAULT", "(", expression, ")", "FOR", identifierTerm);
+            gb.Prod(createTableTableConstraintBody).Is("PRIMARY", "KEY", "(", createTableKeyColumnList, ")");
+            gb.Prod(createTableTableConstraintBody).Is("PRIMARY", "KEY", "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")");
+            gb.Prod(createTableTableConstraintBody).Is("PRIMARY", "KEY", "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
+            gb.Prod(createTableTableConstraintBody).Is("PRIMARY", "KEY", createTableConstraintClusterType, "(", createTableKeyColumnList, ")");
+            gb.Prod(createTableTableConstraintBody).Is("PRIMARY", "KEY", createTableConstraintClusterType, "(", createTableKeyColumnList, ")", "ON", indexStorageTarget);
+            gb.Prod(createTableTableConstraintBody).Is("PRIMARY", "KEY", "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
+            gb.Prod(createTableTableConstraintBody).Is("PRIMARY", "KEY", createTableConstraintClusterType, "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
+            gb.Prod(createTableTableConstraintBody).Is("PRIMARY", "KEY", createTableConstraintClusterType, "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")", "ON", indexStorageTarget);
+            gb.Prod(createTableTableConstraintBody).Is("UNIQUE", "(", createTableKeyColumnList, ")");
+            gb.Prod(createTableTableConstraintBody).Is("UNIQUE", createTableConstraintClusterType, "(", createTableKeyColumnList, ")");
+            gb.Prod(createTableTableConstraintBody).Is("UNIQUE", "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
+            gb.Prod(createTableTableConstraintBody).Is("UNIQUE", createTableConstraintClusterType, "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
+            gb.Prod(createTableTableConstraintBody).Is("UNIQUE", createTableConstraintClusterType, "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")", "ON", indexStorageTarget);
+            gb.Prod(createTableTableConstraintBody).Is("CHECK", "(", searchCondition, ")");
+            gb.Prod(createTableTableConstraintBody).Is("FOREIGN", "KEY", "(", identifierList, ")", "REFERENCES", qualifiedName);
+            gb.Prod(createTableTableConstraintBody).Is("FOREIGN", "KEY", "(", identifierList, ")", "REFERENCES", qualifiedName, "(", identifierList, ")");
+            gb.Prod(createTableTableConstraintBody).Is("DEFAULT", expression, "FOR", identifierTerm);
+            gb.Prod(createTableTableConstraintBody).Is("DEFAULT", "(", expression, ")", "FOR", identifierTerm);
 
             gb.Rule(createTableColumnKeyClusterType)
                 .CanBe("CLUSTERED")
@@ -2221,63 +2221,63 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .Or("CLUSTERED")
                 .Or("NONCLUSTERED");
 
-            gb.Prod("CreateTableKeyColumnList").Is(createTableKeyColumn);
-            gb.Prod("CreateTableKeyColumnList").Is(createTableKeyColumnList, ",", createTableKeyColumn);
-            gb.Prod("CreateTableKeyColumn").Is(identifierTerm);
-            gb.Prod("CreateTableKeyColumn").Is(identifierTerm, "ASC");
-            gb.Prod("CreateTableKeyColumn").Is(identifierTerm, "DESC");
+            gb.Prod(createTableKeyColumnList).Is(createTableKeyColumn);
+            gb.Prod(createTableKeyColumnList).Is(createTableKeyColumnList, ",", createTableKeyColumn);
+            gb.Prod(createTableKeyColumn).Is(identifierTerm);
+            gb.Prod(createTableKeyColumn).Is(identifierTerm, "ASC");
+            gb.Prod(createTableKeyColumn).Is(identifierTerm, "DESC");
 
-            gb.Prod("CreateTableTableIndex").Is("INDEX", identifierTerm, "(", createTableKeyColumnList, ")");
-            gb.Prod("CreateTableTableIndex").Is("INDEX", identifierTerm, "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")");
-            gb.Prod("CreateTableTableIndex").Is("INDEX", identifierTerm, createTableClusterType, "(", createTableKeyColumnList, ")");
-            gb.Prod("CreateTableTableIndex").Is("INDEX", identifierTerm, "(", createTableKeyColumnList, ")", createIndexWithClause);
-            gb.Prod("CreateTableTableIndex").Is("INDEX", identifierTerm, "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")", createIndexWithClause);
-            gb.Prod("CreateTableTableIndex").Is("INDEX", identifierTerm, createTableClusterType, "(", createTableKeyColumnList, ")", createIndexWithClause);
-            gb.Prod("CreateTableTableIndex").Is("INDEX", identifierTerm, "CLUSTERED", "COLUMNSTORE");
-            gb.Prod("CreateTableTableIndex").Is("INDEX", identifierTerm, "CLUSTERED", "COLUMNSTORE", createIndexWithClause);
+            gb.Prod(createTableTableIndex).Is("INDEX", identifierTerm, "(", createTableKeyColumnList, ")");
+            gb.Prod(createTableTableIndex).Is("INDEX", identifierTerm, "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")");
+            gb.Prod(createTableTableIndex).Is("INDEX", identifierTerm, createTableClusterType, "(", createTableKeyColumnList, ")");
+            gb.Prod(createTableTableIndex).Is("INDEX", identifierTerm, "(", createTableKeyColumnList, ")", createIndexWithClause);
+            gb.Prod(createTableTableIndex).Is("INDEX", identifierTerm, "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")", createIndexWithClause);
+            gb.Prod(createTableTableIndex).Is("INDEX", identifierTerm, createTableClusterType, "(", createTableKeyColumnList, ")", createIndexWithClause);
+            gb.Prod(createTableTableIndex).Is("INDEX", identifierTerm, "CLUSTERED", "COLUMNSTORE");
+            gb.Prod(createTableTableIndex).Is("INDEX", identifierTerm, "CLUSTERED", "COLUMNSTORE", createIndexWithClause);
 
-            gb.Prod("CreateTablePeriodClause").Is("PERIOD", forSystemTimeStart, "SYSTEM_TIME", "(", identifierTerm, ",", identifierTerm, ")");
-            gb.Prod("CreateTableOptions").Is("WITH", "(", createTableOptionList, ")");
-            gb.Prod("CreateTableOptionList").Is(createTableOption);
-            gb.Prod("CreateTableOptionList").Is(createTableOptionList, ",", createTableOption);
-            gb.Prod("CreateTableOption").Is("MEMORY_OPTIMIZED", "=", indexOnOffValue);
-            gb.Prod("CreateTableOption").Is("DURABILITY", "=", createTableDurabilityMode);
-            gb.Prod("CreateTableOption").Is("FILETABLE_DIRECTORY", "=", namedOptionValue);
-            gb.Prod("CreateTableOption").Is("FILETABLE_COLLATE_FILENAME", "=", namedOptionValue);
-            gb.Prod("CreateTableOption").Is("CLUSTERED", "COLUMNSTORE", "INDEX");
+            gb.Prod(createTablePeriodClause).Is("PERIOD", forSystemTimeStart, "SYSTEM_TIME", "(", identifierTerm, ",", identifierTerm, ")");
+            gb.Prod(createTableOptions).Is("WITH", "(", createTableOptionList, ")");
+            gb.Prod(createTableOptionList).Is(createTableOption);
+            gb.Prod(createTableOptionList).Is(createTableOptionList, ",", createTableOption);
+            gb.Prod(createTableOption).Is("MEMORY_OPTIMIZED", "=", indexOnOffValue);
+            gb.Prod(createTableOption).Is("DURABILITY", "=", createTableDurabilityMode);
+            gb.Prod(createTableOption).Is("FILETABLE_DIRECTORY", "=", namedOptionValue);
+            gb.Prod(createTableOption).Is("FILETABLE_COLLATE_FILENAME", "=", namedOptionValue);
+            gb.Prod(createTableOption).Is("CLUSTERED", "COLUMNSTORE", "INDEX");
             gb.Rule(createTableDurabilityMode).Keywords("SCHEMA_AND_DATA", "SCHEMA_ONLY");
-            gb.Prod("CreateTableOnClause").Is("ON", indexStorageTarget);
-            gb.Prod("CreateTableTextImageClause").Is("TEXTIMAGE_ON", indexStorageTarget);
+            gb.Prod(createTableOnClause).Is("ON", indexStorageTarget);
+            gb.Prod(createTableTextImageClause).Is("TEXTIMAGE_ON", indexStorageTarget);
 
-            gb.Prod("AlterTableStatement").Is("ALTER", "TABLE", qualifiedName, alterTableAction);
-            gb.Prod("AlterTableAction").Is("ADD", alterTableAddItemList);
-            gb.Prod("AlterTableAction").Is("ALTER", "COLUMN", alterTableAlterColumnAction);
-            gb.Prod("AlterTableAction").Is("DROP", alterTableDropItemList);
-            gb.Prod("AlterTableAction").Is("WITH", alterTableCheckMode, "ADD", createTableConstraint);
-            gb.Prod("AlterTableAction").Is(alterTableCheckMode, "CONSTRAINT", alterTableConstraintTarget);
-            gb.Prod("AlterTableAction").Is("ENABLE", "TRIGGER", alterTableTriggerTarget);
-            gb.Prod("AlterTableAction").Is("DISABLE", "TRIGGER", alterTableTriggerTarget);
-            gb.Prod("AlterTableAction").Is("ADD", createTablePeriodClause);
-            gb.Prod("AlterTableAction").Is("DROP", "PERIOD", forSystemTimeStart, "SYSTEM_TIME");
-            gb.Prod("AlterTableAction").Is("SET", "(", indexOptionList, ")");
-            gb.Prod("AlterTableAddItemList").Is(alterTableAddItem);
-            gb.Prod("AlterTableAddItemList").Is(alterTableAddItemList, ",", alterTableAddItem);
-            gb.Prod("AlterTableAddItem").Is(createTableColumnDefinition);
-            gb.Prod("AlterTableAddItem").Is(createTableConstraint);
-            gb.Prod("AlterTableAddItem").Is(createTableTableIndex);
-            gb.Prod("AlterTableAddItem").Is(createTableComputedColumn);
-            gb.Prod("AlterTableAlterColumnAction").Is(identifierTerm, typeSpec);
-            gb.Prod("AlterTableAlterColumnAction").Is(identifierTerm, typeSpec, alterTableColumnOptionList);
-            gb.Prod("AlterTableAlterColumnAction").Is(identifierTerm, "ADD", alterTableColumnOptionList);
-            gb.Prod("AlterTableAlterColumnAction").Is(identifierTerm, "DROP", alterTableColumnOptionList);
-            gb.Prod("AlterTableColumnOptionList").Is(alterTableColumnOption);
-            gb.Prod("AlterTableColumnOptionList").Is(alterTableColumnOptionList, alterTableColumnOption);
-            gb.Prod("AlterTableColumnOption").Is(createTableColumnOption);
-            gb.Prod("AlterTableDropItemList").Is(alterTableDropItem);
-            gb.Prod("AlterTableDropItemList").Is(alterTableDropItemList, ",", alterTableDropItem);
-            gb.Prod("AlterTableDropItem").Is("COLUMN", identifierTerm);
-            gb.Prod("AlterTableDropItem").Is("CONSTRAINT", identifierTerm);
-            gb.Prod("AlterTableDropItem").Is("CONSTRAINT", "ALL");
+            gb.Prod(alterTableStatement).Is("ALTER", "TABLE", qualifiedName, alterTableAction);
+            gb.Prod(alterTableAction).Is("ADD", alterTableAddItemList);
+            gb.Prod(alterTableAction).Is("ALTER", "COLUMN", alterTableAlterColumnAction);
+            gb.Prod(alterTableAction).Is("DROP", alterTableDropItemList);
+            gb.Prod(alterTableAction).Is("WITH", alterTableCheckMode, "ADD", createTableConstraint);
+            gb.Prod(alterTableAction).Is(alterTableCheckMode, "CONSTRAINT", alterTableConstraintTarget);
+            gb.Prod(alterTableAction).Is("ENABLE", "TRIGGER", alterTableTriggerTarget);
+            gb.Prod(alterTableAction).Is("DISABLE", "TRIGGER", alterTableTriggerTarget);
+            gb.Prod(alterTableAction).Is("ADD", createTablePeriodClause);
+            gb.Prod(alterTableAction).Is("DROP", "PERIOD", forSystemTimeStart, "SYSTEM_TIME");
+            gb.Prod(alterTableAction).Is("SET", "(", indexOptionList, ")");
+            gb.Prod(alterTableAddItemList).Is(alterTableAddItem);
+            gb.Prod(alterTableAddItemList).Is(alterTableAddItemList, ",", alterTableAddItem);
+            gb.Prod(alterTableAddItem).Is(createTableColumnDefinition);
+            gb.Prod(alterTableAddItem).Is(createTableConstraint);
+            gb.Prod(alterTableAddItem).Is(createTableTableIndex);
+            gb.Prod(alterTableAddItem).Is(createTableComputedColumn);
+            gb.Prod(alterTableAlterColumnAction).Is(identifierTerm, typeSpec);
+            gb.Prod(alterTableAlterColumnAction).Is(identifierTerm, typeSpec, alterTableColumnOptionList);
+            gb.Prod(alterTableAlterColumnAction).Is(identifierTerm, "ADD", alterTableColumnOptionList);
+            gb.Prod(alterTableAlterColumnAction).Is(identifierTerm, "DROP", alterTableColumnOptionList);
+            gb.Prod(alterTableColumnOptionList).Is(alterTableColumnOption);
+            gb.Prod(alterTableColumnOptionList).Is(alterTableColumnOptionList, alterTableColumnOption);
+            gb.Prod(alterTableColumnOption).Is(createTableColumnOption);
+            gb.Prod(alterTableDropItemList).Is(alterTableDropItem);
+            gb.Prod(alterTableDropItemList).Is(alterTableDropItemList, ",", alterTableDropItem);
+            gb.Prod(alterTableDropItem).Is("COLUMN", identifierTerm);
+            gb.Prod(alterTableDropItem).Is("CONSTRAINT", identifierTerm);
+            gb.Prod(alterTableDropItem).Is("CONSTRAINT", "ALL");
             gb.Rule(alterTableCheckMode).Keywords("CHECK", "NOCHECK");
             gb.Rule(alterTableConstraintTarget)
                 .CanBe(identifierTerm)
@@ -2286,54 +2286,54 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .CanBe(identifierTerm)
                 .OrKeywords("ALL");
 
-            gb.Prod("CreateKeyListIndexHead").Is("CREATE", "INDEX", identifierTerm);
-            gb.Prod("CreateKeyListIndexHead").Is("CREATE", "UNIQUE", "INDEX", identifierTerm);
-            gb.Prod("CreateKeyListIndexHead").Is("CREATE", "CLUSTERED", "INDEX", identifierTerm);
-            gb.Prod("CreateKeyListIndexHead").Is("CREATE", "NONCLUSTERED", "INDEX", identifierTerm);
-            gb.Prod("CreateKeyListIndexHead").Is("CREATE", "UNIQUE", "CLUSTERED", "INDEX", identifierTerm);
-            gb.Prod("CreateKeyListIndexHead").Is("CREATE", "UNIQUE", "NONCLUSTERED", "INDEX", identifierTerm);
-            gb.Prod("CreateKeyListIndexHead").Is("CREATE", "NONCLUSTERED", "COLUMNSTORE", "INDEX", identifierTerm);
-            gb.Prod("CreateKeylessIndexHead").Is("CREATE", "CLUSTERED", "COLUMNSTORE", "INDEX", identifierTerm);
-            gb.Prod("CreateIndexStatement").Is(createKeyListIndexHead, "ON", qualifiedName, "(", createIndexKeyList, ")");
-            gb.Prod("CreateIndexStatement").Is(createKeyListIndexHead, "ON", qualifiedName, "(", createIndexKeyList, ")", createIndexTailClauseList);
-            gb.Prod("CreateIndexStatement").Is(createKeylessIndexHead, "ON", qualifiedName);
-            gb.Prod("CreateIndexStatement").Is(createKeylessIndexHead, "ON", qualifiedName, createIndexTailClauseList);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "INDEX", identifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "UNIQUE", "INDEX", identifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "CLUSTERED", "INDEX", identifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "NONCLUSTERED", "INDEX", identifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "UNIQUE", "CLUSTERED", "INDEX", identifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "UNIQUE", "NONCLUSTERED", "INDEX", identifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "NONCLUSTERED", "COLUMNSTORE", "INDEX", identifierTerm);
+            gb.Prod(createKeylessIndexHead).Is("CREATE", "CLUSTERED", "COLUMNSTORE", "INDEX", identifierTerm);
+            gb.Prod(createIndexStatement).Is(createKeyListIndexHead, "ON", qualifiedName, "(", createIndexKeyList, ")");
+            gb.Prod(createIndexStatement).Is(createKeyListIndexHead, "ON", qualifiedName, "(", createIndexKeyList, ")", createIndexTailClauseList);
+            gb.Prod(createIndexStatement).Is(createKeylessIndexHead, "ON", qualifiedName);
+            gb.Prod(createIndexStatement).Is(createKeylessIndexHead, "ON", qualifiedName, createIndexTailClauseList);
 
-            gb.Prod("CreateIndexKeyList").Is(createIndexKeyItem);
-            gb.Prod("CreateIndexKeyList").Is(createIndexKeyList, ",", createIndexKeyItem);
-            gb.Prod("CreateIndexKeyItem").Is(identifierTerm);
-            gb.Prod("CreateIndexKeyItem").Is(identifierTerm, "ASC");
-            gb.Prod("CreateIndexKeyItem").Is(identifierTerm, "DESC");
+            gb.Prod(createIndexKeyList).Is(createIndexKeyItem);
+            gb.Prod(createIndexKeyList).Is(createIndexKeyList, ",", createIndexKeyItem);
+            gb.Prod(createIndexKeyItem).Is(identifierTerm);
+            gb.Prod(createIndexKeyItem).Is(identifierTerm, "ASC");
+            gb.Prod(createIndexKeyItem).Is(identifierTerm, "DESC");
 
-            gb.Prod("CreateIndexTailClauseList").Is(createIndexTailClause);
-            gb.Prod("CreateIndexTailClauseList").Is(createIndexTailClauseList, createIndexTailClause);
-            gb.Prod("CreateIndexTailClause").Is(createIndexIncludeClause);
-            gb.Prod("CreateIndexTailClause").Is(createIndexWhereClause);
-            gb.Prod("CreateIndexTailClause").Is(createIndexWithClause);
-            gb.Prod("CreateIndexTailClause").Is(createIndexStorageClause);
-            gb.Prod("CreateIndexTailClause").Is(createIndexFileStreamClause);
+            gb.Prod(createIndexTailClauseList).Is(createIndexTailClause);
+            gb.Prod(createIndexTailClauseList).Is(createIndexTailClauseList, createIndexTailClause);
+            gb.Prod(createIndexTailClause).Is(createIndexIncludeClause);
+            gb.Prod(createIndexTailClause).Is(createIndexWhereClause);
+            gb.Prod(createIndexTailClause).Is(createIndexWithClause);
+            gb.Prod(createIndexTailClause).Is(createIndexStorageClause);
+            gb.Prod(createIndexTailClause).Is(createIndexFileStreamClause);
 
-            gb.Prod("CreateIndexIncludeClause").Is("INCLUDE", "(", createIndexIncludeList, ")");
-            gb.Prod("CreateIndexIncludeList").Is(identifierTerm);
-            gb.Prod("CreateIndexIncludeList").Is(createIndexIncludeList, ",", identifierTerm);
-            gb.Prod("CreateIndexWhereClause").Is("WHERE", searchCondition);
-            gb.Prod("CreateIndexWithClause").Is("WITH", "(", indexOptionList, ")");
-            gb.Prod("CreateIndexStorageClause").Is("ON", indexStorageTarget);
-            gb.Prod("CreateIndexFileStreamClause").Is("FILESTREAM_ON", indexFileStreamTarget);
+            gb.Prod(createIndexIncludeClause).Is("INCLUDE", "(", createIndexIncludeList, ")");
+            gb.Prod(createIndexIncludeList).Is(identifierTerm);
+            gb.Prod(createIndexIncludeList).Is(createIndexIncludeList, ",", identifierTerm);
+            gb.Prod(createIndexWhereClause).Is("WHERE", searchCondition);
+            gb.Prod(createIndexWithClause).Is("WITH", "(", indexOptionList, ")");
+            gb.Prod(createIndexStorageClause).Is("ON", indexStorageTarget);
+            gb.Prod(createIndexFileStreamClause).Is("FILESTREAM_ON", indexFileStreamTarget);
 
-            gb.Prod("IndexStorageTarget").Is(qualifiedName);
-            gb.Prod("IndexStorageTarget").Is("DEFAULT");
-            gb.Prod("IndexStorageTarget").Is(qualifiedName, "(", identifierTerm, ")");
-            gb.Prod("IndexFileStreamTarget").Is(qualifiedName);
-            gb.Prod("IndexFileStreamTarget").Is("NULL");
-            gb.Prod("IndexFileStreamTarget").Is(qualifiedName, "(", identifierTerm, ")");
+            gb.Prod(indexStorageTarget).Is(qualifiedName);
+            gb.Prod(indexStorageTarget).Is("DEFAULT");
+            gb.Prod(indexStorageTarget).Is(qualifiedName, "(", identifierTerm, ")");
+            gb.Prod(indexFileStreamTarget).Is(qualifiedName);
+            gb.Prod(indexFileStreamTarget).Is("NULL");
+            gb.Prod(indexFileStreamTarget).Is(qualifiedName, "(", identifierTerm, ")");
 
-            gb.Prod("IndexOptionList").Is(indexOption);
-            gb.Prod("IndexOptionList").Is(indexOptionList, ",", indexOption);
-            gb.Prod("IndexOptionList").Is(indexOptionList, ","); // allow trailing comma
-            gb.Prod("IndexOption").Is(indexOptionName, "=", indexOptionValue);
-            gb.Prod("IndexOption").Is(indexOptionName, "(", indexOptionList, ")");
-            gb.Prod("IndexOption").Is(indexOptionName, "=", indexOptionValue, "ON", "PARTITIONS", "(", indexPartitionList, ")");
+            gb.Prod(indexOptionList).Is(indexOption);
+            gb.Prod(indexOptionList).Is(indexOptionList, ",", indexOption);
+            gb.Prod(indexOptionList).Is(indexOptionList, ","); // allow trailing comma
+            gb.Prod(indexOption).Is(indexOptionName, "=", indexOptionValue);
+            gb.Prod(indexOption).Is(indexOptionName, "(", indexOptionList, ")");
+            gb.Prod(indexOption).Is(indexOptionName, "=", indexOptionValue, "ON", "PARTITIONS", "(", indexPartitionList, ")");
 
             gb.Rule(indexOptionName)
                 .CanBe("PAD_INDEX")
@@ -2359,25 +2359,25 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .Or("LOB_COMPACTION")
                 .Or("RESUMABLE");
 
-            gb.Prod("IndexOptionValue").Is(expression);
-            gb.Prod("IndexOptionValue").Is(indexOnOffValue);
-            gb.Prod("IndexOptionValue").Is("NONE");
-            gb.Prod("IndexOptionValue").Is("SELF");
-            gb.Prod("IndexOptionValue").Is("BLOCKERS");
-            gb.Prod("IndexOptionValue").Is("ROW");
-            gb.Prod("IndexOptionValue").Is("PAGE");
-            gb.Prod("IndexOptionValue").Is("COLUMNSTORE");
-            gb.Prod("IndexOptionValue").Is("COLUMNSTORE_ARCHIVE");
-            gb.Prod("IndexOptionValue").Is(expression, "MINUTES");
-            gb.Prod("IndexOptionValue").Is(indexOnOffValue, "(", indexOptionList, ")");
-            gb.Prod("IndexOptionValue").Is("(", indexOptionList, ")");
+            gb.Prod(indexOptionValue).Is(expression);
+            gb.Prod(indexOptionValue).Is(indexOnOffValue);
+            gb.Prod(indexOptionValue).Is("NONE");
+            gb.Prod(indexOptionValue).Is("SELF");
+            gb.Prod(indexOptionValue).Is("BLOCKERS");
+            gb.Prod(indexOptionValue).Is("ROW");
+            gb.Prod(indexOptionValue).Is("PAGE");
+            gb.Prod(indexOptionValue).Is("COLUMNSTORE");
+            gb.Prod(indexOptionValue).Is("COLUMNSTORE_ARCHIVE");
+            gb.Prod(indexOptionValue).Is(expression, "MINUTES");
+            gb.Prod(indexOptionValue).Is(indexOnOffValue, "(", indexOptionList, ")");
+            gb.Prod(indexOptionValue).Is("(", indexOptionList, ")");
             gb.Rule(indexOnOffValue).Keywords("ON", "OFF");
 
-            gb.Prod("NamedOptionValue").Is(expression);
-            gb.Prod("NamedOptionValue").Is(identifierTerm);
-            gb.Prod("NamedOptionValue").Is(qualifiedName);
-            gb.Prod("NamedOptionValue").Is("ON");
-            gb.Prod("NamedOptionValue").Is("OFF");
+            gb.Prod(namedOptionValue).Is(expression);
+            gb.Prod(namedOptionValue).Is(identifierTerm);
+            gb.Prod(namedOptionValue).Is(qualifiedName);
+            gb.Prod(namedOptionValue).Is("ON");
+            gb.Prod(namedOptionValue).Is("OFF");
 
             gb.Prod("MaskingOptionList").Is("FUNCTION", "=", expression);
 
@@ -2388,11 +2388,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod("EncryptionOptionList").Is("ENCRYPTION_TYPE", "=", namedOptionValue);
             gb.Prod("EncryptionOptionList").Is("ALGORITHM", "=", namedOptionValue);
 
-            gb.Prod("IndexPartitionList").Is(indexPartitionItem);
-            gb.Prod("IndexPartitionList").Is(indexPartitionList, ",", indexPartitionItem);
-            gb.Prod("IndexPartitionItem").Is(expression);
-            gb.Prod("IndexPartitionItem").Is(expression, "TO", expression);
-            gb.Prod("IndexPartitionItem").Is("ALL");
+            gb.Prod(indexPartitionList).Is(indexPartitionItem);
+            gb.Prod(indexPartitionList).Is(indexPartitionList, ",", indexPartitionItem);
+            gb.Prod(indexPartitionItem).Is(expression);
+            gb.Prod(indexPartitionItem).Is(expression, "TO", expression);
+            gb.Prod(indexPartitionItem).Is("ALL");
 
             gb.Prod("AlterIndexStatement").Is("ALTER", "INDEX", alterIndexTarget, "ON", qualifiedName, alterIndexAction);
             gb.Rule(alterIndexTarget)
