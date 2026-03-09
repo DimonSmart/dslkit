@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DSLKIT.GrammarExamples.MsSql;
+using DSLKIT.GrammarExamples.MsSql.Formatting;
 using FluentAssertions;
 using Xunit;
 
@@ -23,12 +24,403 @@ namespace DSLKIT.Test.GrammarExamples
                 $"formatted SQL for option '{optionId}' should parse, but failed with: {reparsed.Error}");
         }
 
+        [Theory]
+        [MemberData(nameof(ProblematicOptionExamples))]
+        public void TryFormat_ShouldProduceDifferentOutput_ForProblematicOptionExamples(
+            string optionId,
+            string sourceSql,
+            SqlFormattingOptions firstOptions,
+            SqlFormattingOptions secondOptions)
+        {
+            var firstResult = FormatOrThrow(optionId, sourceSql, firstOptions);
+            var secondResult = FormatOrThrow(optionId, sourceSql, secondOptions);
+
+            firstResult.Should().NotBe(
+                secondResult,
+                $"option example '{optionId}' should show a visible formatting difference for the tested values.");
+        }
+
         public static IEnumerable<object[]> OptionExamples()
         {
             foreach (var optionExample in OptionExampleSqlByOptionId)
             {
                 yield return new object[] { optionExample.Key, optionExample.Value };
             }
+        }
+
+        public static IEnumerable<object[]> ProblematicOptionExamples()
+        {
+            yield return
+            [
+                "sql-joins-multiline-threshold",
+                JoinsExampleSql,
+                new SqlFormattingOptions
+                {
+                    Joins = new SqlJoinsFormattingOptions
+                    {
+                        NewlinePerJoin = true,
+                        OnNewLine = true,
+                        MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
+                        {
+                            MaxTokensSingleLine = 0,
+                            BreakOnAnd = true,
+                            BreakOnOr = true
+                        }
+                    }
+                },
+                new SqlFormattingOptions
+                {
+                    Joins = new SqlJoinsFormattingOptions
+                    {
+                        NewlinePerJoin = true,
+                        OnNewLine = true,
+                        MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
+                        {
+                            MaxTokensSingleLine = 12,
+                            BreakOnAnd = true,
+                            BreakOnOr = true
+                        }
+                    }
+                }
+            ];
+
+            yield return
+            [
+                "sql-predicates-inline-max-line-length",
+                PredicatesInlineExampleSql,
+                new SqlFormattingOptions
+                {
+                    Predicates = new SqlPredicatesFormattingOptions
+                    {
+                        MultilineWhere = true,
+                        InlineSimplePredicate = new SqlInlineSimplePredicateOptions
+                        {
+                            MaxConditions = 4,
+                            MaxLineLength = 40,
+                            AllowOnlyAnd = true
+                        }
+                    }
+                },
+                new SqlFormattingOptions
+                {
+                    Predicates = new SqlPredicatesFormattingOptions
+                    {
+                        MultilineWhere = true,
+                        InlineSimplePredicate = new SqlInlineSimplePredicateOptions
+                        {
+                            MaxConditions = 4,
+                            MaxLineLength = 80,
+                            AllowOnlyAnd = true
+                        }
+                    }
+                }
+            ];
+
+            yield return
+            [
+                "sql-predicates-inline-allow-only-and",
+                PredicateAllowOnlyAndExampleSql,
+                new SqlFormattingOptions
+                {
+                    Predicates = new SqlPredicatesFormattingOptions
+                    {
+                        MultilineWhere = true,
+                        InlineSimplePredicate = new SqlInlineSimplePredicateOptions
+                        {
+                            MaxConditions = 2,
+                            MaxLineLength = 120,
+                            AllowOnlyAnd = true
+                        }
+                    }
+                },
+                new SqlFormattingOptions
+                {
+                    Predicates = new SqlPredicatesFormattingOptions
+                    {
+                        MultilineWhere = true,
+                        InlineSimplePredicate = new SqlInlineSimplePredicateOptions
+                        {
+                            MaxConditions = 2,
+                            MaxLineLength = 120,
+                            AllowOnlyAnd = false
+                        }
+                    }
+                }
+            ];
+
+            yield return
+            [
+                "sql-short-queries-max-select-items",
+                ShortQuerySelectItemsExampleSql,
+                new SqlFormattingOptions
+                {
+                    ShortQueries = new SqlShortQueriesFormattingOptions
+                    {
+                        Enabled = true,
+                        MaxLineLength = 120,
+                        MaxSelectItems = 1,
+                        MaxPredicateConditions = 1
+                    }
+                },
+                new SqlFormattingOptions
+                {
+                    ShortQueries = new SqlShortQueriesFormattingOptions
+                    {
+                        Enabled = true,
+                        MaxLineLength = 120,
+                        MaxSelectItems = 2,
+                        MaxPredicateConditions = 1
+                    }
+                }
+            ];
+
+            yield return
+            [
+                "sql-short-queries-max-predicate-conditions",
+                ShortQueryPredicateThresholdExampleSql,
+                new SqlFormattingOptions
+                {
+                    ShortQueries = new SqlShortQueriesFormattingOptions
+                    {
+                        Enabled = true,
+                        MaxLineLength = 120,
+                        MaxSelectItems = 1,
+                        MaxPredicateConditions = 2
+                    }
+                },
+                new SqlFormattingOptions
+                {
+                    ShortQueries = new SqlShortQueriesFormattingOptions
+                    {
+                        Enabled = true,
+                        MaxLineLength = 120,
+                        MaxSelectItems = 1,
+                        MaxPredicateConditions = 3
+                    }
+                }
+            ];
+
+            yield return
+            [
+                "sql-case-threshold-max-line",
+                ExpressionsCaseExampleSql,
+                new SqlFormattingOptions
+                {
+                    Expressions = new SqlExpressionsFormattingOptions
+                    {
+                        CaseStyle = SqlCaseStyle.CompactWhenShort,
+                        CompactCaseThreshold = new SqlCompactCaseThresholdOptions
+                        {
+                            MaxWhenClauses = 0,
+                            MaxTokens = 0,
+                            MaxLineLength = 40
+                        }
+                    }
+                },
+                new SqlFormattingOptions
+                {
+                    Expressions = new SqlExpressionsFormattingOptions
+                    {
+                        CaseStyle = SqlCaseStyle.CompactWhenShort,
+                        CompactCaseThreshold = new SqlCompactCaseThresholdOptions
+                        {
+                            MaxWhenClauses = 0,
+                            MaxTokens = 0,
+                            MaxLineLength = 120
+                        }
+                    }
+                }
+            ];
+
+            yield return
+            [
+                "sql-inline-short-max-depth",
+                InlineShortExpressionDepthExampleSql,
+                new SqlFormattingOptions
+                {
+                    Expressions = new SqlExpressionsFormattingOptions
+                    {
+                        InlineShortExpression = new SqlInlineShortExpressionOptions
+                        {
+                            MaxTokens = 20,
+                            MaxDepth = 12,
+                            MaxLineLength = 120,
+                            ForContexts = [SqlInlineExpressionContext.SelectItem, SqlInlineExpressionContext.Where]
+                        }
+                    }
+                },
+                new SqlFormattingOptions
+                {
+                    Expressions = new SqlExpressionsFormattingOptions
+                    {
+                        InlineShortExpression = new SqlInlineShortExpressionOptions
+                        {
+                            MaxTokens = 20,
+                            MaxDepth = 15,
+                            MaxLineLength = 120,
+                            ForContexts = [SqlInlineExpressionContext.SelectItem, SqlInlineExpressionContext.Where]
+                        }
+                    }
+                }
+            ];
+
+            yield return
+            [
+                "sql-inline-short-max-line",
+                InlineShortExpressionExampleSql,
+                new SqlFormattingOptions
+                {
+                    Joins = new SqlJoinsFormattingOptions
+                    {
+                        NewlinePerJoin = true,
+                        OnNewLine = true,
+                        MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
+                        {
+                            MaxTokensSingleLine = 12,
+                            BreakOnAnd = true,
+                            BreakOnOr = false
+                        }
+                    },
+                    Predicates = new SqlPredicatesFormattingOptions
+                    {
+                        MultilineWhere = true
+                    },
+                    Expressions = new SqlExpressionsFormattingOptions
+                    {
+                        InlineShortExpression = new SqlInlineShortExpressionOptions
+                        {
+                            MaxTokens = 20,
+                            MaxDepth = 0,
+                            MaxLineLength = 40,
+                            ForContexts = [SqlInlineExpressionContext.SelectItem, SqlInlineExpressionContext.On, SqlInlineExpressionContext.Where]
+                        }
+                    }
+                },
+                new SqlFormattingOptions
+                {
+                    Joins = new SqlJoinsFormattingOptions
+                    {
+                        NewlinePerJoin = true,
+                        OnNewLine = true,
+                        MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
+                        {
+                            MaxTokensSingleLine = 12,
+                            BreakOnAnd = true,
+                            BreakOnOr = false
+                        }
+                    },
+                    Predicates = new SqlPredicatesFormattingOptions
+                    {
+                        MultilineWhere = true
+                    },
+                    Expressions = new SqlExpressionsFormattingOptions
+                    {
+                        InlineShortExpression = new SqlInlineShortExpressionOptions
+                        {
+                            MaxTokens = 20,
+                            MaxDepth = 0,
+                            MaxLineLength = 120,
+                            ForContexts = [SqlInlineExpressionContext.SelectItem, SqlInlineExpressionContext.On, SqlInlineExpressionContext.Where]
+                        }
+                    }
+                }
+            ];
+
+            yield return
+            [
+                "sql-select-compact-max-items",
+                SelectCompactThresholdExampleSql,
+                new SqlFormattingOptions
+                {
+                    Lists = new SqlListsFormattingOptions
+                    {
+                        SelectItems = SqlListLayoutStyle.OnePerLine,
+                        SelectCompactThreshold = new SqlSelectCompactThresholdOptions
+                        {
+                            MaxItems = 1,
+                            MaxLineLength = 120,
+                            AllowExpressions = false
+                        }
+                    }
+                },
+                new SqlFormattingOptions
+                {
+                    Lists = new SqlListsFormattingOptions
+                    {
+                        SelectItems = SqlListLayoutStyle.OnePerLine,
+                        SelectCompactThreshold = new SqlSelectCompactThresholdOptions
+                        {
+                            MaxItems = 2,
+                            MaxLineLength = 120,
+                            AllowExpressions = false
+                        }
+                    }
+                }
+            ];
+
+            yield return
+            [
+                "sql-select-compact-max-line-length",
+                SelectCompactLineLengthExampleSql,
+                new SqlFormattingOptions
+                {
+                    Lists = new SqlListsFormattingOptions
+                    {
+                        SelectItems = SqlListLayoutStyle.OnePerLine,
+                        SelectCompactThreshold = new SqlSelectCompactThresholdOptions
+                        {
+                            MaxItems = 2,
+                            MaxLineLength = 40,
+                            AllowExpressions = false
+                        }
+                    }
+                },
+                new SqlFormattingOptions
+                {
+                    Lists = new SqlListsFormattingOptions
+                    {
+                        SelectItems = SqlListLayoutStyle.OnePerLine,
+                        SelectCompactThreshold = new SqlSelectCompactThresholdOptions
+                        {
+                            MaxItems = 2,
+                            MaxLineLength = 120,
+                            AllowExpressions = false
+                        }
+                    }
+                }
+            ];
+
+            yield return
+            [
+                "sql-select-compact-allow-expressions",
+                SelectCompactWithExpressionsExampleSql,
+                new SqlFormattingOptions
+                {
+                    Lists = new SqlListsFormattingOptions
+                    {
+                        SelectItems = SqlListLayoutStyle.OnePerLine,
+                        SelectCompactThreshold = new SqlSelectCompactThresholdOptions
+                        {
+                            MaxItems = 4,
+                            MaxLineLength = 120,
+                            AllowExpressions = false
+                        }
+                    }
+                },
+                new SqlFormattingOptions
+                {
+                    Lists = new SqlListsFormattingOptions
+                    {
+                        SelectItems = SqlListLayoutStyle.OnePerLine,
+                        SelectCompactThreshold = new SqlSelectCompactThresholdOptions
+                        {
+                            MaxItems = 4,
+                            MaxLineLength = 120,
+                            AllowExpressions = true
+                        }
+                    }
+                }
+            ];
         }
 
         private const string KeywordCaseExampleSql =
@@ -67,7 +459,7 @@ order by CustomerId;";
 select o.CustomerId,o.TotalAmount from dbo.Orders as o option (recompile);";
 
         private const string JoinsExampleSql =
-            @"-- JOIN layout: try ON max tokens = 0, 1, 7, 11, 15 and toggle break on AND/OR.
+            @"-- JOIN layout: try ON token limits such as 0, 12, 18 and toggle break on AND/OR.
 select a.Id,a.Region
 from dbo.A as a
 inner join dbo.B as b on a.Id=b.Id and b.Flag=1
@@ -81,25 +473,39 @@ from dbo.A as a
 where a.Status=1 and a.Region='EU' or a.Region='US' and a.Score>10 or a.PriorityScore>3;";
 
         private const string PredicatesInlineExampleSql =
-            @"-- Inline predicate threshold: use multiline WHERE and compare 0, 2, 4 conditions.
+            @"-- Inline predicate threshold: compare 0, 2, 4 conditions and short vs longer line limits.
 select a.Id
 from dbo.A as a
 where a.Status=1 and a.Region='EU' and a.Score>10 and a.Flag=1;";
+
+        private const string PredicateAllowOnlyAndExampleSql =
+            @"-- Inline predicate AND-only: compare OR staying multiline unless OR is explicitly allowed.
+select a.Id
+from dbo.A as a
+where a.Status=1 or a.Flag=1;";
 
         private const string ExpressionsCaseExampleSql =
             @"-- CASE style: compare multiline and compact formatting in SET/DECLARE expressions.
 set @grade = case when @score>90 then 'A' when @score>70 then 'B' else 'C' end;";
 
         private const string InlineShortExpressionExampleSql =
-            @"-- Inline short expression: compare SELECT/ON/WHERE staying inline when thresholds allow.
+            @"-- Inline short expression: compare token and line thresholds plus SELECT/ON/WHERE contexts.
 select a.Price+a.Tax+a.Fee as total,a.Id as id
 from dbo.A as a
 inner join dbo.B as b on a.Id+b.Id>10 and b.Flag=1
 where a.Score+a.Bonus>0 and a.IsActive=1;";
 
+        private const string InlineShortExpressionDepthExampleSql =
+            @"-- Inline short expression depth: compare parse-depth thresholds such as 12 and 15.
+select a.Price+a.Tax as total
+from dbo.A as a
+where a.Score+a.Bonus>0;";
+
         private const string ShortQueriesExampleSql =
-            @"-- Short queries: compare top-level SELECT, parenthesized subquery, and single-JOIN compaction.
-select 1 from dbo.A where X=3 and Y=4;
+            @"select 1 from dbo.A where X=3 and Y=4;
+select a.Id
+from dbo.A as a
+where exists (select 1 from dbo.B as b where b.AId=a.Id and b.IsActive=1);
 select q.Id
 from (select a.Id from dbo.A as a where a.Status=1 and a.Flag=1) as q;
 select a.Id
@@ -107,13 +513,21 @@ from dbo.A as a
 inner join dbo.B as b on a.Id=b.AId
 where a.Status=1;";
 
+        private const string ShortQuerySelectItemsExampleSql =
+            @"select a.Id,a.Region from dbo.A as a where a.Status=1;";
+
+        private const string ShortQueryPredicateThresholdExampleSql =
+            @"select 1 from dbo.A where X=3 and Y=4 and Z=5;";
+
         private const string ListsExampleSql =
             @"-- List layout: focus on comma style and wrapping in SELECT/IN/GROUP BY/ORDER BY lists.
 select a.Id,a.Region,a.Status,a.Score from dbo.A as a where a.Id in(1,2,3,4,5,6,7,8) group by a.Id,a.Region,a.Status,a.Score order by a.Id,a.Region,a.Status,a.Score;";
 
         private const string SelectCompactThresholdExampleSql =
-            @"-- Compact SELECT threshold: compare item count and line length on a short SELECT list.
-select a.Id,a.Region,a.Status,a.Score from dbo.A as a;";
+            @"SELECT a AS A, b AS B FROM dbo.t AS t";
+
+        private const string SelectCompactLineLengthExampleSql =
+            @"SELECT currentQuarterRevenue AS current_quarter_revenue, projectedAnnualRevenue AS projected_annual_revenue FROM dbo.t AS t";
 
         private const string SelectCompactWithExpressionsExampleSql =
             @"-- Compact SELECT threshold: verify whether expression items still stay on one line.
@@ -164,7 +578,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             ["sql-predicates-logical-break"] = PredicatesExampleSql,
             ["sql-predicates-inline-max-conditions"] = PredicatesInlineExampleSql,
             ["sql-predicates-inline-max-line-length"] = PredicatesInlineExampleSql,
-            ["sql-predicates-inline-allow-only-and"] = PredicatesExampleSql,
+            ["sql-predicates-inline-allow-only-and"] = PredicateAllowOnlyAndExampleSql,
             ["sql-predicates-mixed-and-or-parenthesize-or-groups"] = PredicatesExampleSql,
             ["sql-predicates-mixed-and-or-break-or-groups"] = PredicatesExampleSql,
             ["sql-expressions-case-style"] = ExpressionsCaseExampleSql,
@@ -172,15 +586,15 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             ["sql-case-threshold-max-tokens"] = ExpressionsCaseExampleSql,
             ["sql-case-threshold-max-line"] = ExpressionsCaseExampleSql,
             ["sql-inline-short-max-tokens"] = InlineShortExpressionExampleSql,
-            ["sql-inline-short-max-depth"] = InlineShortExpressionExampleSql,
+            ["sql-inline-short-max-depth"] = InlineShortExpressionDepthExampleSql,
             ["sql-inline-short-max-line"] = InlineShortExpressionExampleSql,
             ["sql-inline-short-select-item"] = InlineShortExpressionExampleSql,
             ["sql-inline-short-on"] = InlineShortExpressionExampleSql,
             ["sql-inline-short-where"] = InlineShortExpressionExampleSql,
             ["sql-short-queries-enabled"] = ShortQueriesExampleSql,
             ["sql-short-queries-max-line-length"] = ShortQueriesExampleSql,
-            ["sql-short-queries-max-select-items"] = ShortQueriesExampleSql,
-            ["sql-short-queries-max-predicate-conditions"] = ShortQueriesExampleSql,
+            ["sql-short-queries-max-select-items"] = ShortQuerySelectItemsExampleSql,
+            ["sql-short-queries-max-predicate-conditions"] = ShortQueryPredicateThresholdExampleSql,
             ["sql-short-queries-apply-to-parenthesized-subqueries"] = ShortQueriesExampleSql,
             ["sql-short-queries-allow-single-join"] = ShortQueriesExampleSql,
             ["sql-comma-style"] = ListsExampleSql,
@@ -188,7 +602,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             ["sql-group-by-items-style"] = ListsExampleSql,
             ["sql-order-by-items-style"] = ListsExampleSql,
             ["sql-select-compact-max-items"] = SelectCompactThresholdExampleSql,
-            ["sql-select-compact-max-line-length"] = SelectCompactThresholdExampleSql,
+            ["sql-select-compact-max-line-length"] = SelectCompactLineLengthExampleSql,
             ["sql-select-compact-allow-expressions"] = SelectCompactWithExpressionsExampleSql,
             ["sql-in-list-items-style"] = ListsExampleSql,
             ["sql-inline-in-list-max-items"] = InListThresholdExampleSql,
@@ -204,5 +618,15 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             ["sql-spaces-around-binary-operators"] = SpacingExampleSql,
             ["sql-spaces-before-semicolon"] = SpacingExampleSql
         };
+
+        private static string FormatOrThrow(string optionId, string sourceSql, SqlFormattingOptions options)
+        {
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            result.IsSuccess.Should().BeTrue(
+                $"option example '{optionId}' should format with the tested options, but failed with: {result.ErrorMessage}");
+            return NormalizeLineEndings(result.FormattedSql!);
+        }
+
+        private static string NormalizeLineEndings(string text) => text.Replace("\r\n", "\n");
     }
 }
