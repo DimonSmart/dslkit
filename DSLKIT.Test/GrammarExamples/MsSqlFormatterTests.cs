@@ -325,10 +325,6 @@ namespace DSLKIT.Test.GrammarExamples
                         MaxConditions = 0,
                         MaxLineLength = 120,
                         AllowOnlyAnd = true
-                    },
-                    MixedAndOrParentheses = new SqlMixedAndOrParenthesesOptions
-                    {
-                        Mode = SqlMixedAndOrParenthesesMode.KeepOriginal
                     }
                 }
             };
@@ -350,11 +346,7 @@ namespace DSLKIT.Test.GrammarExamples
                 Predicates = new SqlPredicatesFormattingOptions
                 {
                     MultilineWhere = true,
-                    LogicalOperatorLineBreak = SqlLogicalOperatorLineBreakMode.BeforeOperator,
-                    MixedAndOrParentheses = new SqlMixedAndOrParenthesesOptions
-                    {
-                        Mode = SqlMixedAndOrParenthesesMode.KeepOriginal
-                    }
+                    LogicalOperatorLineBreak = SqlLogicalOperatorLineBreakMode.BeforeOperator
                 }
             };
 
@@ -364,6 +356,54 @@ namespace DSLKIT.Test.GrammarExamples
             result.IsSuccess.Should().BeTrue();
             NormalizeSql(formattedSql!).Should().Be(NormalizeSql(sourceSql));
             formattedSql.Should().Contain("AND (b = 2 OR c = 3)");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldParenthesizeMixedAndOrGroups_WhenEnabled()
+        {
+            const string sourceSql = "SELECT a AS A FROM dbo.t AS t WHERE a = 1 AND b = 2 OR c = 3 AND d = 4";
+            var options = new SqlFormattingOptions
+            {
+                Predicates = new SqlPredicatesFormattingOptions
+                {
+                    MultilineWhere = false,
+                    MixedAndOrParentheses = new SqlMixedAndOrParenthesesOptions
+                    {
+                        ParenthesizeOrGroups = true
+                    }
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+
+            result.IsSuccess.Should().BeTrue();
+            formattedSql.Should().Contain("WHERE (a = 1 AND b = 2) OR (c = 3 AND d = 4)");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldBreakMixedAndOrGroups_WhenEnabled()
+        {
+            const string sourceSql = "SELECT a AS A FROM dbo.t AS t WHERE a = 1 AND b = 2 OR c = 3 AND d = 4 OR e = 5";
+            var options = new SqlFormattingOptions
+            {
+                Predicates = new SqlPredicatesFormattingOptions
+                {
+                    MultilineWhere = true,
+                    LogicalOperatorLineBreak = SqlLogicalOperatorLineBreakMode.BeforeOperator,
+                    MixedAndOrParentheses = new SqlMixedAndOrParenthesesOptions
+                    {
+                        BreakOrGroups = true,
+                        ParenthesizeOrGroups = true
+                    }
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+
+            result.IsSuccess.Should().BeTrue();
+            formattedSql.Should().Contain("WHERE\n    (a = 1 AND b = 2)\n    OR (c = 3 AND d = 4)\n    OR e = 5");
         }
 
         [Fact]
@@ -394,30 +434,38 @@ namespace DSLKIT.Test.GrammarExamples
         [Fact]
         public void TryFormat_ShouldApplyStage6CaseLayoutSettings()
         {
-            const string sourceSql = "SELECT CASE WHEN x=1 THEN 'A' ELSE 'B' END AS v FROM dbo.t AS t";
-            var options = new SqlFormattingOptions
+            const string sourceSql = "SET @grade = CASE WHEN @score=100 THEN 'A' WHEN @score=80 THEN 'B' ELSE 'C' END;";
+            var compactOptions = new SqlFormattingOptions
             {
                 Expressions = new SqlExpressionsFormattingOptions
                 {
                     CaseStyle = SqlCaseStyle.CompactWhenShort,
                     CompactCaseThreshold = new SqlCompactCaseThresholdOptions
                     {
-                        MaxWhenClauses = 1,
-                        MaxTokens = 20,
+                        MaxWhenClauses = 2,
+                        MaxTokens = 30,
                         MaxLineLength = 120
                     }
-                },
-                Lists = new SqlListsFormattingOptions
+                }
+            };
+            var multilineOptions = new SqlFormattingOptions
+            {
+                Expressions = new SqlExpressionsFormattingOptions
                 {
-                    SelectItems = SqlListLayoutStyle.OnePerLine
+                    CaseStyle = SqlCaseStyle.Multiline
                 }
             };
 
-            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
-            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+            var compactResult = ModernMsSqlFormatter.TryFormat(sourceSql, compactOptions);
+            var multilineResult = ModernMsSqlFormatter.TryFormat(sourceSql, multilineOptions);
+            var compactSql = NormalizeLineEndings(compactResult.FormattedSql);
+            var multilineSql = NormalizeLineEndings(multilineResult.FormattedSql);
 
-            result.IsSuccess.Should().BeTrue();
-            formattedSql.Should().Contain("CASE WHEN x = 1 THEN 'A' ELSE 'B' END AS v");
+            compactResult.IsSuccess.Should().BeTrue();
+            multilineResult.IsSuccess.Should().BeTrue();
+            compactSql.Should().Contain("SET @grade = CASE WHEN @score = 100 THEN 'A' WHEN @score = 80 THEN 'B' ELSE 'C' END;");
+            multilineSql.Should().Contain("CASE\n");
+            multilineSql.Should().Contain("\n    WHEN @score = 100 THEN 'A'");
         }
 
         [Fact]
@@ -635,16 +683,22 @@ namespace DSLKIT.Test.GrammarExamples
                     MAXSIZE = 512MB,
                     FILEGROWTH = 64MB
                 ),
+                FILEGROUP FG_Archive CONTAINS FILESTREAM DEFAULT
+                (
+                    NAME = ArchiveFs,
+                    FILENAME = 'C:\data\archive'
+                ),
                 LOG ON
                 (
                     NAME = SalesLog,
                     FILENAME = 'C:\data\sales.ldf',
                     FILEGROWTH = 10%
                 )
+                COLLATE Latin1_General_100_CI_AS
                 WITH
-                FILESTREAM ( DIRECTORY_NAME = 'salesfs', NON_TRANSACTED_ACCESS = FULL ),
-                DEFAULT_FULLTEXT_LANGUAGE = 1033,
-                DB_CHAINING ON,
+                DEFAULT_LANGUAGE = us_english,
+                NESTED_TRIGGERS = ON,
+                TRUSTWORTHY OFF,
                 LEDGER = OFF;
                 GO
                 """;
@@ -654,8 +708,8 @@ namespace DSLKIT.Test.GrammarExamples
             result.IsSuccess.Should().BeTrue();
             var formattedSql = NormalizeLineEndings(result.FormattedSql!);
             formattedSql.Should().Contain("CREATE DATABASE Sales");
-            formattedSql.Should().Contain("FILESTREAM (DIRECTORY_NAME = 'salesfs', NON_TRANSACTED_ACCESS =");
-            formattedSql.Should().Contain("FULL");
+            formattedSql.Should().Contain("FILEGROUP FG_Archive CONTAINS FILESTREAM DEFAULT");
+            formattedSql.Should().Contain("DEFAULT_LANGUAGE = us_english");
             formattedSql.Should().Contain("GO");
         }
 

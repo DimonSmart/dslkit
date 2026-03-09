@@ -86,7 +86,7 @@
                             <CascadingValue Value="OptionExamples">
                                 <div class="dsl-sql-option-sections" @onchange="OnOptionsChangedAsync">
                                 <details class="dsl-sql-option-section" open>
-                                    <summary>Text</summary>
+                                    <summary>General</summary>
                                     <div class="dsl-sql-property-grid">
                                         <div class="dsl-sql-property-row" hidden='@HideOption("keyword keyword case uppercase lowercase preserve")'>
                                             <SqlOptionLabel ForId="sql-keyword-case" Text="Keyword case" OnExampleRequested="OnOptionExampleRequestedAsync" />
@@ -101,7 +101,7 @@
                                             <SqlOptionLabel ForId="sql-statement-semicolon" Text="Terminate with semicolon" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <select id="sql-statement-semicolon" class="form-select form-select-sm" @bind="terminateWithSemicolon" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlStatementTerminationMode.Never">Never</option>
-                                                <option value="@SqlStatementTerminationMode.ExistingOnly">ExistingOnly</option>
+                                                <option value="@SqlStatementTerminationMode.ExistingOnly">Existing only</option>
                                                 <option value="@SqlStatementTerminationMode.Always">Always</option>
                                             </select>
                                         </div>
@@ -111,10 +111,6 @@
                                             <input id="sql-eof-newline" class="form-check-input" type="checkbox" @bind="eofNewline" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
-                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("align select aliases")'>
-                                            <SqlOptionLabel ForId="sql-align-select-aliases" Text="Align select aliases" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-align-select-aliases" class="form-check-input" type="checkbox" @bind="alignSelectAliases" @bind:after="OnOptionValueChangedAsync" />
-                                        </div>
                                     </div>
                                 </details>
 
@@ -229,8 +225,8 @@
                                             <select id="sql-predicates-logical-break"
                                                     class="form-select form-select-sm"
                                                     @bind="predicatesLogicalOperatorLineBreak" @bind:after="OnOptionValueChangedAsync">
-                                                <option value="@SqlLogicalOperatorLineBreakMode.BeforeOperator">BeforeOperator</option>
-                                                <option value="@SqlLogicalOperatorLineBreakMode.AfterOperator">AfterOperator</option>
+                                                <option value="@SqlLogicalOperatorLineBreakMode.BeforeOperator">Before operator</option>
+                                                <option value="@SqlLogicalOperatorLineBreakMode.AfterOperator">After operator</option>
                                             </select>
                                         </div>
 
@@ -259,13 +255,20 @@
                                             <input id="sql-predicates-inline-allow-only-and" class="form-check-input" type="checkbox" @bind="predicatesInlineSimpleAllowOnlyAnd" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
-                                        <div class="dsl-sql-property-row" hidden='@HideOption("predicates mixed and or parentheses keep original preserve semantics")'>
-                                            <SqlOptionLabel ForId="sql-predicates-mixed-and-or-parentheses-mode" Text="Mixed AND/OR parentheses" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <select id="sql-predicates-mixed-and-or-parentheses-mode"
-                                                    class="form-select form-select-sm"
-                                                    @bind="predicatesMixedAndOrParenthesesMode" @bind:after="OnOptionValueChangedAsync">
-                                                <option value="@SqlMixedAndOrParenthesesMode.KeepOriginal">KeepOriginal</option>
-                                            </select>
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("predicates mixed and or parenthesize or groups")'>
+                                            <SqlOptionLabel ForId="sql-predicates-mixed-and-or-parenthesize-or-groups" Text="Parenthesize OR groups" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <input id="sql-predicates-mixed-and-or-parenthesize-or-groups"
+                                                   class="form-check-input"
+                                                   type="checkbox"
+                                                   @bind="predicatesMixedAndOrParenthesizeOrGroups" @bind:after="OnOptionValueChangedAsync" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("predicates mixed and or break or groups")'>
+                                            <SqlOptionLabel ForId="sql-predicates-mixed-and-or-break-or-groups" Text="Break OR groups" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <input id="sql-predicates-mixed-and-or-break-or-groups"
+                                                   class="form-check-input"
+                                                   type="checkbox"
+                                                   @bind="predicatesMixedAndOrBreakOrGroups" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
                                     </div>
                                 </details>
@@ -279,7 +282,7 @@
                                                     class="form-select form-select-sm"
                                                     @bind="expressionsCaseStyle" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlCaseStyle.Multiline">Multiline</option>
-                                                <option value="@SqlCaseStyle.CompactWhenShort">CompactWhenShort</option>
+                                                <option value="@SqlCaseStyle.CompactWhenShort">Compact when short</option>
                                             </select>
                                         </div>
 
@@ -374,24 +377,24 @@
                                         <div class="dsl-sql-property-row" hidden='@HideOption("lists select items style")'>
                                             <SqlOptionLabel ForId="sql-select-items-style" Text="SELECT items" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <select id="sql-select-items-style" class="form-select form-select-sm" @bind="selectItemsStyle" @bind:after="OnOptionValueChangedAsync">
-                                                <option value="@SqlListLayoutStyle.OnePerLine">OnePerLine</option>
-                                                <option value="@SqlListLayoutStyle.WrapByWidth">WrapByWidth</option>
+                                                <option value="@SqlListLayoutStyle.OnePerLine">One per line</option>
+                                                <option value="@SqlListLayoutStyle.WrapByWidth">Wrap by width</option>
                                             </select>
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("lists group by items style")'>
                                             <SqlOptionLabel ForId="sql-group-by-items-style" Text="GROUP BY items" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <select id="sql-group-by-items-style" class="form-select form-select-sm" @bind="groupByItemsStyle" @bind:after="OnOptionValueChangedAsync">
-                                                <option value="@SqlListLayoutStyle.OnePerLine">OnePerLine</option>
-                                                <option value="@SqlListLayoutStyle.WrapByWidth">WrapByWidth</option>
+                                                <option value="@SqlListLayoutStyle.OnePerLine">One per line</option>
+                                                <option value="@SqlListLayoutStyle.WrapByWidth">Wrap by width</option>
                                             </select>
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("lists order by items style")'>
                                             <SqlOptionLabel ForId="sql-order-by-items-style" Text="ORDER BY items" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <select id="sql-order-by-items-style" class="form-select form-select-sm" @bind="orderByItemsStyle" @bind:after="OnOptionValueChangedAsync">
-                                                <option value="@SqlListLayoutStyle.OnePerLine">OnePerLine</option>
-                                                <option value="@SqlListLayoutStyle.WrapByWidth">WrapByWidth</option>
+                                                <option value="@SqlListLayoutStyle.OnePerLine">One per line</option>
+                                                <option value="@SqlListLayoutStyle.WrapByWidth">Wrap by width</option>
                                             </select>
                                         </div>
 
@@ -420,12 +423,17 @@
                                             <input id="sql-select-compact-allow-expressions" class="form-check-input" type="checkbox" @bind="selectCompactAllowExpressions" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("align select aliases")'>
+                                            <SqlOptionLabel ForId="sql-align-select-aliases" Text="Align select aliases" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <input id="sql-align-select-aliases" class="form-check-input" type="checkbox" @bind="alignSelectAliases" @bind:after="OnOptionValueChangedAsync" />
+                                        </div>
+
                                         <div class="dsl-sql-property-row" hidden='@HideOption("lists in list items style inline one per line wrap by width")'>
                                             <SqlOptionLabel ForId="sql-in-list-items-style" Text="IN list items" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <select id="sql-in-list-items-style" class="form-select form-select-sm" @bind="inListItemsStyle" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlInListItemsStyle.Inline">Inline</option>
-                                                <option value="@SqlInListItemsStyle.OnePerLine">OnePerLine</option>
-                                                <option value="@SqlInListItemsStyle.WrapByWidth">WrapByWidth</option>
+                                                <option value="@SqlInListItemsStyle.OnePerLine">One per line</option>
+                                                <option value="@SqlInListItemsStyle.WrapByWidth">Wrap by width</option>
                                             </select>
                                         </div>
 
@@ -457,16 +465,16 @@
                                         <div class="dsl-sql-property-row" hidden='@HideOption("dml update set style one per line wrap by width")'>
                                             <SqlOptionLabel ForId="sql-update-set-style" Text="UPDATE SET style" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <select id="sql-update-set-style" class="form-select form-select-sm" @bind="updateSetStyle" @bind:after="OnOptionValueChangedAsync">
-                                                <option value="@SqlDmlListStyle.OnePerLine">OnePerLine</option>
-                                                <option value="@SqlDmlListStyle.WrapByWidth">WrapByWidth</option>
+                                                <option value="@SqlDmlListStyle.OnePerLine">One per line</option>
+                                                <option value="@SqlDmlListStyle.WrapByWidth">Wrap by width</option>
                                             </select>
                                         </div>
 
-                                        <div class="dsl-sql-property-row" hidden='@HideOption("dml insert columns style one per line wrap by width")'>
-                                            <SqlOptionLabel ForId="sql-insert-columns-style" Text="INSERT columns style" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("dml insert columns values style one per line wrap by width")'>
+                                            <SqlOptionLabel ForId="sql-insert-columns-style" Text="INSERT columns/values style" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <select id="sql-insert-columns-style" class="form-select form-select-sm" @bind="insertColumnsStyle" @bind:after="OnOptionValueChangedAsync">
-                                                <option value="@SqlDmlListStyle.OnePerLine">OnePerLine</option>
-                                                <option value="@SqlDmlListStyle.WrapByWidth">WrapByWidth</option>
+                                                <option value="@SqlDmlListStyle.OnePerLine">One per line</option>
+                                                <option value="@SqlDmlListStyle.WrapByWidth">Wrap by width</option>
                                             </select>
                                         </div>
 
@@ -492,17 +500,8 @@
                                             <SqlOptionLabel ForId="sql-comments-formatting" Text="Comment formatting" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <select id="sql-comments-formatting" class="form-select form-select-sm" @bind="commentsFormatting" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlCommentsFormattingMode.Keep">Keep</option>
-                                                <option value="@SqlCommentsFormattingMode.ReflowSafeOnly">ReflowSafeOnly</option>
+                                                <option value="@SqlCommentsFormattingMode.ReflowSafeOnly">Reflow safe only</option>
                                             </select>
-                                        </div>
-
-                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("preserve string literals")'>
-                                            <SqlOptionLabel ForId="sql-preserve-string-literals" Text="Preserve string literals" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-preserve-string-literals"
-                                                   class="form-check-input"
-                                                   type="checkbox"
-                                                   @bind="preserveStringLiterals" @bind:after="OnOptionValueChangedAsync"
-                                                   disabled />
                                         </div>
                                     </div>
                                 </details>
@@ -515,7 +514,6 @@
                                             <select id="sql-inside-parentheses" class="form-select form-select-sm" @bind="insideParentheses" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlParenthesesSpacing.Never">Never</option>
                                                 <option value="@SqlParenthesesSpacing.Always">Always</option>
-                                                <option value="@SqlParenthesesSpacing.Smart">Smart</option>
                                             </select>
                                         </div>
 
@@ -641,19 +639,34 @@ left join dbo.D as d on a.Id=d.Id and d.Flag=1 and d.Region=a.Region or d.Kind=a
 
     private const string PredicatesExampleSql =
         @"-- Predicate layout: inspect WHERE logical breaks and mixed AND/OR grouping.
-select a.Id from dbo.A as a where a.Status=1 and a.Region='EU' or a.Region='US' and a.Score>10;";
+select a.Id
+from dbo.A as a
+where a.Status=1 and a.Region='EU' or a.Region='US' and a.Score>10 or a.PriorityScore>3;";
+
+    private const string PredicatesInlineExampleSql =
+        @"-- Inline predicate threshold: use multiline WHERE and compare 0, 2, 4 conditions.
+select a.Id
+from dbo.A as a
+where a.Status=1 and a.Region='EU' and a.Score>10 and a.Flag=1;";
 
     private const string ExpressionsCaseExampleSql =
-        @"-- CASE style: check WHEN/THEN formatting for multiline versus compact output.
-select case when a.Score>90 then 'A' when a.Score>70 then 'B' else 'C' end as grade from dbo.A as a;";
+        @"-- CASE style: compare multiline and compact formatting in SET/DECLARE expressions.
+set @grade = case when @score>90 then 'A' when @score>70 then 'B' else 'C' end;";
 
     private const string InlineShortExpressionExampleSql =
-        @"-- Inline short expression: watch nested expressions in SELECT/ON/WHERE collapse or expand.
-select ((a.Price+a.Tax)+a.Fee)+a.Discount as total from dbo.A as a inner join dbo.B as b on ((a.Id+b.Id)+b.ShiftAmount)>10 where ((a.Score+a.Bonus)+a.Penalty)>0;";
+        @"-- Inline short expression: compare SELECT/ON/WHERE staying inline when thresholds allow.
+select a.Price+a.Tax+a.Fee as total,a.Id as id
+from dbo.A as a
+inner join dbo.B as b on a.Id+b.Id>10 and b.Flag=1
+where a.Score+a.Bonus>0 and a.IsActive=1;";
 
     private const string ListsExampleSql =
         @"-- List layout: focus on comma style and wrapping in SELECT/IN/GROUP BY/ORDER BY lists.
 select a.Id,a.Region,a.Status,a.Score from dbo.A as a where a.Id in(1,2,3,4,5,6,7,8) group by a.Id,a.Region,a.Status,a.Score order by a.Id,a.Region,a.Status,a.Score;";
+
+    private const string SelectCompactThresholdExampleSql =
+        @"-- Compact SELECT threshold: compare item count and line length on a short SELECT list.
+select a.Id,a.Region,a.Status,a.Score from dbo.A as a;";
 
     private const string SelectCompactWithExpressionsExampleSql =
         @"-- Compact SELECT threshold: verify whether expression items still stay on one line.
@@ -666,17 +679,13 @@ select a.Id from dbo.A as a where a.Id in(1,2,3,4,5,6,7,8,9,10,11,12);";
     private const string DmlAndDdlExampleSql =
         @"-- DML/DDL layout: check UPDATE/INSERT lists and CREATE PROC block formatting.
 update dbo.A set Region='EU',Status=1,Score=10 where Id=@id;
-insert into dbo.Log(Id,Region,Status,Score) values(@id,'EU',1,10);
+insert into dbo.AuditEntries(EntryId,Region,Status,Score) values(@id,'EU',1,10);
 create proc p as begin select 1 end;";
 
     private const string CommentsExampleSql =
         @"-- Comment formatting: watch comment attachment and internal comment spacing behavior.
 select a.Id /*    keep   spacing   */ as id_alias --line    comment
 from dbo.A as a;";
-
-    private const string StringLiteralsExampleSql =
-        @"-- Preserve string literals: make sure spaces inside quoted strings are untouched.
-select 'A   B  C' as label from dbo.A as a;";
 
     private const int SourcePreviewLength = 80;
 
@@ -703,15 +712,15 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         ["sql-joins-newline-per-join"] = JoinsExampleSql,
         ["sql-joins-on-new-line"] = JoinsExampleSql,
         ["sql-joins-multiline-threshold"] = JoinsExampleSql,
-        ["sql-joins-break-on"] = JoinsExampleSql,
         ["sql-joins-break-on-and"] = JoinsExampleSql,
         ["sql-joins-break-on-or"] = JoinsExampleSql,
         ["sql-predicates-multiline-where"] = PredicatesExampleSql,
         ["sql-predicates-logical-break"] = PredicatesExampleSql,
-        ["sql-predicates-inline-max-conditions"] = PredicatesExampleSql,
-        ["sql-predicates-inline-max-line-length"] = PredicatesExampleSql,
+        ["sql-predicates-inline-max-conditions"] = PredicatesInlineExampleSql,
+        ["sql-predicates-inline-max-line-length"] = PredicatesInlineExampleSql,
         ["sql-predicates-inline-allow-only-and"] = PredicatesExampleSql,
-        ["sql-predicates-mixed-and-or-parentheses-mode"] = PredicatesExampleSql,
+        ["sql-predicates-mixed-and-or-parenthesize-or-groups"] = PredicatesExampleSql,
+        ["sql-predicates-mixed-and-or-break-or-groups"] = PredicatesExampleSql,
         ["sql-expressions-case-style"] = ExpressionsCaseExampleSql,
         ["sql-case-threshold-max-when"] = ExpressionsCaseExampleSql,
         ["sql-case-threshold-max-tokens"] = ExpressionsCaseExampleSql,
@@ -726,8 +735,8 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         ["sql-select-items-style"] = ListsExampleSql,
         ["sql-group-by-items-style"] = ListsExampleSql,
         ["sql-order-by-items-style"] = ListsExampleSql,
-        ["sql-select-compact-max-items"] = ListsExampleSql,
-        ["sql-select-compact-max-line-length"] = ListsExampleSql,
+        ["sql-select-compact-max-items"] = SelectCompactThresholdExampleSql,
+        ["sql-select-compact-max-line-length"] = SelectCompactThresholdExampleSql,
         ["sql-select-compact-allow-expressions"] = SelectCompactWithExpressionsExampleSql,
         ["sql-in-list-items-style"] = ListsExampleSql,
         ["sql-inline-in-list-max-items"] = InListThresholdExampleSql,
@@ -737,7 +746,6 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         ["sql-create-proc-layout"] = DmlAndDdlExampleSql,
         ["sql-comments-preserve-attachment"] = CommentsExampleSql,
         ["sql-comments-formatting"] = CommentsExampleSql,
-        ["sql-preserve-string-literals"] = StringLiteralsExampleSql,
         ["sql-inside-parentheses"] = SpacingExampleSql,
         ["sql-spaces-after-comma"] = SpacingExampleSql,
         ["sql-spaces-around-binary-operators"] = SpacingExampleSql,
@@ -777,7 +785,8 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
     private int predicatesInlineSimpleMaxConditions;
     private int predicatesInlineSimpleMaxLineLength = 120;
     private bool predicatesInlineSimpleAllowOnlyAnd = true;
-    private SqlMixedAndOrParenthesesMode predicatesMixedAndOrParenthesesMode = SqlMixedAndOrParenthesesMode.KeepOriginal;
+    private bool predicatesMixedAndOrParenthesizeOrGroups;
+    private bool predicatesMixedAndOrBreakOrGroups;
     private SqlCaseStyle expressionsCaseStyle = SqlCaseStyle.Multiline;
     private int compactCaseMaxWhenClauses;
     private int compactCaseMaxTokens;
@@ -788,13 +797,11 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
     private bool inlineShortContextSelectItem;
     private bool inlineShortContextOn;
     private bool inlineShortContextWhere;
-    private SqlSubqueryIndentStyle subqueriesIndentStyle = SqlSubqueryIndentStyle.Indented;
     private SqlDmlListStyle updateSetStyle = SqlDmlListStyle.OnePerLine;
     private SqlDmlListStyle insertColumnsStyle = SqlDmlListStyle.OnePerLine;
     private SqlCreateProcLayout createProcLayout = SqlCreateProcLayout.Expanded;
     private bool commentsPreserveAttachment = true;
     private SqlCommentsFormattingMode commentsFormatting = SqlCommentsFormattingMode.Keep;
-    private bool preserveStringLiterals = true;
 
     private bool newlineBeforeWith = true;
     private bool newlineBeforeSelect = true;
@@ -950,17 +957,68 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
 
     private void ApplyOptionExamplePreset(string optionId)
     {
-        var isJoinBreakOnOption = string.Equals(optionId, "sql-joins-break-on", StringComparison.Ordinal) ||
-            string.Equals(optionId, "sql-joins-break-on-and", StringComparison.Ordinal) ||
-            string.Equals(optionId, "sql-joins-break-on-or", StringComparison.Ordinal);
-        if (!isJoinBreakOnOption)
-        {
-            return;
-        }
-
-        if (joinsMultilineOnMaxTokensSingleLine == 0)
+        var isJoinBreakOption = string.Equals(optionId, "sql-joins-break-on-and", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-joins-break-on-or", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-joins-multiline-threshold", StringComparison.Ordinal);
+        if (isJoinBreakOption && joinsMultilineOnMaxTokensSingleLine == 0)
         {
             joinsMultilineOnMaxTokensSingleLine = 1;
+        }
+
+        var isPredicateInlineOption = string.Equals(optionId, "sql-predicates-inline-max-conditions", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-predicates-inline-max-line-length", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-predicates-inline-allow-only-and", StringComparison.Ordinal);
+        if (isPredicateInlineOption)
+        {
+            predicatesMultilineWhere = true;
+            if (predicatesInlineSimpleMaxConditions == 0)
+            {
+                predicatesInlineSimpleMaxConditions = 2;
+            }
+        }
+
+        var isMixedAndOrOption = string.Equals(optionId, "sql-predicates-mixed-and-or-parenthesize-or-groups", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-predicates-mixed-and-or-break-or-groups", StringComparison.Ordinal);
+        if (isMixedAndOrOption)
+        {
+            predicatesMultilineWhere = true;
+        }
+
+        var isCaseThresholdOption = string.Equals(optionId, "sql-case-threshold-max-when", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-case-threshold-max-tokens", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-case-threshold-max-line", StringComparison.Ordinal);
+        if (isCaseThresholdOption)
+        {
+            expressionsCaseStyle = SqlCaseStyle.CompactWhenShort;
+        }
+
+        var isInlineShortOption = string.Equals(optionId, "sql-inline-short-max-tokens", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-inline-short-max-depth", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-inline-short-max-line", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-inline-short-select-item", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-inline-short-on", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-inline-short-where", StringComparison.Ordinal);
+        if (isInlineShortOption)
+        {
+            selectItemsStyle = SqlListLayoutStyle.OnePerLine;
+            joinsMultilineOnMaxTokensSingleLine = Math.Max(joinsMultilineOnMaxTokensSingleLine, 1);
+            joinsMultilineOnBreakOnAnd = true;
+            predicatesMultilineWhere = true;
+        }
+
+        var isSelectCompactOption = string.Equals(optionId, "sql-select-compact-max-items", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-select-compact-max-line-length", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-select-compact-allow-expressions", StringComparison.Ordinal);
+        if (isSelectCompactOption)
+        {
+            selectItemsStyle = SqlListLayoutStyle.OnePerLine;
+        }
+
+        var isInlineInListOption = string.Equals(optionId, "sql-inline-in-list-max-items", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-inline-in-list-max-line", StringComparison.Ordinal);
+        if (isInlineInListOption)
+        {
+            inListItemsStyle = SqlInListItemsStyle.OnePerLine;
         }
     }
 
@@ -1014,7 +1072,8 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         predicatesInlineSimpleMaxConditions = 0;
         predicatesInlineSimpleMaxLineLength = 120;
         predicatesInlineSimpleAllowOnlyAnd = true;
-        predicatesMixedAndOrParenthesesMode = SqlMixedAndOrParenthesesMode.KeepOriginal;
+        predicatesMixedAndOrParenthesizeOrGroups = false;
+        predicatesMixedAndOrBreakOrGroups = false;
         expressionsCaseStyle = SqlCaseStyle.Multiline;
         compactCaseMaxWhenClauses = 0;
         compactCaseMaxTokens = 0;
@@ -1025,7 +1084,6 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         inlineShortContextSelectItem = false;
         inlineShortContextOn = false;
         inlineShortContextWhere = false;
-        subqueriesIndentStyle = SqlSubqueryIndentStyle.Indented;
         inListItemsStyle = SqlInListItemsStyle.Inline;
         inlineInListMaxItems = 0;
         inlineInListMaxLineLength = 120;
@@ -1034,7 +1092,6 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         createProcLayout = SqlCreateProcLayout.Expanded;
         commentsPreserveAttachment = true;
         commentsFormatting = SqlCommentsFormattingMode.Keep;
-        preserveStringLiterals = true;
 
         newlineBeforeWith = true;
         newlineBeforeSelect = true;
@@ -1136,7 +1193,8 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
                     },
                     MixedAndOrParentheses = new SqlMixedAndOrParenthesesOptions
                     {
-                        Mode = predicatesMixedAndOrParenthesesMode
+                        ParenthesizeOrGroups = predicatesMixedAndOrParenthesizeOrGroups,
+                        BreakOrGroups = predicatesMixedAndOrBreakOrGroups
                     }
                 },
                 Expressions = new SqlExpressionsFormattingOptions
@@ -1156,10 +1214,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
                         ForContexts = BuildInlineShortExpressionContexts()
                     }
                 },
-                Subqueries = new SqlSubqueriesFormattingOptions
-                {
-                    IndentStyle = subqueriesIndentStyle
-                },
+                Subqueries = new SqlSubqueriesFormattingOptions(),
                 Dml = new SqlDmlFormattingOptions
                 {
                     UpdateSetStyle = updateSetStyle,
@@ -1176,7 +1231,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
                 },
                 Preserve = new SqlPreserveFormattingOptions
                 {
-                    StringLiterals = preserveStringLiterals
+                    StringLiterals = true
                 }
             };
 

@@ -90,11 +90,6 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         AfterOperator
     }
 
-    public enum SqlMixedAndOrParenthesesMode
-    {
-        KeepOriginal
-    }
-
     public sealed record SqlFormattingOptions
     {
         public SqlKeywordCase KeywordCase { get; init; } = SqlKeywordCase.Upper;
@@ -255,7 +250,9 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
     public sealed record SqlMixedAndOrParenthesesOptions
     {
-        public SqlMixedAndOrParenthesesMode Mode { get; init; } = SqlMixedAndOrParenthesesMode.KeepOriginal;
+        public bool ParenthesizeOrGroups { get; init; }
+
+        public bool BreakOrGroups { get; init; }
     }
 
     public sealed record SqlExpressionsFormattingOptions

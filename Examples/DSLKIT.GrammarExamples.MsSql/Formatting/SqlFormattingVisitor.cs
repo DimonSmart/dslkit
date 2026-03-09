@@ -82,6 +82,16 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             "OR"
         };
 
+        private static readonly HashSet<string> AndLogicalOperators = new(StringComparer.Ordinal)
+        {
+            "AND"
+        };
+
+        private static readonly HashSet<string> OrLogicalOperators = new(StringComparer.Ordinal)
+        {
+            "OR"
+        };
+
         private const int WrapByWidthLineLength = 120;
 
         private readonly SqlFormattingOptions _options;
@@ -637,6 +647,11 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             var whenCount = CountCaseWhenClauses(node);
             if (ShouldUseCompactCaseLayout(whenCount, tokenInfos.Count, inlineCaseText.Length))
             {
+                if (_writer.HasContent && !_writer.IsLineStart && ShouldWriteSpaceBefore("CASE"))
+                {
+                    _writer.WriteSpace();
+                }
+
                 _writer.WriteToken(inlineCaseText);
                 UpdatePreviousToken(tokenInfos[^1]);
                 return true;
@@ -976,6 +991,10 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             IReadOnlyList<SqlTokenInfo> tokenInfos,
             bool forceInlineByShortExpression)
         {
+            var mixedAndOrOptions = _options.Predicates.MixedAndOrParentheses;
+            var hasMixedTopLevelAndOr = TryGetMixedTopLevelOrSplit(tokenInfos, out var mixedOrSplit);
+            var useMixedOrGrouping = hasMixedTopLevelAndOr &&
+                (mixedAndOrOptions.ParenthesizeOrGroups || mixedAndOrOptions.BreakOrGroups);
             var shouldMultiline = _options.Predicates.MultilineWhere;
             if (shouldMultiline && ShouldInlineSimplePredicate(anchorKeyword, tokenInfos))
             {
@@ -990,14 +1009,25 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             if (!shouldMultiline)
             {
                 _writer.WriteSpace();
-                _writer.WriteToken(RenderTokensInline(tokenInfos));
+                _writer.WriteToken(useMixedOrGrouping
+                    ? RenderMixedOrGroupsInline(mixedOrSplit, mixedAndOrOptions.ParenthesizeOrGroups)
+                    : RenderTokensInline(tokenInfos));
                 return;
             }
 
-            var split = SplitByTopLevelLogicalOperators(tokenInfos, AllLogicalOperators);
             _writer.WriteLine();
             using (_writer.PushIndent())
             {
+                if (useMixedOrGrouping)
+                {
+                    WriteMixedOrGroupPredicateLines(
+                        mixedOrSplit,
+                        mixedAndOrOptions.ParenthesizeOrGroups,
+                        _options.Predicates.LogicalOperatorLineBreak);
+                    return;
+                }
+
+                var split = SplitByTopLevelLogicalOperators(tokenInfos, AllLogicalOperators);
                 if (split.Operators.Count == 0)
                 {
                     _writer.WriteToken(RenderTokensInline(tokenInfos));
@@ -1114,6 +1144,144 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             var predicateText = RenderTokensInline(tokenInfos);
             var maxLineLength = Math.Max(1, inlineOptions.MaxLineLength);
             return anchorKeyword.Length + 1 + predicateText.Length <= maxLineLength;
+        }
+
+        private bool TryGetMixedTopLevelOrSplit(IReadOnlyList<SqlTokenInfo> tokenInfos, out LogicalSplitResult orSplit)
+        {
+            orSplit = SplitByTopLevelLogicalOperators(tokenInfos, OrLogicalOperators);
+            if (orSplit.Operators.Count == 0)
+            {
+                return false;
+            }
+
+            var split = SplitByTopLevelLogicalOperators(tokenInfos, AllLogicalOperators);
+            var hasAnd = split.Operators.Any(logicalOperator =>
+                string.Equals(logicalOperator.TokenForRules, "AND", StringComparison.Ordinal));
+            var hasOr = split.Operators.Any(logicalOperator =>
+                string.Equals(logicalOperator.TokenForRules, "OR", StringComparison.Ordinal));
+            return hasAnd && hasOr;
+        }
+
+        private string RenderMixedOrGroupsInline(LogicalSplitResult split, bool parenthesizeOrGroups)
+        {
+            var builder = new StringBuilder();
+            for (var splitIndex = 0; splitIndex < split.Segments.Count; splitIndex++)
+            {
+                if (splitIndex > 0)
+                {
+                    var logicalOperator = split.Operators[splitIndex - 1];
+                    var operatorText = FormatToken(logicalOperator.Raw, logicalOperator.TokenForRules, logicalOperator.IsKeyword);
+                    builder.Append(' ');
+                    builder.Append(operatorText);
+                    builder.Append(' ');
+                }
+
+                builder.Append(RenderMixedOrGroupText(split.Segments[splitIndex], parenthesizeOrGroups));
+            }
+
+            return builder.ToString();
+        }
+
+        private void WriteMixedOrGroupPredicateLines(
+            LogicalSplitResult split,
+            bool parenthesizeOrGroups,
+            SqlLogicalOperatorLineBreakMode lineBreakMode)
+        {
+            if (lineBreakMode == SqlLogicalOperatorLineBreakMode.AfterOperator)
+            {
+                for (var splitIndex = 0; splitIndex < split.Operators.Count; splitIndex++)
+                {
+                    var leftSegmentText = RenderMixedOrGroupText(split.Segments[splitIndex], parenthesizeOrGroups);
+                    var logicalOperator = split.Operators[splitIndex];
+                    var operatorText = FormatToken(logicalOperator.Raw, logicalOperator.TokenForRules, logicalOperator.IsKeyword);
+                    _writer.WriteToken($"{leftSegmentText} {operatorText}");
+                    _writer.WriteLine();
+                }
+
+                _writer.WriteToken(RenderMixedOrGroupText(split.Segments[^1], parenthesizeOrGroups));
+                return;
+            }
+
+            _writer.WriteToken(RenderMixedOrGroupText(split.Segments[0], parenthesizeOrGroups));
+            for (var splitIndex = 0; splitIndex < split.Operators.Count; splitIndex++)
+            {
+                _writer.WriteLine();
+                var logicalOperator = split.Operators[splitIndex];
+                var operatorText = FormatToken(logicalOperator.Raw, logicalOperator.TokenForRules, logicalOperator.IsKeyword);
+                var rightSegmentText = RenderMixedOrGroupText(split.Segments[splitIndex + 1], parenthesizeOrGroups);
+                _writer.WriteToken($"{operatorText} {rightSegmentText}");
+            }
+        }
+
+        private string RenderMixedOrGroupText(IReadOnlyList<SqlTokenInfo> tokenInfos, bool parenthesizeOrGroups)
+        {
+            var groupText = RenderTokensInline(tokenInfos);
+            if (!parenthesizeOrGroups || !ShouldParenthesizeMixedOrGroup(tokenInfos))
+            {
+                return groupText;
+            }
+
+            if (IsWrappedInSingleTopLevelParentheses(tokenInfos))
+            {
+                return groupText;
+            }
+
+            return WrapInlineTextInParentheses(groupText);
+        }
+
+        private bool ShouldParenthesizeMixedOrGroup(IReadOnlyList<SqlTokenInfo> tokenInfos)
+        {
+            var split = SplitByTopLevelLogicalOperators(tokenInfos, AndLogicalOperators);
+            return split.Operators.Count > 0;
+        }
+
+        private static bool IsWrappedInSingleTopLevelParentheses(IReadOnlyList<SqlTokenInfo> tokenInfos)
+        {
+            var startIndex = 0;
+            while (startIndex < tokenInfos.Count && tokenInfos[startIndex].IsComment)
+            {
+                startIndex++;
+            }
+
+            var endIndex = tokenInfos.Count - 1;
+            while (endIndex >= startIndex && tokenInfos[endIndex].IsComment)
+            {
+                endIndex--;
+            }
+
+            if (startIndex >= endIndex ||
+                !string.Equals(tokenInfos[startIndex].TokenForRules, "(", StringComparison.Ordinal) ||
+                !string.Equals(tokenInfos[endIndex].TokenForRules, ")", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            var parenthesisDepth = 0;
+            for (var tokenIndex = startIndex; tokenIndex <= endIndex; tokenIndex++)
+            {
+                var token = tokenInfos[tokenIndex].TokenForRules;
+                if (string.Equals(token, "(", StringComparison.Ordinal))
+                {
+                    parenthesisDepth++;
+                }
+                else if (string.Equals(token, ")", StringComparison.Ordinal))
+                {
+                    parenthesisDepth--;
+                    if (parenthesisDepth == 0 && tokenIndex < endIndex)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return parenthesisDepth == 0;
+        }
+
+        private string WrapInlineTextInParentheses(string text)
+        {
+            return _options.Spaces.InsideParentheses == SqlParenthesesSpacing.Always
+                ? $"( {text} )"
+                : $"({text})";
         }
 
         private static LogicalSplitResult SplitByTopLevelLogicalOperators(IReadOnlyList<SqlTokenInfo> tokenInfos, HashSet<string> breakOperators)

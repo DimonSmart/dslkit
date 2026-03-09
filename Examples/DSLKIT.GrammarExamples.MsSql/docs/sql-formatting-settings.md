@@ -13,7 +13,8 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
 - `keywordCase`: `Upper | Lower | Preserve`
 - `spaces.afterComma`: `true | false`
 - `spaces.aroundBinaryOperators`: `true | false`
-- `spaces.insideParentheses`: `Never | Always | Smart`
+- `spaces.insideParentheses`: `Never | Always`
+  - `Smart` is reserved in the model but not exposed in the UI yet.
 - `spaces.beforeSemicolon`: `true | false`
 - `statement.terminateWithSemicolon`: `Never | ExistingOnly | Always`
 - `eof.newline`: `true | false`
@@ -54,7 +55,9 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
   - `maxLineLength`
   - `allowOnlyAnd`
 - `predicates.mixedAndOrParentheses`:
-  - `mode = KeepOriginal`
+  - `parenthesizeOrGroups = true | false`
+  - `breakOrGroups = true | false`
+  - Both options are semantics-preserving and operate only when top-level `AND` and `OR` are mixed in the same predicate.
 
 ## Stage 6. CASE/Expressions/Subqueries/IN Lists
 
@@ -64,6 +67,7 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
   - `maxTokens`
   - `maxLineLength`
 - `subqueries.indentStyle`: `Indented`
+  - Fixed behavior for now; not exposed in the UI yet.
 - `lists.inListItems`: `Inline | OnePerLine | WrapByWidth`
 - `[HEURISTIC] lists.inlineInListThreshold`:
   - `maxItemsInline`
@@ -78,14 +82,14 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
 
 - `dml.updateSetStyle`: `OnePerLine | WrapByWidth`
 - `dml.insertColumnsStyle`: `OnePerLine | WrapByWidth`
+  - Current implementation applies the same style to `VALUES (...)` layout too.
 - `ddl.createProcLayout`: `Expanded | Compact`
 
 ## Stage 8. Comments And Semantic Safety
 
 - `comments.preserveAttachment`: `true` (default)
 - `comments.formatting`: `Keep | ReflowSafeOnly`
-- `preserve.stringLiterals`: `true` (always)
-- Mixed `AND`/`OR` parentheses handling is semantics-preserving only. Current formatter mode keeps original user parentheses and does not regroup boolean predicates.
+- `preserve.stringLiterals`: `true` (always, not user-configurable)
 
 ## Precedence Rules
 

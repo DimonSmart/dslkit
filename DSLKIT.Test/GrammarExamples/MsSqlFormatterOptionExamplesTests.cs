@@ -76,19 +76,34 @@ left join dbo.D as d on a.Id=d.Id and d.Flag=1 and d.Region=a.Region or d.Kind=a
 
         private const string PredicatesExampleSql =
             @"-- Predicate layout: inspect WHERE logical breaks and mixed AND/OR grouping.
-select a.Id from dbo.A as a where a.Status=1 and a.Region='EU' or a.Region='US' and a.Score>10;";
+select a.Id
+from dbo.A as a
+where a.Status=1 and a.Region='EU' or a.Region='US' and a.Score>10 or a.PriorityScore>3;";
+
+        private const string PredicatesInlineExampleSql =
+            @"-- Inline predicate threshold: use multiline WHERE and compare 0, 2, 4 conditions.
+select a.Id
+from dbo.A as a
+where a.Status=1 and a.Region='EU' and a.Score>10 and a.Flag=1;";
 
         private const string ExpressionsCaseExampleSql =
-            @"-- CASE style: check WHEN/THEN formatting for multiline versus compact output.
-select case when a.Score>90 then 'A' when a.Score>70 then 'B' else 'C' end as grade from dbo.A as a;";
+            @"-- CASE style: compare multiline and compact formatting in SET/DECLARE expressions.
+set @grade = case when @score>90 then 'A' when @score>70 then 'B' else 'C' end;";
 
         private const string InlineShortExpressionExampleSql =
-            @"-- Inline short expression: watch nested expressions in SELECT/ON/WHERE collapse or expand.
-select ((a.Price+a.Tax)+a.Fee)+a.Discount as total from dbo.A as a inner join dbo.B as b on ((a.Id+b.Id)+b.ShiftAmount)>10 where ((a.Score+a.Bonus)+a.Penalty)>0;";
+            @"-- Inline short expression: compare SELECT/ON/WHERE staying inline when thresholds allow.
+select a.Price+a.Tax+a.Fee as total,a.Id as id
+from dbo.A as a
+inner join dbo.B as b on a.Id+b.Id>10 and b.Flag=1
+where a.Score+a.Bonus>0 and a.IsActive=1;";
 
         private const string ListsExampleSql =
             @"-- List layout: focus on comma style and wrapping in SELECT/IN/GROUP BY/ORDER BY lists.
 select a.Id,a.Region,a.Status,a.Score from dbo.A as a where a.Id in(1,2,3,4,5,6,7,8) group by a.Id,a.Region,a.Status,a.Score order by a.Id,a.Region,a.Status,a.Score;";
+
+        private const string SelectCompactThresholdExampleSql =
+            @"-- Compact SELECT threshold: compare item count and line length on a short SELECT list.
+select a.Id,a.Region,a.Status,a.Score from dbo.A as a;";
 
         private const string SelectCompactWithExpressionsExampleSql =
             @"-- Compact SELECT threshold: verify whether expression items still stay on one line.
@@ -101,17 +116,13 @@ select a.Id from dbo.A as a where a.Id in(1,2,3,4,5,6,7,8,9,10,11,12);";
         private const string DmlAndDdlExampleSql =
             @"-- DML/DDL layout: check UPDATE/INSERT lists and CREATE PROC block formatting.
 update dbo.A set Region='EU',Status=1,Score=10 where Id=@id;
-insert into dbo.Log(Id,Region,Status,Score) values(@id,'EU',1,10);
+insert into dbo.AuditEntries(EntryId,Region,Status,Score) values(@id,'EU',1,10);
 create proc p as begin select 1 end;";
 
         private const string CommentsExampleSql =
             @"-- Comment formatting: watch comment attachment and internal comment spacing behavior.
 select a.Id /*    keep   spacing   */ as id_alias --line    comment
 from dbo.A as a;";
-
-        private const string StringLiteralsExampleSql =
-            @"-- Preserve string literals: make sure spaces inside quoted strings are untouched.
-select 'A   B  C' as label from dbo.A as a;";
 
         private const string SpacingExampleSql =
             @"-- Spacing options: inspect spaces after commas, around operators, and parentheses.
@@ -136,15 +147,15 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             ["sql-joins-newline-per-join"] = JoinsExampleSql,
             ["sql-joins-on-new-line"] = JoinsExampleSql,
             ["sql-joins-multiline-threshold"] = JoinsExampleSql,
-            ["sql-joins-break-on"] = JoinsExampleSql,
             ["sql-joins-break-on-and"] = JoinsExampleSql,
             ["sql-joins-break-on-or"] = JoinsExampleSql,
             ["sql-predicates-multiline-where"] = PredicatesExampleSql,
             ["sql-predicates-logical-break"] = PredicatesExampleSql,
-            ["sql-predicates-inline-max-conditions"] = PredicatesExampleSql,
-            ["sql-predicates-inline-max-line-length"] = PredicatesExampleSql,
+            ["sql-predicates-inline-max-conditions"] = PredicatesInlineExampleSql,
+            ["sql-predicates-inline-max-line-length"] = PredicatesInlineExampleSql,
             ["sql-predicates-inline-allow-only-and"] = PredicatesExampleSql,
-            ["sql-predicates-mixed-and-or-parentheses-mode"] = PredicatesExampleSql,
+            ["sql-predicates-mixed-and-or-parenthesize-or-groups"] = PredicatesExampleSql,
+            ["sql-predicates-mixed-and-or-break-or-groups"] = PredicatesExampleSql,
             ["sql-expressions-case-style"] = ExpressionsCaseExampleSql,
             ["sql-case-threshold-max-when"] = ExpressionsCaseExampleSql,
             ["sql-case-threshold-max-tokens"] = ExpressionsCaseExampleSql,
@@ -159,8 +170,8 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             ["sql-select-items-style"] = ListsExampleSql,
             ["sql-group-by-items-style"] = ListsExampleSql,
             ["sql-order-by-items-style"] = ListsExampleSql,
-            ["sql-select-compact-max-items"] = ListsExampleSql,
-            ["sql-select-compact-max-line-length"] = ListsExampleSql,
+            ["sql-select-compact-max-items"] = SelectCompactThresholdExampleSql,
+            ["sql-select-compact-max-line-length"] = SelectCompactThresholdExampleSql,
             ["sql-select-compact-allow-expressions"] = SelectCompactWithExpressionsExampleSql,
             ["sql-in-list-items-style"] = ListsExampleSql,
             ["sql-inline-in-list-max-items"] = InListThresholdExampleSql,
@@ -170,7 +181,6 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             ["sql-create-proc-layout"] = DmlAndDdlExampleSql,
             ["sql-comments-preserve-attachment"] = CommentsExampleSql,
             ["sql-comments-formatting"] = CommentsExampleSql,
-            ["sql-preserve-string-literals"] = StringLiteralsExampleSql,
             ["sql-inside-parentheses"] = SpacingExampleSql,
             ["sql-spaces-after-comma"] = SpacingExampleSql,
             ["sql-spaces-around-binary-operators"] = SpacingExampleSql,
