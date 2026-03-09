@@ -46,8 +46,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             var expressionList = context.Symbols.ExpressionList;
             var functionCall = context.Symbols.FunctionCall;
             var graphColumnRef = context.GraphColumnRefTerminal;
-            var identifierList = context.Symbols.IdentifierList;
             var identifierTerm = context.Symbols.IdentifierTerm;
+            var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
             var qualifiedName = context.Symbols.QualifiedName;
             var queryExpression = context.Symbols.QueryExpression;
             var searchCondition = context.Symbols.SearchCondition;
@@ -55,6 +55,22 @@ namespace DSLKIT.GrammarExamples.MsSql
             var tableFactor = context.Symbols.TableFactor;
             var tableSourceList = context.Symbols.TableSourceList;
             var variableReference = context.Symbols.VariableReference;
+            var dmlIdentifierTerm = gb.NT("DmlIdentifierTerm");
+            var dmlIdentifierList = gb.NT("DmlIdentifierList");
+            var dmlObjectIdentifierTerm = gb.NT("DmlObjectIdentifierTerm");
+            var dmlQualifiedName = gb.NT("DmlQualifiedName");
+
+            gb.Rule(dmlIdentifierTerm)
+                .CanBe(strictIdentifierTerm)
+                .OrKeywords("NAME", "SOURCE", "TARGET");
+            gb.Rule(dmlObjectIdentifierTerm)
+                .CanBe(strictIdentifierTerm)
+                .OrKeywords("POLICY");
+            gb.Prod(dmlIdentifierList).Is(dmlIdentifierTerm);
+            gb.Prod(dmlIdentifierList).Is(dmlIdentifierList, ",", dmlIdentifierTerm);
+            gb.Prod(dmlQualifiedName).Is(dmlObjectIdentifierTerm);
+            gb.Prod(dmlQualifiedName).Is(dmlQualifiedName, ".", dmlObjectIdentifierTerm);
+            gb.Prod(dmlQualifiedName).Is(dmlQualifiedName, ".", ".", dmlObjectIdentifierTerm);
 
             gb.Prod(updateStatement).Is("UPDATE", tableFactor, "SET", updateSetList);
             gb.Prod(updateStatement).Is("UPDATE", tableFactor, "SET", updateSetList, "WHERE", searchCondition);
@@ -83,21 +99,21 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(insertStatement).Is("INSERT", insertTarget, queryExpression);
             gb.Prod(insertStatement).Is("INSERT", insertTarget, dmlOutputClause, "VALUES", rowValueList);
             gb.Prod(insertStatement).Is("INSERT", insertTarget, dmlOutputClause, queryExpression);
-            gb.Prod(insertTarget).Is("INTO", qualifiedName);
-            gb.Prod(insertTarget).Is(qualifiedName);
-            gb.Prod(insertTarget).Is("INTO", qualifiedName, "(", insertColumnList, ")");
-            gb.Prod(insertTarget).Is(qualifiedName, "(", insertColumnList, ")");
+            gb.Prod(insertTarget).Is("INTO", dmlQualifiedName);
+            gb.Prod(insertTarget).Is(dmlQualifiedName);
+            gb.Prod(insertTarget).Is("INTO", dmlQualifiedName, "(", insertColumnList, ")");
+            gb.Prod(insertTarget).Is(dmlQualifiedName, "(", insertColumnList, ")");
             gb.Prod(insertTarget).Is("INTO", variableReference);
             gb.Prod(insertTarget).Is(variableReference);
             gb.Prod(insertTarget).Is("INTO", variableReference, "(", insertColumnList, ")");
             gb.Prod(insertTarget).Is(variableReference, "(", insertColumnList, ")");
-            gb.Prod(insertTarget).Is("INTO", qualifiedName, "WITH", "(", tableHintLimitedList, ")");
-            gb.Prod(insertTarget).Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")");
-            gb.Prod(insertTarget).Is("INTO", qualifiedName, "(", insertColumnList, ")", "WITH", "(", tableHintLimitedList, ")");
-            gb.Prod(insertTarget).Is("INTO", qualifiedName, "WITH", "(", tableHintLimitedList, ")", "(", insertColumnList, ")");
-            gb.Prod(insertTarget).Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")", "(", insertColumnList, ")");
-            gb.Prod(insertColumnList).Is(identifierTerm);
-            gb.Prod(insertColumnList).Is(insertColumnList, ",", identifierTerm);
+            gb.Prod(insertTarget).Is("INTO", dmlQualifiedName, "WITH", "(", tableHintLimitedList, ")");
+            gb.Prod(insertTarget).Is(dmlQualifiedName, "WITH", "(", tableHintLimitedList, ")");
+            gb.Prod(insertTarget).Is("INTO", dmlQualifiedName, "(", insertColumnList, ")", "WITH", "(", tableHintLimitedList, ")");
+            gb.Prod(insertTarget).Is("INTO", dmlQualifiedName, "WITH", "(", tableHintLimitedList, ")", "(", insertColumnList, ")");
+            gb.Prod(insertTarget).Is(dmlQualifiedName, "WITH", "(", tableHintLimitedList, ")", "(", insertColumnList, ")");
+            gb.Prod(insertColumnList).Is(dmlIdentifierTerm);
+            gb.Prod(insertColumnList).Is(insertColumnList, ",", dmlIdentifierTerm);
             if (context.HasFeature(MsSqlDialectFeatures.GraphExtensions))
             {
                 gb.Prod(insertColumnList).Is(graphColumnRef);
@@ -121,11 +137,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(deleteTarget).Is(deleteTargetSimple);
             gb.Prod(deleteTarget).Is(deleteTargetRowset);
 
-            gb.Prod(deleteTargetSimple).Is(identifierTerm);
-            gb.Prod(deleteTargetSimple).Is(qualifiedName);
+            gb.Prod(deleteTargetSimple).Is(dmlIdentifierTerm);
+            gb.Prod(deleteTargetSimple).Is(dmlQualifiedName);
             gb.Prod(deleteTargetSimple).Is(variableReference);
-            gb.Prod(deleteTargetSimple).Is(identifierTerm, "WITH", "(", tableHintLimitedList, ")");
-            gb.Prod(deleteTargetSimple).Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")");
+            gb.Prod(deleteTargetSimple).Is(dmlIdentifierTerm, "WITH", "(", tableHintLimitedList, ")");
+            gb.Prod(deleteTargetSimple).Is(dmlQualifiedName, "WITH", "(", tableHintLimitedList, ")");
 
             gb.Prod(deleteTargetRowset).Is(rowsetFunctionLimited);
             gb.Prod(deleteTargetRowset).Is(rowsetFunctionLimited, "WITH", "(", tableHintLimitedList, ")");
@@ -155,17 +171,17 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod(dmlOutputClause).Is("OUTPUT", selectItemList);
             gb.Prod(dmlOutputClause).Is("OUTPUT", selectItemList, "INTO", dmlOutputTarget, dmlOutputIntoColumnListOpt);
-            gb.Prod(dmlOutputTarget).Is(qualifiedName);
+            gb.Prod(dmlOutputTarget).Is(dmlQualifiedName);
             gb.Prod(dmlOutputTarget).Is(variableReference);
-            gb.Opt(dmlOutputIntoColumnListOpt, "(", identifierList, ")");
+            gb.Opt(dmlOutputIntoColumnListOpt, "(", dmlIdentifierList, ")");
 
             gb.Prod(deleteSourceFromClause).Is("FROM", tableSourceList);
 
             gb.Rule(deleteWhereClause)
                 .CanBe("WHERE", searchCondition)
-                .Or("WHERE", "CURRENT", "OF", identifierTerm)
+                .Or("WHERE", "CURRENT", "OF", dmlIdentifierTerm)
                 .Or("WHERE", "CURRENT", "OF", variableReference)
-                .Or("WHERE", "CURRENT", "OF", "GLOBAL", identifierTerm)
+                .Or("WHERE", "CURRENT", "OF", "GLOBAL", dmlIdentifierTerm)
                 .Or("WHERE", "CURRENT", "OF", "GLOBAL", variableReference);
 
             gb.Prod(queryOptionClause).Is("OPTION", "(", queryHintList, ")");

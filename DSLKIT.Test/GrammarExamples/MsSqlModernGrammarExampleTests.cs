@@ -1463,6 +1463,29 @@ namespace DSLKIT.Test.GrammarExamples
             parseResult.IsSuccess.Should().BeFalse(reason);
         }
 
+        [Theory]
+        [InlineData(
+            "INSERT INTO dbo.T (WAITFOR) VALUES (1);",
+            "INSERT column lists should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "DELETE WAITFOR FROM dbo.T AS t;",
+            "DELETE targets should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "DELETE FROM dbo.T OUTPUT deleted.Id INTO @DeletedRows (WAITFOR);",
+            "OUTPUT INTO column lists should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "DELETE FROM OPENROWSET('SQLOLEDB', 'Server=(local);Trusted_Connection=yes;', 'SELECT CityId FROM dbo.City') WHERE CURRENT OF WAITFOR;",
+            "CURRENT OF cursor names should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "DELETE FROM OPENROWSET('SQLOLEDB', 'Server=(local);Trusted_Connection=yes;', 'SELECT CityId FROM dbo.City') WHERE CURRENT OF GLOBAL WAITFOR;",
+            "GLOBAL CURRENT OF cursor names should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        public void ParseScript_ShouldRejectDmlIdentifiers_WithContextualKeywordFallback(string script, string reason)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse(reason);
+        }
+
         [Fact]
         public void ParseScript_ShouldParseInsertExec_Variants()
         {
