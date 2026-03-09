@@ -338,8 +338,7 @@ namespace DSLKIT.Test.GrammarExamples
                         SelectCompactThreshold = new SqlSelectCompactThresholdOptions
                         {
                             MaxItems = 1,
-                            MaxLineLength = 120,
-                            AllowExpressions = false
+                            MaxLineLength = 120
                         }
                     }
                 },
@@ -351,8 +350,7 @@ namespace DSLKIT.Test.GrammarExamples
                         SelectCompactThreshold = new SqlSelectCompactThresholdOptions
                         {
                             MaxItems = 2,
-                            MaxLineLength = 120,
-                            AllowExpressions = false
+                            MaxLineLength = 120
                         }
                     }
                 }
@@ -370,8 +368,7 @@ namespace DSLKIT.Test.GrammarExamples
                         SelectCompactThreshold = new SqlSelectCompactThresholdOptions
                         {
                             MaxItems = 2,
-                            MaxLineLength = 40,
-                            AllowExpressions = false
+                            MaxLineLength = 40
                         }
                     }
                 },
@@ -383,40 +380,7 @@ namespace DSLKIT.Test.GrammarExamples
                         SelectCompactThreshold = new SqlSelectCompactThresholdOptions
                         {
                             MaxItems = 2,
-                            MaxLineLength = 120,
-                            AllowExpressions = false
-                        }
-                    }
-                }
-            ];
-
-            yield return
-            [
-                "sql-select-compact-allow-expressions",
-                SelectCompactWithExpressionsExampleSql,
-                new SqlFormattingOptions
-                {
-                    Lists = new SqlListsFormattingOptions
-                    {
-                        SelectItems = SqlListLayoutStyle.OnePerLine,
-                        SelectCompactThreshold = new SqlSelectCompactThresholdOptions
-                        {
-                            MaxItems = 4,
-                            MaxLineLength = 120,
-                            AllowExpressions = false
-                        }
-                    }
-                },
-                new SqlFormattingOptions
-                {
-                    Lists = new SqlListsFormattingOptions
-                    {
-                        SelectItems = SqlListLayoutStyle.OnePerLine,
-                        SelectCompactThreshold = new SqlSelectCompactThresholdOptions
-                        {
-                            MaxItems = 4,
-                            MaxLineLength = 120,
-                            AllowExpressions = true
+                            MaxLineLength = 120
                         }
                     }
                 }
@@ -524,14 +488,10 @@ where a.Status=1;";
 select a.Id,a.Region,a.Status,a.Score from dbo.A as a where a.Id in(1,2,3,4,5,6,7,8) group by a.Id,a.Region,a.Status,a.Score order by a.Id,a.Region,a.Status,a.Score;";
 
         private const string SelectCompactThresholdExampleSql =
-            @"SELECT a AS A, b AS B FROM dbo.t AS t";
+            @"SELECT a+b AS c, d AS f FROM dbo.t AS t";
 
         private const string SelectCompactLineLengthExampleSql =
             @"SELECT currentQuarterRevenue AS current_quarter_revenue, projectedAnnualRevenue AS projected_annual_revenue FROM dbo.t AS t";
-
-        private const string SelectCompactWithExpressionsExampleSql =
-            @"-- Compact SELECT threshold: verify whether expression items still stay on one line.
-select a.Id,a.Region,a.Score+10 as boosted_score,a.Status from dbo.A as a;";
 
         private const string InListThresholdExampleSql =
             @"-- Inline IN threshold: inspect when IN(...) remains inline versus multiline.
@@ -603,7 +563,6 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             ["sql-order-by-items-style"] = ListsExampleSql,
             ["sql-select-compact-max-items"] = SelectCompactThresholdExampleSql,
             ["sql-select-compact-max-line-length"] = SelectCompactLineLengthExampleSql,
-            ["sql-select-compact-allow-expressions"] = SelectCompactWithExpressionsExampleSql,
             ["sql-in-list-items-style"] = ListsExampleSql,
             ["sql-inline-in-list-max-items"] = InListThresholdExampleSql,
             ["sql-inline-in-list-max-line"] = InListThresholdExampleSql,

@@ -237,7 +237,7 @@ namespace DSLKIT.Test.GrammarExamples
         [Fact]
         public void TryFormat_ShouldCompactShortSelect_WhenThresholdAllowsIt()
         {
-            const string sourceSql = "SELECT a AS A, b AS B FROM dbo.t AS t";
+            const string sourceSql = "SELECT a+b AS c, d AS f FROM dbo.t AS t";
             var options = new SqlFormattingOptions
             {
                 Lists = new SqlListsFormattingOptions
@@ -246,8 +246,7 @@ namespace DSLKIT.Test.GrammarExamples
                     SelectCompactThreshold = new SqlSelectCompactThresholdOptions
                     {
                         MaxItems = 2,
-                        MaxLineLength = 120,
-                        AllowExpressions = true
+                        MaxLineLength = 120
                     }
                 }
             };
@@ -256,7 +255,32 @@ namespace DSLKIT.Test.GrammarExamples
             var formattedSql = NormalizeLineEndings(result.FormattedSql);
 
             result.IsSuccess.Should().BeTrue();
-            formattedSql.Should().Contain("SELECT a AS A, b AS B");
+            formattedSql.Should().Contain("SELECT a + b AS c, d AS f");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldKeepLongSelectExpanded_WhenCompactThresholdLineLengthIsExceeded()
+        {
+            const string sourceSql = "SELECT currentQuarterRevenue AS current_quarter_revenue, projectedAnnualRevenue AS projected_annual_revenue FROM dbo.t AS t";
+            var options = new SqlFormattingOptions
+            {
+                Lists = new SqlListsFormattingOptions
+                {
+                    SelectItems = SqlListLayoutStyle.OnePerLine,
+                    SelectCompactThreshold = new SqlSelectCompactThresholdOptions
+                    {
+                        MaxItems = 2,
+                        MaxLineLength = 40
+                    }
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+
+            result.IsSuccess.Should().BeTrue();
+            formattedSql.Should().Contain("SELECT\n");
+            formattedSql.Should().Contain(",\n");
         }
 
         [Fact]

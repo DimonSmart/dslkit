@@ -513,13 +513,8 @@
                                                    @bind="selectCompactMaxLineLength" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
-                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("lists compact select list allow expressions")'>
-                                            <SqlOptionLabel ForId="sql-select-compact-allow-expressions" Text="Compact SELECT list allow expressions" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-select-compact-allow-expressions" class="form-check-input" type="checkbox" @bind="selectCompactAllowExpressions" @bind:after="OnOptionValueChangedAsync" />
-                                        </div>
-
                                         <div class="dsl-sql-property-note text-muted small">
-                                            Applied after <code>SELECT items</code> decide to wrap, so a short list can still stay inline.
+                                            Applied after <code>SELECT items</code> decide to wrap, so a short list can still stay inline when it fits by item count and total line length.
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("align select aliases")'>
@@ -810,14 +805,10 @@ where a.Status=1;";
 select a.Id,a.Region,a.Status,a.Score from dbo.A as a where a.Id in(1,2,3,4,5,6,7,8) group by a.Id,a.Region,a.Status,a.Score order by a.Id,a.Region,a.Status,a.Score;";
 
     private const string SelectCompactThresholdExampleSql =
-        @"SELECT a AS A, b AS B FROM dbo.t AS t";
+        @"SELECT a+b AS c, d AS f FROM dbo.t AS t";
 
     private const string SelectCompactLineLengthExampleSql =
         @"SELECT currentQuarterRevenue AS current_quarter_revenue, projectedAnnualRevenue AS projected_annual_revenue FROM dbo.t AS t";
-
-    private const string SelectCompactWithExpressionsExampleSql =
-        @"-- Compact SELECT threshold: verify whether expression items still stay on one line.
-select a.Id,a.Region,a.Score+10 as boosted_score,a.Status from dbo.A as a;";
 
     private const string InListThresholdExampleSql =
         @"-- Inline IN threshold: inspect when IN(...) remains inline versus multiline.
@@ -891,7 +882,6 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         ["sql-order-by-items-style"] = ListsExampleSql,
         ["sql-select-compact-max-items"] = SelectCompactThresholdExampleSql,
         ["sql-select-compact-max-line-length"] = SelectCompactLineLengthExampleSql,
-        ["sql-select-compact-allow-expressions"] = SelectCompactWithExpressionsExampleSql,
         ["sql-in-list-items-style"] = ListsExampleSql,
         ["sql-inline-in-list-max-items"] = InListThresholdExampleSql,
         ["sql-inline-in-list-max-line"] = InListThresholdExampleSql,
@@ -929,7 +919,6 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
     private bool spacesBeforeSemicolon = false;
     private bool eofNewline;
     private bool alignSelectAliases;
-    private bool selectCompactAllowExpressions;
     private bool joinsNewlinePerJoin = true;
     private bool joinsOnNewLine = true;
     private bool joinsMultilineOnBreakOnAnd = true;
@@ -1281,8 +1270,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         }
 
         var isSelectCompactOption = string.Equals(optionId, "sql-select-compact-max-items", StringComparison.Ordinal) ||
-            string.Equals(optionId, "sql-select-compact-max-line-length", StringComparison.Ordinal) ||
-            string.Equals(optionId, "sql-select-compact-allow-expressions", StringComparison.Ordinal);
+            string.Equals(optionId, "sql-select-compact-max-line-length", StringComparison.Ordinal);
         if (isSelectCompactOption)
         {
             selectItemsStyle = SqlListLayoutStyle.OnePerLine;
@@ -1300,12 +1288,6 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         {
             selectCompactMaxItems = Math.Max(2, selectCompactMaxItems);
             selectCompactMaxLineLength = 40;
-        }
-
-        if (string.Equals(optionId, "sql-select-compact-allow-expressions", StringComparison.Ordinal))
-        {
-            selectCompactMaxItems = Math.Max(4, selectCompactMaxItems);
-            selectCompactMaxLineLength = Math.Max(120, selectCompactMaxLineLength);
         }
 
         var isInlineInListOption = string.Equals(optionId, "sql-inline-in-list-max-items", StringComparison.Ordinal) ||
@@ -1364,7 +1346,6 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         spacesBeforeSemicolon = false;
         eofNewline = false;
         alignSelectAliases = false;
-        selectCompactAllowExpressions = false;
         joinsNewlinePerJoin = true;
         joinsOnNewLine = true;
         joinsMultilineOnBreakOnAnd = true;
@@ -1469,8 +1450,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
                     SelectCompactThreshold = new SqlSelectCompactThresholdOptions
                     {
                         MaxItems = Math.Max(0, selectCompactMaxItems),
-                        MaxLineLength = Math.Max(10, selectCompactMaxLineLength),
-                        AllowExpressions = selectCompactAllowExpressions
+                        MaxLineLength = Math.Max(10, selectCompactMaxLineLength)
                     },
                     InlineInListThreshold = new SqlInlineInListThresholdOptions
                     {

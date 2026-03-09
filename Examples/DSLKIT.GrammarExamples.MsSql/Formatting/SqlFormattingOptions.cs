@@ -188,8 +188,6 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         public int MaxItems { get; init; } = 0;
 
         public int MaxLineLength { get; init; } = 80;
-
-        public bool AllowExpressions { get; init; } = false;
     }
 
     public sealed record SqlInlineInListThresholdOptions

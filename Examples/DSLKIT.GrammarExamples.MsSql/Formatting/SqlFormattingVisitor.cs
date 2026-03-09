@@ -2131,11 +2131,6 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 return true;
             }
 
-            if (!threshold.AllowExpressions && itemNodes.Any(itemNode => !IsSimpleSelectItem(itemNode)))
-            {
-                return true;
-            }
-
             var inlineLineLength = "SELECT ".Length + string.Join(GetInlineCommaSeparator(), itemTexts).Length;
             return inlineLineLength > Math.Max(1, threshold.MaxLineLength);
         }
@@ -2182,53 +2177,6 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         private int GetWrapColumn()
         {
             return Math.Max(10, _options.Layout.WrapColumn);
-        }
-
-        private bool IsSimpleSelectItem(ParseTreeNode itemNode)
-        {
-            var terminals = CollectTerminalNodes(itemNode);
-            if (terminals.Count == 0)
-            {
-                return false;
-            }
-
-            foreach (var terminalNode in terminals)
-            {
-                var rawToken = terminalNode.Token.OriginalString;
-                if (string.IsNullOrWhiteSpace(rawToken))
-                {
-                    continue;
-                }
-
-                if (IsKeywordToken(terminalNode.Token))
-                {
-                    var keyword = rawToken.ToUpperInvariant();
-                    if (!string.Equals(keyword, "AS", StringComparison.Ordinal))
-                    {
-                        return false;
-                    }
-
-                    continue;
-                }
-
-                if (char.IsDigit(rawToken[0]) || rawToken[0] == '\'')
-                {
-                    return false;
-                }
-
-                if (string.Equals(rawToken, "(", StringComparison.Ordinal) ||
-                    string.Equals(rawToken, ")", StringComparison.Ordinal))
-                {
-                    return false;
-                }
-
-                if (IsBinaryOperatorToken(rawToken))
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
 
         private List<string> AlignSelectAliases(IReadOnlyList<string> itemTexts)
