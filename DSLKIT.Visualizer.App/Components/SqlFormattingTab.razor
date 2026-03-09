@@ -259,14 +259,12 @@
                                             <input id="sql-predicates-inline-allow-only-and" class="form-check-input" type="checkbox" @bind="predicatesInlineSimpleAllowOnlyAnd" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
-                                        <div class="dsl-sql-property-row" hidden='@HideOption("predicates parenthesize mixed and or mode")'>
-                                            <SqlOptionLabel ForId="sql-predicates-parenthesize-mode" Text="Parenthesize mixed AND/OR" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <select id="sql-predicates-parenthesize-mode"
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("predicates mixed and or parentheses keep original preserve semantics")'>
+                                            <SqlOptionLabel ForId="sql-predicates-mixed-and-or-parentheses-mode" Text="Mixed AND/OR parentheses" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <select id="sql-predicates-mixed-and-or-parentheses-mode"
                                                     class="form-select form-select-sm"
-                                                    @bind="predicatesParenthesizeMixedAndOrMode" @bind:after="OnOptionValueChangedAsync">
-                                                <option value="@SqlParenthesizeMixedAndOrMode.None">None</option>
-                                                <option value="@SqlParenthesizeMixedAndOrMode.Minimal">Minimal</option>
-                                                <option value="@SqlParenthesizeMixedAndOrMode.AlwaysForOrGroups">AlwaysForOrGroups</option>
+                                                    @bind="predicatesMixedAndOrParenthesesMode" @bind:after="OnOptionValueChangedAsync">
+                                                <option value="@SqlMixedAndOrParenthesesMode.KeepOriginal">KeepOriginal</option>
                                             </select>
                                         </div>
                                     </div>
@@ -713,7 +711,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         ["sql-predicates-inline-max-conditions"] = PredicatesExampleSql,
         ["sql-predicates-inline-max-line-length"] = PredicatesExampleSql,
         ["sql-predicates-inline-allow-only-and"] = PredicatesExampleSql,
-        ["sql-predicates-parenthesize-mode"] = PredicatesExampleSql,
+        ["sql-predicates-mixed-and-or-parentheses-mode"] = PredicatesExampleSql,
         ["sql-expressions-case-style"] = ExpressionsCaseExampleSql,
         ["sql-case-threshold-max-when"] = ExpressionsCaseExampleSql,
         ["sql-case-threshold-max-tokens"] = ExpressionsCaseExampleSql,
@@ -779,7 +777,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
     private int predicatesInlineSimpleMaxConditions;
     private int predicatesInlineSimpleMaxLineLength = 120;
     private bool predicatesInlineSimpleAllowOnlyAnd = true;
-    private SqlParenthesizeMixedAndOrMode predicatesParenthesizeMixedAndOrMode = SqlParenthesizeMixedAndOrMode.None;
+    private SqlMixedAndOrParenthesesMode predicatesMixedAndOrParenthesesMode = SqlMixedAndOrParenthesesMode.KeepOriginal;
     private SqlCaseStyle expressionsCaseStyle = SqlCaseStyle.Multiline;
     private int compactCaseMaxWhenClauses;
     private int compactCaseMaxTokens;
@@ -1016,7 +1014,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         predicatesInlineSimpleMaxConditions = 0;
         predicatesInlineSimpleMaxLineLength = 120;
         predicatesInlineSimpleAllowOnlyAnd = true;
-        predicatesParenthesizeMixedAndOrMode = SqlParenthesizeMixedAndOrMode.None;
+        predicatesMixedAndOrParenthesesMode = SqlMixedAndOrParenthesesMode.KeepOriginal;
         expressionsCaseStyle = SqlCaseStyle.Multiline;
         compactCaseMaxWhenClauses = 0;
         compactCaseMaxTokens = 0;
@@ -1136,9 +1134,9 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
                         MaxLineLength = Math.Max(10, predicatesInlineSimpleMaxLineLength),
                         AllowOnlyAnd = predicatesInlineSimpleAllowOnlyAnd
                     },
-                    ParenthesizeMixedAndOr = new SqlParenthesizeMixedAndOrOptions
+                    MixedAndOrParentheses = new SqlMixedAndOrParenthesesOptions
                     {
-                        Mode = predicatesParenthesizeMixedAndOrMode
+                        Mode = predicatesMixedAndOrParenthesesMode
                     }
                 },
                 Expressions = new SqlExpressionsFormattingOptions

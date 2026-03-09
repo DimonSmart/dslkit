@@ -920,7 +920,6 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
             if (isWhereOrHavingAnchor)
             {
-                tokenInfos = ApplyParenthesizeMixedAndOr(tokenInfos);
                 var forceInlineByShortExpression = ShouldInlineShortExpression(
                     node,
                     SqlInlineExpressionContext.Where,
@@ -1115,86 +1114,6 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             var predicateText = RenderTokensInline(tokenInfos);
             var maxLineLength = Math.Max(1, inlineOptions.MaxLineLength);
             return anchorKeyword.Length + 1 + predicateText.Length <= maxLineLength;
-        }
-
-        private List<SqlTokenInfo> ApplyParenthesizeMixedAndOr(IReadOnlyList<SqlTokenInfo> tokenInfos)
-        {
-            var mode = _options.Predicates.ParenthesizeMixedAndOr.Mode;
-            if (mode == SqlParenthesizeMixedAndOrMode.None)
-            {
-                return tokenInfos.ToList();
-            }
-
-            var split = SplitByTopLevelLogicalOperators(tokenInfos, AllLogicalOperators);
-            var hasAnd = split.Operators.Any(logicalOperator => string.Equals(logicalOperator.TokenForRules, "AND", StringComparison.Ordinal));
-            var hasOr = split.Operators.Any(logicalOperator => string.Equals(logicalOperator.TokenForRules, "OR", StringComparison.Ordinal));
-            if (!hasAnd || !hasOr)
-            {
-                return tokenInfos.ToList();
-            }
-
-            var groupedSegments = new List<(List<List<SqlTokenInfo>> Segments, bool HasOr)>();
-            var currentGroup = new List<List<SqlTokenInfo>> { split.Segments[0] };
-            var currentGroupHasOr = false;
-
-            for (var splitIndex = 0; splitIndex < split.Operators.Count; splitIndex++)
-            {
-                var logicalOperator = split.Operators[splitIndex];
-                var rightSegment = split.Segments[splitIndex + 1];
-
-                if (string.Equals(logicalOperator.TokenForRules, "OR", StringComparison.Ordinal))
-                {
-                    currentGroupHasOr = true;
-                    currentGroup.Add(rightSegment);
-                    continue;
-                }
-
-                groupedSegments.Add((currentGroup, currentGroupHasOr));
-                currentGroup = new List<List<SqlTokenInfo>> { rightSegment };
-                currentGroupHasOr = false;
-            }
-
-            groupedSegments.Add((currentGroup, currentGroupHasOr));
-
-            var rebuilt = new List<SqlTokenInfo>();
-            for (var groupIndex = 0; groupIndex < groupedSegments.Count; groupIndex++)
-            {
-                var groupedSegment = groupedSegments[groupIndex];
-                var groupTokens = JoinSegmentsWithLogicalOperator(groupedSegment.Segments, "OR");
-
-                var shouldWrapGroup = groupedSegment.HasOr &&
-                    mode is SqlParenthesizeMixedAndOrMode.Minimal or SqlParenthesizeMixedAndOrMode.AlwaysForOrGroups;
-                if (shouldWrapGroup)
-                {
-                    groupTokens.Insert(0, CreateSymbolToken("("));
-                    groupTokens.Add(CreateSymbolToken(")"));
-                }
-
-                if (groupIndex > 0)
-                {
-                    rebuilt.Add(CreateKeywordToken("AND"));
-                }
-
-                rebuilt.AddRange(groupTokens);
-            }
-
-            return rebuilt;
-        }
-
-        private static List<SqlTokenInfo> JoinSegmentsWithLogicalOperator(IReadOnlyList<List<SqlTokenInfo>> segments, string logicalOperator)
-        {
-            var joined = new List<SqlTokenInfo>();
-            for (var segmentIndex = 0; segmentIndex < segments.Count; segmentIndex++)
-            {
-                if (segmentIndex > 0)
-                {
-                    joined.Add(CreateKeywordToken(logicalOperator));
-                }
-
-                joined.AddRange(segments[segmentIndex]);
-            }
-
-            return joined;
         }
 
         private static LogicalSplitResult SplitByTopLevelLogicalOperators(IReadOnlyList<SqlTokenInfo> tokenInfos, HashSet<string> breakOperators)

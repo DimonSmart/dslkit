@@ -53,8 +53,8 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
   - `maxConditions`
   - `maxLineLength`
   - `allowOnlyAnd`
-- `[HEURISTIC] predicates.parenthesizeMixedAndOr`:
-  - `mode = None | Minimal | AlwaysForOrGroups`
+- `predicates.mixedAndOrParentheses`:
+  - `mode = KeepOriginal`
 
 ## Stage 6. CASE/Expressions/Subqueries/IN Lists
 
@@ -85,6 +85,7 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
 - `comments.preserveAttachment`: `true` (default)
 - `comments.formatting`: `Keep | ReflowSafeOnly`
 - `preserve.stringLiterals`: `true` (always)
+- Mixed `AND`/`OR` parentheses handling is semantics-preserving only. Current formatter mode keeps original user parentheses and does not regroup boolean predicates.
 
 ## Precedence Rules
 

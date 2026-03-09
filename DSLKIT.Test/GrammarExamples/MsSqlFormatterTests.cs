@@ -311,9 +311,9 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
-        public void TryFormat_ShouldApplyStage5PredicateSettings()
+        public void TryFormat_ShouldKeepOriginalMixedAndOrPredicateShape()
         {
-            const string sourceSql = "SELECT a AS A FROM dbo.t AS t WHERE a = 1 AND b = 2 OR c = 3";
+            const string sourceSql = "SELECT a AS A FROM dbo.t AS t WHERE a = 1 AND b = 2 OR c = 3 AND d = 4";
             var options = new SqlFormattingOptions
             {
                 Predicates = new SqlPredicatesFormattingOptions
@@ -326,9 +326,9 @@ namespace DSLKIT.Test.GrammarExamples
                         MaxLineLength = 120,
                         AllowOnlyAnd = true
                     },
-                    ParenthesizeMixedAndOr = new SqlParenthesizeMixedAndOrOptions
+                    MixedAndOrParentheses = new SqlMixedAndOrParenthesesOptions
                     {
-                        Mode = SqlParenthesizeMixedAndOrMode.AlwaysForOrGroups
+                        Mode = SqlMixedAndOrParenthesesMode.KeepOriginal
                     }
                 }
             };
@@ -337,7 +337,33 @@ namespace DSLKIT.Test.GrammarExamples
             var formattedSql = NormalizeLineEndings(result.FormattedSql);
 
             result.IsSuccess.Should().BeTrue();
-            formattedSql.Should().MatchRegex("WHERE\\n\\s+a\\s*=\\s*1\\n\\s+AND\\s+\\(b\\s*=\\s*2\\s+OR\\s+c\\s*=\\s*3\\)");
+            NormalizeSql(formattedSql!).Should().Be(NormalizeSql(sourceSql));
+            formattedSql.Should().NotContain("AND (b = 2 OR c = 3) AND");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldPreserveOriginalParentheses_InMixedAndOrPredicate()
+        {
+            const string sourceSql = "SELECT a AS A FROM dbo.t AS t WHERE a = 1 AND (b = 2 OR c = 3)";
+            var options = new SqlFormattingOptions
+            {
+                Predicates = new SqlPredicatesFormattingOptions
+                {
+                    MultilineWhere = true,
+                    LogicalOperatorLineBreak = SqlLogicalOperatorLineBreakMode.BeforeOperator,
+                    MixedAndOrParentheses = new SqlMixedAndOrParenthesesOptions
+                    {
+                        Mode = SqlMixedAndOrParenthesesMode.KeepOriginal
+                    }
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+
+            result.IsSuccess.Should().BeTrue();
+            NormalizeSql(formattedSql!).Should().Be(NormalizeSql(sourceSql));
+            formattedSql.Should().Contain("AND (b = 2 OR c = 3)");
         }
 
         [Fact]

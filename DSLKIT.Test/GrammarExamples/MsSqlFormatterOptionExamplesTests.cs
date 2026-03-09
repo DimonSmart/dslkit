@@ -144,7 +144,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             ["sql-predicates-inline-max-conditions"] = PredicatesExampleSql,
             ["sql-predicates-inline-max-line-length"] = PredicatesExampleSql,
             ["sql-predicates-inline-allow-only-and"] = PredicatesExampleSql,
-            ["sql-predicates-parenthesize-mode"] = PredicatesExampleSql,
+            ["sql-predicates-mixed-and-or-parentheses-mode"] = PredicatesExampleSql,
             ["sql-expressions-case-style"] = ExpressionsCaseExampleSql,
             ["sql-case-threshold-max-when"] = ExpressionsCaseExampleSql,
             ["sql-case-threshold-max-tokens"] = ExpressionsCaseExampleSql,

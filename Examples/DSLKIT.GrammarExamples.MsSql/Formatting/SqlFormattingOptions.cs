@@ -90,11 +90,9 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         AfterOperator
     }
 
-    public enum SqlParenthesizeMixedAndOrMode
+    public enum SqlMixedAndOrParenthesesMode
     {
-        None,
-        Minimal,
-        AlwaysForOrGroups
+        KeepOriginal
     }
 
     public sealed record SqlFormattingOptions
@@ -243,7 +241,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
         public SqlInlineSimplePredicateOptions InlineSimplePredicate { get; init; } = new();
 
-        public SqlParenthesizeMixedAndOrOptions ParenthesizeMixedAndOr { get; init; } = new();
+        public SqlMixedAndOrParenthesesOptions MixedAndOrParentheses { get; init; } = new();
     }
 
     public sealed record SqlInlineSimplePredicateOptions
@@ -255,9 +253,9 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         public bool AllowOnlyAnd { get; init; } = true;
     }
 
-    public sealed record SqlParenthesizeMixedAndOrOptions
+    public sealed record SqlMixedAndOrParenthesesOptions
     {
-        public SqlParenthesizeMixedAndOrMode Mode { get; init; } = SqlParenthesizeMixedAndOrMode.None;
+        public SqlMixedAndOrParenthesesMode Mode { get; init; } = SqlMixedAndOrParenthesesMode.KeepOriginal;
     }
 
     public sealed record SqlExpressionsFormattingOptions
