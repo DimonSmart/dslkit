@@ -59,7 +59,16 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
   - `breakOrGroups = true | false`
   - Both options are semantics-preserving and operate only when top-level `AND` and `OR` are mixed in the same predicate.
 
-## Stage 6. CASE/Expressions/Subqueries/IN Lists
+## Stage 6. Short Queries / CASE / Expressions / Subqueries / IN Lists
+
+- `[HEURISTIC] shortQueries`:
+  - `enabled`
+  - `maxLineLength`
+  - `maxSelectItems`
+  - `maxPredicateConditions`
+  - `applyToSubqueries`
+  - `allowSingleJoin`
+  - Current implementation is intentionally conservative: it only compacts simple single-query `SELECT ... [FROM ...] [WHERE ...]` shapes, and skips `GROUP BY`, `HAVING`, set operators, `ORDER BY`, comments, and nested subqueries.
 
 - `expressions.caseStyle`: `Multiline | CompactWhenShort`
 - `[HEURISTIC] expressions.compactCaseThreshold`:

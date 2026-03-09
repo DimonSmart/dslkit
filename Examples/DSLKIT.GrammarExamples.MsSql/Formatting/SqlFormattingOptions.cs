@@ -112,6 +112,8 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
         public SqlExpressionsFormattingOptions Expressions { get; init; } = new();
 
+        public SqlShortQueriesFormattingOptions ShortQueries { get; init; } = new();
+
         public SqlSubqueriesFormattingOptions Subqueries { get; init; } = new();
 
         public SqlDmlFormattingOptions Dml { get; init; } = new();
@@ -262,6 +264,21 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         public SqlCompactCaseThresholdOptions CompactCaseThreshold { get; init; } = new();
 
         public SqlInlineShortExpressionOptions InlineShortExpression { get; init; } = new();
+    }
+
+    public sealed record SqlShortQueriesFormattingOptions
+    {
+        public bool Enabled { get; init; }
+
+        public int MaxLineLength { get; init; } = 100;
+
+        public int MaxSelectItems { get; init; } = 2;
+
+        public int MaxPredicateConditions { get; init; } = 2;
+
+        public bool ApplyToSubqueries { get; init; }
+
+        public bool AllowSingleJoin { get; init; }
     }
 
     public sealed record SqlCompactCaseThresholdOptions

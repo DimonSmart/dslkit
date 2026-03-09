@@ -274,6 +274,56 @@
                                 </details>
 
                                 <details class="dsl-sql-option-section" open>
+                                    <summary>Short Queries</summary>
+                                    <div class="dsl-sql-property-grid">
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("short queries compact enabled short query")'>
+                                            <SqlOptionLabel ForId="sql-short-queries-enabled" Text="Compact short queries" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <input id="sql-short-queries-enabled" class="form-check-input" type="checkbox" @bind="shortQueriesEnabled" @bind:after="OnOptionValueChangedAsync" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("short queries max line length short query")'>
+                                            <SqlOptionLabel ForId="sql-short-queries-max-line-length" Text="Short query max line length" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <input id="sql-short-queries-max-line-length"
+                                                   class="form-control form-control-sm"
+                                                   type="number"
+                                                   min="10"
+                                                   step="1"
+                                                   @bind="shortQueriesMaxLineLength" @bind:after="OnOptionValueChangedAsync" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("short queries max select items short query")'>
+                                            <SqlOptionLabel ForId="sql-short-queries-max-select-items" Text="Short query max SELECT items" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <input id="sql-short-queries-max-select-items"
+                                                   class="form-control form-control-sm"
+                                                   type="number"
+                                                   min="1"
+                                                   step="1"
+                                                   @bind="shortQueriesMaxSelectItems" @bind:after="OnOptionValueChangedAsync" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("short queries max where conditions predicate conditions")'>
+                                            <SqlOptionLabel ForId="sql-short-queries-max-predicate-conditions" Text="Short query max WHERE conditions" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <input id="sql-short-queries-max-predicate-conditions"
+                                                   class="form-control form-control-sm"
+                                                   type="number"
+                                                   min="1"
+                                                   step="1"
+                                                   @bind="shortQueriesMaxPredicateConditions" @bind:after="OnOptionValueChangedAsync" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("short queries apply to subqueries")'>
+                                            <SqlOptionLabel ForId="sql-short-queries-apply-to-subqueries" Text="Apply to subqueries" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <input id="sql-short-queries-apply-to-subqueries" class="form-check-input" type="checkbox" @bind="shortQueriesApplyToSubqueries" @bind:after="OnOptionValueChangedAsync" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("short queries allow single join")'>
+                                            <SqlOptionLabel ForId="sql-short-queries-allow-single-join" Text="Allow single JOIN" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <input id="sql-short-queries-allow-single-join" class="form-check-input" type="checkbox" @bind="shortQueriesAllowSingleJoin" @bind:after="OnOptionValueChangedAsync" />
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <details class="dsl-sql-option-section" open>
                                     <summary>Expressions</summary>
                                     <div class="dsl-sql-property-grid">
                                         <div class="dsl-sql-property-row" hidden='@HideOption("expressions case style multiline compact when short")'>
@@ -660,6 +710,16 @@ from dbo.A as a
 inner join dbo.B as b on a.Id+b.Id>10 and b.Flag=1
 where a.Score+a.Bonus>0 and a.IsActive=1;";
 
+    private const string ShortQueriesExampleSql =
+        @"-- Short queries: compare top-level SELECT, derived-table subquery, and single-JOIN compaction.
+select 1 from dbo.A where X=3 and Y=4;
+select q.Id
+from (select a.Id from dbo.A as a where a.Status=1 and a.Flag=1) as q;
+select a.Id
+from dbo.A as a
+inner join dbo.B as b on a.Id=b.AId
+where a.Status=1;";
+
     private const string ListsExampleSql =
         @"-- List layout: focus on comma style and wrapping in SELECT/IN/GROUP BY/ORDER BY lists.
 select a.Id,a.Region,a.Status,a.Score from dbo.A as a where a.Id in(1,2,3,4,5,6,7,8) group by a.Id,a.Region,a.Status,a.Score order by a.Id,a.Region,a.Status,a.Score;";
@@ -731,6 +791,12 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         ["sql-inline-short-select-item"] = InlineShortExpressionExampleSql,
         ["sql-inline-short-on"] = InlineShortExpressionExampleSql,
         ["sql-inline-short-where"] = InlineShortExpressionExampleSql,
+        ["sql-short-queries-enabled"] = ShortQueriesExampleSql,
+        ["sql-short-queries-max-line-length"] = ShortQueriesExampleSql,
+        ["sql-short-queries-max-select-items"] = ShortQueriesExampleSql,
+        ["sql-short-queries-max-predicate-conditions"] = ShortQueriesExampleSql,
+        ["sql-short-queries-apply-to-subqueries"] = ShortQueriesExampleSql,
+        ["sql-short-queries-allow-single-join"] = ShortQueriesExampleSql,
         ["sql-comma-style"] = ListsExampleSql,
         ["sql-select-items-style"] = ListsExampleSql,
         ["sql-group-by-items-style"] = ListsExampleSql,
@@ -797,6 +863,12 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
     private bool inlineShortContextSelectItem;
     private bool inlineShortContextOn;
     private bool inlineShortContextWhere;
+    private bool shortQueriesEnabled;
+    private int shortQueriesMaxLineLength = 100;
+    private int shortQueriesMaxSelectItems = 2;
+    private int shortQueriesMaxPredicateConditions = 2;
+    private bool shortQueriesApplyToSubqueries;
+    private bool shortQueriesAllowSingleJoin;
     private SqlDmlListStyle updateSetStyle = SqlDmlListStyle.OnePerLine;
     private SqlDmlListStyle insertColumnsStyle = SqlDmlListStyle.OnePerLine;
     private SqlCreateProcLayout createProcLayout = SqlCreateProcLayout.Expanded;
@@ -1006,6 +1078,30 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             predicatesMultilineWhere = true;
         }
 
+        var isShortQueryOption = string.Equals(optionId, "sql-short-queries-enabled", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-short-queries-max-line-length", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-short-queries-max-select-items", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-short-queries-max-predicate-conditions", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-short-queries-apply-to-subqueries", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-short-queries-allow-single-join", StringComparison.Ordinal);
+        if (isShortQueryOption)
+        {
+            shortQueriesEnabled = true;
+            shortQueriesMaxLineLength = Math.Max(40, shortQueriesMaxLineLength);
+            shortQueriesMaxSelectItems = Math.Max(1, shortQueriesMaxSelectItems);
+            shortQueriesMaxPredicateConditions = Math.Max(1, shortQueriesMaxPredicateConditions);
+        }
+
+        if (string.Equals(optionId, "sql-short-queries-apply-to-subqueries", StringComparison.Ordinal))
+        {
+            shortQueriesApplyToSubqueries = true;
+        }
+
+        if (string.Equals(optionId, "sql-short-queries-allow-single-join", StringComparison.Ordinal))
+        {
+            shortQueriesAllowSingleJoin = true;
+        }
+
         var isSelectCompactOption = string.Equals(optionId, "sql-select-compact-max-items", StringComparison.Ordinal) ||
             string.Equals(optionId, "sql-select-compact-max-line-length", StringComparison.Ordinal) ||
             string.Equals(optionId, "sql-select-compact-allow-expressions", StringComparison.Ordinal);
@@ -1084,6 +1180,12 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         inlineShortContextSelectItem = false;
         inlineShortContextOn = false;
         inlineShortContextWhere = false;
+        shortQueriesEnabled = false;
+        shortQueriesMaxLineLength = 100;
+        shortQueriesMaxSelectItems = 2;
+        shortQueriesMaxPredicateConditions = 2;
+        shortQueriesApplyToSubqueries = false;
+        shortQueriesAllowSingleJoin = false;
         inListItemsStyle = SqlInListItemsStyle.Inline;
         inlineInListMaxItems = 0;
         inlineInListMaxLineLength = 120;
@@ -1213,6 +1315,15 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
                         MaxLineLength = Math.Max(10, inlineShortExpressionMaxLineLength),
                         ForContexts = BuildInlineShortExpressionContexts()
                     }
+                },
+                ShortQueries = new SqlShortQueriesFormattingOptions
+                {
+                    Enabled = shortQueriesEnabled,
+                    MaxLineLength = Math.Max(10, shortQueriesMaxLineLength),
+                    MaxSelectItems = Math.Max(1, shortQueriesMaxSelectItems),
+                    MaxPredicateConditions = Math.Max(1, shortQueriesMaxPredicateConditions),
+                    ApplyToSubqueries = shortQueriesApplyToSubqueries,
+                    AllowSingleJoin = shortQueriesAllowSingleJoin
                 },
                 Subqueries = new SqlSubqueriesFormattingOptions(),
                 Dml = new SqlDmlFormattingOptions

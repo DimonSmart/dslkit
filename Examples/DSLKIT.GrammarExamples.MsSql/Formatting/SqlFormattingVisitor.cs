@@ -96,6 +96,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
         private readonly SqlFormattingOptions _options;
         private readonly IndentedSqlTextWriter _writer;
+        private readonly Stack<string> _nonTerminalNameStack = new();
 
         private string? _previousToken;
         private string? _tokenBeforePrevious;
@@ -132,42 +133,55 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         protected override void VisitNonTerminal(NonTerminalNode node)
         {
             var nonTerminalName = node.NonTerminal.Name;
-            if (TryWriteCreateProcStatement(node, nonTerminalName))
+            _nonTerminalNameStack.Push(nonTerminalName);
+            try
             {
-                return;
-            }
+                if (TryWriteCreateProcStatement(node, nonTerminalName))
+                {
+                    return;
+                }
 
-            if (TryWriteUpdateStatement(node, nonTerminalName))
+                if (TryWriteUpdateStatement(node, nonTerminalName))
+                {
+                    return;
+                }
+
+                if (TryWriteInsertStatement(node, nonTerminalName))
+                {
+                    return;
+                }
+
+                if (TryWriteShortQueryExpression(node, nonTerminalName))
+                {
+                    return;
+                }
+
+                if (TryWriteSubqueryQueryPrimary(node, nonTerminalName))
+                {
+                    return;
+                }
+
+                if (TryWriteCaseExpression(node, nonTerminalName))
+                {
+                    return;
+                }
+
+                if (TryWriteStructuredList(node, nonTerminalName))
+                {
+                    return;
+                }
+
+                if (TryWriteSearchCondition(node, nonTerminalName))
+                {
+                    return;
+                }
+
+                VisitChildren(node);
+            }
+            finally
             {
-                return;
+                _nonTerminalNameStack.Pop();
             }
-
-            if (TryWriteInsertStatement(node, nonTerminalName))
-            {
-                return;
-            }
-
-            if (TryWriteSubqueryQueryPrimary(node, nonTerminalName))
-            {
-                return;
-            }
-
-            if (TryWriteCaseExpression(node, nonTerminalName))
-            {
-                return;
-            }
-
-            if (TryWriteStructuredList(node, nonTerminalName))
-            {
-                return;
-            }
-
-            if (TryWriteSearchCondition(node, nonTerminalName))
-            {
-                return;
-            }
-
-            VisitChildren(node);
         }
 
         protected override void VisitTerminal(TerminalNode node)
@@ -586,6 +600,35 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             UpdatePreviousToken(CreateSymbolToken(")"));
         }
 
+        private bool TryWriteShortQueryExpression(NonTerminalNode node, string nonTerminalName)
+        {
+            var isSupportedNode = string.Equals(nonTerminalName, "QueryExpression", StringComparison.Ordinal) ||
+                string.Equals(nonTerminalName, "ImplicitQueryExpression", StringComparison.Ordinal);
+            if (!isSupportedNode)
+            {
+                return false;
+            }
+
+            if (IsNestedShortQueryContext() && !_options.ShortQueries.ApplyToSubqueries)
+            {
+                return false;
+            }
+
+            if (!TryGetShortQueryInlineText(node, out var inlineText))
+            {
+                return false;
+            }
+
+            if (_writer.HasContent && !_writer.IsLineStart && ShouldWriteSpaceBefore("SELECT"))
+            {
+                _writer.WriteSpace();
+            }
+
+            _writer.WriteToken(inlineText);
+            UpdatePreviousTokenFromNode(node);
+            return true;
+        }
+
         private bool TryWriteSubqueryQueryPrimary(NonTerminalNode node, string nonTerminalName)
         {
             var isSupportedNode = string.Equals(nonTerminalName, "QueryPrimary", StringComparison.Ordinal) ||
@@ -612,6 +655,22 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 _writer.WriteSpace();
             }
 
+            if (_options.ShortQueries.ApplyToSubqueries &&
+                TryGetShortQueryInlineText(queryExpressionNode, out var inlineText))
+            {
+                _writer.WriteToken("(");
+                _writer.WriteToken(inlineText);
+                _writer.WriteToken(")");
+                UpdatePreviousToken(CreateSymbolToken(")"));
+
+                for (var childIndex = 3; childIndex < node.Children.Count; childIndex++)
+                {
+                    Visit(node.Children[childIndex]);
+                }
+
+                return true;
+            }
+
             _writer.WriteToken("(");
             _writer.WriteLine();
             using (_writer.PushIndent())
@@ -633,6 +692,312 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             }
 
             return true;
+        }
+
+        private bool TryGetShortQueryInlineText(NonTerminalNode queryExpressionNode, out string inlineText)
+        {
+            inlineText = string.Empty;
+            if (!_options.ShortQueries.Enabled)
+            {
+                return false;
+            }
+
+            if (!TryGetShortQuerySpecificationNode(queryExpressionNode, out var querySpecificationNode))
+            {
+                return false;
+            }
+
+            if (!TryFindFirstNonTerminal(querySpecificationNode, "SelectItemList", out var selectItemListNode))
+            {
+                return false;
+            }
+
+            if (ContainsComment(queryExpressionNode) ||
+                ContainsDescendantNonTerminal(querySpecificationNode, "QuerySpecificationGroupByClause") ||
+                ContainsDescendantNonTerminal(querySpecificationNode, "QueryExpression") ||
+                ContainsDescendantNonTerminal(querySpecificationNode, "ImplicitQueryExpression"))
+            {
+                return false;
+            }
+
+            var maxSelectItems = Math.Max(1, _options.ShortQueries.MaxSelectItems);
+            var selectItemCount = ExtractDelimitedListItems(selectItemListNode, "SelectItemList").Count;
+            if (selectItemCount > maxSelectItems)
+            {
+                return false;
+            }
+
+            var joinCount = CountJoinClauses(querySpecificationNode);
+            if (joinCount > 0 && (!_options.ShortQueries.AllowSingleJoin || joinCount > 1))
+            {
+                return false;
+            }
+
+            if (TryGetWhereSearchCondition(querySpecificationNode, out var whereSearchConditionNode))
+            {
+                var maxPredicateConditions = Math.Max(1, _options.ShortQueries.MaxPredicateConditions);
+                if (CountPredicateConditions(whereSearchConditionNode) > maxPredicateConditions)
+                {
+                    return false;
+                }
+            }
+
+            inlineText = RenderNodeInline(queryExpressionNode);
+            return inlineText.Length <= Math.Max(10, _options.ShortQueries.MaxLineLength);
+        }
+
+        private bool TryGetShortQuerySpecificationNode(
+            NonTerminalNode queryExpressionNode,
+            out NonTerminalNode querySpecificationNode)
+        {
+            querySpecificationNode = null!;
+            if (string.Equals(queryExpressionNode.NonTerminal.Name, "QueryExpression", StringComparison.Ordinal))
+            {
+                return TryGetExplicitShortQuerySpecificationNode(queryExpressionNode, out querySpecificationNode);
+            }
+
+            if (string.Equals(queryExpressionNode.NonTerminal.Name, "ImplicitQueryExpression", StringComparison.Ordinal))
+            {
+                return TryGetImplicitShortQuerySpecificationNode(queryExpressionNode, out querySpecificationNode);
+            }
+
+            return false;
+        }
+
+        private static bool TryGetExplicitShortQuerySpecificationNode(
+            NonTerminalNode queryExpressionNode,
+            out NonTerminalNode querySpecificationNode)
+        {
+            querySpecificationNode = null!;
+            if (queryExpressionNode.Children.Count != 2 ||
+                queryExpressionNode.Children[0] is not NonTerminalNode queryUnionNode ||
+                queryExpressionNode.Children[1] is not NonTerminalNode queryExpressionTailNode ||
+                HasTerminalNodes(queryExpressionTailNode))
+            {
+                return false;
+            }
+
+            if (queryUnionNode.Children.Count != 1 ||
+                queryUnionNode.Children[0] is not NonTerminalNode queryIntersectNode ||
+                queryIntersectNode.Children.Count != 1 ||
+                queryIntersectNode.Children[0] is not NonTerminalNode queryPrimaryNode)
+            {
+                return false;
+            }
+
+            return TryGetQuerySpecificationFromQueryPrimary(queryPrimaryNode, out querySpecificationNode);
+        }
+
+        private static bool TryGetImplicitShortQuerySpecificationNode(
+            NonTerminalNode queryExpressionNode,
+            out NonTerminalNode querySpecificationNode)
+        {
+            querySpecificationNode = null!;
+            if (queryExpressionNode.Children.Count != 2 ||
+                queryExpressionNode.Children[0] is not NonTerminalNode queryUnionNode ||
+                queryExpressionNode.Children[1] is not NonTerminalNode queryExpressionTailNode ||
+                HasTerminalNodes(queryExpressionTailNode))
+            {
+                return false;
+            }
+
+            if (queryUnionNode.Children.Count != 1 ||
+                queryUnionNode.Children[0] is not NonTerminalNode queryIntersectNode ||
+                queryIntersectNode.Children.Count != 1 ||
+                queryIntersectNode.Children[0] is not NonTerminalNode querySpecificationNodeCandidate ||
+                !string.Equals(querySpecificationNodeCandidate.NonTerminal.Name, "QuerySpecification", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            querySpecificationNode = querySpecificationNodeCandidate;
+            return true;
+        }
+
+        private static bool TryGetQuerySpecificationFromQueryPrimary(
+            NonTerminalNode queryPrimaryNode,
+            out NonTerminalNode querySpecificationNode)
+        {
+            querySpecificationNode = null!;
+            if (queryPrimaryNode.Children.Count != 1 ||
+                queryPrimaryNode.Children[0] is not NonTerminalNode querySpecificationNodeCandidate ||
+                !string.Equals(querySpecificationNodeCandidate.NonTerminal.Name, "QuerySpecification", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            querySpecificationNode = querySpecificationNodeCandidate;
+            return true;
+        }
+
+        private static bool TryFindFirstNonTerminal(
+            ParseTreeNode node,
+            string nonTerminalName,
+            out NonTerminalNode result)
+        {
+            result = null!;
+            if (node is NonTerminalNode nonTerminalNode &&
+                string.Equals(nonTerminalNode.NonTerminal.Name, nonTerminalName, StringComparison.Ordinal))
+            {
+                result = nonTerminalNode;
+                return true;
+            }
+
+            foreach (var childNode in node.Children)
+            {
+                if (TryFindFirstNonTerminal(childNode, nonTerminalName, out result))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool ContainsDescendantNonTerminal(ParseTreeNode node, string nonTerminalName)
+        {
+            foreach (var childNode in node.Children)
+            {
+                if (childNode is NonTerminalNode nonTerminalNode &&
+                    (string.Equals(nonTerminalNode.NonTerminal.Name, nonTerminalName, StringComparison.Ordinal) ||
+                    ContainsDescendantNonTerminal(nonTerminalNode, nonTerminalName)))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool HasTerminalNodes(ParseTreeNode node)
+        {
+            if (node is TerminalNode)
+            {
+                return true;
+            }
+
+            foreach (var childNode in node.Children)
+            {
+                if (HasTerminalNodes(childNode))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool ContainsComment(ParseTreeNode node)
+        {
+            return CollectTokenInfos(node).Any(static tokenInfo => tokenInfo.IsComment);
+        }
+
+        private static int CountJoinClauses(ParseTreeNode node)
+        {
+            var joinCount = 0;
+            foreach (var terminalNode in CollectTerminalNodes(node))
+            {
+                var rawToken = terminalNode.Token.OriginalString;
+                if (string.Equals(rawToken, "JOIN", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(rawToken, "APPLY", StringComparison.OrdinalIgnoreCase))
+                {
+                    joinCount++;
+                }
+            }
+
+            return joinCount;
+        }
+
+        private static bool TryGetWhereSearchCondition(ParseTreeNode querySpecificationNode, out NonTerminalNode searchConditionNode)
+        {
+            searchConditionNode = null!;
+            if (!TryFindFirstNonTerminal(querySpecificationNode, "QuerySpecificationWhereClause", out var whereClauseNode))
+            {
+                return false;
+            }
+
+            return TryFindFirstNonTerminal(whereClauseNode, "SearchCondition", out searchConditionNode);
+        }
+
+        private static int CountPredicateConditions(ParseTreeNode node)
+        {
+            if (node is not NonTerminalNode nonTerminalNode)
+            {
+                return 0;
+            }
+
+            return nonTerminalNode.NonTerminal.Name switch
+            {
+                "SearchCondition" => nonTerminalNode.Children.Count == 1
+                    ? CountPredicateConditions(nonTerminalNode.Children[0])
+                    : 1,
+                "BooleanOrExpression" => CountLogicalPredicateConditions(nonTerminalNode, "OR"),
+                "BooleanAndExpression" => CountLogicalPredicateConditions(nonTerminalNode, "AND"),
+                "BooleanNotExpression" => CountBooleanNotConditions(nonTerminalNode),
+                "BooleanPrimary" => CountBooleanPrimaryConditions(nonTerminalNode),
+                _ => nonTerminalNode.Children.Count == 1
+                    ? CountPredicateConditions(nonTerminalNode.Children[0])
+                    : 1
+            };
+        }
+
+        private static int CountLogicalPredicateConditions(NonTerminalNode logicalExpressionNode, string logicalOperator)
+        {
+            if (logicalExpressionNode.Children.Count == 3 &&
+                TryGetTerminalText(logicalExpressionNode.Children[1], out var operatorText) &&
+                string.Equals(operatorText, logicalOperator, StringComparison.OrdinalIgnoreCase))
+            {
+                return CountPredicateConditions(logicalExpressionNode.Children[0]) +
+                    CountPredicateConditions(logicalExpressionNode.Children[2]);
+            }
+
+            return logicalExpressionNode.Children.Count == 1
+                ? CountPredicateConditions(logicalExpressionNode.Children[0])
+                : 1;
+        }
+
+        private static int CountBooleanNotConditions(NonTerminalNode booleanNotExpressionNode)
+        {
+            if (booleanNotExpressionNode.Children.Count == 2 &&
+                TryGetTerminalText(booleanNotExpressionNode.Children[0], out var notText) &&
+                string.Equals(notText, "NOT", StringComparison.OrdinalIgnoreCase))
+            {
+                return CountPredicateConditions(booleanNotExpressionNode.Children[1]);
+            }
+
+            return booleanNotExpressionNode.Children.Count == 1
+                ? CountPredicateConditions(booleanNotExpressionNode.Children[0])
+                : 1;
+        }
+
+        private static int CountBooleanPrimaryConditions(NonTerminalNode booleanPrimaryNode)
+        {
+            if (booleanPrimaryNode.Children.Count == 3 &&
+                TryGetTerminalText(booleanPrimaryNode.Children[0], out var openText) &&
+                string.Equals(openText, "(", StringComparison.Ordinal) &&
+                booleanPrimaryNode.Children[1] is NonTerminalNode nestedSearchConditionNode &&
+                string.Equals(nestedSearchConditionNode.NonTerminal.Name, "SearchCondition", StringComparison.Ordinal))
+            {
+                return CountPredicateConditions(nestedSearchConditionNode);
+            }
+
+            return 1;
+        }
+
+        private bool IsNestedShortQueryContext()
+        {
+            var parentNonTerminalName = GetParentNonTerminalName();
+            return string.Equals(parentNonTerminalName, "BooleanPrimary", StringComparison.Ordinal) ||
+                string.Equals(parentNonTerminalName, "CteDefinition", StringComparison.Ordinal) ||
+                string.Equals(parentNonTerminalName, "InPredicateValue", StringComparison.Ordinal) ||
+                string.Equals(parentNonTerminalName, "PrimaryExpression", StringComparison.Ordinal) ||
+                string.Equals(parentNonTerminalName, "QueryPrimary", StringComparison.Ordinal) ||
+                string.Equals(parentNonTerminalName, "TableFactor", StringComparison.Ordinal);
+        }
+
+        private string? GetParentNonTerminalName()
+        {
+            return _nonTerminalNameStack.Skip(1).FirstOrDefault();
         }
 
         private bool TryWriteCaseExpression(NonTerminalNode node, string nonTerminalName)

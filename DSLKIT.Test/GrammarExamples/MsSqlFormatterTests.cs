@@ -234,6 +234,52 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void TryFormat_ShouldCompactWholeShortQuery_WhenPolicyAllowsIt()
+        {
+            const string sourceSql = "SELECT 1 FROM dbo.A WHERE X=3 AND Y=4";
+            var options = new SqlFormattingOptions
+            {
+                ShortQueries = new SqlShortQueriesFormattingOptions
+                {
+                    Enabled = true,
+                    MaxLineLength = 120,
+                    MaxSelectItems = 1,
+                    MaxPredicateConditions = 2
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+
+            result.IsSuccess.Should().BeTrue();
+            formattedSql.Should().Contain("SELECT 1 FROM dbo.A WHERE X = 3 AND Y = 4");
+            formattedSql.Should().NotContain("\nFROM dbo.A");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldKeepWholeQueryExpanded_WhenShortQueryPredicateThresholdIsExceeded()
+        {
+            const string sourceSql = "SELECT 1 FROM dbo.A WHERE X=3 AND Y=4";
+            var options = new SqlFormattingOptions
+            {
+                ShortQueries = new SqlShortQueriesFormattingOptions
+                {
+                    Enabled = true,
+                    MaxLineLength = 120,
+                    MaxSelectItems = 1,
+                    MaxPredicateConditions = 1
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+
+            result.IsSuccess.Should().BeTrue();
+            formattedSql.Should().NotContain("SELECT 1 FROM dbo.A WHERE X = 3 AND Y = 4");
+            formattedSql.Should().Contain("\nFROM dbo.A\nWHERE X = 3 AND Y = 4");
+        }
+
+        [Fact]
         public void TryFormat_ShouldApplyStage4JoinSettings()
         {
             const string sourceSql = "SELECT a AS A FROM dbo.A AS a INNER JOIN dbo.B AS b ON a.Id=b.Id AND a.Type=b.Type AND a.IsActive=1";
@@ -522,6 +568,74 @@ namespace DSLKIT.Test.GrammarExamples
             result.IsSuccess.Should().BeTrue();
             formattedSql.Should().Contain("SELECT a + b + c + d AS s");
             formattedSql.Should().Contain("\nFROM dbo.t AS t");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldCompactShortSubquery_WhenPolicyAllowsSubqueries()
+        {
+            const string sourceSql = "SELECT q.Id FROM (SELECT a.Id FROM dbo.A AS a WHERE a.Status=1 AND a.Flag=1) AS q";
+            var disabledOptions = new SqlFormattingOptions
+            {
+                ShortQueries = new SqlShortQueriesFormattingOptions
+                {
+                    Enabled = true,
+                    MaxLineLength = 120,
+                    MaxSelectItems = 1,
+                    MaxPredicateConditions = 2,
+                    ApplyToSubqueries = false
+                }
+            };
+            var enabledOptions = disabledOptions with
+            {
+                ShortQueries = disabledOptions.ShortQueries with
+                {
+                    ApplyToSubqueries = true
+                }
+            };
+
+            var disabledResult = ModernMsSqlFormatter.TryFormat(sourceSql, disabledOptions);
+            var enabledResult = ModernMsSqlFormatter.TryFormat(sourceSql, enabledOptions);
+            var disabledSql = NormalizeLineEndings(disabledResult.FormattedSql);
+            var enabledSql = NormalizeLineEndings(enabledResult.FormattedSql);
+
+            disabledResult.IsSuccess.Should().BeTrue();
+            enabledResult.IsSuccess.Should().BeTrue();
+            disabledSql.Should().NotContain("FROM (SELECT a.Id FROM dbo.A AS a WHERE a.Status = 1 AND a.Flag = 1) AS q");
+            enabledSql.Should().Contain("FROM (SELECT a.Id FROM dbo.A AS a WHERE a.Status = 1 AND a.Flag = 1) AS q");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldCompactShortQueryWithSingleJoin_OnlyWhenAllowed()
+        {
+            const string sourceSql = "SELECT a.Id FROM dbo.A AS a INNER JOIN dbo.B AS b ON a.Id=b.AId WHERE a.Status=1";
+            var disallowOptions = new SqlFormattingOptions
+            {
+                ShortQueries = new SqlShortQueriesFormattingOptions
+                {
+                    Enabled = true,
+                    MaxLineLength = 120,
+                    MaxSelectItems = 1,
+                    MaxPredicateConditions = 1,
+                    AllowSingleJoin = false
+                }
+            };
+            var allowOptions = disallowOptions with
+            {
+                ShortQueries = disallowOptions.ShortQueries with
+                {
+                    AllowSingleJoin = true
+                }
+            };
+
+            var disallowResult = ModernMsSqlFormatter.TryFormat(sourceSql, disallowOptions);
+            var allowResult = ModernMsSqlFormatter.TryFormat(sourceSql, allowOptions);
+            var disallowSql = NormalizeLineEndings(disallowResult.FormattedSql);
+            var allowSql = NormalizeLineEndings(allowResult.FormattedSql);
+
+            disallowResult.IsSuccess.Should().BeTrue();
+            allowResult.IsSuccess.Should().BeTrue();
+            disallowSql.Should().NotContain("SELECT a.Id FROM dbo.A AS a INNER JOIN dbo.B AS b ON a.Id = b.AId WHERE a.Status = 1");
+            allowSql.Should().Contain("SELECT a.Id FROM dbo.A AS a INNER JOIN dbo.B AS b ON a.Id = b.AId WHERE a.Status = 1");
         }
 
         [Fact]
