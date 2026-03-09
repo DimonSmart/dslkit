@@ -1338,6 +1338,82 @@ namespace DSLKIT.Test.GrammarExamples
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
 
+        [Theory]
+        [InlineData(
+            "EXECUTE dbo.usp_DoWork WITH RESULT SETS ((WAITFOR INT));",
+            "EXECUTE RESULT SETS column names should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "EXECUTE (N'SELECT 1') AT DATA_SOURCE WAITFOR;",
+            "EXECUTE AT DATA_SOURCE targets should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            """
+            SELECT *
+            FROM OPENJSON(@json)
+            WITH
+            (
+                WAITFOR INT
+            );
+            """,
+            "OPENJSON WITH column names should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            """
+            SELECT *
+            FROM
+            (
+                SELECT 2024 AS Yr, 10 AS Amount
+            ) AS src
+            PIVOT
+            (
+                SUM(Amount) FOR WAITFOR IN ([2024])
+            ) AS p;
+            """,
+            "PIVOT FOR targets should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            """
+            SELECT *
+            FROM
+            (
+                SELECT 2024 AS Yr, 10 AS Amount
+            ) AS src
+            UNPIVOT
+            (
+                WAITFOR FOR Attr IN (Yr)
+            ) AS u;
+            """,
+            "UNPIVOT value targets should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            """
+            SELECT *
+            FROM
+            (
+                SELECT 2024 AS Yr, 10 AS Amount
+            ) AS src
+            UNPIVOT
+            (
+                Amount FOR WAITFOR IN (Yr)
+            ) AS u;
+            """,
+            "UNPIVOT FOR targets should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            """
+            SELECT *
+            FROM
+            (
+                SELECT 2024 AS Yr, 10 AS Amount
+            ) AS src
+            UNPIVOT
+            (
+                Amount FOR Attr IN (WAITFOR)
+            ) AS u;
+            """,
+            "UNPIVOT column lists should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        public void ParseScript_ShouldRejectQuerySideIdentifiers_WithContextualKeywordFallback(string script, string reason)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse(reason);
+        }
+
         [Fact]
         public void ParseScript_ShouldParseInsertExec_Variants()
         {

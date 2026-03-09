@@ -39,6 +39,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             var unicodeStringLiteral = context.Symbols.UnicodeStringLiteral;
             var variableReference = context.Symbols.VariableReference;
             var stringLiteral = context.StringLiteralTerminal;
+            var executeIdentifierTerm = gb.NT("ExecuteIdentifierTerm");
+
+            gb.Rule(executeIdentifierTerm)
+                .CanBe(strictIdentifierTerm)
+                .OrKeywords("NAME");
 
             gb.Rule(executeStatement)
                 .CanBe("EXEC", executeModuleCall)
@@ -84,10 +89,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(executeResultSetsDef).Is("AS", "FOR", "XML");
             gb.Prod(executeColumnDefList).Is(executeColumnDef);
             gb.Prod(executeColumnDefList).Is(executeColumnDefList, ",", executeColumnDef);
-            gb.Prod(executeColumnDef).Is(identifierTerm, typeSpec);
-            gb.Prod(executeColumnDef).Is(identifierTerm, typeSpec, "COLLATE", strictIdentifierTerm);
-            gb.Prod(executeColumnDef).Is(identifierTerm, typeSpec, executeNullability);
-            gb.Prod(executeColumnDef).Is(identifierTerm, typeSpec, "COLLATE", strictIdentifierTerm, executeNullability);
+            gb.Prod(executeColumnDef).Is(executeIdentifierTerm, typeSpec);
+            gb.Prod(executeColumnDef).Is(executeIdentifierTerm, typeSpec, "COLLATE", strictIdentifierTerm);
+            gb.Prod(executeColumnDef).Is(executeIdentifierTerm, typeSpec, executeNullability);
+            gb.Prod(executeColumnDef).Is(executeIdentifierTerm, typeSpec, "COLLATE", strictIdentifierTerm, executeNullability);
             gb.Rule(executeNullability)
                 .CanBe("NULL")
                 .Or("NOT", "NULL");
@@ -112,8 +117,8 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .Or("AS", "USER", "=", unicodeStringLiteral)
                 .Or("AS", "LOGIN", "=", strictIdentifierTerm)
                 .Or("AS", "USER", "=", strictIdentifierTerm);
-            gb.Prod(executeAtClause).Is("AT", identifierTerm);
-            gb.Prod(executeAtClause).Is("AT", "DATA_SOURCE", identifierTerm);
+            gb.Prod(executeAtClause).Is("AT", executeIdentifierTerm);
+            gb.Prod(executeAtClause).Is("AT", "DATA_SOURCE", executeIdentifierTerm);
 
             gb.Prod(useStatement).Is("USE", strictIdentifierTerm);
         }

@@ -39,6 +39,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             var forSystemTimeStart = context.ForSystemTimeStartTerminal;
             var hasGraphExtensions = context.HasFeature(MsSqlDialectFeatures.GraphExtensions);
             var stringLiteral = context.StringLiteralTerminal;
+            var tableSourceColumnIdentifierTerm = gb.NT("TableSourceColumnIdentifierTerm");
+
+            gb.Rule(tableSourceColumnIdentifierTerm)
+                .CanBe(context.Symbols.StrictIdentifierTerm)
+                .OrKeywords("NAME");
 
             gb.Rule(tableSourceList).SeparatedBy(",", tableSource);
             gb.Prod(tableSource).Is(tableFactor);
@@ -88,7 +93,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(tableFactor).Is(qualifiedName, "PIVOT", "(", pivotClause, ")", identifierTerm);
             gb.Prod(tableFactor).Is(qualifiedName, "AS", identifierTerm, "PIVOT", "(", pivotClause, ")", identifierTerm);
             gb.Prod(tableFactor).Is(qualifiedName, identifierTerm, "PIVOT", "(", pivotClause, ")", identifierTerm);
-            gb.Prod(pivotClause).Is(functionCall, "FOR", identifierTerm, "IN", "(", pivotValueList, ")");
+            gb.Prod(pivotClause).Is(functionCall, "FOR", tableSourceColumnIdentifierTerm, "IN", "(", pivotValueList, ")");
             gb.Prod(pivotValueList).Is(expression);
             gb.Prod(pivotValueList).Is(pivotValueList, ",", expression);
             gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", identifierTerm);
@@ -101,9 +106,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(tableFactor).Is(qualifiedName, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
             gb.Prod(tableFactor).Is(qualifiedName, "AS", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
             gb.Prod(tableFactor).Is(qualifiedName, identifierTerm, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
-            gb.Prod(unpivotClause).Is(identifierTerm, "FOR", identifierTerm, "IN", "(", unpivotColumnList, ")");
-            gb.Prod(unpivotColumnList).Is(identifierTerm);
-            gb.Prod(unpivotColumnList).Is(unpivotColumnList, ",", identifierTerm);
+            gb.Prod(unpivotClause).Is(tableSourceColumnIdentifierTerm, "FOR", tableSourceColumnIdentifierTerm, "IN", "(", unpivotColumnList, ")");
+            gb.Prod(unpivotColumnList).Is(tableSourceColumnIdentifierTerm);
+            gb.Prod(unpivotColumnList).Is(unpivotColumnList, ",", tableSourceColumnIdentifierTerm);
             gb.Prod(tableFactor).Is("(", "VALUES", rowValueList, ")", "AS", identifierTerm);
             gb.Prod(tableFactor).Is("(", "VALUES", rowValueList, ")", identifierTerm);
             gb.Prod(tableFactor).Is("(", "VALUES", rowValueList, ")", "AS", identifierTerm, "(", insertColumnList, ")");
@@ -117,12 +122,12 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(openJsonWithClause).Is("WITH", "(", openJsonColumnList, ")");
             gb.Prod(openJsonColumnList).Is(openJsonColumnDef);
             gb.Prod(openJsonColumnList).Is(openJsonColumnList, ",", openJsonColumnDef);
-            gb.Prod(openJsonColumnDef).Is(identifierTerm, typeSpec);
+            gb.Prod(openJsonColumnDef).Is(tableSourceColumnIdentifierTerm, typeSpec);
             gb.Prod(openJsonPath).Is(stringLiteral);
             gb.Prod(openJsonPath).Is(unicodeStringLiteral);
-            gb.Prod(openJsonColumnDef).Is(identifierTerm, typeSpec, openJsonPath);
-            gb.Prod(openJsonColumnDef).Is(identifierTerm, typeSpec, "AS", "JSON");
-            gb.Prod(openJsonColumnDef).Is(identifierTerm, typeSpec, openJsonPath, "AS", "JSON");
+            gb.Prod(openJsonColumnDef).Is(tableSourceColumnIdentifierTerm, typeSpec, openJsonPath);
+            gb.Prod(openJsonColumnDef).Is(tableSourceColumnIdentifierTerm, typeSpec, "AS", "JSON");
+            gb.Prod(openJsonColumnDef).Is(tableSourceColumnIdentifierTerm, typeSpec, openJsonPath, "AS", "JSON");
 
             gb.Prod(joinPart).Is("JOIN", tableFactor, "ON", searchCondition);
             gb.Prod(joinPart).Is(joinType, "JOIN", tableFactor, "ON", searchCondition);
