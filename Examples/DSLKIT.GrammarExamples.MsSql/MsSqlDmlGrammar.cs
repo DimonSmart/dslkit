@@ -46,7 +46,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             var expressionList = context.Symbols.ExpressionList;
             var functionCall = context.Symbols.FunctionCall;
             var graphColumnRef = context.GraphColumnRefTerminal;
-            var identifierTerm = context.Symbols.IdentifierTerm;
             var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
             var qualifiedName = context.Symbols.QualifiedName;
             var queryExpression = context.Symbols.QueryExpression;
@@ -59,6 +58,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var dmlIdentifierList = gb.NT("DmlIdentifierList");
             var dmlObjectIdentifierTerm = gb.NT("DmlObjectIdentifierTerm");
             var dmlQualifiedName = gb.NT("DmlQualifiedName");
+            var dmlTableHintQualifiedName = gb.NT("DmlTableHintQualifiedName");
 
             gb.Rule(dmlIdentifierTerm)
                 .CanBe(strictIdentifierTerm)
@@ -71,6 +71,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(dmlQualifiedName).Is(dmlObjectIdentifierTerm);
             gb.Prod(dmlQualifiedName).Is(dmlQualifiedName, ".", dmlObjectIdentifierTerm);
             gb.Prod(dmlQualifiedName).Is(dmlQualifiedName, ".", ".", dmlObjectIdentifierTerm);
+            gb.Prod(dmlTableHintQualifiedName).Is(tableHintLimitedName);
+            gb.Prod(dmlTableHintQualifiedName).Is(dmlTableHintQualifiedName, ".", tableHintLimitedName);
+            gb.Prod(dmlTableHintQualifiedName).Is(dmlTableHintQualifiedName, ".", ".", tableHintLimitedName);
 
             gb.Prod(updateStatement).Is("UPDATE", tableFactor, "SET", updateSetList);
             gb.Prod(updateStatement).Is("UPDATE", tableFactor, "SET", updateSetList, "WHERE", searchCondition);
@@ -154,12 +157,30 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .CanBe(tableHintLimitedName)
                 .Or(tableHintLimitedName, "=", expression)
                 .Or(tableHintLimitedName, "(", expressionList, ")")
-                .Or(qualifiedName)
-                .Or(qualifiedName, "=", expression)
-                .Or(qualifiedName, "(", expressionList, ")");
-            gb.Rule(tableHintLimitedName)
-                .CanBe(identifierTerm)
-                .OrKeywords("INDEX");
+                .Or(dmlTableHintQualifiedName)
+                .Or(dmlTableHintQualifiedName, "=", expression)
+                .Or(dmlTableHintQualifiedName, "(", expressionList, ")");
+            gb.Rule(tableHintLimitedName).Keywords(
+                "HOLDLOCK",
+                "NOLOCK",
+                "READUNCOMMITTED",
+                "UPDLOCK",
+                "REPEATABLEREAD",
+                "SERIALIZABLE",
+                "READCOMMITTED",
+                "READCOMMITTEDLOCK",
+                "TABLOCK",
+                "TABLOCKX",
+                "PAGLOCK",
+                "ROWLOCK",
+                "NOWAIT",
+                "READPAST",
+                "XLOCK",
+                "SNAPSHOT",
+                "NOEXPAND",
+                "INDEX",
+                "FORCESEEK",
+                "FORCESCAN");
 
             gb.Prod(deleteStatementTail).Is(dmlOutputClause, deleteStatementTailNoOutput);
             gb.Prod(deleteStatementTail).Is(deleteStatementTailNoOutput);

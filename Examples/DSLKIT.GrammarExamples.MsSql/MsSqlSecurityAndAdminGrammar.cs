@@ -273,7 +273,6 @@ namespace DSLKIT.GrammarExamples.MsSql
         {
             var gb = context.Gb;
             var expression = context.Symbols.Expression;
-            var identifierTerm = context.Symbols.IdentifierTerm;
             var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
             var namedOptionValue = context.Symbols.NamedOptionValue;
             var qualifiedName = context.Symbols.QualifiedName;

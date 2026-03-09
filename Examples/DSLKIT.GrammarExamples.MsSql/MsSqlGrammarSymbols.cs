@@ -49,8 +49,7 @@ namespace DSLKIT.GrammarExamples.MsSql
         public INonTerminal ExpressionList { get; init; } = null!;
         public INonTerminal GroupingSetList { get; init; } = null!;
         public INonTerminal GroupingSet { get; init; } = null!;
-        public INonTerminal IdentifierList { get; init; } = null!;
-        public INonTerminal IdentifierTerm { get; init; } = null!;
+        public INonTerminal ContextualIdentifierTerm { get; init; } = null!;
         public INonTerminal StrictIdentifierTerm { get; init; } = null!;
         public INonTerminal StrictQualifiedName { get; init; } = null!;
         public INonTerminal QualifiedName { get; init; } = null!;

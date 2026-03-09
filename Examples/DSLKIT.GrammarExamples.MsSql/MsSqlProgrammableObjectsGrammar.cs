@@ -84,8 +84,6 @@ namespace DSLKIT.GrammarExamples.MsSql
         {
             var gb = context.Gb;
             var expression = context.Symbols.Expression;
-            var identifierList = context.Symbols.IdentifierList;
-            var identifierTerm = context.Symbols.IdentifierTerm;
             var qualifiedName = context.Symbols.QualifiedName;
             var queryExpression = context.Symbols.QueryExpression;
             var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
@@ -94,6 +92,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             var variableReference = context.Symbols.VariableReference;
             var number = context.NumberTerminal;
             var stringLiteral = context.StringLiteralTerminal;
+            var procExecuteAsIdentifierTerm = gb.NT("ProcExecuteAsIdentifierTerm");
+            var nativeAtomicOnOffValue = gb.NT("NativeAtomicOnOffValue");
+            var viewColumnIdentifierList = gb.NT("ViewColumnIdentifierList");
 
             gb.Prod(createProcKeyword).Is("PROC");
             gb.Prod(createProcKeyword).Is("PROCEDURE");
@@ -135,13 +136,14 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .CanBe(createProcExecuteAsClause)
                 .OrKeywords("ENCRYPTION", "RECOMPILE", "NATIVE_COMPILATION", "SCHEMABINDING");
 
+            gb.Rule(procExecuteAsIdentifierTerm).OneOf(strictIdentifierTerm);
             gb.Rule(createProcExecuteAsClause)
                 .CanBe("EXECUTE", "AS", "CALLER")
                 .Or("EXECUTE", "AS", "SELF")
                 .Or("EXECUTE", "AS", "OWNER")
                 .Or("EXECUTE", "AS", stringLiteral)
                 .Or("EXECUTE", "AS", unicodeStringLiteral)
-                .Or("EXECUTE", "AS", identifierTerm);
+                .Or("EXECUTE", "AS", procExecuteAsIdentifierTerm);
 
             gb.Prod(createProcForReplicationClause).Is("FOR", "REPLICATION");
 
@@ -155,10 +157,9 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod(createProcNativeAtomicOptionList).Is(createProcNativeAtomicOption);
             gb.Prod(createProcNativeAtomicOptionList).Is(createProcNativeAtomicOptionList, ",", createProcNativeAtomicOption);
-            gb.Prod(createProcNativeAtomicOption).Is(identifierTerm, "=", expression);
-            gb.Prod(createProcNativeAtomicOption).Is(qualifiedName, "=", expression);
-            gb.Prod(createProcNativeAtomicOption).Is(identifierTerm, identifierTerm, "=", expression);
-            gb.Prod(createProcNativeAtomicOption).Is(identifierTerm, identifierTerm, identifierTerm, "=", expression);
+            gb.Rule(nativeAtomicOnOffValue).Keywords("ON", "OFF");
+            gb.Prod(createProcNativeAtomicOption).Is("LANGUAGE", "=", expression);
+            gb.Prod(createProcNativeAtomicOption).Is("DELAYED_DURABILITY", "=", nativeAtomicOnOffValue);
             gb.Prod(createProcNativeAtomicOption).Is("TRANSACTION", "ISOLATION", "LEVEL", "=", setTransactionIsolationLevel);
 
             gb.Prod(createProcExternalName).Is(qualifiedName);
@@ -294,7 +295,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createViewHead).Is("CREATE", "VIEW");
             gb.Prod(createViewHead).Is("CREATE", "OR", "ALTER", "VIEW");
             gb.Prod(createViewHead).Is("ALTER", "VIEW");
-            gb.Prod(createViewColumnList).Is("(", identifierList, ")");
+            gb.Prod(viewColumnIdentifierList).Is(strictIdentifierTerm);
+            gb.Prod(viewColumnIdentifierList).Is(viewColumnIdentifierList, ",", strictIdentifierTerm);
+            gb.Prod(createViewColumnList).Is("(", viewColumnIdentifierList, ")");
             gb.Prod(createViewOptionClause).Is("WITH", createViewOptionList);
             gb.Prod(createViewQuery).Is(queryExpression);
             gb.Prod(createViewQuery).Is(withClause, queryExpression);

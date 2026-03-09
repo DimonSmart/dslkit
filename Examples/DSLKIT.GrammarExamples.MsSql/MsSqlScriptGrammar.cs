@@ -38,7 +38,7 @@ namespace DSLKIT.GrammarExamples.MsSql
         {
             var gb = context.Gb;
             var expression = context.Symbols.Expression;
-            var identifierTerm = context.Symbols.IdentifierTerm;
+            var contextualIdentifierTerm = context.Symbols.ContextualIdentifierTerm;
             var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
             var strictQualifiedName = context.Symbols.StrictQualifiedName;
             var qualifiedName = context.Symbols.QualifiedName;
@@ -105,14 +105,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(strictQualifiedName).Is(strictIdentifierTerm);
             gb.Prod(strictQualifiedName).Is(strictQualifiedName, ".", strictIdentifierTerm);
             gb.Prod(strictQualifiedName).Is(strictQualifiedName, ".", ".", strictIdentifierTerm);
-            gb.Prod(qualifiedName).Is(identifierTerm);
-            gb.Prod(qualifiedName).Is(qualifiedName, ".", identifierTerm);
+            gb.Prod(qualifiedName).Is(contextualIdentifierTerm);
+            gb.Prod(qualifiedName).Is(qualifiedName, ".", contextualIdentifierTerm);
             if (context.HasFeature(MsSqlDialectFeatures.GraphExtensions))
             {
                 gb.Prod(qualifiedName).Is(qualifiedName, ".", graphColumnRef);
             }
 
-            gb.Prod(qualifiedName).Is(qualifiedName, ".", ".", identifierTerm);
+            gb.Prod(qualifiedName).Is(qualifiedName, ".", ".", contextualIdentifierTerm);
         }
     }
 }

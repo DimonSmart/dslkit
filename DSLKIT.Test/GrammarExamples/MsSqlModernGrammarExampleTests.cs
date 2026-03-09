@@ -697,6 +697,17 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldRejectDeleteStatement_WithUnknownTableHintName()
+        {
+            const string script = "DELETE FROM dbo.Company WITH (WAITFOR) WHERE IsDeleted = 1;";
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse(
+                "DML table hints should not accept contextual keywords through a generic identifier fallback.");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseCreateOrAlterViewAndAlterProcedure()
         {
             const string script = """
@@ -753,6 +764,17 @@ namespace DSLKIT.Test.GrammarExamples
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldRejectCreateView_WithContextualKeywordColumnName()
+        {
+            const string script = "CREATE VIEW dbo.vTest (WAITFOR) AS SELECT 1 AS A;";
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse(
+                "CREATE VIEW column lists should not accept contextual keywords through a generic identifier fallback.");
         }
 
         [Fact]
@@ -1164,6 +1186,28 @@ namespace DSLKIT.Test.GrammarExamples
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Theory]
+        [InlineData(
+            "CREATE PROCEDURE dbo.usp_Test WITH EXECUTE AS WAITFOR AS SELECT 1;",
+            "CREATE PROCEDURE EXECUTE AS should not accept contextual keywords through a generic identifier fallback.")]
+        [InlineData(
+            """
+            CREATE PROCEDURE dbo.usp_NativeProc
+                @id INT
+            WITH NATIVE_COMPILATION, SCHEMABINDING, EXECUTE AS OWNER
+            AS
+            BEGIN ATOMIC WITH (WAITFOR = 1)
+                RETURN @id;
+            END;
+            """,
+            "BEGIN ATOMIC WITH should not accept arbitrary identifier names as native atomic options.")]
+        public void ParseScript_ShouldRejectProgrammableObjectIdentifiers_WithContextualKeywordFallback(string script, string reason)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse(reason);
         }
 
         [Fact]

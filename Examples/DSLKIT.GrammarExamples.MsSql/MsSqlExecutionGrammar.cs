@@ -32,7 +32,6 @@ namespace DSLKIT.GrammarExamples.MsSql
         {
             var gb = context.Gb;
             var expression = context.Symbols.Expression;
-            var identifierTerm = context.Symbols.IdentifierTerm;
             var qualifiedName = context.Symbols.QualifiedName;
             var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
             var typeSpec = context.Symbols.TypeSpec;

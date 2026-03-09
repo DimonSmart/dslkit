@@ -28,8 +28,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var graphWithinGroupClause = symbols.GraphWithinGroupClause;
             var groupingSet = symbols.GroupingSet;
             var groupingSetList = symbols.GroupingSetList;
-            var identifierList = symbols.IdentifierList;
-            var identifierTerm = symbols.IdentifierTerm;
+            var contextualIdentifierTerm = symbols.ContextualIdentifierTerm;
             var iifArgumentList = symbols.IifArgumentList;
             var inPredicateValue = symbols.InPredicateValue;
             var literal = symbols.Literal;
@@ -67,6 +66,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var bracketIdentifier = context.BracketIdentifierTerminal;
             var quotedIdentifier = context.QuotedIdentifierTerminal;
             var tempIdentifier = context.TempIdentifierTerminal;
+            var contextualIdentifierList = gb.NT("ContextualIdentifierList");
 
             gb.Prod(orderByClause).Is("ORDER", "BY", orderItemList);
             gb.Prod(orderItemList).Is(orderItem);
@@ -175,17 +175,17 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(functionCall).Is(qualifiedName, "(", "DISTINCT", functionArgumentList, ")");
             gb.Prod(functionCall).Is(qualifiedName, "(", "ALL", functionArgumentList, ")");
             gb.Prod(functionCall).Is(qualifiedName, "(", functionArgumentList, ",", "*", ",", functionArgumentList, ")");
-            gb.Prod(functionCall).Is(qualifiedName, ".", identifierTerm, "(", ")");
-            gb.Prod(functionCall).Is(qualifiedName, ".", identifierTerm, "(", functionArgumentList, ")");
-            gb.Prod(functionCall).Is(variableReference, ".", identifierTerm, "(", ")");
-            gb.Prod(functionCall).Is(variableReference, ".", identifierTerm, "(", functionArgumentList, ")");
+            gb.Prod(functionCall).Is(qualifiedName, ".", contextualIdentifierTerm, "(", ")");
+            gb.Prod(functionCall).Is(qualifiedName, ".", contextualIdentifierTerm, "(", functionArgumentList, ")");
+            gb.Prod(functionCall).Is(variableReference, ".", contextualIdentifierTerm, "(", ")");
+            gb.Prod(functionCall).Is(variableReference, ".", contextualIdentifierTerm, "(", functionArgumentList, ")");
             gb.Prod(functionCall).Is("LEFT", "(", functionArgumentList, ")");
             gb.Prod(functionCall).Is("RIGHT", "(", functionArgumentList, ")");
             gb.Prod(functionCall).Is("COALESCE", "(", functionArgumentList, ")");
             gb.Prod(functionCall).Is("NULLIF", "(", functionArgumentList, ")");
             gb.Prod(functionCall).Is("IIF", "(", iifArgumentList, ")");
             gb.Prod(functionCall).Is("UPDATE", "(", functionArgumentList, ")");
-            gb.Prod(functionCall).Is("NEXT", identifierTerm, "FOR", qualifiedName);
+            gb.Prod(functionCall).Is("NEXT", contextualIdentifierTerm, "FOR", qualifiedName);
             gb.Prod(functionCall).Is("OPENROWSET", "(", openRowsetBulk, ")");
             gb.Prod(openRowsetBulk).Is("BULK", expression, ",", openRowsetBulkOptionList);
             gb.Prod(openRowsetBulkOptionList).Is(openRowsetBulkOption);
@@ -261,8 +261,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(groupingSetList).Is(groupingSetList, ",", groupingSet);
             gb.Prod(groupingSet).Is("(", expressionList, ")");
             gb.Prod(groupingSet).Is("(", ")");
-            gb.Prod(identifierList).Is(identifierTerm);
-            gb.Prod(identifierList).Is(identifierList, ",", identifierTerm);
+            gb.Prod(contextualIdentifierList).Is(contextualIdentifierTerm);
+            gb.Prod(contextualIdentifierList).Is(contextualIdentifierList, ",", contextualIdentifierTerm);
 
             gb.Rule(strictIdentifierTerm).OneOf(
                 identifier,
@@ -270,8 +270,8 @@ namespace DSLKIT.GrammarExamples.MsSql
                 quotedIdentifier,
                 tempIdentifier,
                 sqlcmdVariable);
-            gb.Rule(identifierTerm).OneOf(strictIdentifierTerm);
-            gb.Rule(identifierTerm).Keywords(
+            gb.Rule(contextualIdentifierTerm).OneOf(strictIdentifierTerm);
+            gb.Rule(contextualIdentifierTerm).Keywords(
                 "TYPE",
                 "OPENQUERY",
                 "OPENROWSET",

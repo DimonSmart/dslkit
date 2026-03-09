@@ -10,7 +10,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             var expression = symbols.Expression;
             var functionArgumentList = symbols.FunctionArgumentList;
             var functionCall = symbols.FunctionCall;
-            var identifierTerm = symbols.IdentifierTerm;
             var insertColumnList = symbols.InsertColumnList;
             var joinPart = symbols.JoinPart;
             var joinType = symbols.JoinType;

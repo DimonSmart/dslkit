@@ -809,9 +809,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             var caseWhenList = gb.NT("CaseWhenList");
             var caseWhen = gb.NT("CaseWhen");
             var expressionList = gb.NT("ExpressionList");
-            var identifierList = gb.NT("IdentifierList");
             var strictIdentifierTerm = gb.NT("StrictIdentifierTerm");
-            var identifierTerm = gb.NT("IdentifierTerm");
+            var contextualIdentifierTerm = gb.NT("ContextualIdentifierTerm");
             var strictQualifiedName = gb.NT("StrictQualifiedName");
             var qualifiedName = gb.NT("QualifiedName");
             var variableReference = gb.NT("VariableReference");
@@ -869,8 +868,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 ExpressionList = expressionList,
                 GroupingSetList = groupingSetList,
                 GroupingSet = groupingSet,
-                IdentifierList = identifierList,
-                IdentifierTerm = identifierTerm,
+                ContextualIdentifierTerm = contextualIdentifierTerm,
                 StrictIdentifierTerm = strictIdentifierTerm,
                 StrictQualifiedName = strictQualifiedName,
                 QualifiedName = qualifiedName,

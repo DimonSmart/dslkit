@@ -6,7 +6,7 @@ namespace DSLKIT.GrammarExamples.MsSql
         {
             var gb = context.Gb;
             var expression = context.Symbols.Expression;
-            var identifierTerm = context.Symbols.IdentifierTerm;
+            var contextualIdentifierTerm = context.Symbols.ContextualIdentifierTerm;
             var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
             var strictQualifiedName = context.Symbols.StrictQualifiedName;
             var qualifiedName = context.Symbols.QualifiedName;
@@ -412,7 +412,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule(indexOnOffValue).Keywords("ON", "OFF");
 
             gb.Prod(namedOptionValue).Is(expression);
-            gb.Prod(namedOptionValue).Is(identifierTerm);
+            gb.Prod(namedOptionValue).Is(contextualIdentifierTerm);
             gb.Prod(namedOptionValue).Is(qualifiedName);
             gb.Prod(namedOptionValue).Is("ON");
             gb.Prod(namedOptionValue).Is("OFF");
