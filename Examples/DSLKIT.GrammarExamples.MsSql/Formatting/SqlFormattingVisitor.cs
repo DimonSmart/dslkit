@@ -92,8 +92,6 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             "OR"
         };
 
-        private const int WrapByWidthLineLength = 120;
-
         private readonly SqlFormattingOptions _options;
         private readonly IndentedSqlTextWriter _writer;
         private readonly Stack<string> _nonTerminalNameStack = new();
@@ -542,9 +540,13 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 return false;
             }
 
-            if (node.Children.Count < 10 ||
-                node.Children[4] is not NonTerminalNode columnListNode ||
-                node.Children[8] is not NonTerminalNode valueListNode)
+            if (node.Children.Count != 4 ||
+                node.Children[1] is not NonTerminalNode insertTargetNode ||
+                node.Children[2] is not TerminalNode valuesTerminal ||
+                !string.Equals(valuesTerminal.Token.OriginalString, "VALUES", StringComparison.OrdinalIgnoreCase) ||
+                node.Children[3] is not NonTerminalNode rowValueListNode ||
+                !TryExtractSimpleInsertTarget(insertTargetNode, out var hasIntoKeyword, out var targetNode, out var columnListNode) ||
+                !TryExtractSingleRowInsertValues(rowValueListNode, out var valueListNode))
             {
                 return false;
             }
@@ -557,17 +559,27 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             var insertKeyword = FormatToken("INSERT", "INSERT", isKeyword: true);
             var intoKeyword = FormatToken("INTO", "INTO", isKeyword: true);
             var valuesKeyword = FormatToken("VALUES", "VALUES", isKeyword: true);
-            var targetText = RenderNodeInline(node.Children[2]);
+            var targetText = RenderNodeInline(targetNode);
 
-            var columnItemNodes = ExtractDelimitedListItems(columnListNode, "InsertColumnList");
-            var columnItemTexts = columnItemNodes.Select(RenderNodeInline).ToList();
             var valueItemNodes = ExtractDelimitedListItems(valueListNode, "InsertValueList");
             var valueItemTexts = valueItemNodes.Select(RenderNodeInline).ToList();
-            var multilineColumns = ShouldUseMultilineDmlList(_options.Dml.InsertColumnsStyle, columnItemTexts, "(".Length);
-            var multilineValues = ShouldUseMultilineDmlList(_options.Dml.InsertColumnsStyle, valueItemTexts, "(".Length);
+            var multilineColumns = false;
+            if (columnListNode != null)
+            {
+                var columnItemNodes = ExtractDelimitedListItems(columnListNode, "InsertColumnList");
+                var columnItemTexts = columnItemNodes.Select(RenderNodeInline).ToList();
+                multilineColumns = ShouldUseMultilineDmlList(_options.Dml.InsertColumnsStyle, columnItemTexts, "(".Length);
+            }
 
-            _writer.WriteToken($"{insertKeyword} {intoKeyword} {targetText}");
-            WriteParenthesizedList(columnListNode, multilineColumns);
+            var multilineValues = ShouldUseMultilineDmlList(_options.Dml.InsertValuesStyle, valueItemTexts, "(".Length);
+
+            _writer.WriteToken(hasIntoKeyword
+                ? $"{insertKeyword} {intoKeyword} {targetText}"
+                : $"{insertKeyword} {targetText}");
+            if (columnListNode != null)
+            {
+                WriteParenthesizedList(columnListNode, multilineColumns);
+            }
 
             if (multilineColumns || multilineValues)
             {
@@ -582,6 +594,88 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             WriteParenthesizedList(valueListNode, multilineValues);
 
             UpdatePreviousTokenFromNode(node);
+            return true;
+        }
+
+        private static bool TryExtractSimpleInsertTarget(
+            NonTerminalNode insertTargetNode,
+            out bool hasIntoKeyword,
+            out ParseTreeNode targetNode,
+            out NonTerminalNode? columnListNode)
+        {
+            hasIntoKeyword = false;
+            columnListNode = null;
+            targetNode = null!;
+
+            if (insertTargetNode.Children.Count == 1 &&
+                insertTargetNode.Children[0] is ParseTreeNode targetOnlyNode)
+            {
+                targetNode = targetOnlyNode;
+                return true;
+            }
+
+            if (insertTargetNode.Children.Count == 2 &&
+                insertTargetNode.Children[0] is TerminalNode intoTerminal &&
+                string.Equals(intoTerminal.Token.OriginalString, "INTO", StringComparison.OrdinalIgnoreCase))
+            {
+                hasIntoKeyword = true;
+                targetNode = insertTargetNode.Children[1];
+                return true;
+            }
+
+            if (insertTargetNode.Children.Count == 4 &&
+                insertTargetNode.Children[0] is ParseTreeNode targetWithColumnsNode &&
+                insertTargetNode.Children[1] is TerminalNode openTerminal &&
+                string.Equals(openTerminal.Token.OriginalString, "(", StringComparison.Ordinal) &&
+                insertTargetNode.Children[2] is NonTerminalNode insertColumnListNode &&
+                string.Equals(insertColumnListNode.NonTerminal.Name, "InsertColumnList", StringComparison.Ordinal) &&
+                insertTargetNode.Children[3] is TerminalNode closeTerminal &&
+                string.Equals(closeTerminal.Token.OriginalString, ")", StringComparison.Ordinal))
+            {
+                targetNode = targetWithColumnsNode;
+                columnListNode = insertColumnListNode;
+                return true;
+            }
+
+            if (insertTargetNode.Children.Count == 5 &&
+                insertTargetNode.Children[0] is TerminalNode intoWithColumnsTerminal &&
+                string.Equals(intoWithColumnsTerminal.Token.OriginalString, "INTO", StringComparison.OrdinalIgnoreCase) &&
+                insertTargetNode.Children[1] is ParseTreeNode targetWithIntoAndColumnsNode &&
+                insertTargetNode.Children[2] is TerminalNode intoOpenTerminal &&
+                string.Equals(intoOpenTerminal.Token.OriginalString, "(", StringComparison.Ordinal) &&
+                insertTargetNode.Children[3] is NonTerminalNode insertColumnListWithIntoNode &&
+                string.Equals(insertColumnListWithIntoNode.NonTerminal.Name, "InsertColumnList", StringComparison.Ordinal) &&
+                insertTargetNode.Children[4] is TerminalNode intoCloseTerminal &&
+                string.Equals(intoCloseTerminal.Token.OriginalString, ")", StringComparison.Ordinal))
+            {
+                hasIntoKeyword = true;
+                targetNode = targetWithIntoAndColumnsNode;
+                columnListNode = insertColumnListWithIntoNode;
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryExtractSingleRowInsertValues(
+            NonTerminalNode rowValueListNode,
+            out NonTerminalNode valueListNode)
+        {
+            valueListNode = null!;
+            if (rowValueListNode.Children.Count != 1 ||
+                rowValueListNode.Children[0] is not NonTerminalNode rowValueNode ||
+                rowValueNode.Children.Count != 3 ||
+                rowValueNode.Children[0] is not TerminalNode openTerminal ||
+                !string.Equals(openTerminal.Token.OriginalString, "(", StringComparison.Ordinal) ||
+                rowValueNode.Children[1] is not NonTerminalNode insertValueListNode ||
+                !string.Equals(insertValueListNode.NonTerminal.Name, "InsertValueList", StringComparison.Ordinal) ||
+                rowValueNode.Children[2] is not TerminalNode closeTerminal ||
+                !string.Equals(closeTerminal.Token.OriginalString, ")", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            valueListNode = insertValueListNode;
             return true;
         }
 
@@ -609,7 +703,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 return false;
             }
 
-            if (IsNestedShortQueryContext() && !_options.ShortQueries.ApplyToSubqueries)
+            if (IsParenthesizedShortQueryContext() && !_options.ShortQueries.ApplyToParenthesizedSubqueries)
             {
                 return false;
             }
@@ -655,7 +749,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 _writer.WriteSpace();
             }
 
-            if (_options.ShortQueries.ApplyToSubqueries &&
+            if (_options.ShortQueries.ApplyToParenthesizedSubqueries &&
                 TryGetShortQueryInlineText(queryExpressionNode, out var inlineText))
             {
                 _writer.WriteToken("(");
@@ -984,7 +1078,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             return 1;
         }
 
-        private bool IsNestedShortQueryContext()
+        private bool IsParenthesizedShortQueryContext()
         {
             var parentNonTerminalName = GetParentNonTerminalName();
             return string.Equals(parentNonTerminalName, "BooleanPrimary", StringComparison.Ordinal) ||
@@ -1749,7 +1843,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             var useMultiline = listStyle switch
             {
                 SqlInListItemsStyle.OnePerLine => true,
-                SqlInListItemsStyle.WrapByWidth => "IN (".Length + string.Join(GetInlineCommaSeparator(), itemTexts).Length + 1 > WrapByWidthLineLength,
+                SqlInListItemsStyle.WrapByWidth => "IN (".Length + string.Join(GetInlineCommaSeparator(), itemTexts).Length + 1 > GetWrapColumn(),
                 _ => false
             };
 
@@ -1795,7 +1889,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         {
             var itemNodes = ExtractDelimitedListItems(node, "InsertColumnList");
             var itemTexts = itemNodes.Select(RenderNodeInline).ToList();
-            var useMultiline = ShouldUseMultilineDmlList(_options.Dml.InsertColumnsStyle, itemTexts, "(".Length);
+            var useMultiline = ShouldUseMultilineDmlList(_options.Dml.InsertValuesStyle, itemTexts, "(".Length);
 
             if (useMultiline)
             {
@@ -1927,7 +2021,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             }
 
             var inlineLength = clausePrefixLength + string.Join(GetInlineCommaSeparator(), itemTexts).Length;
-            return inlineLength > WrapByWidthLineLength;
+            return inlineLength > GetWrapColumn();
         }
 
         private bool ShouldUseMultilineDmlList(SqlDmlListStyle listStyle, IReadOnlyList<string> itemTexts, int clausePrefixLength)
@@ -1938,7 +2032,12 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             }
 
             var inlineLength = clausePrefixLength + string.Join(GetInlineCommaSeparator(), itemTexts).Length;
-            return inlineLength > WrapByWidthLineLength;
+            return inlineLength > GetWrapColumn();
+        }
+
+        private int GetWrapColumn()
+        {
+            return Math.Max(10, _options.Layout.WrapColumn);
         }
 
         private bool IsSimpleSelectItem(ParseTreeNode itemNode)

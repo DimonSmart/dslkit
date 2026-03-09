@@ -98,7 +98,7 @@ inner join dbo.B as b on a.Id+b.Id>10 and b.Flag=1
 where a.Score+a.Bonus>0 and a.IsActive=1;";
 
         private const string ShortQueriesExampleSql =
-            @"-- Short queries: compare top-level SELECT, derived-table subquery, and single-JOIN compaction.
+            @"-- Short queries: compare top-level SELECT, parenthesized subquery, and single-JOIN compaction.
 select 1 from dbo.A where X=3 and Y=4;
 select q.Id
 from (select a.Id from dbo.A as a where a.Status=1 and a.Flag=1) as q;
@@ -145,6 +145,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             ["sql-eof-newline"] = SemicolonAndEofExampleSql,
             ["sql-align-select-aliases"] = AlignAliasesExampleSql,
             ["sql-indent-size"] = LayoutClausesExampleSql,
+            ["sql-wrap-column"] = ListsExampleSql,
             ["sql-blank-line-between-clauses"] = LayoutClausesExampleSql,
             ["sql-newline-with"] = LayoutWithClauseExampleSql,
             ["sql-newline-select"] = LayoutClausesExampleSql,
@@ -180,7 +181,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             ["sql-short-queries-max-line-length"] = ShortQueriesExampleSql,
             ["sql-short-queries-max-select-items"] = ShortQueriesExampleSql,
             ["sql-short-queries-max-predicate-conditions"] = ShortQueriesExampleSql,
-            ["sql-short-queries-apply-to-subqueries"] = ShortQueriesExampleSql,
+            ["sql-short-queries-apply-to-parenthesized-subqueries"] = ShortQueriesExampleSql,
             ["sql-short-queries-allow-single-join"] = ShortQueriesExampleSql,
             ["sql-comma-style"] = ListsExampleSql,
             ["sql-select-items-style"] = ListsExampleSql,
@@ -194,6 +195,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             ["sql-inline-in-list-max-line"] = InListThresholdExampleSql,
             ["sql-update-set-style"] = DmlAndDdlExampleSql,
             ["sql-insert-columns-style"] = DmlAndDdlExampleSql,
+            ["sql-insert-values-style"] = DmlAndDdlExampleSql,
             ["sql-create-proc-layout"] = DmlAndDdlExampleSql,
             ["sql-comments-preserve-attachment"] = CommentsExampleSql,
             ["sql-comments-formatting"] = CommentsExampleSql,

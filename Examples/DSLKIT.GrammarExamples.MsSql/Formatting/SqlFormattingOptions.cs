@@ -12,8 +12,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
     public enum SqlParenthesesSpacing
     {
         Never,
-        Always,
-        Smart
+        Always
     }
 
     public enum SqlStatementTerminationMode
@@ -45,11 +44,6 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
     {
         Multiline,
         CompactWhenShort
-    }
-
-    public enum SqlSubqueryIndentStyle
-    {
-        Indented
     }
 
     public enum SqlInListItemsStyle
@@ -114,15 +108,11 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
         public SqlShortQueriesFormattingOptions ShortQueries { get; init; } = new();
 
-        public SqlSubqueriesFormattingOptions Subqueries { get; init; } = new();
-
         public SqlDmlFormattingOptions Dml { get; init; } = new();
 
         public SqlDdlFormattingOptions Ddl { get; init; } = new();
 
         public SqlCommentsFormattingOptions Comments { get; init; } = new();
-
-        public SqlPreserveFormattingOptions Preserve { get; init; } = new();
     }
 
     public sealed record SqlSpacesFormattingOptions
@@ -149,6 +139,8 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
     public sealed record SqlLayoutFormattingOptions
     {
         public int IndentSize { get; init; } = 4;
+
+        public int WrapColumn { get; init; } = 120;
 
         public SqlClauseNewlineOptions NewlineBeforeClause { get; init; } = new();
 
@@ -276,7 +268,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
         public int MaxPredicateConditions { get; init; } = 2;
 
-        public bool ApplyToSubqueries { get; init; }
+        public bool ApplyToParenthesizedSubqueries { get; init; }
 
         public bool AllowSingleJoin { get; init; }
     }
@@ -301,16 +293,13 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         public IReadOnlyCollection<SqlInlineExpressionContext> ForContexts { get; init; } = [];
     }
 
-    public sealed record SqlSubqueriesFormattingOptions
-    {
-        public SqlSubqueryIndentStyle IndentStyle { get; init; } = SqlSubqueryIndentStyle.Indented;
-    }
-
     public sealed record SqlDmlFormattingOptions
     {
         public SqlDmlListStyle UpdateSetStyle { get; init; } = SqlDmlListStyle.OnePerLine;
 
         public SqlDmlListStyle InsertColumnsStyle { get; init; } = SqlDmlListStyle.OnePerLine;
+
+        public SqlDmlListStyle InsertValuesStyle { get; init; } = SqlDmlListStyle.OnePerLine;
     }
 
     public sealed record SqlDdlFormattingOptions
@@ -323,10 +312,5 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         public bool PreserveAttachment { get; init; } = true;
 
         public SqlCommentsFormattingMode Formatting { get; init; } = SqlCommentsFormattingMode.Keep;
-    }
-
-    public sealed record SqlPreserveFormattingOptions
-    {
-        public bool StringLiterals { get; init; } = true;
     }
 }

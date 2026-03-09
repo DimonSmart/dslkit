@@ -127,6 +127,16 @@
                                                    @bind="indentSize" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("layout wrap column wrap by width")'>
+                                            <SqlOptionLabel ForId="sql-wrap-column" Text="Wrap column" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <input id="sql-wrap-column"
+                                                   class="form-control form-control-sm"
+                                                   type="number"
+                                                   min="10"
+                                                   step="1"
+                                                   @bind="wrapColumn" @bind:after="OnOptionValueChangedAsync" />
+                                        </div>
+
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout blank line between clauses")'>
                                             <SqlOptionLabel ForId="sql-blank-line-between-clauses" Text="Blank line between clauses" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-blank-line-between-clauses"
@@ -311,9 +321,9 @@
                                                    @bind="shortQueriesMaxPredicateConditions" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
-                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("short queries apply to subqueries")'>
-                                            <SqlOptionLabel ForId="sql-short-queries-apply-to-subqueries" Text="Apply to subqueries" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-short-queries-apply-to-subqueries" class="form-check-input" type="checkbox" @bind="shortQueriesApplyToSubqueries" @bind:after="OnOptionValueChangedAsync" />
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("short queries apply to parenthesized subqueries")'>
+                                            <SqlOptionLabel ForId="sql-short-queries-apply-to-parenthesized-subqueries" Text="Apply to parenthesized subqueries" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <input id="sql-short-queries-apply-to-parenthesized-subqueries" class="form-check-input" type="checkbox" @bind="shortQueriesApplyToParenthesizedSubqueries" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("short queries allow single join")'>
@@ -324,7 +334,7 @@
                                 </details>
 
                                 <details class="dsl-sql-option-section" open>
-                                    <summary>Expressions</summary>
+                                    <summary>CASE & Inline Expressions</summary>
                                     <div class="dsl-sql-property-grid">
                                         <div class="dsl-sql-property-row" hidden='@HideOption("expressions case style multiline compact when short")'>
                                             <SqlOptionLabel ForId="sql-expressions-case-style" Text="CASE style" OnExampleRequested="OnOptionExampleRequestedAsync" />
@@ -367,7 +377,7 @@
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("expressions inline short expression max tokens")'>
-                                            <SqlOptionLabel ForId="sql-inline-short-max-tokens" Text="Inline short max tokens" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <SqlOptionLabel ForId="sql-inline-short-max-tokens" Text="Inline expression max tokens" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-inline-short-max-tokens"
                                                    class="form-control form-control-sm"
                                                    type="number"
@@ -377,7 +387,7 @@
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("expressions inline short expression max depth")'>
-                                            <SqlOptionLabel ForId="sql-inline-short-max-depth" Text="Inline short max depth" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <SqlOptionLabel ForId="sql-inline-short-max-depth" Text="Inline expression max depth" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-inline-short-max-depth"
                                                    class="form-control form-control-sm"
                                                    type="number"
@@ -387,7 +397,7 @@
                                         </div>
 
                                         <div class="dsl-sql-property-row" hidden='@HideOption("expressions inline short expression max line length")'>
-                                            <SqlOptionLabel ForId="sql-inline-short-max-line" Text="Inline short max line" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <SqlOptionLabel ForId="sql-inline-short-max-line" Text="Inline expression max line length" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-inline-short-max-line"
                                                    class="form-control form-control-sm"
                                                    type="number"
@@ -397,17 +407,17 @@
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("expressions inline short expression context select item")'>
-                                            <SqlOptionLabel ForId="sql-inline-short-select-item" Text="Inline in SELECT items" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <SqlOptionLabel ForId="sql-inline-short-select-item" Text="Inline SELECT item expressions" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-inline-short-select-item" class="form-check-input" type="checkbox" @bind="inlineShortContextSelectItem" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("expressions inline short expression context on")'>
-                                            <SqlOptionLabel ForId="sql-inline-short-on" Text="Inline in ON" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <SqlOptionLabel ForId="sql-inline-short-on" Text="Inline ON expressions" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-inline-short-on" class="form-check-input" type="checkbox" @bind="inlineShortContextOn" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("expressions inline short expression context where")'>
-                                            <SqlOptionLabel ForId="sql-inline-short-where" Text="Inline in WHERE" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <SqlOptionLabel ForId="sql-inline-short-where" Text="Inline WHERE expressions" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-inline-short-where" class="form-check-input" type="checkbox" @bind="inlineShortContextWhere" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
                                     </div>
@@ -448,8 +458,8 @@
                                             </select>
                                         </div>
 
-                                        <div class="dsl-sql-property-row" hidden='@HideOption("lists select compact threshold max items")'>
-                                            <SqlOptionLabel ForId="sql-select-compact-max-items" Text="Compact max items" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("lists compact select list max items")'>
+                                            <SqlOptionLabel ForId="sql-select-compact-max-items" Text="Compact SELECT list max items" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-select-compact-max-items"
                                                    class="form-control form-control-sm"
                                                    type="number"
@@ -458,8 +468,8 @@
                                                    @bind="selectCompactMaxItems" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
-                                        <div class="dsl-sql-property-row" hidden='@HideOption("lists select compact threshold max line length")'>
-                                            <SqlOptionLabel ForId="sql-select-compact-max-line-length" Text="Compact max line length" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("lists compact select list max line length")'>
+                                            <SqlOptionLabel ForId="sql-select-compact-max-line-length" Text="Compact SELECT list max line length" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-select-compact-max-line-length"
                                                    class="form-control form-control-sm"
                                                    type="number"
@@ -468,8 +478,8 @@
                                                    @bind="selectCompactMaxLineLength" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
-                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("lists compact threshold allow expressions")'>
-                                            <SqlOptionLabel ForId="sql-select-compact-allow-expressions" Text="Compact allow expressions" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("lists compact select list allow expressions")'>
+                                            <SqlOptionLabel ForId="sql-select-compact-allow-expressions" Text="Compact SELECT list allow expressions" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-select-compact-allow-expressions" class="form-check-input" type="checkbox" @bind="selectCompactAllowExpressions" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
@@ -510,7 +520,7 @@
                                 </details>
 
                                 <details class="dsl-sql-option-section" open>
-                                    <summary>DML/DDL</summary>
+                                    <summary>DML</summary>
                                     <div class="dsl-sql-property-grid">
                                         <div class="dsl-sql-property-row" hidden='@HideOption("dml update set style one per line wrap by width")'>
                                             <SqlOptionLabel ForId="sql-update-set-style" Text="UPDATE SET style" OnExampleRequested="OnOptionExampleRequestedAsync" />
@@ -520,14 +530,27 @@
                                             </select>
                                         </div>
 
-                                        <div class="dsl-sql-property-row" hidden='@HideOption("dml insert columns values style one per line wrap by width")'>
-                                            <SqlOptionLabel ForId="sql-insert-columns-style" Text="INSERT columns/values style" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("dml insert columns style one per line wrap by width")'>
+                                            <SqlOptionLabel ForId="sql-insert-columns-style" Text="INSERT columns style" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <select id="sql-insert-columns-style" class="form-select form-select-sm" @bind="insertColumnsStyle" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlDmlListStyle.OnePerLine">One per line</option>
                                                 <option value="@SqlDmlListStyle.WrapByWidth">Wrap by width</option>
                                             </select>
                                         </div>
 
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("dml insert values style one per line wrap by width")'>
+                                            <SqlOptionLabel ForId="sql-insert-values-style" Text="INSERT VALUES style" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <select id="sql-insert-values-style" class="form-select form-select-sm" @bind="insertValuesStyle" @bind:after="OnOptionValueChangedAsync">
+                                                <option value="@SqlDmlListStyle.OnePerLine">One per line</option>
+                                                <option value="@SqlDmlListStyle.WrapByWidth">Wrap by width</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <details class="dsl-sql-option-section" open>
+                                    <summary>DDL</summary>
+                                    <div class="dsl-sql-property-grid">
                                         <div class="dsl-sql-property-row" hidden='@HideOption("ddl create proc layout expanded compact")'>
                                             <SqlOptionLabel ForId="sql-create-proc-layout" Text="CREATE PROC layout" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <select id="sql-create-proc-layout" class="form-select form-select-sm" @bind="createProcLayout" @bind:after="OnOptionValueChangedAsync">
@@ -559,7 +582,7 @@
                                 <details class="dsl-sql-option-section" open>
                                     <summary>Spacing</summary>
                                     <div class="dsl-sql-property-grid">
-                                        <div class="dsl-sql-property-row" hidden='@HideOption("spaces inside parentheses smart always never")'>
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("spaces inside parentheses always never")'>
                                             <SqlOptionLabel ForId="sql-inside-parentheses" Text="Inside parentheses" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <select id="sql-inside-parentheses" class="form-select form-select-sm" @bind="insideParentheses" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlParenthesesSpacing.Never">Never</option>
@@ -711,7 +734,7 @@ inner join dbo.B as b on a.Id+b.Id>10 and b.Flag=1
 where a.Score+a.Bonus>0 and a.IsActive=1;";
 
     private const string ShortQueriesExampleSql =
-        @"-- Short queries: compare top-level SELECT, derived-table subquery, and single-JOIN compaction.
+        @"-- Short queries: compare top-level SELECT, parenthesized subquery, and single-JOIN compaction.
 select 1 from dbo.A where X=3 and Y=4;
 select q.Id
 from (select a.Id from dbo.A as a where a.Status=1 and a.Flag=1) as q;
@@ -760,6 +783,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         ["sql-eof-newline"] = SemicolonAndEofExampleSql,
         ["sql-align-select-aliases"] = AlignAliasesExampleSql,
         ["sql-indent-size"] = LayoutClausesExampleSql,
+        ["sql-wrap-column"] = ListsExampleSql,
         ["sql-blank-line-between-clauses"] = LayoutClausesExampleSql,
         ["sql-newline-with"] = LayoutWithClauseExampleSql,
         ["sql-newline-select"] = LayoutClausesExampleSql,
@@ -795,7 +819,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         ["sql-short-queries-max-line-length"] = ShortQueriesExampleSql,
         ["sql-short-queries-max-select-items"] = ShortQueriesExampleSql,
         ["sql-short-queries-max-predicate-conditions"] = ShortQueriesExampleSql,
-        ["sql-short-queries-apply-to-subqueries"] = ShortQueriesExampleSql,
+        ["sql-short-queries-apply-to-parenthesized-subqueries"] = ShortQueriesExampleSql,
         ["sql-short-queries-allow-single-join"] = ShortQueriesExampleSql,
         ["sql-comma-style"] = ListsExampleSql,
         ["sql-select-items-style"] = ListsExampleSql,
@@ -809,6 +833,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         ["sql-inline-in-list-max-line"] = InListThresholdExampleSql,
         ["sql-update-set-style"] = DmlAndDdlExampleSql,
         ["sql-insert-columns-style"] = DmlAndDdlExampleSql,
+        ["sql-insert-values-style"] = DmlAndDdlExampleSql,
         ["sql-create-proc-layout"] = DmlAndDdlExampleSql,
         ["sql-comments-preserve-attachment"] = CommentsExampleSql,
         ["sql-comments-formatting"] = CommentsExampleSql,
@@ -867,10 +892,11 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
     private int shortQueriesMaxLineLength = 100;
     private int shortQueriesMaxSelectItems = 2;
     private int shortQueriesMaxPredicateConditions = 2;
-    private bool shortQueriesApplyToSubqueries;
+    private bool shortQueriesApplyToParenthesizedSubqueries;
     private bool shortQueriesAllowSingleJoin;
     private SqlDmlListStyle updateSetStyle = SqlDmlListStyle.OnePerLine;
     private SqlDmlListStyle insertColumnsStyle = SqlDmlListStyle.OnePerLine;
+    private SqlDmlListStyle insertValuesStyle = SqlDmlListStyle.OnePerLine;
     private SqlCreateProcLayout createProcLayout = SqlCreateProcLayout.Expanded;
     private bool commentsPreserveAttachment = true;
     private SqlCommentsFormattingMode commentsFormatting = SqlCommentsFormattingMode.Keep;
@@ -885,8 +911,9 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
     private bool newlineBeforeOption = true;
 
     private int indentSize = 4;
-    private int selectCompactMaxItems = 4;
-    private int selectCompactMaxLineLength = 220;
+    private int wrapColumn = 120;
+    private int selectCompactMaxItems;
+    private int selectCompactMaxLineLength = 120;
     private int inlineInListMaxItems;
     private int inlineInListMaxLineLength = 120;
     private bool resizeEditorsPending = true;
@@ -1082,7 +1109,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             string.Equals(optionId, "sql-short-queries-max-line-length", StringComparison.Ordinal) ||
             string.Equals(optionId, "sql-short-queries-max-select-items", StringComparison.Ordinal) ||
             string.Equals(optionId, "sql-short-queries-max-predicate-conditions", StringComparison.Ordinal) ||
-            string.Equals(optionId, "sql-short-queries-apply-to-subqueries", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-short-queries-apply-to-parenthesized-subqueries", StringComparison.Ordinal) ||
             string.Equals(optionId, "sql-short-queries-allow-single-join", StringComparison.Ordinal);
         if (isShortQueryOption)
         {
@@ -1092,9 +1119,9 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             shortQueriesMaxPredicateConditions = Math.Max(1, shortQueriesMaxPredicateConditions);
         }
 
-        if (string.Equals(optionId, "sql-short-queries-apply-to-subqueries", StringComparison.Ordinal))
+        if (string.Equals(optionId, "sql-short-queries-apply-to-parenthesized-subqueries", StringComparison.Ordinal))
         {
-            shortQueriesApplyToSubqueries = true;
+            shortQueriesApplyToParenthesizedSubqueries = true;
         }
 
         if (string.Equals(optionId, "sql-short-queries-allow-single-join", StringComparison.Ordinal))
@@ -1108,6 +1135,8 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         if (isSelectCompactOption)
         {
             selectItemsStyle = SqlListLayoutStyle.OnePerLine;
+            selectCompactMaxItems = Math.Max(2, selectCompactMaxItems);
+            selectCompactMaxLineLength = Math.Max(40, selectCompactMaxLineLength);
         }
 
         var isInlineInListOption = string.Equals(optionId, "sql-inline-in-list-max-items", StringComparison.Ordinal) ||
@@ -1115,6 +1144,15 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         if (isInlineInListOption)
         {
             inListItemsStyle = SqlInListItemsStyle.OnePerLine;
+        }
+
+        if (string.Equals(optionId, "sql-wrap-column", StringComparison.Ordinal))
+        {
+            selectItemsStyle = SqlListLayoutStyle.WrapByWidth;
+            groupByItemsStyle = SqlListLayoutStyle.WrapByWidth;
+            orderByItemsStyle = SqlListLayoutStyle.WrapByWidth;
+            inListItemsStyle = SqlInListItemsStyle.WrapByWidth;
+            wrapColumn = Math.Max(40, wrapColumn);
         }
     }
 
@@ -1184,13 +1222,14 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         shortQueriesMaxLineLength = 100;
         shortQueriesMaxSelectItems = 2;
         shortQueriesMaxPredicateConditions = 2;
-        shortQueriesApplyToSubqueries = false;
+        shortQueriesApplyToParenthesizedSubqueries = false;
         shortQueriesAllowSingleJoin = false;
         inListItemsStyle = SqlInListItemsStyle.Inline;
         inlineInListMaxItems = 0;
         inlineInListMaxLineLength = 120;
         updateSetStyle = SqlDmlListStyle.OnePerLine;
         insertColumnsStyle = SqlDmlListStyle.OnePerLine;
+        insertValuesStyle = SqlDmlListStyle.OnePerLine;
         createProcLayout = SqlCreateProcLayout.Expanded;
         commentsPreserveAttachment = true;
         commentsFormatting = SqlCommentsFormattingMode.Keep;
@@ -1205,8 +1244,9 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         newlineBeforeOption = true;
 
         indentSize = 4;
-        selectCompactMaxItems = 4;
-        selectCompactMaxLineLength = 220;
+        wrapColumn = 120;
+        selectCompactMaxItems = 0;
+        selectCompactMaxLineLength = 120;
     }
 
     private void FormatCurrentSql()
@@ -1234,6 +1274,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
                 Layout = new SqlLayoutFormattingOptions
                 {
                     IndentSize = Math.Max(1, indentSize),
+                    WrapColumn = Math.Max(10, wrapColumn),
                     NewlineBeforeClause = new SqlClauseNewlineOptions
                     {
                         With = newlineBeforeWith,
@@ -1322,14 +1363,14 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
                     MaxLineLength = Math.Max(10, shortQueriesMaxLineLength),
                     MaxSelectItems = Math.Max(1, shortQueriesMaxSelectItems),
                     MaxPredicateConditions = Math.Max(1, shortQueriesMaxPredicateConditions),
-                    ApplyToSubqueries = shortQueriesApplyToSubqueries,
+                    ApplyToParenthesizedSubqueries = shortQueriesApplyToParenthesizedSubqueries,
                     AllowSingleJoin = shortQueriesAllowSingleJoin
                 },
-                Subqueries = new SqlSubqueriesFormattingOptions(),
                 Dml = new SqlDmlFormattingOptions
                 {
                     UpdateSetStyle = updateSetStyle,
-                    InsertColumnsStyle = insertColumnsStyle
+                    InsertColumnsStyle = insertColumnsStyle,
+                    InsertValuesStyle = insertValuesStyle
                 },
                 Ddl = new SqlDdlFormattingOptions
                 {
@@ -1339,10 +1380,6 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
                 {
                     PreserveAttachment = commentsPreserveAttachment,
                     Formatting = commentsFormatting
-                },
-                Preserve = new SqlPreserveFormattingOptions
-                {
-                    StringLiterals = true
                 }
             };
 

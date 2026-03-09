@@ -14,7 +14,6 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
 - `spaces.afterComma`: `true | false`
 - `spaces.aroundBinaryOperators`: `true | false`
 - `spaces.insideParentheses`: `Never | Always`
-  - `Smart` is reserved in the model but not exposed in the UI yet.
 - `spaces.beforeSemicolon`: `true | false`
 - `statement.terminateWithSemicolon`: `Never | ExistingOnly | Always`
 - `eof.newline`: `true | false`
@@ -22,6 +21,7 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
 ## Stage 2. Query Skeleton
 
 - `layout.indentSize`: `2 | 4 | ...`
+- `layout.wrapColumn`: `80 | 100 | 120 | ...`
 - `layout.newlineBeforeClause`: flags for `WITH/SELECT/FROM/WHERE/GROUP BY/HAVING/ORDER BY/OPTION`
 - `layout.blankLineBetweenClauses`: `None | BetweenMajorClauses`
 
@@ -59,24 +59,22 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
   - `breakOrGroups = true | false`
   - Both options are semantics-preserving and operate only when top-level `AND` and `OR` are mixed in the same predicate.
 
-## Stage 6. Short Queries / CASE / Expressions / Subqueries / IN Lists
+## Stage 6. Short Queries / CASE / Inline Expressions / IN Lists
 
 - `[HEURISTIC] shortQueries`:
   - `enabled`
   - `maxLineLength`
   - `maxSelectItems`
   - `maxPredicateConditions`
-  - `applyToSubqueries`
+  - `applyToParenthesizedSubqueries`
   - `allowSingleJoin`
-  - Current implementation is intentionally conservative: it only compacts simple single-query `SELECT ... [FROM ...] [WHERE ...]` shapes, and skips `GROUP BY`, `HAVING`, set operators, `ORDER BY`, comments, and nested subqueries.
+  - Current implementation is intentionally conservative: it only compacts simple single-query `SELECT ... [FROM ...] [WHERE ...]` shapes, and skips `GROUP BY`, `HAVING`, set operators, `ORDER BY`, comments, and nested subqueries inside the compacted query.
 
 - `expressions.caseStyle`: `Multiline | CompactWhenShort`
 - `[HEURISTIC] expressions.compactCaseThreshold`:
   - `maxWhenClauses`
   - `maxTokens`
   - `maxLineLength`
-- `subqueries.indentStyle`: `Indented`
-  - Fixed behavior for now; not exposed in the UI yet.
 - `lists.inListItems`: `Inline | OnePerLine | WrapByWidth`
 - `[HEURISTIC] lists.inlineInListThreshold`:
   - `maxItemsInline`
@@ -87,18 +85,17 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
   - `maxLineLength`
   - `forContexts`
 
-## Stage 7. DML/DDL
+## Stage 7. DML / DDL
 
 - `dml.updateSetStyle`: `OnePerLine | WrapByWidth`
 - `dml.insertColumnsStyle`: `OnePerLine | WrapByWidth`
-  - Current implementation applies the same style to `VALUES (...)` layout too.
+- `dml.insertValuesStyle`: `OnePerLine | WrapByWidth`
 - `ddl.createProcLayout`: `Expanded | Compact`
 
 ## Stage 8. Comments And Semantic Safety
 
 - `comments.preserveAttachment`: `true` (default)
 - `comments.formatting`: `Keep | ReflowSafeOnly`
-- `preserve.stringLiterals`: `true` (always, not user-configurable)
 
 ## Precedence Rules
 

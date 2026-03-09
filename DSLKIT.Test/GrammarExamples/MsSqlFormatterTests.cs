@@ -107,6 +107,7 @@ namespace DSLKIT.Test.GrammarExamples
                 Layout = new SqlLayoutFormattingOptions
                 {
                     IndentSize = 2,
+                    WrapColumn = 40,
                     BlankLineBetweenClauses = SqlBlankLineBetweenClausesMode.BetweenMajorClauses,
                     NewlineBeforeClause = new SqlClauseNewlineOptions
                     {
@@ -129,6 +130,31 @@ namespace DSLKIT.Test.GrammarExamples
             formattedSql.Should().Contain("\n  a AS A,");
             formattedSql.Should().Contain("FROM dbo.t AS t\n\nWHERE");
             formattedSql.Should().Contain("WHERE x = 1\n\nORDER BY");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldUseConfiguredWrapColumn_ForWrapByWidthLists()
+        {
+            const string sourceSql = "SELECT a AS A, b AS B, c AS C FROM dbo.t AS t";
+            var options = new SqlFormattingOptions
+            {
+                Layout = new SqlLayoutFormattingOptions
+                {
+                    WrapColumn = 20
+                },
+                Lists = new SqlListsFormattingOptions
+                {
+                    SelectItems = SqlListLayoutStyle.WrapByWidth
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+
+            result.IsSuccess.Should().BeTrue();
+            formattedSql.Should().Contain("SELECT\n");
+            formattedSql.Should().Contain("\n    a AS A,\n");
+            formattedSql.Should().Contain("\n    b AS B,\n");
         }
 
         [Fact]
@@ -571,7 +597,7 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
-        public void TryFormat_ShouldCompactShortSubquery_WhenPolicyAllowsSubqueries()
+        public void TryFormat_ShouldCompactShortParenthesizedSubquery_WhenPolicyAllowsIt()
         {
             const string sourceSql = "SELECT q.Id FROM (SELECT a.Id FROM dbo.A AS a WHERE a.Status=1 AND a.Flag=1) AS q";
             var disabledOptions = new SqlFormattingOptions
@@ -582,14 +608,14 @@ namespace DSLKIT.Test.GrammarExamples
                     MaxLineLength = 120,
                     MaxSelectItems = 1,
                     MaxPredicateConditions = 2,
-                    ApplyToSubqueries = false
+                    ApplyToParenthesizedSubqueries = false
                 }
             };
             var enabledOptions = disabledOptions with
             {
                 ShortQueries = disabledOptions.ShortQueries with
                 {
-                    ApplyToSubqueries = true
+                    ApplyToParenthesizedSubqueries = true
                 }
             };
 
@@ -647,7 +673,8 @@ namespace DSLKIT.Test.GrammarExamples
                 Dml = new SqlDmlFormattingOptions
                 {
                     UpdateSetStyle = SqlDmlListStyle.OnePerLine,
-                    InsertColumnsStyle = SqlDmlListStyle.OnePerLine
+                    InsertColumnsStyle = SqlDmlListStyle.OnePerLine,
+                    InsertValuesStyle = SqlDmlListStyle.OnePerLine
                 },
                 Ddl = new SqlDdlFormattingOptions
                 {
