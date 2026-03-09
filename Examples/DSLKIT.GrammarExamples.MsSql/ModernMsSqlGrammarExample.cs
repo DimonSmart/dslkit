@@ -1475,7 +1475,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 mergeMatchedAction,
                 mergeNotMatchedAction,
                 qualifiedName,
-                identifierTerm,
+                strictIdentifierTerm,
                 tableHintLimitedList,
                 tableSource,
                 dmlOutputClause,
@@ -1504,7 +1504,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                     matchGraphStepChain,
                     matchGraphShortestPath,
                     matchGraphShortestPathBody,
-                    identifierTerm,
+                    strictIdentifierTerm,
                     number);
             }
 
@@ -1515,7 +1515,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                     functionCall,
                     predictArgList,
                     predictArg,
-                    identifierTerm,
+                    strictIdentifierTerm,
                     expression);
             }
 
@@ -1540,7 +1540,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                     createExternalDataSourceStatement,
                     externalDataSourceOptionList,
                     qualifiedName,
-                    identifierTerm,
+                    strictIdentifierTerm,
                     createTableElementList,
                     namedOptionValue);
             }

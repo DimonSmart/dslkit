@@ -18,7 +18,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             var forXmlOption = symbols.ForXmlOption;
             var forXmlOptionList = symbols.ForXmlOptionList;
             var groupingSetList = symbols.GroupingSetList;
-            var identifierTerm = symbols.IdentifierTerm;
             var implicitQueryExpression = symbols.ImplicitQueryExpression;
             var implicitQueryIntersectExpression = symbols.ImplicitQueryIntersectExpression;
             var implicitQueryUnionExpression = symbols.ImplicitQueryUnionExpression;
@@ -51,6 +50,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var selectList = symbols.SelectList;
             var setOperator = symbols.SetOperator;
             var setQuantifier = symbols.SetQuantifier;
+            var strictIdentifierTerm = symbols.StrictIdentifierTerm;
             var tableSourceList = symbols.TableSourceList;
             var topClause = symbols.TopClause;
             var topClauseTail = symbols.TopClauseTail;
@@ -59,6 +59,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var compoundAssignOp = symbols.CompoundAssignOp;
             var number = context.NumberTerminal;
             var stringLiteral = context.StringLiteralTerminal;
+            var queryAliasTerm = gb.NT("QueryAliasTerm");
 
             gb.Prod(implicitQueryExpression).Is(implicitQueryUnionExpression, queryExpressionTail);
             gb.Prod(implicitQueryUnionExpression).Is(implicitQueryIntersectExpression);
@@ -164,10 +165,11 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Rule(selectList).CanBe(selectItemList);
             gb.Rule(selectItemList).SeparatedBy(",", selectItem);
+            gb.Rule(queryAliasTerm).OneOf(strictIdentifierTerm);
             gb.Prod(selectItem).Is("*");
-            gb.Prod(selectItem).Is(expression, "AS", identifierTerm);
+            gb.Prod(selectItem).Is(expression, "AS", queryAliasTerm);
             gb.Prod(selectItem).Is(expression, "AS", stringLiteral);
-            gb.Prod(selectItem).Is(expression, identifierTerm);
+            gb.Prod(selectItem).Is(expression, queryAliasTerm);
             gb.Prod(selectItem).Is(expression, stringLiteral);
             gb.Prod(selectItem).Is(expression);
             gb.Prod(selectItem).Is(qualifiedName, ".", "*");

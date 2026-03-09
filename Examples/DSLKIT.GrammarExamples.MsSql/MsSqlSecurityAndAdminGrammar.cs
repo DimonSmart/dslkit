@@ -59,8 +59,6 @@ namespace DSLKIT.GrammarExamples.MsSql
         {
             var gb = context.Gb;
             var expression = context.Symbols.Expression;
-            var identifierList = context.Symbols.IdentifierList;
-            var identifierTerm = context.Symbols.IdentifierTerm;
             var qualifiedName = context.Symbols.QualifiedName;
             var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
             var strictQualifiedName = context.Symbols.StrictQualifiedName;
@@ -79,7 +77,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(grantPermissionList).Is(grantPermissionItem);
             gb.Prod(grantPermissionList).Is(grantPermissionList, ",", grantPermissionItem);
             gb.Prod(grantPermissionItem).Is(grantPermission);
-            gb.Prod(grantPermissionItem).Is(grantPermission, "(", identifierList, ")");
+            gb.Prod(grantPermissionItem).Is(grantPermission, "(", adminIdentifierList, ")");
 
             gb.Prod(grantPermission).Is(grantPermissionWord);
             gb.Prod(grantPermission).Is("VIEW", "DEFINITION");

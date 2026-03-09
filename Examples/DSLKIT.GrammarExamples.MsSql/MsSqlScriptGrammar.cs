@@ -38,12 +38,14 @@ namespace DSLKIT.GrammarExamples.MsSql
         {
             var gb = context.Gb;
             var expression = context.Symbols.Expression;
-            var identifierList = context.Symbols.IdentifierList;
             var identifierTerm = context.Symbols.IdentifierTerm;
             var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
             var strictQualifiedName = context.Symbols.StrictQualifiedName;
             var qualifiedName = context.Symbols.QualifiedName;
             var graphColumnRef = context.GraphColumnRefTerminal;
+            var cteIdentifierTerm = gb.NT("CteIdentifierTerm");
+            var cteIdentifierList = gb.NT("CteIdentifierList");
+            var xmlNamespaceAliasTerm = gb.NT("XmlNamespaceAliasTerm");
 
             gb.Rule("Start").CanBe(script);
             gb.Rule(script).OneOf(
@@ -87,14 +89,18 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(withXmlNamespacesClause).Is("WITH", "XMLNAMESPACES", "(", xmlNamespaceItemList, ")");
             gb.Prod(xmlNamespaceItemList).Is(xmlNamespaceItem);
             gb.Prod(xmlNamespaceItemList).Is(xmlNamespaceItemList, ",", xmlNamespaceItem);
-            gb.Prod(xmlNamespaceItem).Is(expression, "AS", identifierTerm);
+            gb.Rule(xmlNamespaceAliasTerm).OneOf(strictIdentifierTerm);
+            gb.Prod(xmlNamespaceItem).Is(expression, "AS", xmlNamespaceAliasTerm);
             gb.Prod(xmlNamespaceItem).Is("DEFAULT", expression);
 
             gb.Prod(withClause).Is("WITH", cteDefinitionList);
             gb.Prod(cteDefinitionList).Is(cteDefinition);
             gb.Prod(cteDefinitionList).Is(cteDefinitionList, ",", cteDefinition);
-            gb.Prod(cteDefinition).Is(identifierTerm, "AS", "(", queryExpression, ")");
-            gb.Prod(cteDefinition).Is(identifierTerm, "(", identifierList, ")", "AS", "(", queryExpression, ")");
+            gb.Rule(cteIdentifierTerm).OneOf(strictIdentifierTerm);
+            gb.Prod(cteIdentifierList).Is(cteIdentifierTerm);
+            gb.Prod(cteIdentifierList).Is(cteIdentifierList, ",", cteIdentifierTerm);
+            gb.Prod(cteDefinition).Is(cteIdentifierTerm, "AS", "(", queryExpression, ")");
+            gb.Prod(cteDefinition).Is(cteIdentifierTerm, "(", cteIdentifierList, ")", "AS", "(", queryExpression, ")");
 
             gb.Prod(strictQualifiedName).Is(strictIdentifierTerm);
             gb.Prod(strictQualifiedName).Is(strictQualifiedName, ".", strictIdentifierTerm);

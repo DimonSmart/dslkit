@@ -820,6 +820,17 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void ParseScript_ShouldRejectGrantStatement_WithContextualKeywordColumnList()
+        {
+            const string script = "GRANT UPDATE (WAITFOR) ON OBJECT::dbo.Company TO [app_role];";
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse(
+                "GRANT column lists should not accept contextual keywords through broad IdentifierTerm fallback.");
+        }
+
+        [Fact]
         public void ParseScript_ShouldParseDbccStatement_Variants()
         {
             const string script = """
@@ -1319,6 +1330,39 @@ namespace DSLKIT.Test.GrammarExamples
             parseResult.IsSuccess.Should().BeFalse("MERGE target must be a target table, not a derived table.");
         }
 
+        [Theory]
+        [InlineData(
+            """
+            MERGE dbo.Target AS WAITFOR
+            USING dbo.Source AS src
+            ON WAITFOR.Id = src.Id
+            WHEN MATCHED THEN DELETE;
+            """,
+            "MERGE target aliases should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            """
+            MERGE dbo.Target WAITFOR
+            USING dbo.Source AS src
+            ON WAITFOR.Id = src.Id
+            WHEN MATCHED THEN DELETE;
+            """,
+            "MERGE target aliases without AS should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "SELECT * FROM PRODUCT P1, PRODUCT P2, ISPARTOF IPO WHERE MATCH(WAITFOR-(IPO)->P2);",
+            "Graph MATCH identifiers should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            """
+            CREATE EXTERNAL DATA SOURCE WAITFOR
+            WITH (TYPE = BLOB_STORAGE, LOCATION = 'https://example.com/path');
+            """,
+            "CREATE EXTERNAL DATA SOURCE names should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        public void ParseScript_ShouldRejectExtensionIdentifiers_WithContextualKeywordFallback(string script, string reason)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse(reason);
+        }
+
         [Fact]
         public void ParseScript_ShouldParseExecuteStatement_Variants()
         {
@@ -1407,7 +1451,30 @@ namespace DSLKIT.Test.GrammarExamples
             ) AS u;
             """,
             "UNPIVOT column lists should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "SELECT 1 AS WAITFOR;",
+            "SELECT aliases with AS should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "SELECT 1 WAITFOR, 2 AS B;",
+            "SELECT aliases without AS should not accept contextual keywords through broad IdentifierTerm fallback.")]
         public void ParseScript_ShouldRejectQuerySideIdentifiers_WithContextualKeywordFallback(string script, string reason)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse(reason);
+        }
+
+        [Theory]
+        [InlineData(
+            "WITH WAITFOR AS (SELECT 1 AS X) SELECT X FROM WAITFOR;",
+            "CTE names should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "WITH cte (WAITFOR) AS (SELECT 1 AS X) SELECT X FROM cte;",
+            "CTE column lists should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "WITH XMLNAMESPACES ('http://example.com' AS WAITFOR) SELECT 1;",
+            "XML namespace aliases should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        public void ParseScript_ShouldRejectScriptIdentifiers_WithContextualKeywordFallback(string script, string reason)
         {
             var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
 
@@ -2344,6 +2411,35 @@ namespace DSLKIT.Test.GrammarExamples
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParsePredictFunction_WhenSynapseFeaturesEnabled()
+        {
+            const string script = """
+                DECLARE @model VARBINARY(MAX);
+                DECLARE @input INT = 1;
+                SELECT PREDICT(Model = @model, Data = @input AS Score);
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script, MsSqlDialectFeatures.All);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Theory]
+        [InlineData(
+            "SELECT PREDICT(WAITFOR = 1);",
+            "PREDICT argument names should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "SELECT PREDICT(Model = 1 AS WAITFOR);",
+            "PREDICT result aliases should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        public void ParseScript_ShouldRejectPredictIdentifiers_WithContextualKeywordFallback(string script, string reason)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script, MsSqlDialectFeatures.All);
+
+            parseResult.IsSuccess.Should().BeFalse(reason);
         }
 
         [Fact]

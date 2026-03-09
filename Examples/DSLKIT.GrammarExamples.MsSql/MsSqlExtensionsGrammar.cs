@@ -65,9 +65,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             INonTerminal matchGraphStepChain,
             INonTerminal matchGraphShortestPath,
             INonTerminal matchGraphShortestPathBody,
-            INonTerminal identifierTerm,
+            INonTerminal strictIdentifierTerm,
             ITerminal number)
         {
+            var graphIdentifierTerm = gb.NT("GraphIdentifierTerm");
+
+            gb.Rule(graphIdentifierTerm)
+                .CanBe(strictIdentifierTerm)
+                .OrKeywords("NAME", "SOURCE", "TARGET");
             gb.Prod(matchGraphPattern).Is(matchGraphPath);
             gb.Prod(matchGraphPattern).Is("SHORTEST_PATH", "(", matchGraphShortestPath, ")");
             gb.Prod(matchGraphPattern).Is(matchGraphPattern, "AND", matchGraphPath);
@@ -75,13 +80,13 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(matchGraphShortestPath).Is(matchGraphShortestPathBody);
             gb.Prod(matchGraphShortestPath).Is(matchGraphShortestPathBody, "+");
             gb.Prod(matchGraphShortestPath).Is(matchGraphShortestPathBody, "{", number, ",", number, "}");
-            gb.Prod(matchGraphPath).Is(identifierTerm);
-            gb.Prod(matchGraphPath).Is(identifierTerm, matchGraphStepChain);
-            gb.Prod(matchGraphShortestPathBody).Is(identifierTerm, "(", matchGraphStepChain, ")");
+            gb.Prod(matchGraphPath).Is(graphIdentifierTerm);
+            gb.Prod(matchGraphPath).Is(graphIdentifierTerm, matchGraphStepChain);
+            gb.Prod(matchGraphShortestPathBody).Is(graphIdentifierTerm, "(", matchGraphStepChain, ")");
             gb.Rule(matchGraphStep)
-                .CanBe("-", "(", identifierTerm, ")", "-", ">", identifierTerm)
-                .Or("<", "-", "(", identifierTerm, ")", "-", identifierTerm)
-                .Or("-", "(", identifierTerm, ")", "-", identifierTerm);
+                .CanBe("-", "(", graphIdentifierTerm, ")", "-", ">", graphIdentifierTerm)
+                .Or("<", "-", "(", graphIdentifierTerm, ")", "-", graphIdentifierTerm)
+                .Or("-", "(", graphIdentifierTerm, ")", "-", graphIdentifierTerm);
             gb.Prod(matchGraphStepChain).Is(matchGraphStep);
             gb.Prod(matchGraphStepChain).Is(matchGraphStepChain, matchGraphStep);
         }
@@ -97,7 +102,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             INonTerminal mergeMatchedAction,
             INonTerminal mergeNotMatchedAction,
             INonTerminal qualifiedName,
-            INonTerminal identifierTerm,
+            INonTerminal strictIdentifierTerm,
             INonTerminal tableHintLimitedList,
             INonTerminal tableSource,
             INonTerminal dmlOutputClause,
@@ -108,12 +113,17 @@ namespace DSLKIT.GrammarExamples.MsSql
             INonTerminal insertColumnList,
             INonTerminal insertValueList)
         {
+            var mergeAliasTerm = gb.NT("MergeAliasTerm");
+
+            gb.Rule(mergeAliasTerm)
+                .CanBe(strictIdentifierTerm)
+                .OrKeywords("NAME", "SOURCE", "TARGET");
             gb.Prod(mergeTargetTable).Is(qualifiedName);
-            gb.Prod(mergeTargetTable).Is(qualifiedName, "AS", identifierTerm);
-            gb.Prod(mergeTargetTable).Is(qualifiedName, identifierTerm);
+            gb.Prod(mergeTargetTable).Is(qualifiedName, "AS", mergeAliasTerm);
+            gb.Prod(mergeTargetTable).Is(qualifiedName, mergeAliasTerm);
             gb.Prod(mergeTargetTable).Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")");
-            gb.Prod(mergeTargetTable).Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")", "AS", identifierTerm);
-            gb.Prod(mergeTargetTable).Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")", identifierTerm);
+            gb.Prod(mergeTargetTable).Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")", "AS", mergeAliasTerm);
+            gb.Prod(mergeTargetTable).Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")", mergeAliasTerm);
             gb.Prod(mergeSourceTable).Is(tableSource);
             gb.Opt(mergeOutputClauseOpt, dmlOutputClause);
             gb.Opt(mergeOptionClauseOpt, optionClause);
@@ -181,10 +191,19 @@ namespace DSLKIT.GrammarExamples.MsSql
             INonTerminal createExternalDataSourceStatement,
             INonTerminal externalDataSourceOptionList,
             INonTerminal qualifiedName,
-            INonTerminal identifierTerm,
+            INonTerminal strictIdentifierTerm,
             INonTerminal createTableElementList,
             INonTerminal namedOptionValue)
         {
+            var externalObjectIdentifierTerm = gb.NT("ExternalObjectIdentifierTerm");
+            var externalObjectQualifiedName = gb.NT("ExternalObjectQualifiedName");
+
+            gb.Rule(externalObjectIdentifierTerm)
+                .CanBe(strictIdentifierTerm)
+                .OrKeywords("NAME");
+            gb.Prod(externalObjectQualifiedName).Is(externalObjectIdentifierTerm);
+            gb.Prod(externalObjectQualifiedName).Is(externalObjectQualifiedName, ".", externalObjectIdentifierTerm);
+            gb.Prod(externalObjectQualifiedName).Is(externalObjectQualifiedName, ".", ".", externalObjectIdentifierTerm);
             gb.Prod(createExternalTableStatement).Is("CREATE", "EXTERNAL", "TABLE", qualifiedName, "(", createTableElementList, ")");
             gb.Prod(createExternalTableStatement).Is("CREATE", "EXTERNAL", "TABLE", qualifiedName, "(", createTableElementList, ")", "WITH", "(", externalTableOptionList, ")");
             DefineNamedOptionList(
@@ -201,8 +220,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 "SCHEMA_NAME",
                 "OBJECT_NAME");
 
-            gb.Prod(createExternalDataSourceStatement).Is("CREATE", "EXTERNAL", "DATA", "SOURCE", identifierTerm, "WITH", "(", externalDataSourceOptionList, ")");
-            gb.Prod(createExternalDataSourceStatement).Is("CREATE", "EXTERNAL", "DATA", "SOURCE", qualifiedName, "WITH", "(", externalDataSourceOptionList, ")");
+            gb.Prod(createExternalDataSourceStatement).Is("CREATE", "EXTERNAL", "DATA", "SOURCE", externalObjectQualifiedName, "WITH", "(", externalDataSourceOptionList, ")");
             DefineNamedOptionList(
                 gb,
                 externalDataSourceOptionList,
@@ -260,14 +278,19 @@ namespace DSLKIT.GrammarExamples.MsSql
             INonTerminal functionCall,
             INonTerminal predictArgList,
             INonTerminal predictArg,
-            INonTerminal identifierTerm,
+            INonTerminal strictIdentifierTerm,
             INonTerminal expression)
         {
+            var predictIdentifierTerm = gb.NT("PredictIdentifierTerm");
+
+            gb.Rule(predictIdentifierTerm)
+                .CanBe(strictIdentifierTerm)
+                .OrKeywords("NAME", "MODEL", "DATA");
             gb.Prod(functionCall).Is("PREDICT", "(", predictArgList, ")");
             gb.Prod(predictArgList).Is(predictArg);
             gb.Prod(predictArgList).Is(predictArgList, ",", predictArg);
-            gb.Prod(predictArg).Is(identifierTerm, "=", expression);
-            gb.Prod(predictArg).Is(identifierTerm, "=", expression, "AS", identifierTerm);
+            gb.Prod(predictArg).Is(predictIdentifierTerm, "=", expression);
+            gb.Prod(predictArg).Is(predictIdentifierTerm, "=", expression, "AS", predictIdentifierTerm);
         }
 
         private static void DefineNamedOptionList(
