@@ -903,6 +903,16 @@ code {
     margin-top: 0;
 }
 
+.dsl-sql-property-row--disabled {
+    opacity: 0.6;
+}
+
+.dsl-sql-property-note {
+    grid-column: 1 / -1;
+    margin-top: -0.1rem;
+    margin-bottom: 0.2rem;
+}
+
 .dsl-sql-input-tab {
     display: flex;
     flex-direction: column;
