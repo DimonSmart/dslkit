@@ -40,28 +40,35 @@ namespace DSLKIT.GrammarExamples.MsSql
             var hasGraphExtensions = context.HasFeature(MsSqlDialectFeatures.GraphExtensions);
             var stringLiteral = context.StringLiteralTerminal;
             var tableSourceColumnIdentifierTerm = gb.NT("TableSourceColumnIdentifierTerm");
+            var tableSourceAliasTerm = gb.NT("TableSourceAliasTerm");
+            var tableSourceColumnAliasList = gb.NT("TableSourceColumnAliasList");
 
             gb.Rule(tableSourceColumnIdentifierTerm)
                 .CanBe(context.Symbols.StrictIdentifierTerm)
                 .OrKeywords("NAME");
+            gb.Rule(tableSourceAliasTerm)
+                .CanBe(tableSourceColumnIdentifierTerm)
+                .OrKeywords("SOURCE", "TARGET");
+            gb.Prod(tableSourceColumnAliasList).Is(tableSourceColumnIdentifierTerm);
+            gb.Prod(tableSourceColumnAliasList).Is(tableSourceColumnAliasList, ",", tableSourceColumnIdentifierTerm);
 
             gb.Rule(tableSourceList).SeparatedBy(",", tableSource);
             gb.Prod(tableSource).Is(tableFactor);
             gb.Prod(tableSource).Is(tableSource, joinPart);
             gb.Prod(tableFactor).Is(qualifiedName);
-            gb.Prod(tableFactor).Is(qualifiedName, "AS", identifierTerm);
-            gb.Prod(tableFactor).Is(qualifiedName, identifierTerm);
+            gb.Prod(tableFactor).Is(qualifiedName, "AS", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is(qualifiedName, tableSourceAliasTerm);
             if (hasGraphExtensions)
             {
                 gb.Prod(tableFactor).Is(qualifiedName, forPathStart, "PATH");
-                gb.Prod(tableFactor).Is(qualifiedName, forPathStart, "PATH", identifierTerm);
+                gb.Prod(tableFactor).Is(qualifiedName, forPathStart, "PATH", tableSourceAliasTerm);
             }
             gb.Prod(tableFactor).Is(qualifiedName, "WITH", "(", tableHintLimitedList, ")");
-            gb.Prod(tableFactor).Is(qualifiedName, "AS", identifierTerm, "WITH", "(", tableHintLimitedList, ")");
-            gb.Prod(tableFactor).Is(qualifiedName, identifierTerm, "WITH", "(", tableHintLimitedList, ")");
+            gb.Prod(tableFactor).Is(qualifiedName, "AS", tableSourceAliasTerm, "WITH", "(", tableHintLimitedList, ")");
+            gb.Prod(tableFactor).Is(qualifiedName, tableSourceAliasTerm, "WITH", "(", tableHintLimitedList, ")");
             gb.Prod(tableFactor).Is(qualifiedName, temporalClause);
-            gb.Prod(tableFactor).Is(qualifiedName, temporalClause, "AS", identifierTerm);
-            gb.Prod(tableFactor).Is(qualifiedName, temporalClause, identifierTerm);
+            gb.Prod(tableFactor).Is(qualifiedName, temporalClause, "AS", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is(qualifiedName, temporalClause, tableSourceAliasTerm);
             gb.Rule(temporalClause).OneOf(
                 gb.Seq(forSystemTimeStart, "SYSTEM_TIME", "AS", "OF", additiveExpression),
                 gb.Seq(forSystemTimeStart, "SYSTEM_TIME", "ALL"),
@@ -69,53 +76,53 @@ namespace DSLKIT.GrammarExamples.MsSql
                 gb.Seq(forSystemTimeStart, "SYSTEM_TIME", "FROM", additiveExpression, "TO", additiveExpression),
                 gb.Seq(forSystemTimeStart, "SYSTEM_TIME", "CONTAINED", "IN", "(", additiveExpression, ",", additiveExpression, ")"));
             gb.Prod(tableFactor).Is(variableReference);
-            gb.Prod(tableFactor).Is(variableReference, "AS", identifierTerm);
-            gb.Prod(tableFactor).Is(variableReference, identifierTerm);
+            gb.Prod(tableFactor).Is(variableReference, "AS", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is(variableReference, tableSourceAliasTerm);
             gb.Prod(tableFactor).Is(functionCall);
-            gb.Prod(tableFactor).Is(functionCall, "AS", identifierTerm);
-            gb.Prod(tableFactor).Is(functionCall, identifierTerm);
-            gb.Prod(tableFactor).Is(functionCall, "AS", identifierTerm, "(", insertColumnList, ")");
-            gb.Prod(tableFactor).Is(functionCall, identifierTerm, "(", insertColumnList, ")");
+            gb.Prod(tableFactor).Is(functionCall, "AS", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is(functionCall, tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is(functionCall, "AS", tableSourceAliasTerm, "(", tableSourceColumnAliasList, ")");
+            gb.Prod(tableFactor).Is(functionCall, tableSourceAliasTerm, "(", tableSourceColumnAliasList, ")");
             gb.Prod(tableFactor).Is(openJsonCall);
-            gb.Prod(tableFactor).Is(openJsonCall, "AS", identifierTerm);
-            gb.Prod(tableFactor).Is(openJsonCall, identifierTerm);
-            gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", identifierTerm);
-            gb.Prod(tableFactor).Is("(", queryExpression, ")", identifierTerm);
-            gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", identifierTerm, "(", insertColumnList, ")");
-            gb.Prod(tableFactor).Is("(", queryExpression, ")", identifierTerm, "(", insertColumnList, ")");
-            gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", identifierTerm, "PIVOT", "(", pivotClause, ")", "AS", identifierTerm);
-            gb.Prod(tableFactor).Is("(", queryExpression, ")", identifierTerm, "PIVOT", "(", pivotClause, ")", "AS", identifierTerm);
-            gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", identifierTerm, "PIVOT", "(", pivotClause, ")", identifierTerm);
-            gb.Prod(tableFactor).Is("(", queryExpression, ")", identifierTerm, "PIVOT", "(", pivotClause, ")", identifierTerm);
-            gb.Prod(tableFactor).Is(qualifiedName, "PIVOT", "(", pivotClause, ")", "AS", identifierTerm);
-            gb.Prod(tableFactor).Is(qualifiedName, "AS", identifierTerm, "PIVOT", "(", pivotClause, ")", "AS", identifierTerm);
-            gb.Prod(tableFactor).Is(qualifiedName, identifierTerm, "PIVOT", "(", pivotClause, ")", "AS", identifierTerm);
-            gb.Prod(tableFactor).Is(qualifiedName, "PIVOT", "(", pivotClause, ")", identifierTerm);
-            gb.Prod(tableFactor).Is(qualifiedName, "AS", identifierTerm, "PIVOT", "(", pivotClause, ")", identifierTerm);
-            gb.Prod(tableFactor).Is(qualifiedName, identifierTerm, "PIVOT", "(", pivotClause, ")", identifierTerm);
+            gb.Prod(tableFactor).Is(openJsonCall, "AS", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is(openJsonCall, tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is("(", queryExpression, ")", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", tableSourceAliasTerm, "(", tableSourceColumnAliasList, ")");
+            gb.Prod(tableFactor).Is("(", queryExpression, ")", tableSourceAliasTerm, "(", tableSourceColumnAliasList, ")");
+            gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", tableSourceAliasTerm, "PIVOT", "(", pivotClause, ")", "AS", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is("(", queryExpression, ")", tableSourceAliasTerm, "PIVOT", "(", pivotClause, ")", "AS", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", tableSourceAliasTerm, "PIVOT", "(", pivotClause, ")", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is("(", queryExpression, ")", tableSourceAliasTerm, "PIVOT", "(", pivotClause, ")", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is(qualifiedName, "PIVOT", "(", pivotClause, ")", "AS", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is(qualifiedName, "AS", tableSourceAliasTerm, "PIVOT", "(", pivotClause, ")", "AS", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is(qualifiedName, tableSourceAliasTerm, "PIVOT", "(", pivotClause, ")", "AS", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is(qualifiedName, "PIVOT", "(", pivotClause, ")", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is(qualifiedName, "AS", tableSourceAliasTerm, "PIVOT", "(", pivotClause, ")", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is(qualifiedName, tableSourceAliasTerm, "PIVOT", "(", pivotClause, ")", tableSourceAliasTerm);
             gb.Prod(pivotClause).Is(functionCall, "FOR", tableSourceColumnIdentifierTerm, "IN", "(", pivotValueList, ")");
             gb.Prod(pivotValueList).Is(expression);
             gb.Prod(pivotValueList).Is(pivotValueList, ",", expression);
-            gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", identifierTerm);
-            gb.Prod(tableFactor).Is("(", queryExpression, ")", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", identifierTerm);
-            gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
-            gb.Prod(tableFactor).Is("(", queryExpression, ")", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
-            gb.Prod(tableFactor).Is(qualifiedName, "UNPIVOT", "(", unpivotClause, ")", "AS", identifierTerm);
-            gb.Prod(tableFactor).Is(qualifiedName, "AS", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", identifierTerm);
-            gb.Prod(tableFactor).Is(qualifiedName, identifierTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", identifierTerm);
-            gb.Prod(tableFactor).Is(qualifiedName, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
-            gb.Prod(tableFactor).Is(qualifiedName, "AS", identifierTerm, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
-            gb.Prod(tableFactor).Is(qualifiedName, identifierTerm, "UNPIVOT", "(", unpivotClause, ")", identifierTerm);
+            gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", tableSourceAliasTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is("(", queryExpression, ")", tableSourceAliasTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", tableSourceAliasTerm, "UNPIVOT", "(", unpivotClause, ")", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is("(", queryExpression, ")", tableSourceAliasTerm, "UNPIVOT", "(", unpivotClause, ")", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is(qualifiedName, "UNPIVOT", "(", unpivotClause, ")", "AS", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is(qualifiedName, "AS", tableSourceAliasTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is(qualifiedName, tableSourceAliasTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is(qualifiedName, "UNPIVOT", "(", unpivotClause, ")", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is(qualifiedName, "AS", tableSourceAliasTerm, "UNPIVOT", "(", unpivotClause, ")", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is(qualifiedName, tableSourceAliasTerm, "UNPIVOT", "(", unpivotClause, ")", tableSourceAliasTerm);
             gb.Prod(unpivotClause).Is(tableSourceColumnIdentifierTerm, "FOR", tableSourceColumnIdentifierTerm, "IN", "(", unpivotColumnList, ")");
             gb.Prod(unpivotColumnList).Is(tableSourceColumnIdentifierTerm);
             gb.Prod(unpivotColumnList).Is(unpivotColumnList, ",", tableSourceColumnIdentifierTerm);
-            gb.Prod(tableFactor).Is("(", "VALUES", rowValueList, ")", "AS", identifierTerm);
-            gb.Prod(tableFactor).Is("(", "VALUES", rowValueList, ")", identifierTerm);
-            gb.Prod(tableFactor).Is("(", "VALUES", rowValueList, ")", "AS", identifierTerm, "(", insertColumnList, ")");
-            gb.Prod(tableFactor).Is("(", "VALUES", rowValueList, ")", identifierTerm, "(", insertColumnList, ")");
+            gb.Prod(tableFactor).Is("(", "VALUES", rowValueList, ")", "AS", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is("(", "VALUES", rowValueList, ")", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is("(", "VALUES", rowValueList, ")", "AS", tableSourceAliasTerm, "(", tableSourceColumnAliasList, ")");
+            gb.Prod(tableFactor).Is("(", "VALUES", rowValueList, ")", tableSourceAliasTerm, "(", tableSourceColumnAliasList, ")");
             gb.Prod(tableFactor).Is("(", tableSource, ")");
-            gb.Prod(tableFactor).Is("(", tableSource, ")", "AS", identifierTerm);
-            gb.Prod(tableFactor).Is("(", tableSource, ")", identifierTerm);
+            gb.Prod(tableFactor).Is("(", tableSource, ")", "AS", tableSourceAliasTerm);
+            gb.Prod(tableFactor).Is("(", tableSource, ")", tableSourceAliasTerm);
 
             gb.Prod(openJsonCall).Is("OPENJSON", "(", functionArgumentList, ")");
             gb.Prod(openJsonCall).Is("OPENJSON", "(", functionArgumentList, ")", openJsonWithClause);

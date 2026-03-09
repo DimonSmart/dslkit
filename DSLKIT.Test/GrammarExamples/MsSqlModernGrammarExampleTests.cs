@@ -1414,6 +1414,55 @@ namespace DSLKIT.Test.GrammarExamples
             parseResult.IsSuccess.Should().BeFalse(reason);
         }
 
+        [Theory]
+        [InlineData(
+            "SELECT * FROM dbo.T AS WAITFOR;",
+            "Table aliases should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "SELECT * FROM OPENJSON(@json) AS WAITFOR;",
+            "OPENJSON aliases should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "SELECT * FROM (SELECT 1 AS X) AS WAITFOR;",
+            "Derived table aliases should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "SELECT * FROM (VALUES (1)) AS v(WAITFOR);",
+            "Derived table column alias lists should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "SELECT * FROM PRODUCT FOR PATH WAITFOR;",
+            "FOR PATH aliases should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            """
+            SELECT *
+            FROM
+            (
+                SELECT 2024 AS Yr, 10 AS Amount
+            ) AS src
+            PIVOT
+            (
+                SUM(Amount) FOR Yr IN ([2024])
+            ) AS WAITFOR;
+            """,
+            "PIVOT aliases should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            """
+            SELECT *
+            FROM
+            (
+                SELECT 2024 AS Yr, 10 AS Amount
+            ) AS src
+            UNPIVOT
+            (
+                Amount FOR Attr IN (Yr)
+            ) AS WAITFOR;
+            """,
+            "UNPIVOT aliases should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        public void ParseScript_ShouldRejectTableSourceAliases_WithContextualKeywordFallback(string script, string reason)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse(reason);
+        }
+
         [Fact]
         public void ParseScript_ShouldParseInsertExec_Variants()
         {
