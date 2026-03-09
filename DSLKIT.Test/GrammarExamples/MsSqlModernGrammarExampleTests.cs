@@ -84,6 +84,35 @@ namespace DSLKIT.Test.GrammarExamples
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
 
+        [Theory]
+        [InlineData(
+            """
+            CREATE DATABASE Sales
+            WITH TRUSTWORTHY = OFF
+            COLLATE Latin1_General_100_CI_AS;
+            """,
+            "CREATE DATABASE clauses should not allow WITH before COLLATE.")]
+        [InlineData(
+            """
+            CREATE DATABASE Sales
+            WITH TRUSTWORTHY = OFF
+            WITH LEDGER = OFF;
+            """,
+            "CREATE DATABASE clauses should not allow duplicate WITH sections.")]
+        [InlineData(
+            """
+            CREATE DATABASE Sales
+            COLLATE Latin1_General_100_CI_AS
+            COLLATE SQL_Latin1_General_CP1_CI_AS;
+            """,
+            "CREATE DATABASE clauses should not allow duplicate COLLATE sections.")]
+        public void ParseScript_ShouldRejectCreateDatabase_WithInvalidClauseOrderOrDuplicates(string script, string reason)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse(reason);
+        }
+
         [Fact]
         public void ParseScript_ShouldParseCreateTable_AsFileTable()
         {
@@ -700,6 +729,35 @@ namespace DSLKIT.Test.GrammarExamples
 
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
+        [Theory]
+        [InlineData(
+            """
+            CREATE INDEX IX_T ON dbo.T (ID)
+            WITH (FILLFACTOR = 90)
+            INCLUDE (Name);
+            """,
+            "CREATE INDEX tail clauses should not allow INCLUDE after WITH.")]
+        [InlineData(
+            """
+            CREATE INDEX IX_T ON dbo.T (ID)
+            WITH (FILLFACTOR = 90)
+            WITH (ONLINE = ON);
+            """,
+            "CREATE INDEX tail clauses should not allow duplicate WITH sections.")]
+        [InlineData(
+            """
+            CREATE INDEX IX_T ON dbo.T (ID)
+            ON [PRIMARY]
+            WHERE ID > 0;
+            """,
+            "CREATE INDEX tail clauses should not allow WHERE after ON.")]
+        public void ParseScript_ShouldRejectCreateIndex_WithInvalidTailClauseOrderOrDuplicates(string script, string reason)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse(reason);
         }
 
         [Fact]

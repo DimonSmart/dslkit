@@ -85,6 +85,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             var alterIndexReorganizeSpec = symbols.AlterIndexReorganizeSpec;
             var alterIndexResumeSpec = symbols.AlterIndexResumeSpec;
             var alterIndexPartitionSelector = symbols.AlterIndexPartitionSelector;
+            var createIndexIncludeClauseOpt = gb.NT("CreateIndexIncludeClauseOpt");
+            var createIndexWhereClauseOpt = gb.NT("CreateIndexWhereClauseOpt");
+            var createIndexWithClauseOpt = gb.NT("CreateIndexWithClauseOpt");
+            var createIndexStorageClauseOpt = gb.NT("CreateIndexStorageClauseOpt");
+            var createIndexFileStreamClauseOpt = gb.NT("CreateIndexFileStreamClauseOpt");
 
             gb.Prod(createTableFileTableClause).Is("AS", "FILETABLE");
             gb.Prod(createTableStatement).Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")");
@@ -295,13 +300,28 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createIndexKeyItem).Is(identifierTerm, "ASC");
             gb.Prod(createIndexKeyItem).Is(identifierTerm, "DESC");
 
-            gb.Prod(createIndexTailClauseList).Is(createIndexTailClause);
-            gb.Prod(createIndexTailClauseList).Is(createIndexTailClauseList, createIndexTailClause);
-            gb.Prod(createIndexTailClause).Is(createIndexIncludeClause);
-            gb.Prod(createIndexTailClause).Is(createIndexWhereClause);
-            gb.Prod(createIndexTailClause).Is(createIndexWithClause);
-            gb.Prod(createIndexTailClause).Is(createIndexStorageClause);
-            gb.Prod(createIndexTailClause).Is(createIndexFileStreamClause);
+            gb.Prod(createIndexTailClauseList).Is(
+                createIndexIncludeClause,
+                createIndexWhereClauseOpt,
+                createIndexWithClauseOpt,
+                createIndexStorageClauseOpt,
+                createIndexFileStreamClauseOpt);
+            gb.Prod(createIndexTailClauseList).Is(
+                createIndexWhereClause,
+                createIndexWithClauseOpt,
+                createIndexStorageClauseOpt,
+                createIndexFileStreamClauseOpt);
+            gb.Prod(createIndexTailClauseList).Is(
+                createIndexWithClause,
+                createIndexStorageClauseOpt,
+                createIndexFileStreamClauseOpt);
+            gb.Prod(createIndexTailClauseList).Is(createIndexStorageClause, createIndexFileStreamClauseOpt);
+            gb.Prod(createIndexTailClauseList).Is(createIndexFileStreamClause);
+            gb.Opt(createIndexIncludeClauseOpt, createIndexIncludeClause);
+            gb.Opt(createIndexWhereClauseOpt, createIndexWhereClause);
+            gb.Opt(createIndexWithClauseOpt, createIndexWithClause);
+            gb.Opt(createIndexStorageClauseOpt, createIndexStorageClause);
+            gb.Opt(createIndexFileStreamClauseOpt, createIndexFileStreamClause);
 
             gb.Prod(createIndexIncludeClause).Is("INCLUDE", "(", createIndexIncludeList, ")");
             gb.Prod(createIndexIncludeList).Is(identifierTerm);
@@ -445,16 +465,26 @@ namespace DSLKIT.GrammarExamples.MsSql
             var createDatabaseGrowthSpec = symbols.CreateDatabaseGrowthSpec;
             var createDatabaseSizeUnit = symbols.CreateDatabaseSizeUnit;
             var createDatabaseGrowthUnit = symbols.CreateDatabaseGrowthUnit;
+            var createDatabaseOnClauseOpt = gb.NT("CreateDatabaseOnClauseOpt");
+            var createDatabaseCollateClauseOpt = gb.NT("CreateDatabaseCollateClauseOpt");
+            var createDatabaseWithClauseOpt = gb.NT("CreateDatabaseWithClauseOpt");
 
             gb.Prod(createDatabaseStatement).Is("CREATE", "DATABASE", identifierTerm);
             gb.Prod(createDatabaseStatement).Is("CREATE", "DATABASE", identifierTerm, createDatabaseClauseList);
-
-            gb.Prod(createDatabaseClauseList).Is(createDatabaseClause);
-            gb.Prod(createDatabaseClauseList).Is(createDatabaseClauseList, createDatabaseClause);
-            gb.Prod(createDatabaseClause).Is(createDatabaseContainmentClause);
-            gb.Prod(createDatabaseClause).Is(createDatabaseOnClause);
-            gb.Prod(createDatabaseClause).Is(createDatabaseCollateClause);
-            gb.Prod(createDatabaseClause).Is(createDatabaseWithClause);
+            gb.Prod(createDatabaseClauseList).Is(
+                createDatabaseContainmentClause,
+                createDatabaseOnClauseOpt,
+                createDatabaseCollateClauseOpt,
+                createDatabaseWithClauseOpt);
+            gb.Prod(createDatabaseClauseList).Is(
+                createDatabaseOnClause,
+                createDatabaseCollateClauseOpt,
+                createDatabaseWithClauseOpt);
+            gb.Prod(createDatabaseClauseList).Is(createDatabaseCollateClause, createDatabaseWithClauseOpt);
+            gb.Prod(createDatabaseClauseList).Is(createDatabaseWithClause);
+            gb.Opt(createDatabaseOnClauseOpt, createDatabaseOnClause);
+            gb.Opt(createDatabaseCollateClauseOpt, createDatabaseCollateClause);
+            gb.Opt(createDatabaseWithClauseOpt, createDatabaseWithClause);
 
             gb.Prod(createDatabaseContainmentClause).Is("CONTAINMENT", "=", "NONE");
             gb.Prod(createDatabaseContainmentClause).Is("CONTAINMENT", "=", "PARTIAL");
