@@ -257,6 +257,68 @@ namespace DSLKIT.Test.GrammarExamples
             parseResult.IsSuccess.Should().BeFalse(reason);
         }
 
+        [Theory]
+        [InlineData(
+            "CREATE STATISTICS Stat_T ON dbo.T (WAITFOR);",
+            "CREATE STATISTICS column lists should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE INDEX IX_T ON dbo.T (Id) ON PartScheme(WAITFOR);",
+            "Index storage targets should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE INDEX IX_T ON dbo.T (Id) FILESTREAM_ON PartScheme(WAITFOR);",
+            "Index FILESTREAM storage targets should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "DROP INDEX IX_T ON dbo.T WITH (MOVE TO PartScheme(WAITFOR));",
+            "DROP INDEX MOVE TO targets should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "ALTER DATABASE SCOPED CONFIGURATION CLEAR WAITFOR;",
+            "ALTER DATABASE SCOPED CONFIGURATION names should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "ALTER DATABASE SCOPED CONFIGURATION SET WAITFOR = 1;",
+            "ALTER DATABASE SCOPED CONFIGURATION names should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE DATABASE Sales WITH DEFAULT_LANGUAGE = WAITFOR;",
+            "CREATE DATABASE option values should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            """
+            CREATE DATABASE Sales
+            ON
+            (
+                NAME = SalesData,
+                FILENAME = 'C:\\data\\sales.mdf',
+                SIZE = 64 WAITFOR
+            );
+            """,
+            "CREATE DATABASE size specs should not accept arbitrary identifier units.")]
+        [InlineData(
+            """
+            CREATE DATABASE Sales
+            ON
+            (
+                NAME = SalesData,
+                FILENAME = 'C:\\data\\sales.mdf',
+                MAXSIZE = 128 WAITFOR
+            );
+            """,
+            "CREATE DATABASE max size specs should not accept arbitrary identifier units.")]
+        [InlineData(
+            """
+            CREATE DATABASE Sales
+            ON
+            (
+                NAME = SalesData,
+                FILENAME = 'C:\\data\\sales.mdf',
+                FILEGROWTH = 10 WAITFOR
+            );
+            """,
+            "CREATE DATABASE growth specs should not accept arbitrary identifier units.")]
+        public void ParseScript_ShouldRejectDdlStorageAndOptionIdentifiers_WithContextualKeywordFallback(string script, string reason)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse(reason);
+        }
+
         [Fact]
         public void ParseScript_ShouldParseCreateTable_AsFileTable()
         {

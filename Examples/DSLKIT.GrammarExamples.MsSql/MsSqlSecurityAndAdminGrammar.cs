@@ -64,6 +64,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             var qualifiedName = context.Symbols.QualifiedName;
             var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
             var strictQualifiedName = context.Symbols.StrictQualifiedName;
+            var adminIdentifierTerm = gb.NT("AdminIdentifierTerm");
+            var adminIdentifierList = gb.NT("AdminIdentifierList");
+
+            gb.Rule(adminIdentifierTerm)
+                .CanBe(strictIdentifierTerm)
+                .OrKeywords("NAME");
+            gb.Prod(adminIdentifierList).Is(adminIdentifierTerm);
+            gb.Prod(adminIdentifierList).Is(adminIdentifierList, ",", adminIdentifierTerm);
 
             gb.Prod(grantPermissionSet).Is("ALL");
             gb.Prod(grantPermissionSet).Is("ALL", "PRIVILEGES");
@@ -191,7 +199,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule(dropMoveToTarget)
                 .CanBe(qualifiedName)
                 .OrKeywords("DEFAULT")
-                .Or(qualifiedName, "(", identifierTerm, ")");
+                .Or(qualifiedName, "(", adminIdentifierTerm, ")");
             gb.Rule(dropFileStreamTarget)
                 .CanBe(qualifiedName)
                 .OrKeywords("DEFAULT");
@@ -267,7 +275,6 @@ namespace DSLKIT.GrammarExamples.MsSql
         {
             var gb = context.Gb;
             var expression = context.Symbols.Expression;
-            var identifierList = context.Symbols.IdentifierList;
             var identifierTerm = context.Symbols.IdentifierTerm;
             var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
             var namedOptionValue = context.Symbols.NamedOptionValue;
@@ -278,6 +285,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             var queryExpression = context.Symbols.QueryExpression;
             var stringLiteral = context.StringLiteralTerminal;
             var alterDatabaseTarget = gb.NT("AlterDatabaseTarget");
+            var statisticsIdentifierTerm = gb.NT("StatisticsIdentifierTerm");
+            var statisticsIdentifierList = gb.NT("StatisticsIdentifierList");
+
+            gb.Rule(statisticsIdentifierTerm)
+                .CanBe(strictIdentifierTerm)
+                .OrKeywords("NAME");
+            gb.Prod(statisticsIdentifierList).Is(statisticsIdentifierTerm);
+            gb.Prod(statisticsIdentifierList).Is(statisticsIdentifierList, ",", statisticsIdentifierTerm);
 
             gb.Prod(truncateStatement).Is("TRUNCATE", "TABLE", qualifiedName);
 
@@ -288,8 +303,8 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .CanBe(strictIdentifierTerm)
                 .OrKeywords("CURRENT");
             gb.Prod(alterDatabaseStatement).Is("ALTER", "DATABASE", alterDatabaseTarget, "SET", alterDatabaseSetOption);
-            gb.Prod(alterDatabaseStatement).Is("ALTER", "DATABASE", "SCOPED", "CONFIGURATION", "CLEAR", identifierTerm);
-            gb.Prod(alterDatabaseStatement).Is("ALTER", "DATABASE", "SCOPED", "CONFIGURATION", "SET", identifierTerm, "=", expression);
+            gb.Prod(alterDatabaseStatement).Is("ALTER", "DATABASE", "SCOPED", "CONFIGURATION", "CLEAR", strictIdentifierTerm);
+            gb.Prod(alterDatabaseStatement).Is("ALTER", "DATABASE", "SCOPED", "CONFIGURATION", "SET", strictIdentifierTerm, "=", expression);
             gb.Rule(alterDatabaseSetOnOffOption).Keywords(
                 "ALLOW_SNAPSHOT_ISOLATION",
                 "AUTO_CREATE_STATISTICS",
@@ -384,8 +399,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createUserStatement).Is("CREATE", "USER", strictIdentifierTerm, "FOR", "LOGIN", strictIdentifierTerm);
             gb.Prod(createUserStatement).Is("CREATE", "USER", strictIdentifierTerm, "WITHOUT", "LOGIN");
 
-            gb.Prod(createStatisticsStatement).Is("CREATE", "STATISTICS", strictIdentifierTerm, "ON", qualifiedName, "(", identifierList, ")");
-            gb.Prod(createStatisticsStatement).Is("CREATE", "STATISTICS", strictIdentifierTerm, "ON", qualifiedName, "(", identifierList, ")", "WITH", "(", indexOptionList, ")");
+            gb.Prod(createStatisticsStatement).Is("CREATE", "STATISTICS", strictIdentifierTerm, "ON", qualifiedName, "(", statisticsIdentifierList, ")");
+            gb.Prod(createStatisticsStatement).Is("CREATE", "STATISTICS", strictIdentifierTerm, "ON", qualifiedName, "(", statisticsIdentifierList, ")", "WITH", "(", indexOptionList, ")");
 
             gb.Prod(dropTypeStatement).Is("DROP", "TYPE", qualifiedName);
             gb.Prod(dropTypeStatement).Is("DROP", "TYPE", "IF", "EXISTS", qualifiedName);

@@ -361,10 +361,10 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod(indexStorageTarget).Is(qualifiedName);
             gb.Prod(indexStorageTarget).Is("DEFAULT");
-            gb.Prod(indexStorageTarget).Is(qualifiedName, "(", identifierTerm, ")");
+            gb.Prod(indexStorageTarget).Is(qualifiedName, "(", schemaDdlIdentifierTerm, ")");
             gb.Prod(indexFileStreamTarget).Is(qualifiedName);
             gb.Prod(indexFileStreamTarget).Is("NULL");
-            gb.Prod(indexFileStreamTarget).Is(qualifiedName, "(", identifierTerm, ")");
+            gb.Prod(indexFileStreamTarget).Is(qualifiedName, "(", schemaDdlIdentifierTerm, ")");
 
             gb.Prod(indexOptionList).Is(indexOption);
             gb.Prod(indexOptionList).Is(indexOptionList, ",", indexOption);
@@ -463,7 +463,6 @@ namespace DSLKIT.GrammarExamples.MsSql
         public static void BuildDatabaseGrammar(MsSqlGrammarContext context, MsSqlSchemaDdlSymbols symbols)
         {
             var gb = context.Gb;
-            var identifierTerm = context.Symbols.IdentifierTerm;
             var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
             var number = context.NumberTerminal;
             var stringLiteral = context.StringLiteralTerminal;
@@ -562,7 +561,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 ")");
 
             gb.Prod(createDatabaseOptionValue).Is(number);
-            gb.Prod(createDatabaseOptionValue).Is(identifierTerm);
+            gb.Prod(createDatabaseOptionValue).Is(strictIdentifierTerm);
             gb.Prod(createDatabaseOptionValue).Is(stringLiteral);
 
             gb.Rule(createDatabaseOnOffValue).Keywords("ON", "OFF");
@@ -607,16 +606,16 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod(createDatabaseSizeSpec).Is(number);
             gb.Prod(createDatabaseSizeSpec).Is(number, createDatabaseSizeUnit);
-            gb.Prod(createDatabaseSizeSpec).Is(number, identifierTerm);
+            gb.Prod(createDatabaseSizeSpec).Is(number, strictIdentifierTerm);
 
             gb.Prod(createDatabaseMaxSizeSpec).Is("UNLIMITED");
             gb.Prod(createDatabaseMaxSizeSpec).Is(number);
             gb.Prod(createDatabaseMaxSizeSpec).Is(number, createDatabaseSizeUnit);
-            gb.Prod(createDatabaseMaxSizeSpec).Is(number, identifierTerm);
+            gb.Prod(createDatabaseMaxSizeSpec).Is(number, strictIdentifierTerm);
 
             gb.Prod(createDatabaseGrowthSpec).Is(number);
             gb.Prod(createDatabaseGrowthSpec).Is(number, createDatabaseGrowthUnit);
-            gb.Prod(createDatabaseGrowthSpec).Is(number, identifierTerm);
+            gb.Prod(createDatabaseGrowthSpec).Is(number, strictIdentifierTerm);
 
             gb.Rule(createDatabaseSizeUnit).Keywords("KB", "MB", "GB", "TB");
 
