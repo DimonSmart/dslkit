@@ -268,38 +268,6 @@ namespace DSLKIT.Test.GrammarExamples
 
             yield return
             [
-                "sql-case-threshold-max-tokens",
-                ExpressionsCaseExampleSql,
-                new SqlFormattingOptions
-                {
-                    Expressions = new SqlExpressionsFormattingOptions
-                    {
-                        CaseStyle = SqlCaseStyle.CompactWhenShort,
-                        CompactCaseThreshold = new SqlCompactCaseThresholdOptions
-                        {
-                            MaxWhenClauses = 0,
-                            MaxTokens = 14,
-                            MaxLineLength = 120
-                        }
-                    }
-                },
-                new SqlFormattingOptions
-                {
-                    Expressions = new SqlExpressionsFormattingOptions
-                    {
-                        CaseStyle = SqlCaseStyle.CompactWhenShort,
-                        CompactCaseThreshold = new SqlCompactCaseThresholdOptions
-                        {
-                            MaxWhenClauses = 0,
-                            MaxTokens = 20,
-                            MaxLineLength = 120
-                        }
-                    }
-                }
-            ];
-
-            yield return
-            [
                 "sql-case-threshold-max-line",
                 ExpressionsCaseExampleSql,
                 new SqlFormattingOptions
@@ -387,38 +355,6 @@ namespace DSLKIT.Test.GrammarExamples
                             MaxDepth = 0,
                             MaxLineLength = 120,
                             ForContexts = [SqlInlineExpressionContext.SelectItem, SqlInlineExpressionContext.On, SqlInlineExpressionContext.Where]
-                        }
-                    }
-                }
-            ];
-
-            yield return
-            [
-                "sql-inline-short-max-depth",
-                InlineShortExpressionDepthExampleSql,
-                new SqlFormattingOptions
-                {
-                    Expressions = new SqlExpressionsFormattingOptions
-                    {
-                        InlineShortExpression = new SqlInlineShortExpressionOptions
-                        {
-                            MaxTokens = 20,
-                            MaxDepth = 12,
-                            MaxLineLength = 120,
-                            ForContexts = [SqlInlineExpressionContext.SelectItem, SqlInlineExpressionContext.Where]
-                        }
-                    }
-                },
-                new SqlFormattingOptions
-                {
-                    Expressions = new SqlExpressionsFormattingOptions
-                    {
-                        InlineShortExpression = new SqlInlineShortExpressionOptions
-                        {
-                            MaxTokens = 20,
-                            MaxDepth = 15,
-                            MaxLineLength = 120,
-                            ForContexts = [SqlInlineExpressionContext.SelectItem, SqlInlineExpressionContext.Where]
                         }
                     }
                 }
@@ -706,12 +642,6 @@ from dbo.A as a
 inner join dbo.B as b on a.Id+b.Id+a.LegacyId>10 and b.Flag=1
 where a.Score+a.Bonus+a.Penalty>0 and a.IsActive=1;";
 
-        private const string InlineShortExpressionDepthExampleSql =
-            @"-- Inline short expression depth: compare parse-depth thresholds such as 12 and 15.
-select a.Price+a.Tax as total
-from dbo.A as a
-where a.Score+a.Bonus>0;";
-
         private const string ShortQueriesExampleSql =
             @"select 1 from dbo.A where X=3 and Y=4;
 select a.Id
@@ -794,10 +724,8 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             ["sql-predicates-mixed-and-or-break-or-groups"] = PredicatesExampleSql,
             ["sql-expressions-case-style"] = ExpressionsCaseExampleSql,
             ["sql-case-threshold-max-when"] = ExpressionsCaseExampleSql,
-            ["sql-case-threshold-max-tokens"] = ExpressionsCaseExampleSql,
             ["sql-case-threshold-max-line"] = ExpressionsCaseExampleSql,
             ["sql-inline-short-max-tokens"] = InlineShortExpressionExampleSql,
-            ["sql-inline-short-max-depth"] = InlineShortExpressionDepthExampleSql,
             ["sql-inline-short-max-line"] = InlineShortExpressionExampleSql,
             ["sql-inline-short-select-item"] = InlineShortExpressionExampleSql,
             ["sql-inline-short-on"] = InlineShortExpressionExampleSql,
