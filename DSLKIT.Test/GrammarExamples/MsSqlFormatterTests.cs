@@ -631,6 +631,39 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void TryFormat_ShouldKeepShortSubqueriesInline_InsidePredicates()
+        {
+            const string sourceSql = """
+                SELECT a.Id
+                FROM dbo.A AS a
+                WHERE EXISTS (SELECT 1 FROM dbo.B AS b WHERE b.AId = a.Id AND b.IsActive = 1)
+                    AND a.Id IN (SELECT c.AId FROM dbo.C AS c WHERE c.IsReady = 1);
+                """;
+            var options = new SqlFormattingOptions
+            {
+                Predicates = new SqlPredicatesFormattingOptions
+                {
+                    MultilineWhere = true
+                },
+                ShortQueries = new SqlShortQueriesFormattingOptions
+                {
+                    Enabled = true,
+                    MaxLineLength = 120,
+                    MaxSelectItems = 1,
+                    MaxPredicateConditions = 2,
+                    ApplyToParenthesizedSubqueries = true
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            result.IsSuccess.Should().BeTrue(result.ErrorMessage);
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+
+            formattedSql.Should().Contain("EXISTS (SELECT 1 FROM dbo.B AS b WHERE b.AId = a.Id AND b.IsActive = 1)");
+            formattedSql.Should().Contain("IN (SELECT c.AId FROM dbo.C AS c WHERE c.IsReady = 1)");
+        }
+
+        [Fact]
         public void TryFormat_ShouldCompactShortQueryWithSingleJoin_OnlyWhenAllowed()
         {
             const string sourceSql = "SELECT a.Id FROM dbo.A AS a INNER JOIN dbo.B AS b ON a.Id=b.AId WHERE a.Status=1";
@@ -695,6 +728,32 @@ namespace DSLKIT.Test.GrammarExamples
             formattedSql.Should().Contain("\nWHERE id = @id;\n");
             formattedSql.Should().Contain("CREATE PROC p\nAS\nBEGIN\n");
             formattedSql.Should().Contain("\n    SELECT\n        1\nEND");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldApplyInsertColumnsAndValuesStyles_ForOutputAndMultiRowValues()
+        {
+            const string sourceSql = "INSERT INTO dbo.TargetRows (A, B) OUTPUT INSERTED.A VALUES (1,2),(3,4);";
+            var options = new SqlFormattingOptions
+            {
+                Dml = new SqlDmlFormattingOptions
+                {
+                    InsertColumnsStyle = SqlDmlListStyle.OnePerLine,
+                    InsertValuesStyle = SqlDmlListStyle.OnePerLine
+                },
+                Statement = new SqlStatementFormattingOptions
+                {
+                    TerminateWithSemicolon = SqlStatementTerminationMode.Always
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            result.IsSuccess.Should().BeTrue(result.ErrorMessage);
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+
+            formattedSql.Should().Contain("INSERT INTO dbo.TargetRows (\n    A,\n    B\n) OUTPUT INSERTED.A\nVALUES\n");
+            formattedSql.Should().Contain("(\n        1,\n        2\n    ),\n");
+            formattedSql.Should().Contain("(\n        3,\n        4\n    );");
         }
 
         [Fact]

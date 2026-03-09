@@ -69,6 +69,7 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
   - `applyToParenthesizedSubqueries`
   - `allowSingleJoin`
   - Current implementation is intentionally conservative: it only compacts simple single-query `SELECT ... [FROM ...] [WHERE ...]` shapes, and skips `GROUP BY`, `HAVING`, set operators, `ORDER BY`, comments, and nested subqueries inside the compacted query.
+  - `applyToParenthesizedSubqueries` also applies to short subqueries inside `EXISTS (...)`, `IN (SELECT ...)`, scalar subqueries, and derived tables.
 
 - `expressions.caseStyle`: `Multiline | CompactWhenShort`
 - `[HEURISTIC] expressions.compactCaseThreshold`:
@@ -90,6 +91,7 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
 - `dml.updateSetStyle`: `OnePerLine | WrapByWidth`
 - `dml.insertColumnsStyle`: `OnePerLine | WrapByWidth`
 - `dml.insertValuesStyle`: `OnePerLine | WrapByWidth`
+  - Applies to single-row and multi-row `INSERT ... VALUES ...`; `OUTPUT` clauses keep their inline form and stay attached to the `INSERT` header.
 - `ddl.createProcLayout`: `Expanded | Compact`
 
 ## Stage 8. Comments And Semantic Safety

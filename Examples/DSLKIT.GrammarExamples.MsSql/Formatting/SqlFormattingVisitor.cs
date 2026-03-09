@@ -540,13 +540,17 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 return false;
             }
 
-            if (node.Children.Count != 4 ||
-                node.Children[1] is not NonTerminalNode insertTargetNode ||
-                node.Children[2] is not TerminalNode valuesTerminal ||
-                !string.Equals(valuesTerminal.Token.OriginalString, "VALUES", StringComparison.OrdinalIgnoreCase) ||
-                node.Children[3] is not NonTerminalNode rowValueListNode ||
-                !TryExtractSimpleInsertTarget(insertTargetNode, out var hasIntoKeyword, out var targetNode, out var columnListNode) ||
-                !TryExtractSingleRowInsertValues(rowValueListNode, out var valueListNode))
+            if (!TryGetInsertValuesStatementParts(
+                    node,
+                    out var insertTargetNode,
+                    out var dmlOutputClauseNode,
+                    out var rowValueListNode) ||
+                !TryExtractInsertTargetLayoutParts(
+                    insertTargetNode,
+                    out var targetPrefixText,
+                    out var columnListNode,
+                    out var targetSuffixText) ||
+                !TryExtractInsertRowValues(rowValueListNode, out var valueListNodes))
             {
                 return false;
             }
@@ -557,12 +561,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             }
 
             var insertKeyword = FormatToken("INSERT", "INSERT", isKeyword: true);
-            var intoKeyword = FormatToken("INTO", "INTO", isKeyword: true);
             var valuesKeyword = FormatToken("VALUES", "VALUES", isKeyword: true);
-            var targetText = RenderNodeInline(targetNode);
-
-            var valueItemNodes = ExtractDelimitedListItems(valueListNode, "InsertValueList");
-            var valueItemTexts = valueItemNodes.Select(RenderNodeInline).ToList();
             var multilineColumns = false;
             if (columnListNode != null)
             {
@@ -571,17 +570,38 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 multilineColumns = ShouldUseMultilineDmlList(_options.Dml.InsertColumnsStyle, columnItemTexts, "(".Length);
             }
 
-            var multilineValues = ShouldUseMultilineDmlList(_options.Dml.InsertValuesStyle, valueItemTexts, "(".Length);
+            var rowValueLayoutInfos = valueListNodes
+                .Select(valueListNode =>
+                {
+                    var valueItemNodes = ExtractDelimitedListItems(valueListNode, "InsertValueList");
+                    var valueItemTexts = valueItemNodes.Select(RenderNodeInline).ToList();
+                    var isMultiline = ShouldUseMultilineDmlList(_options.Dml.InsertValuesStyle, valueItemTexts, "(".Length);
+                    return new InsertRowValueLayoutInfo(valueListNode, isMultiline);
+                })
+                .ToList();
+            var useMultilineValues = rowValueLayoutInfos.Any(layoutInfo => layoutInfo.IsMultiline);
+            var useMultilineRowLayout = rowValueLayoutInfos.Count > 1 &&
+                (_options.Dml.InsertValuesStyle == SqlDmlListStyle.OnePerLine || useMultilineValues);
 
-            _writer.WriteToken(hasIntoKeyword
-                ? $"{insertKeyword} {intoKeyword} {targetText}"
-                : $"{insertKeyword} {targetText}");
+            _writer.WriteToken($"{insertKeyword} {targetPrefixText}");
             if (columnListNode != null)
             {
                 WriteParenthesizedList(columnListNode, multilineColumns);
             }
 
-            if (multilineColumns || multilineValues)
+            if (!string.IsNullOrWhiteSpace(targetSuffixText))
+            {
+                _writer.WriteSpace();
+                _writer.WriteToken(targetSuffixText);
+            }
+
+            if (dmlOutputClauseNode != null)
+            {
+                _writer.WriteSpace();
+                _writer.WriteToken(RenderNodeInline(dmlOutputClauseNode));
+            }
+
+            if (multilineColumns || useMultilineValues || useMultilineRowLayout)
             {
                 _writer.WriteLine();
             }
@@ -591,92 +611,160 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             }
 
             _writer.WriteToken(valuesKeyword);
-            WriteParenthesizedList(valueListNode, multilineValues);
+            WriteInsertRowValueList(rowValueLayoutInfos, useMultilineRowLayout);
 
             UpdatePreviousTokenFromNode(node);
             return true;
         }
 
-        private static bool TryExtractSimpleInsertTarget(
-            NonTerminalNode insertTargetNode,
-            out bool hasIntoKeyword,
-            out ParseTreeNode targetNode,
-            out NonTerminalNode? columnListNode)
+        private static bool TryGetInsertValuesStatementParts(
+            NonTerminalNode insertStatementNode,
+            out NonTerminalNode insertTargetNode,
+            out NonTerminalNode? dmlOutputClauseNode,
+            out NonTerminalNode rowValueListNode)
         {
-            hasIntoKeyword = false;
-            columnListNode = null;
-            targetNode = null!;
+            insertTargetNode = null!;
+            dmlOutputClauseNode = null;
+            rowValueListNode = null!;
 
-            if (insertTargetNode.Children.Count == 1 &&
-                insertTargetNode.Children[0] is ParseTreeNode targetOnlyNode)
+            if (insertStatementNode.Children.Count == 4 &&
+                insertStatementNode.Children[1] is NonTerminalNode simpleInsertTargetNode &&
+                insertStatementNode.Children[2] is TerminalNode simpleValuesTerminal &&
+                string.Equals(simpleValuesTerminal.Token.OriginalString, "VALUES", StringComparison.OrdinalIgnoreCase) &&
+                insertStatementNode.Children[3] is NonTerminalNode simpleRowValueListNode &&
+                string.Equals(simpleRowValueListNode.NonTerminal.Name, "RowValueList", StringComparison.Ordinal))
             {
-                targetNode = targetOnlyNode;
+                insertTargetNode = simpleInsertTargetNode;
+                rowValueListNode = simpleRowValueListNode;
                 return true;
             }
 
-            if (insertTargetNode.Children.Count == 2 &&
-                insertTargetNode.Children[0] is TerminalNode intoTerminal &&
-                string.Equals(intoTerminal.Token.OriginalString, "INTO", StringComparison.OrdinalIgnoreCase))
+            if (insertStatementNode.Children.Count == 5 &&
+                insertStatementNode.Children[1] is NonTerminalNode outputInsertTargetNode &&
+                insertStatementNode.Children[2] is NonTerminalNode outputClauseNode &&
+                string.Equals(outputClauseNode.NonTerminal.Name, "DeleteOutputClause", StringComparison.Ordinal) &&
+                insertStatementNode.Children[3] is TerminalNode outputValuesTerminal &&
+                string.Equals(outputValuesTerminal.Token.OriginalString, "VALUES", StringComparison.OrdinalIgnoreCase) &&
+                insertStatementNode.Children[4] is NonTerminalNode outputRowValueListNode &&
+                string.Equals(outputRowValueListNode.NonTerminal.Name, "RowValueList", StringComparison.Ordinal))
             {
-                hasIntoKeyword = true;
-                targetNode = insertTargetNode.Children[1];
-                return true;
-            }
-
-            if (insertTargetNode.Children.Count == 4 &&
-                insertTargetNode.Children[0] is ParseTreeNode targetWithColumnsNode &&
-                insertTargetNode.Children[1] is TerminalNode openTerminal &&
-                string.Equals(openTerminal.Token.OriginalString, "(", StringComparison.Ordinal) &&
-                insertTargetNode.Children[2] is NonTerminalNode insertColumnListNode &&
-                string.Equals(insertColumnListNode.NonTerminal.Name, "InsertColumnList", StringComparison.Ordinal) &&
-                insertTargetNode.Children[3] is TerminalNode closeTerminal &&
-                string.Equals(closeTerminal.Token.OriginalString, ")", StringComparison.Ordinal))
-            {
-                targetNode = targetWithColumnsNode;
-                columnListNode = insertColumnListNode;
-                return true;
-            }
-
-            if (insertTargetNode.Children.Count == 5 &&
-                insertTargetNode.Children[0] is TerminalNode intoWithColumnsTerminal &&
-                string.Equals(intoWithColumnsTerminal.Token.OriginalString, "INTO", StringComparison.OrdinalIgnoreCase) &&
-                insertTargetNode.Children[1] is ParseTreeNode targetWithIntoAndColumnsNode &&
-                insertTargetNode.Children[2] is TerminalNode intoOpenTerminal &&
-                string.Equals(intoOpenTerminal.Token.OriginalString, "(", StringComparison.Ordinal) &&
-                insertTargetNode.Children[3] is NonTerminalNode insertColumnListWithIntoNode &&
-                string.Equals(insertColumnListWithIntoNode.NonTerminal.Name, "InsertColumnList", StringComparison.Ordinal) &&
-                insertTargetNode.Children[4] is TerminalNode intoCloseTerminal &&
-                string.Equals(intoCloseTerminal.Token.OriginalString, ")", StringComparison.Ordinal))
-            {
-                hasIntoKeyword = true;
-                targetNode = targetWithIntoAndColumnsNode;
-                columnListNode = insertColumnListWithIntoNode;
+                insertTargetNode = outputInsertTargetNode;
+                dmlOutputClauseNode = outputClauseNode;
+                rowValueListNode = outputRowValueListNode;
                 return true;
             }
 
             return false;
         }
 
-        private static bool TryExtractSingleRowInsertValues(
-            NonTerminalNode rowValueListNode,
-            out NonTerminalNode valueListNode)
+        private bool TryExtractInsertTargetLayoutParts(
+            NonTerminalNode insertTargetNode,
+            out string targetPrefixText,
+            out NonTerminalNode? columnListNode,
+            out string targetSuffixText)
         {
-            valueListNode = null!;
-            if (rowValueListNode.Children.Count != 1 ||
-                rowValueListNode.Children[0] is not NonTerminalNode rowValueNode ||
-                rowValueNode.Children.Count != 3 ||
-                rowValueNode.Children[0] is not TerminalNode openTerminal ||
-                !string.Equals(openTerminal.Token.OriginalString, "(", StringComparison.Ordinal) ||
-                rowValueNode.Children[1] is not NonTerminalNode insertValueListNode ||
-                !string.Equals(insertValueListNode.NonTerminal.Name, "InsertValueList", StringComparison.Ordinal) ||
-                rowValueNode.Children[2] is not TerminalNode closeTerminal ||
-                !string.Equals(closeTerminal.Token.OriginalString, ")", StringComparison.Ordinal))
+            targetPrefixText = RenderNodeInline(insertTargetNode);
+            columnListNode = null;
+            targetSuffixText = string.Empty;
+
+            var columnListIndex = -1;
+            for (var childIndex = 0; childIndex < insertTargetNode.Children.Count; childIndex++)
             {
+                if (insertTargetNode.Children[childIndex] is NonTerminalNode candidateColumnListNode &&
+                    string.Equals(candidateColumnListNode.NonTerminal.Name, "InsertColumnList", StringComparison.Ordinal))
+                {
+                    columnListIndex = childIndex;
+                    columnListNode = candidateColumnListNode;
+                    break;
+                }
+            }
+
+            if (columnListIndex < 0)
+            {
+                return true;
+            }
+
+            if (columnListIndex == 0 ||
+                columnListIndex >= insertTargetNode.Children.Count - 1 ||
+                !TryGetTerminalText(insertTargetNode.Children[columnListIndex - 1], out var openParenthesis) ||
+                !string.Equals(openParenthesis, "(", StringComparison.Ordinal) ||
+                !TryGetTerminalText(insertTargetNode.Children[columnListIndex + 1], out var closeParenthesis) ||
+                !string.Equals(closeParenthesis, ")", StringComparison.Ordinal))
+            {
+                columnListNode = null;
+                targetSuffixText = string.Empty;
+                targetPrefixText = RenderNodeInline(insertTargetNode);
                 return false;
             }
 
-            valueListNode = insertValueListNode;
+            targetPrefixText = RenderNodesInline(insertTargetNode.Children.Take(columnListIndex - 1));
+            targetSuffixText = RenderNodesInline(insertTargetNode.Children.Skip(columnListIndex + 2));
             return true;
+        }
+
+        private static bool TryExtractInsertRowValues(
+            NonTerminalNode rowValueListNode,
+            out IReadOnlyList<NonTerminalNode> valueListNodes)
+        {
+            var extractedValueListNodes = new List<NonTerminalNode>();
+            foreach (var rowValueNodeCandidate in ExtractDelimitedListItems(rowValueListNode, "RowValueList"))
+            {
+                if (rowValueNodeCandidate is not NonTerminalNode rowValueNode ||
+                    !string.Equals(rowValueNode.NonTerminal.Name, "RowValue", StringComparison.Ordinal) ||
+                    rowValueNode.Children.Count != 3 ||
+                    rowValueNode.Children[0] is not TerminalNode openTerminal ||
+                    !string.Equals(openTerminal.Token.OriginalString, "(", StringComparison.Ordinal) ||
+                    rowValueNode.Children[1] is not NonTerminalNode insertValueListNode ||
+                    !string.Equals(insertValueListNode.NonTerminal.Name, "InsertValueList", StringComparison.Ordinal) ||
+                    rowValueNode.Children[2] is not TerminalNode closeTerminal ||
+                    !string.Equals(closeTerminal.Token.OriginalString, ")", StringComparison.Ordinal))
+                {
+                    valueListNodes = [];
+                    return false;
+                }
+
+                extractedValueListNodes.Add(insertValueListNode);
+            }
+
+            valueListNodes = extractedValueListNodes;
+            return true;
+        }
+
+        private void WriteInsertRowValueList(
+            IReadOnlyList<InsertRowValueLayoutInfo> rowValueLayoutInfos,
+            bool useMultilineRowLayout)
+        {
+            if (!useMultilineRowLayout)
+            {
+                for (var rowIndex = 0; rowIndex < rowValueLayoutInfos.Count; rowIndex++)
+                {
+                    WriteParenthesizedList(rowValueLayoutInfos[rowIndex].ValueListNode, rowValueLayoutInfos[rowIndex].IsMultiline);
+                    if (rowIndex >= rowValueLayoutInfos.Count - 1)
+                    {
+                        continue;
+                    }
+
+                    _writer.WriteToken(",");
+                }
+
+                return;
+            }
+
+            _writer.WriteLine();
+            using (_writer.PushIndent())
+            {
+                for (var rowIndex = 0; rowIndex < rowValueLayoutInfos.Count; rowIndex++)
+                {
+                    WriteParenthesizedList(rowValueLayoutInfos[rowIndex].ValueListNode, rowValueLayoutInfos[rowIndex].IsMultiline);
+                    if (rowIndex >= rowValueLayoutInfos.Count - 1)
+                    {
+                        continue;
+                    }
+
+                    _writer.WriteToken(",");
+                    _writer.WriteLine();
+                }
+            }
         }
 
         private void WriteParenthesizedList(NonTerminalNode listNode, bool multiline)
@@ -1386,6 +1474,10 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 return false;
             }
 
+            var shortQueryReplacements = isWhereOrHavingAnchor &&
+                _options.ShortQueries.ApplyToParenthesizedSubqueries
+                ? CollectShortQueryReplacements(node)
+                : [];
             var tokenInfos = CollectTokenInfos(node);
             if (tokenInfos.Count == 0)
             {
@@ -1398,7 +1490,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                     node,
                     SqlInlineExpressionContext.Where,
                     anchorKeyword.Length + 1);
-                WriteWhereOrHavingPredicate(anchorKeyword, tokenInfos, forceInlineByShortExpression);
+                WriteWhereOrHavingPredicate(anchorKeyword, tokenInfos, shortQueryReplacements, forceInlineByShortExpression);
             }
             else
             {
@@ -1448,6 +1540,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         private void WriteWhereOrHavingPredicate(
             string anchorKeyword,
             IReadOnlyList<SqlTokenInfo> tokenInfos,
+            IReadOnlyList<ShortQueryReplacement> shortQueryReplacements,
             bool forceInlineByShortExpression)
         {
             var mixedAndOrOptions = _options.Predicates.MixedAndOrParentheses;
@@ -1455,7 +1548,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             var useMixedOrGrouping = hasMixedTopLevelAndOr &&
                 (mixedAndOrOptions.ParenthesizeOrGroups || mixedAndOrOptions.BreakOrGroups);
             var shouldMultiline = _options.Predicates.MultilineWhere;
-            if (shouldMultiline && ShouldInlineSimplePredicate(anchorKeyword, tokenInfos))
+            if (shouldMultiline && ShouldInlineSimplePredicate(anchorKeyword, tokenInfos, shortQueryReplacements))
             {
                 shouldMultiline = false;
             }
@@ -1469,8 +1562,8 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             {
                 _writer.WriteSpace();
                 _writer.WriteToken(useMixedOrGrouping
-                    ? RenderMixedOrGroupsInline(mixedOrSplit, mixedAndOrOptions.ParenthesizeOrGroups)
-                    : RenderTokensInline(tokenInfos));
+                    ? RenderMixedOrGroupsInline(mixedOrSplit, mixedAndOrOptions.ParenthesizeOrGroups, shortQueryReplacements)
+                    : RenderTokensInline(tokenInfos, 0, shortQueryReplacements));
                 return;
             }
 
@@ -1482,18 +1575,19 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                     WriteMixedOrGroupPredicateLines(
                         mixedOrSplit,
                         mixedAndOrOptions.ParenthesizeOrGroups,
-                        _options.Predicates.LogicalOperatorLineBreak);
+                        _options.Predicates.LogicalOperatorLineBreak,
+                        shortQueryReplacements);
                     return;
                 }
 
                 var split = SplitByTopLevelLogicalOperators(tokenInfos, AllLogicalOperators);
                 if (split.Operators.Count == 0)
                 {
-                    _writer.WriteToken(RenderTokensInline(tokenInfos));
+                    _writer.WriteToken(RenderTokensInline(tokenInfos, 0, shortQueryReplacements));
                     return;
                 }
 
-                WriteLogicalPredicateLines(split, _options.Predicates.LogicalOperatorLineBreak);
+                WriteLogicalPredicateLines(split, _options.Predicates.LogicalOperatorLineBreak, shortQueryReplacements);
             }
         }
 
@@ -1551,35 +1645,53 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             }
         }
 
-        private void WriteLogicalPredicateLines(LogicalSplitResult split, SqlLogicalOperatorLineBreakMode lineBreakMode)
+        private void WriteLogicalPredicateLines(
+            LogicalSplitResult split,
+            SqlLogicalOperatorLineBreakMode lineBreakMode,
+            IReadOnlyList<ShortQueryReplacement> shortQueryReplacements)
         {
             if (lineBreakMode == SqlLogicalOperatorLineBreakMode.AfterOperator)
             {
                 for (var splitIndex = 0; splitIndex < split.Operators.Count; splitIndex++)
                 {
-                    var leftSegmentText = RenderTokensInline(split.Segments[splitIndex]);
+                    var leftSegmentText = RenderTokensInline(
+                        split.Segments[splitIndex],
+                        split.SegmentStartIndexes[splitIndex],
+                        shortQueryReplacements);
                     var logicalOperator = split.Operators[splitIndex];
                     var operatorText = FormatToken(logicalOperator.Raw, logicalOperator.TokenForRules, logicalOperator.IsKeyword);
                     _writer.WriteToken($"{leftSegmentText} {operatorText}");
                     _writer.WriteLine();
                 }
 
-                _writer.WriteToken(RenderTokensInline(split.Segments[^1]));
+                _writer.WriteToken(RenderTokensInline(
+                    split.Segments[^1],
+                    split.SegmentStartIndexes[^1],
+                    shortQueryReplacements));
                 return;
             }
 
-            _writer.WriteToken(RenderTokensInline(split.Segments[0]));
+            _writer.WriteToken(RenderTokensInline(
+                split.Segments[0],
+                split.SegmentStartIndexes[0],
+                shortQueryReplacements));
             for (var splitIndex = 0; splitIndex < split.Operators.Count; splitIndex++)
             {
                 _writer.WriteLine();
                 var logicalOperator = split.Operators[splitIndex];
                 var operatorText = FormatToken(logicalOperator.Raw, logicalOperator.TokenForRules, logicalOperator.IsKeyword);
-                var rightSegmentText = RenderTokensInline(split.Segments[splitIndex + 1]);
+                var rightSegmentText = RenderTokensInline(
+                    split.Segments[splitIndex + 1],
+                    split.SegmentStartIndexes[splitIndex + 1],
+                    shortQueryReplacements);
                 _writer.WriteToken($"{operatorText} {rightSegmentText}");
             }
         }
 
-        private bool ShouldInlineSimplePredicate(string anchorKeyword, IReadOnlyList<SqlTokenInfo> tokenInfos)
+        private bool ShouldInlineSimplePredicate(
+            string anchorKeyword,
+            IReadOnlyList<SqlTokenInfo> tokenInfos,
+            IReadOnlyList<ShortQueryReplacement> shortQueryReplacements)
         {
             var inlineOptions = _options.Predicates.InlineSimplePredicate;
             if (inlineOptions.MaxConditions <= 0)
@@ -1600,7 +1712,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 return false;
             }
 
-            var predicateText = RenderTokensInline(tokenInfos);
+            var predicateText = RenderTokensInline(tokenInfos, 0, shortQueryReplacements);
             var maxLineLength = Math.Max(1, inlineOptions.MaxLineLength);
             return anchorKeyword.Length + 1 + predicateText.Length <= maxLineLength;
         }
@@ -1621,7 +1733,10 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             return hasAnd && hasOr;
         }
 
-        private string RenderMixedOrGroupsInline(LogicalSplitResult split, bool parenthesizeOrGroups)
+        private string RenderMixedOrGroupsInline(
+            LogicalSplitResult split,
+            bool parenthesizeOrGroups,
+            IReadOnlyList<ShortQueryReplacement> shortQueryReplacements)
         {
             var builder = new StringBuilder();
             for (var splitIndex = 0; splitIndex < split.Segments.Count; splitIndex++)
@@ -1635,7 +1750,11 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                     builder.Append(' ');
                 }
 
-                builder.Append(RenderMixedOrGroupText(split.Segments[splitIndex], parenthesizeOrGroups));
+                builder.Append(RenderMixedOrGroupText(
+                    split.Segments[splitIndex],
+                    split.SegmentStartIndexes[splitIndex],
+                    parenthesizeOrGroups,
+                    shortQueryReplacements));
             }
 
             return builder.ToString();
@@ -1644,37 +1763,58 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         private void WriteMixedOrGroupPredicateLines(
             LogicalSplitResult split,
             bool parenthesizeOrGroups,
-            SqlLogicalOperatorLineBreakMode lineBreakMode)
+            SqlLogicalOperatorLineBreakMode lineBreakMode,
+            IReadOnlyList<ShortQueryReplacement> shortQueryReplacements)
         {
             if (lineBreakMode == SqlLogicalOperatorLineBreakMode.AfterOperator)
             {
                 for (var splitIndex = 0; splitIndex < split.Operators.Count; splitIndex++)
                 {
-                    var leftSegmentText = RenderMixedOrGroupText(split.Segments[splitIndex], parenthesizeOrGroups);
+                    var leftSegmentText = RenderMixedOrGroupText(
+                        split.Segments[splitIndex],
+                        split.SegmentStartIndexes[splitIndex],
+                        parenthesizeOrGroups,
+                        shortQueryReplacements);
                     var logicalOperator = split.Operators[splitIndex];
                     var operatorText = FormatToken(logicalOperator.Raw, logicalOperator.TokenForRules, logicalOperator.IsKeyword);
                     _writer.WriteToken($"{leftSegmentText} {operatorText}");
                     _writer.WriteLine();
                 }
 
-                _writer.WriteToken(RenderMixedOrGroupText(split.Segments[^1], parenthesizeOrGroups));
+                _writer.WriteToken(RenderMixedOrGroupText(
+                    split.Segments[^1],
+                    split.SegmentStartIndexes[^1],
+                    parenthesizeOrGroups,
+                    shortQueryReplacements));
                 return;
             }
 
-            _writer.WriteToken(RenderMixedOrGroupText(split.Segments[0], parenthesizeOrGroups));
+            _writer.WriteToken(RenderMixedOrGroupText(
+                split.Segments[0],
+                split.SegmentStartIndexes[0],
+                parenthesizeOrGroups,
+                shortQueryReplacements));
             for (var splitIndex = 0; splitIndex < split.Operators.Count; splitIndex++)
             {
                 _writer.WriteLine();
                 var logicalOperator = split.Operators[splitIndex];
                 var operatorText = FormatToken(logicalOperator.Raw, logicalOperator.TokenForRules, logicalOperator.IsKeyword);
-                var rightSegmentText = RenderMixedOrGroupText(split.Segments[splitIndex + 1], parenthesizeOrGroups);
+                var rightSegmentText = RenderMixedOrGroupText(
+                    split.Segments[splitIndex + 1],
+                    split.SegmentStartIndexes[splitIndex + 1],
+                    parenthesizeOrGroups,
+                    shortQueryReplacements);
                 _writer.WriteToken($"{operatorText} {rightSegmentText}");
             }
         }
 
-        private string RenderMixedOrGroupText(IReadOnlyList<SqlTokenInfo> tokenInfos, bool parenthesizeOrGroups)
+        private string RenderMixedOrGroupText(
+            IReadOnlyList<SqlTokenInfo> tokenInfos,
+            int startIndex,
+            bool parenthesizeOrGroups,
+            IReadOnlyList<ShortQueryReplacement> shortQueryReplacements)
         {
-            var groupText = RenderTokensInline(tokenInfos);
+            var groupText = RenderTokensInline(tokenInfos, startIndex, shortQueryReplacements);
             if (!parenthesizeOrGroups || !ShouldParenthesizeMixedOrGroup(tokenInfos))
             {
                 return groupText;
@@ -1746,11 +1886,13 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         private static LogicalSplitResult SplitByTopLevelLogicalOperators(IReadOnlyList<SqlTokenInfo> tokenInfos, HashSet<string> breakOperators)
         {
             var segments = new List<List<SqlTokenInfo>> { new List<SqlTokenInfo>() };
+            var segmentStartIndexes = new List<int> { 0 };
             var operators = new List<SqlTokenInfo>();
             var parenthesisDepth = 0;
 
-            foreach (var tokenInfo in tokenInfos)
+            for (var tokenIndex = 0; tokenIndex < tokenInfos.Count; tokenIndex++)
             {
+                var tokenInfo = tokenInfos[tokenIndex];
                 if (string.Equals(tokenInfo.TokenForRules, "(", StringComparison.Ordinal))
                 {
                     parenthesisDepth++;
@@ -1776,15 +1918,17 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
                 operators.Add(tokenInfo);
                 segments.Add(new List<SqlTokenInfo>());
+                segmentStartIndexes.Add(tokenIndex + 1);
             }
 
             if (segments.Count > 1 && segments[^1].Count == 0)
             {
                 segments.RemoveAt(segments.Count - 1);
+                segmentStartIndexes.RemoveAt(segmentStartIndexes.Count - 1);
                 operators.RemoveAt(operators.Count - 1);
             }
 
-            return new LogicalSplitResult(segments, operators);
+            return new LogicalSplitResult(segments, segmentStartIndexes, operators);
         }
 
         private static int CountSignificantTokens(IReadOnlyList<SqlTokenInfo> tokenInfos)
@@ -1889,7 +2033,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         {
             var itemNodes = ExtractDelimitedListItems(node, "InsertColumnList");
             var itemTexts = itemNodes.Select(RenderNodeInline).ToList();
-            var useMultiline = ShouldUseMultilineDmlList(_options.Dml.InsertValuesStyle, itemTexts, "(".Length);
+            var useMultiline = ShouldUseMultilineDmlList(_options.Dml.InsertColumnsStyle, itemTexts, "(".Length);
 
             if (useMultiline)
             {
@@ -1907,7 +2051,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         {
             var itemNodes = ExtractDelimitedListItems(node, "InsertValueList");
             var itemTexts = itemNodes.Select(RenderNodeInline).ToList();
-            var useMultiline = ShouldUseMultilineDmlList(_options.Dml.InsertColumnsStyle, itemTexts, "(".Length);
+            var useMultiline = ShouldUseMultilineDmlList(_options.Dml.InsertValuesStyle, itemTexts, "(".Length);
 
             if (useMultiline)
             {
@@ -2181,14 +2325,59 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             return RenderTokensInline(tokenInfos);
         }
 
+        private string RenderNodesInline(IEnumerable<ParseTreeNode> nodes)
+        {
+            var tokenInfos = new List<SqlTokenInfo>();
+            foreach (var node in nodes)
+            {
+                tokenInfos.AddRange(CollectTokenInfos(node));
+            }
+
+            return RenderTokensInline(tokenInfos);
+        }
+
         private string RenderTokensInline(IReadOnlyList<SqlTokenInfo> tokenInfos)
         {
+            return RenderTokensInline(tokenInfos, 0, []);
+        }
+
+        private string RenderTokensInline(
+            IReadOnlyList<SqlTokenInfo> tokenInfos,
+            int startIndex,
+            IReadOnlyList<ShortQueryReplacement> shortQueryReplacements)
+        {
+            var replacementsByStartIndex = shortQueryReplacements.Count == 0
+                ? null
+                : shortQueryReplacements.ToDictionary(replacement => replacement.StartIndex);
             var builder = new StringBuilder();
             string? previousToken = null;
             var previousTokenWasKeyword = false;
 
-            foreach (var tokenInfo in tokenInfos)
+            for (var tokenIndex = 0; tokenIndex < tokenInfos.Count; tokenIndex++)
             {
+                var absoluteTokenIndex = startIndex + tokenIndex;
+                if (replacementsByStartIndex != null &&
+                    replacementsByStartIndex.TryGetValue(absoluteTokenIndex, out var replacement))
+                {
+                    var startTokenInfo = tokenInfos[tokenIndex];
+                    if (ShouldWriteSpaceBeforeToken(previousToken, previousTokenWasKeyword, startTokenInfo.TokenForRules))
+                    {
+                        builder.Append(' ');
+                    }
+
+                    builder.Append(replacement.Text);
+                    var localEndIndex = replacement.EndIndex - startIndex;
+                    if (localEndIndex >= tokenIndex && localEndIndex < tokenInfos.Count)
+                    {
+                        previousToken = tokenInfos[localEndIndex].TokenForRules;
+                        previousTokenWasKeyword = tokenInfos[localEndIndex].IsKeyword;
+                        tokenIndex = localEndIndex;
+                    }
+
+                    continue;
+                }
+
+                var tokenInfo = tokenInfos[tokenIndex];
                 if (ShouldWriteSpaceBeforeToken(previousToken, previousTokenWasKeyword, tokenInfo.TokenForRules))
                 {
                     builder.Append(' ');
@@ -2224,6 +2413,13 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
         private List<SqlTokenInfo> CollectTokenInfos(ParseTreeNode node)
         {
+            return CollectTokenInfos(node, terminalTokenIndexes: null);
+        }
+
+        private List<SqlTokenInfo> CollectTokenInfos(
+            ParseTreeNode node,
+            Dictionary<TerminalNode, int>? terminalTokenIndexes)
+        {
             var terminalNodes = CollectTerminalNodes(node);
             var tokenInfos = new List<SqlTokenInfo>(terminalNodes.Count);
             foreach (var terminalNode in terminalNodes)
@@ -2238,6 +2434,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
                 var isKeyword = IsKeywordToken(terminalNode.Token);
                 var tokenForRules = isKeyword ? rawToken.ToUpperInvariant() : rawToken;
+                terminalTokenIndexes?.Add(terminalNode, tokenInfos.Count);
                 tokenInfos.Add(new SqlTokenInfo(rawToken, tokenForRules, isKeyword));
 
                 AppendCommentTriviaTokenInfos(terminalNode.Token.Trivia.TrailingTrivia, tokenInfos);
@@ -2266,6 +2463,141 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                     IsKeyword: false,
                     IsComment: true));
             }
+        }
+
+        private IReadOnlyList<ShortQueryReplacement> CollectShortQueryReplacements(ParseTreeNode node)
+        {
+            var terminalTokenIndexes = new Dictionary<TerminalNode, int>();
+            CollectTokenInfos(node, terminalTokenIndexes);
+
+            var replacements = new List<ShortQueryReplacement>();
+            CollectShortQueryReplacements(node, terminalTokenIndexes, replacements);
+            return replacements
+                .OrderBy(replacement => replacement.StartIndex)
+                .ToList();
+        }
+
+        private void CollectShortQueryReplacements(
+            ParseTreeNode node,
+            IReadOnlyDictionary<TerminalNode, int> terminalTokenIndexes,
+            List<ShortQueryReplacement> output)
+        {
+            if (TryAddShortQueryReplacement(node, terminalTokenIndexes, output))
+            {
+                return;
+            }
+
+            foreach (var childNode in node.Children)
+            {
+                CollectShortQueryReplacements(childNode, terminalTokenIndexes, output);
+            }
+        }
+
+        private bool TryAddShortQueryReplacement(
+            ParseTreeNode node,
+            IReadOnlyDictionary<TerminalNode, int> terminalTokenIndexes,
+            List<ShortQueryReplacement> output)
+        {
+            if (TryGetExistsSubqueryRange(node, out var existsOpenTerminal, out var existsQueryExpressionNode, out var existsCloseTerminal))
+            {
+                return TryAddShortQueryReplacement(
+                    existsOpenTerminal,
+                    existsQueryExpressionNode,
+                    existsCloseTerminal,
+                    terminalTokenIndexes,
+                    output);
+            }
+
+            if (TryGetParenthesizedSubqueryRange(node, out var openTerminal, out var queryExpressionNode, out var closeTerminal))
+            {
+                return TryAddShortQueryReplacement(
+                    openTerminal,
+                    queryExpressionNode,
+                    closeTerminal,
+                    terminalTokenIndexes,
+                    output);
+            }
+
+            return false;
+        }
+
+        private bool TryAddShortQueryReplacement(
+            TerminalNode openTerminal,
+            NonTerminalNode queryExpressionNode,
+            TerminalNode closeTerminal,
+            IReadOnlyDictionary<TerminalNode, int> terminalTokenIndexes,
+            List<ShortQueryReplacement> output)
+        {
+            if (!TryGetShortQueryInlineText(queryExpressionNode, out var inlineText) ||
+                !terminalTokenIndexes.TryGetValue(openTerminal, out var startIndex) ||
+                !terminalTokenIndexes.TryGetValue(closeTerminal, out var endIndex))
+            {
+                return false;
+            }
+
+            output.Add(new ShortQueryReplacement(startIndex, endIndex, $"({inlineText})"));
+            return true;
+        }
+
+        private static bool TryGetExistsSubqueryRange(
+            ParseTreeNode node,
+            out TerminalNode openTerminal,
+            out NonTerminalNode queryExpressionNode,
+            out TerminalNode closeTerminal)
+        {
+            openTerminal = null!;
+            queryExpressionNode = null!;
+            closeTerminal = null!;
+            if (node is not NonTerminalNode nonTerminalNode ||
+                !string.Equals(nonTerminalNode.NonTerminal.Name, "BooleanPrimary", StringComparison.Ordinal) ||
+                nonTerminalNode.Children.Count != 4 ||
+                !TryGetTerminalText(nonTerminalNode.Children[0], out var existsKeyword) ||
+                !string.Equals(existsKeyword, "EXISTS", StringComparison.OrdinalIgnoreCase) ||
+                nonTerminalNode.Children[1] is not TerminalNode existsOpenTerminal ||
+                !string.Equals(existsOpenTerminal.Token.OriginalString, "(", StringComparison.Ordinal) ||
+                nonTerminalNode.Children[2] is not NonTerminalNode existsQueryExpressionNode ||
+                !string.Equals(existsQueryExpressionNode.NonTerminal.Name, "QueryExpression", StringComparison.Ordinal) ||
+                nonTerminalNode.Children[3] is not TerminalNode existsCloseTerminal ||
+                !string.Equals(existsCloseTerminal.Token.OriginalString, ")", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            openTerminal = existsOpenTerminal;
+            queryExpressionNode = existsQueryExpressionNode;
+            closeTerminal = existsCloseTerminal;
+            return true;
+        }
+
+        private static bool TryGetParenthesizedSubqueryRange(
+            ParseTreeNode node,
+            out TerminalNode openTerminal,
+            out NonTerminalNode queryExpressionNode,
+            out TerminalNode closeTerminal)
+        {
+            openTerminal = null!;
+            queryExpressionNode = null!;
+            closeTerminal = null!;
+            if (node is not NonTerminalNode nonTerminalNode ||
+                (nonTerminalNode.NonTerminal.Name is not "InPredicateValue" and
+                    not "PrimaryExpression" and
+                    not "QueryPrimary" and
+                    not "TableFactor") ||
+                nonTerminalNode.Children.Count != 3 ||
+                nonTerminalNode.Children[0] is not TerminalNode subqueryOpenTerminal ||
+                !string.Equals(subqueryOpenTerminal.Token.OriginalString, "(", StringComparison.Ordinal) ||
+                nonTerminalNode.Children[1] is not NonTerminalNode subqueryQueryExpressionNode ||
+                !string.Equals(subqueryQueryExpressionNode.NonTerminal.Name, "QueryExpression", StringComparison.Ordinal) ||
+                nonTerminalNode.Children[2] is not TerminalNode subqueryCloseTerminal ||
+                !string.Equals(subqueryCloseTerminal.Token.OriginalString, ")", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            openTerminal = subqueryOpenTerminal;
+            queryExpressionNode = subqueryQueryExpressionNode;
+            closeTerminal = subqueryCloseTerminal;
+            return true;
         }
 
         private void UpdatePreviousTokenFromNode(ParseTreeNode node)
@@ -2648,7 +2980,17 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
         private sealed record LogicalSplitResult(
             List<List<SqlTokenInfo>> Segments,
+            List<int> SegmentStartIndexes,
             List<SqlTokenInfo> Operators);
+
+        private sealed record InsertRowValueLayoutInfo(
+            NonTerminalNode ValueListNode,
+            bool IsMultiline);
+
+        private sealed record ShortQueryReplacement(
+            int StartIndex,
+            int EndIndex,
+            string Text);
 
         private readonly record struct SqlTokenInfo(string Raw, string TokenForRules, bool IsKeyword, bool IsComment = false);
     }

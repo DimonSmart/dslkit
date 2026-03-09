@@ -240,29 +240,35 @@
                                             </select>
                                         </div>
 
-                                        <div class="dsl-sql-property-row" hidden='@HideOption("predicates inline simple predicate max conditions")'>
+                                        <div class="@GetPropertyRowClass(disabled: !predicatesMultilineWhere)" hidden='@HideOption("predicates inline simple predicate max conditions")'>
                                             <SqlOptionLabel ForId="sql-predicates-inline-max-conditions" Text="Inline max conditions" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-predicates-inline-max-conditions"
                                                    class="form-control form-control-sm"
                                                    type="number"
                                                    min="0"
                                                    step="1"
+                                                   disabled="@(!predicatesMultilineWhere)"
                                                    @bind="predicatesInlineSimpleMaxConditions" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
-                                        <div class="dsl-sql-property-row" hidden='@HideOption("predicates inline simple predicate max line length")'>
+                                        <div class="@GetPropertyRowClass(disabled: !predicatesMultilineWhere)" hidden='@HideOption("predicates inline simple predicate max line length")'>
                                             <SqlOptionLabel ForId="sql-predicates-inline-max-line-length" Text="Inline max line length" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-predicates-inline-max-line-length"
                                                    class="form-control form-control-sm"
                                                    type="number"
                                                    min="10"
                                                    step="1"
+                                                   disabled="@(!predicatesMultilineWhere)"
                                                    @bind="predicatesInlineSimpleMaxLineLength" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
-                                        <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("predicates inline simple predicate allow only and")'>
+                                        <div class="@GetPropertyRowClass(disabled: !predicatesMultilineWhere, isCheck: true)" hidden='@HideOption("predicates inline simple predicate allow only and")'>
                                             <SqlOptionLabel ForId="sql-predicates-inline-allow-only-and" Text="Inline allow only AND" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <input id="sql-predicates-inline-allow-only-and" class="form-check-input" type="checkbox" @bind="predicatesInlineSimpleAllowOnlyAnd" @bind:after="OnOptionValueChangedAsync" />
+                                            <input id="sql-predicates-inline-allow-only-and" class="form-check-input" type="checkbox" disabled="@(!predicatesMultilineWhere)" @bind="predicatesInlineSimpleAllowOnlyAnd" @bind:after="OnOptionValueChangedAsync" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-note text-muted small">
+                                            Active when <code>Multiline WHERE/HAVING</code> is enabled.
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("predicates mixed and or parenthesize or groups")'>
@@ -483,6 +489,10 @@
                                             <input id="sql-select-compact-allow-expressions" class="form-check-input" type="checkbox" @bind="selectCompactAllowExpressions" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
+                                        <div class="dsl-sql-property-note text-muted small">
+                                            Applied after <code>SELECT items</code> decide to wrap, so a short list can still stay inline.
+                                        </div>
+
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("align select aliases")'>
                                             <SqlOptionLabel ForId="sql-align-select-aliases" Text="Align select aliases" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-align-select-aliases" class="form-check-input" type="checkbox" @bind="alignSelectAliases" @bind:after="OnOptionValueChangedAsync" />
@@ -497,24 +507,30 @@
                                             </select>
                                         </div>
 
-                                        <div class="dsl-sql-property-row" hidden='@HideOption("lists inline in list threshold max items inline")'>
+                                        <div class="@GetPropertyRowClass(disabled: inListItemsStyle == SqlInListItemsStyle.Inline)" hidden='@HideOption("lists inline in list threshold max items inline")'>
                                             <SqlOptionLabel ForId="sql-inline-in-list-max-items" Text="Inline IN max items" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-inline-in-list-max-items"
                                                    class="form-control form-control-sm"
                                                    type="number"
                                                    min="0"
                                                    step="1"
+                                                   disabled="@(inListItemsStyle == SqlInListItemsStyle.Inline)"
                                                    @bind="inlineInListMaxItems" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
-                                        <div class="dsl-sql-property-row" hidden='@HideOption("lists inline in list threshold max line length")'>
+                                        <div class="@GetPropertyRowClass(disabled: inListItemsStyle == SqlInListItemsStyle.Inline)" hidden='@HideOption("lists inline in list threshold max line length")'>
                                             <SqlOptionLabel ForId="sql-inline-in-list-max-line" Text="Inline IN max line" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-inline-in-list-max-line"
                                                    class="form-control form-control-sm"
                                                    type="number"
                                                    min="10"
                                                    step="1"
+                                                   disabled="@(inListItemsStyle == SqlInListItemsStyle.Inline)"
                                                    @bind="inlineInListMaxLineLength" @bind:after="OnOptionValueChangedAsync" />
+                                        </div>
+
+                                        <div class="dsl-sql-property-note text-muted small">
+                                            Active when <code>IN list items</code> uses <code>One per line</code> or <code>Wrap by width</code>.
                                         </div>
                                     </div>
                                 </details>
@@ -734,8 +750,11 @@ inner join dbo.B as b on a.Id+b.Id>10 and b.Flag=1
 where a.Score+a.Bonus>0 and a.IsActive=1;";
 
     private const string ShortQueriesExampleSql =
-        @"-- Short queries: compare top-level SELECT, parenthesized subquery, and single-JOIN compaction.
+        @"-- Short queries: compare top-level SELECT, EXISTS/derived subqueries, and single-JOIN compaction.
 select 1 from dbo.A where X=3 and Y=4;
+select a.Id
+from dbo.A as a
+where exists (select 1 from dbo.B as b where b.AId=a.Id and b.IsActive=1);
 select q.Id
 from (select a.Id from dbo.A as a where a.Status=1 and a.Flag=1) as q;
 select a.Id
@@ -762,7 +781,7 @@ select a.Id from dbo.A as a where a.Id in(1,2,3,4,5,6,7,8,9,10,11,12);";
     private const string DmlAndDdlExampleSql =
         @"-- DML/DDL layout: check UPDATE/INSERT lists and CREATE PROC block formatting.
 update dbo.A set Region='EU',Status=1,Score=10 where Id=@id;
-insert into dbo.AuditEntries(EntryId,Region,Status,Score) values(@id,'EU',1,10);
+insert into dbo.AuditEntries(EntryId,Region,Status,Score) output inserted.EntryId values(@id,'EU',1,10),(@id+1,'US',2,20);
 create proc p as begin select 1 end;";
 
     private const string CommentsExampleSql =
@@ -974,6 +993,14 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
     }
 
     private bool HideOption(string searchTokens) => !MatchesOptionSearch(searchTokens);
+
+    private static string GetPropertyRowClass(bool disabled, bool isCheck = false)
+    {
+        var cssClass = isCheck
+            ? "dsl-sql-property-row dsl-sql-property-row--check"
+            : "dsl-sql-property-row";
+        return disabled ? $"{cssClass} dsl-sql-property-row--disabled" : cssClass;
+    }
 
     private bool MatchesOptionSearch(string searchTokens)
     {
