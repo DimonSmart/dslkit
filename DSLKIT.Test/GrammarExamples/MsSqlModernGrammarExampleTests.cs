@@ -805,6 +805,35 @@ namespace DSLKIT.Test.GrammarExamples
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
 
+        [Theory]
+        [InlineData(
+            """
+            CREATE TABLE dbo.T (ID INT)
+            WITH (MEMORY_OPTIMIZED = ON)
+            WITH (DURABILITY = SCHEMA_ONLY);
+            """,
+            "CREATE TABLE tail clauses should not allow duplicate WITH sections.")]
+        [InlineData(
+            """
+            CREATE TABLE dbo.T (ID INT)
+            TEXTIMAGE_ON [PRIMARY]
+            WITH (MEMORY_OPTIMIZED = ON);
+            """,
+            "CREATE TABLE tail clauses should not allow TEXTIMAGE_ON before WITH.")]
+        [InlineData(
+            """
+            CREATE TABLE dbo.T (ID INT)
+            ON [PRIMARY]
+            PERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo);
+            """,
+            "CREATE TABLE tail clauses should not allow PERIOD after ON.")]
+        public void ParseScript_ShouldRejectCreateTable_WithInvalidTailClauseOrderOrDuplicates(string script, string reason)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse(reason);
+        }
+
         [Fact]
         public void ParseScript_ShouldParseCreateLogin_Variants()
         {

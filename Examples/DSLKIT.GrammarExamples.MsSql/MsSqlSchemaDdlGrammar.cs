@@ -85,6 +85,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             var alterIndexReorganizeSpec = symbols.AlterIndexReorganizeSpec;
             var alterIndexResumeSpec = symbols.AlterIndexResumeSpec;
             var alterIndexPartitionSelector = symbols.AlterIndexPartitionSelector;
+            var createTablePeriodClauseOpt = gb.NT("CreateTablePeriodClauseOpt");
+            var createTableOptionsOpt = gb.NT("CreateTableOptionsOpt");
+            var createTableOnClauseOpt = gb.NT("CreateTableOnClauseOpt");
+            var createTableTextImageClauseOpt = gb.NT("CreateTableTextImageClauseOpt");
+            var createTableFileStreamClauseOpt = gb.NT("CreateTableFileStreamClauseOpt");
             var createIndexIncludeClauseOpt = gb.NT("CreateIndexIncludeClauseOpt");
             var createIndexWhereClauseOpt = gb.NT("CreateIndexWhereClauseOpt");
             var createIndexWithClauseOpt = gb.NT("CreateIndexWithClauseOpt");
@@ -106,13 +111,28 @@ namespace DSLKIT.GrammarExamples.MsSql
                 gb.Prod(createTableStatement).Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")", createTableTailClauseList, "AS", "NODE");
             }
 
-            gb.Prod(createTableTailClauseList).Is(createTableTailClause);
-            gb.Prod(createTableTailClauseList).Is(createTableTailClauseList, createTableTailClause);
-            gb.Prod(createTableTailClause).Is(createTablePeriodClause);
-            gb.Prod(createTableTailClause).Is(createTableOptions);
-            gb.Prod(createTableTailClause).Is(createTableOnClause);
-            gb.Prod(createTableTailClause).Is(createTableTextImageClause);
-            gb.Prod(createTableTailClause).Is(createIndexFileStreamClause);
+            gb.Prod(createTableTailClauseList).Is(
+                createTablePeriodClause,
+                createTableOptionsOpt,
+                createTableOnClauseOpt,
+                createTableTextImageClauseOpt,
+                createTableFileStreamClauseOpt);
+            gb.Prod(createTableTailClauseList).Is(
+                createTableOptions,
+                createTableOnClauseOpt,
+                createTableTextImageClauseOpt,
+                createTableFileStreamClauseOpt);
+            gb.Prod(createTableTailClauseList).Is(
+                createTableOnClause,
+                createTableTextImageClauseOpt,
+                createTableFileStreamClauseOpt);
+            gb.Prod(createTableTailClauseList).Is(createTableTextImageClause, createTableFileStreamClauseOpt);
+            gb.Prod(createTableTailClauseList).Is(createIndexFileStreamClause);
+            gb.Opt(createTablePeriodClauseOpt, createTablePeriodClause);
+            gb.Opt(createTableOptionsOpt, createTableOptions);
+            gb.Opt(createTableOnClauseOpt, createTableOnClause);
+            gb.Opt(createTableTextImageClauseOpt, createTableTextImageClause);
+            gb.Opt(createTableFileStreamClauseOpt, createIndexFileStreamClause);
 
             gb.Prod(createTableElementList).Is(createTableElement);
             gb.Prod(createTableElementList).Is(createTableElementList, ",", createTableElement);
