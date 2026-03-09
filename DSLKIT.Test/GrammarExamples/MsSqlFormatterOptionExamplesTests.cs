@@ -40,6 +40,22 @@ namespace DSLKIT.Test.GrammarExamples
                 $"option example '{optionId}' should show a visible formatting difference for the tested values.");
         }
 
+        [Theory]
+        [MemberData(nameof(InactiveDependentOptionExamples))]
+        public void TryFormat_ShouldKeepSameOutput_ForInactiveDependentOptionExamples(
+            string optionId,
+            string sourceSql,
+            SqlFormattingOptions firstOptions,
+            SqlFormattingOptions secondOptions)
+        {
+            var firstResult = FormatOrThrow(optionId, sourceSql, firstOptions);
+            var secondResult = FormatOrThrow(optionId, sourceSql, secondOptions);
+
+            firstResult.Should().Be(
+                secondResult,
+                $"option example '{optionId}' should keep the same output while its parent mode is inactive.");
+        }
+
         public static IEnumerable<object[]> OptionExamples()
         {
             foreach (var optionExample in OptionExampleSqlByOptionId)
@@ -50,6 +66,56 @@ namespace DSLKIT.Test.GrammarExamples
 
         public static IEnumerable<object[]> ProblematicOptionExamples()
         {
+            yield return
+            [
+                "sql-predicates-logical-break",
+                PredicatesExampleSql,
+                new SqlFormattingOptions
+                {
+                    Predicates = new SqlPredicatesFormattingOptions
+                    {
+                        MultilineWhere = true,
+                        LogicalOperatorLineBreak = SqlLogicalOperatorLineBreakMode.BeforeOperator
+                    }
+                },
+                new SqlFormattingOptions
+                {
+                    Predicates = new SqlPredicatesFormattingOptions
+                    {
+                        MultilineWhere = true,
+                        LogicalOperatorLineBreak = SqlLogicalOperatorLineBreakMode.AfterOperator
+                    }
+                }
+            ];
+
+            yield return
+            [
+                "sql-predicates-mixed-and-or-break-or-groups",
+                PredicatesExampleSql,
+                new SqlFormattingOptions
+                {
+                    Predicates = new SqlPredicatesFormattingOptions
+                    {
+                        MultilineWhere = true,
+                        MixedAndOrParentheses = new SqlMixedAndOrParenthesesOptions
+                        {
+                            BreakOrGroups = false
+                        }
+                    }
+                },
+                new SqlFormattingOptions
+                {
+                    Predicates = new SqlPredicatesFormattingOptions
+                    {
+                        MultilineWhere = true,
+                        MixedAndOrParentheses = new SqlMixedAndOrParenthesesOptions
+                        {
+                            BreakOrGroups = true
+                        }
+                    }
+                }
+            ];
+
             yield return
             [
                 "sql-joins-multiline-threshold",
@@ -202,6 +268,38 @@ namespace DSLKIT.Test.GrammarExamples
 
             yield return
             [
+                "sql-case-threshold-max-tokens",
+                ExpressionsCaseExampleSql,
+                new SqlFormattingOptions
+                {
+                    Expressions = new SqlExpressionsFormattingOptions
+                    {
+                        CaseStyle = SqlCaseStyle.CompactWhenShort,
+                        CompactCaseThreshold = new SqlCompactCaseThresholdOptions
+                        {
+                            MaxWhenClauses = 0,
+                            MaxTokens = 14,
+                            MaxLineLength = 120
+                        }
+                    }
+                },
+                new SqlFormattingOptions
+                {
+                    Expressions = new SqlExpressionsFormattingOptions
+                    {
+                        CaseStyle = SqlCaseStyle.CompactWhenShort,
+                        CompactCaseThreshold = new SqlCompactCaseThresholdOptions
+                        {
+                            MaxWhenClauses = 0,
+                            MaxTokens = 20,
+                            MaxLineLength = 120
+                        }
+                    }
+                }
+            ];
+
+            yield return
+            [
                 "sql-case-threshold-max-line",
                 ExpressionsCaseExampleSql,
                 new SqlFormattingOptions
@@ -227,6 +325,68 @@ namespace DSLKIT.Test.GrammarExamples
                             MaxWhenClauses = 0,
                             MaxTokens = 0,
                             MaxLineLength = 120
+                        }
+                    }
+                }
+            ];
+
+            yield return
+            [
+                "sql-inline-short-max-tokens",
+                InlineShortExpressionExampleSql,
+                new SqlFormattingOptions
+                {
+                    Joins = new SqlJoinsFormattingOptions
+                    {
+                        NewlinePerJoin = true,
+                        OnNewLine = true,
+                        MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
+                        {
+                            MaxTokensSingleLine = 12,
+                            BreakOnAnd = true,
+                            BreakOnOr = false
+                        }
+                    },
+                    Predicates = new SqlPredicatesFormattingOptions
+                    {
+                        MultilineWhere = true
+                    },
+                    Expressions = new SqlExpressionsFormattingOptions
+                    {
+                        InlineShortExpression = new SqlInlineShortExpressionOptions
+                        {
+                            MaxTokens = 12,
+                            MaxDepth = 0,
+                            MaxLineLength = 120,
+                            ForContexts = [SqlInlineExpressionContext.SelectItem, SqlInlineExpressionContext.On, SqlInlineExpressionContext.Where]
+                        }
+                    }
+                },
+                new SqlFormattingOptions
+                {
+                    Joins = new SqlJoinsFormattingOptions
+                    {
+                        NewlinePerJoin = true,
+                        OnNewLine = true,
+                        MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
+                        {
+                            MaxTokensSingleLine = 12,
+                            BreakOnAnd = true,
+                            BreakOnOr = false
+                        }
+                    },
+                    Predicates = new SqlPredicatesFormattingOptions
+                    {
+                        MultilineWhere = true
+                    },
+                    Expressions = new SqlExpressionsFormattingOptions
+                    {
+                        InlineShortExpression = new SqlInlineShortExpressionOptions
+                        {
+                            MaxTokens = 20,
+                            MaxDepth = 0,
+                            MaxLineLength = 120,
+                            ForContexts = [SqlInlineExpressionContext.SelectItem, SqlInlineExpressionContext.On, SqlInlineExpressionContext.Where]
                         }
                     }
                 }
@@ -328,6 +488,40 @@ namespace DSLKIT.Test.GrammarExamples
 
             yield return
             [
+                "sql-wrap-column",
+                ListsExampleSql,
+                new SqlFormattingOptions
+                {
+                    Layout = new SqlLayoutFormattingOptions
+                    {
+                        WrapColumn = 60
+                    },
+                    Lists = new SqlListsFormattingOptions
+                    {
+                        SelectItems = SqlListLayoutStyle.WrapByWidth,
+                        GroupByItems = SqlListLayoutStyle.WrapByWidth,
+                        OrderByItems = SqlListLayoutStyle.WrapByWidth,
+                        InListItems = SqlInListItemsStyle.WrapByWidth
+                    }
+                },
+                new SqlFormattingOptions
+                {
+                    Layout = new SqlLayoutFormattingOptions
+                    {
+                        WrapColumn = 120
+                    },
+                    Lists = new SqlListsFormattingOptions
+                    {
+                        SelectItems = SqlListLayoutStyle.WrapByWidth,
+                        GroupByItems = SqlListLayoutStyle.WrapByWidth,
+                        OrderByItems = SqlListLayoutStyle.WrapByWidth,
+                        InListItems = SqlInListItemsStyle.WrapByWidth
+                    }
+                }
+            ];
+
+            yield return
+            [
                 "sql-select-compact-max-items",
                 SelectCompactThresholdExampleSql,
                 new SqlFormattingOptions
@@ -381,6 +575,59 @@ namespace DSLKIT.Test.GrammarExamples
                         {
                             MaxItems = 2,
                             MaxLineLength = 120
+                        }
+                    }
+                }
+            ];
+        }
+
+        public static IEnumerable<object[]> InactiveDependentOptionExamples()
+        {
+            yield return
+            [
+                "sql-predicates-logical-break",
+                PredicatesExampleSql,
+                new SqlFormattingOptions
+                {
+                    Predicates = new SqlPredicatesFormattingOptions
+                    {
+                        MultilineWhere = false,
+                        LogicalOperatorLineBreak = SqlLogicalOperatorLineBreakMode.BeforeOperator
+                    }
+                },
+                new SqlFormattingOptions
+                {
+                    Predicates = new SqlPredicatesFormattingOptions
+                    {
+                        MultilineWhere = false,
+                        LogicalOperatorLineBreak = SqlLogicalOperatorLineBreakMode.AfterOperator
+                    }
+                }
+            ];
+
+            yield return
+            [
+                "sql-predicates-mixed-and-or-break-or-groups",
+                PredicatesExampleSql,
+                new SqlFormattingOptions
+                {
+                    Predicates = new SqlPredicatesFormattingOptions
+                    {
+                        MultilineWhere = false,
+                        MixedAndOrParentheses = new SqlMixedAndOrParenthesesOptions
+                        {
+                            BreakOrGroups = false
+                        }
+                    }
+                },
+                new SqlFormattingOptions
+                {
+                    Predicates = new SqlPredicatesFormattingOptions
+                    {
+                        MultilineWhere = false,
+                        MixedAndOrParentheses = new SqlMixedAndOrParenthesesOptions
+                        {
+                            BreakOrGroups = true
                         }
                     }
                 }
@@ -449,15 +696,15 @@ from dbo.A as a
 where a.Status=1 or a.Flag=1;";
 
         private const string ExpressionsCaseExampleSql =
-            @"-- CASE style: compare multiline and compact formatting in SET/DECLARE expressions.
-set @grade = case when @score>90 then 'A' when @score>70 then 'B' else 'C' end;";
+            @"-- CASE thresholds: compare token limits such as 10, 14, and 20 with compact CASE enabled.
+set @grade = case when @score>9 then 1 when @score>5 then 2 else 3 end;";
 
         private const string InlineShortExpressionExampleSql =
-            @"-- Inline short expression: compare token and line thresholds plus SELECT/ON/WHERE contexts.
-select a.Price+a.Tax+a.Fee as total,a.Id as id
+            @"-- Inline short expression: compare token limits such as 0, 12, and 20 plus SELECT/ON/WHERE contexts.
+select a.Price+a.Tax as total,a.Id as id
 from dbo.A as a
-inner join dbo.B as b on a.Id+b.Id>10 and b.Flag=1
-where a.Score+a.Bonus>0 and a.IsActive=1;";
+inner join dbo.B as b on a.Id+b.Id+a.LegacyId>10 and b.Flag=1
+where a.Score+a.Bonus+a.Penalty>0 and a.IsActive=1;";
 
         private const string InlineShortExpressionDepthExampleSql =
             @"-- Inline short expression depth: compare parse-depth thresholds such as 12 and 15.
@@ -484,8 +731,12 @@ where a.Status=1;";
             @"select 1 from dbo.A where X=3 and Y=4 and Z=5;";
 
         private const string ListsExampleSql =
-            @"-- List layout: focus on comma style and wrapping in SELECT/IN/GROUP BY/ORDER BY lists.
-select a.Id,a.Region,a.Status,a.Score from dbo.A as a where a.Id in(1,2,3,4,5,6,7,8) group by a.Id,a.Region,a.Status,a.Score order by a.Id,a.Region,a.Status,a.Score;";
+            @"-- Wrap-by-width layout: compare widths such as 30, 60, and 120 across SELECT/IN/GROUP BY/ORDER BY lists.
+select rf.CurrentQuarterRevenue,rf.ProjectedAnnualRevenue,rf.TrailingTwelveMonthRevenue
+from dbo.RevenueForecasts as rf
+where rf.RegionCode in('NorthEurope','WestEurope','CentralUS')
+group by rf.CurrentQuarterRevenue,rf.ProjectedAnnualRevenue,rf.TrailingTwelveMonthRevenue
+order by rf.CurrentQuarterRevenue,rf.ProjectedAnnualRevenue,rf.TrailingTwelveMonthRevenue;";
 
         private const string SelectCompactThresholdExampleSql =
             @"SELECT a+b AS c, d AS f FROM dbo.t AS t";
@@ -504,7 +755,7 @@ insert into dbo.AuditEntries(EntryId,Region,Status,Score) values(@id,'EU',1,10);
 create proc p as begin select 1 end;";
 
         private const string CommentsExampleSql =
-            @"-- Comment formatting: watch comment attachment and internal comment spacing behavior.
+            @"-- Comment whitespace: compare original spacing with safe whitespace normalization.
 select a.Id /*    keep   spacing   */ as id_alias --line    comment
 from dbo.A as a;";
 
