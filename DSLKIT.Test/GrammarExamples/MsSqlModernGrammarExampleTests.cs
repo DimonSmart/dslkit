@@ -234,6 +234,29 @@ namespace DSLKIT.Test.GrammarExamples
             parseResult.IsSuccess.Should().BeFalse(reason);
         }
 
+        [Theory]
+        [InlineData(
+            "CREATE TABLE dbo.T (Id int, ParentId int, CONSTRAINT FK_T FOREIGN KEY (WAITFOR) REFERENCES dbo.Parent (ParentId));",
+            "FOREIGN KEY local column lists should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE TABLE dbo.T (Id int, ParentId int, CONSTRAINT FK_T FOREIGN KEY (ParentId) REFERENCES dbo.Parent (WAITFOR));",
+            "REFERENCES column lists should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE TABLE dbo.T (ParentId int REFERENCES dbo.Parent (WAITFOR));",
+            "Column REFERENCES lists should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE INDEX IX_T ON dbo.T (WAITFOR);",
+            "CREATE INDEX key lists should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE INDEX IX_T ON dbo.T (Id) INCLUDE (WAITFOR);",
+            "CREATE INDEX INCLUDE lists should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        public void ParseScript_ShouldRejectSchemaDdlIdentifierLists_WithContextualKeywordFallback(string script, string reason)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse(reason);
+        }
+
         [Fact]
         public void ParseScript_ShouldParseCreateTable_AsFileTable()
         {

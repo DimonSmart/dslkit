@@ -6,7 +6,6 @@ namespace DSLKIT.GrammarExamples.MsSql
         {
             var gb = context.Gb;
             var expression = context.Symbols.Expression;
-            var identifierList = context.Symbols.IdentifierList;
             var identifierTerm = context.Symbols.IdentifierTerm;
             var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
             var strictQualifiedName = context.Symbols.StrictQualifiedName;
@@ -97,10 +96,13 @@ namespace DSLKIT.GrammarExamples.MsSql
             var createIndexStorageClauseOpt = gb.NT("CreateIndexStorageClauseOpt");
             var createIndexFileStreamClauseOpt = gb.NT("CreateIndexFileStreamClauseOpt");
             var schemaDdlIdentifierTerm = gb.NT("SchemaDdlIdentifierTerm");
+            var schemaDdlIdentifierList = gb.NT("SchemaDdlIdentifierList");
 
             gb.Rule(schemaDdlIdentifierTerm)
                 .CanBe(strictIdentifierTerm)
                 .OrKeywords("NAME");
+            gb.Prod(schemaDdlIdentifierList).Is(schemaDdlIdentifierTerm);
+            gb.Prod(schemaDdlIdentifierList).Is(schemaDdlIdentifierList, ",", schemaDdlIdentifierTerm);
 
             gb.Prod(createTableFileTableClause).Is("AS", "FILETABLE");
             gb.Prod(createTableStatement).Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")");
@@ -184,7 +186,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createTableColumnOption).Is("NOT", "FOR", "REPLICATION");
             gb.Prod(createTableColumnOption).Is("CHECK", "(", searchCondition, ")");
             gb.Prod(createTableColumnOption).Is("REFERENCES", qualifiedName);
-            gb.Prod(createTableColumnOption).Is("REFERENCES", qualifiedName, "(", identifierList, ")");
+            gb.Prod(createTableColumnOption).Is("REFERENCES", qualifiedName, "(", schemaDdlIdentifierList, ")");
             gb.Prod(createTableColumnOption).Is("CONSTRAINT", schemaDdlIdentifierTerm, createTableColumnConstraintBody);
 
             gb.Prod(createTableComputedColumn).Is(schemaDdlIdentifierTerm, "AS", expression);
@@ -201,9 +203,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createTableColumnConstraintBody).Is("UNIQUE", createTableColumnKeyClusterType);
             gb.Prod(createTableColumnConstraintBody).Is("CHECK", "(", searchCondition, ")");
             gb.Prod(createTableColumnConstraintBody).Is("FOREIGN", "KEY", "REFERENCES", qualifiedName);
-            gb.Prod(createTableColumnConstraintBody).Is("FOREIGN", "KEY", "REFERENCES", qualifiedName, "(", identifierList, ")");
+            gb.Prod(createTableColumnConstraintBody).Is("FOREIGN", "KEY", "REFERENCES", qualifiedName, "(", schemaDdlIdentifierList, ")");
             gb.Prod(createTableColumnConstraintBody).Is("REFERENCES", qualifiedName);
-            gb.Prod(createTableColumnConstraintBody).Is("REFERENCES", qualifiedName, "(", identifierList, ")");
+            gb.Prod(createTableColumnConstraintBody).Is("REFERENCES", qualifiedName, "(", schemaDdlIdentifierList, ")");
             gb.Prod(createTableColumnConstraintBody).Is("DEFAULT", expression);
             gb.Prod(createTableColumnConstraintBody).Is("DEFAULT", "(", expression, ")");
 
@@ -221,8 +223,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createTableTableConstraintBody).Is("UNIQUE", createTableConstraintClusterType, "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")");
             gb.Prod(createTableTableConstraintBody).Is("UNIQUE", createTableConstraintClusterType, "(", createTableKeyColumnList, ")", "WITH", "(", indexOptionList, ")", "ON", indexStorageTarget);
             gb.Prod(createTableTableConstraintBody).Is("CHECK", "(", searchCondition, ")");
-            gb.Prod(createTableTableConstraintBody).Is("FOREIGN", "KEY", "(", identifierList, ")", "REFERENCES", qualifiedName);
-            gb.Prod(createTableTableConstraintBody).Is("FOREIGN", "KEY", "(", identifierList, ")", "REFERENCES", qualifiedName, "(", identifierList, ")");
+            gb.Prod(createTableTableConstraintBody).Is("FOREIGN", "KEY", "(", schemaDdlIdentifierList, ")", "REFERENCES", qualifiedName);
+            gb.Prod(createTableTableConstraintBody).Is("FOREIGN", "KEY", "(", schemaDdlIdentifierList, ")", "REFERENCES", qualifiedName, "(", schemaDdlIdentifierList, ")");
             gb.Prod(createTableTableConstraintBody).Is("DEFAULT", expression, "FOR", schemaDdlIdentifierTerm);
             gb.Prod(createTableTableConstraintBody).Is("DEFAULT", "(", expression, ")", "FOR", schemaDdlIdentifierTerm);
 
@@ -322,9 +324,9 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod(createIndexKeyList).Is(createIndexKeyItem);
             gb.Prod(createIndexKeyList).Is(createIndexKeyList, ",", createIndexKeyItem);
-            gb.Prod(createIndexKeyItem).Is(identifierTerm);
-            gb.Prod(createIndexKeyItem).Is(identifierTerm, "ASC");
-            gb.Prod(createIndexKeyItem).Is(identifierTerm, "DESC");
+            gb.Prod(createIndexKeyItem).Is(schemaDdlIdentifierTerm);
+            gb.Prod(createIndexKeyItem).Is(schemaDdlIdentifierTerm, "ASC");
+            gb.Prod(createIndexKeyItem).Is(schemaDdlIdentifierTerm, "DESC");
 
             gb.Prod(createIndexTailClauseList).Is(
                 createIndexIncludeClause,
@@ -350,8 +352,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Opt(createIndexFileStreamClauseOpt, createIndexFileStreamClause);
 
             gb.Prod(createIndexIncludeClause).Is("INCLUDE", "(", createIndexIncludeList, ")");
-            gb.Prod(createIndexIncludeList).Is(identifierTerm);
-            gb.Prod(createIndexIncludeList).Is(createIndexIncludeList, ",", identifierTerm);
+            gb.Prod(createIndexIncludeList).Is(schemaDdlIdentifierTerm);
+            gb.Prod(createIndexIncludeList).Is(createIndexIncludeList, ",", schemaDdlIdentifierTerm);
             gb.Prod(createIndexWhereClause).Is("WHERE", searchCondition);
             gb.Prod(createIndexWithClause).Is("WITH", "(", indexOptionList, ")");
             gb.Prod(createIndexStorageClause).Is("ON", indexStorageTarget);
