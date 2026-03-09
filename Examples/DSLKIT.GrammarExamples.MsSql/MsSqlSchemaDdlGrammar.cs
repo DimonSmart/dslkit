@@ -96,6 +96,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             var createIndexWithClauseOpt = gb.NT("CreateIndexWithClauseOpt");
             var createIndexStorageClauseOpt = gb.NT("CreateIndexStorageClauseOpt");
             var createIndexFileStreamClauseOpt = gb.NT("CreateIndexFileStreamClauseOpt");
+            var schemaDdlIdentifierTerm = gb.NT("SchemaDdlIdentifierTerm");
+
+            gb.Rule(schemaDdlIdentifierTerm)
+                .CanBe(strictIdentifierTerm)
+                .OrKeywords("NAME");
 
             gb.Prod(createTableFileTableClause).Is("AS", "FILETABLE");
             gb.Prod(createTableStatement).Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")");
@@ -143,8 +148,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createTableElement).Is(createTableConstraint);
             gb.Prod(createTableElement).Is(createTableTableIndex);
 
-            gb.Prod(createTableColumnDefinition).Is(identifierTerm, typeSpec);
-            gb.Prod(createTableColumnDefinition).Is(identifierTerm, typeSpec, createTableColumnOptionList);
+            gb.Prod(createTableColumnDefinition).Is(schemaDdlIdentifierTerm, typeSpec);
+            gb.Prod(createTableColumnDefinition).Is(schemaDdlIdentifierTerm, typeSpec, createTableColumnOptionList);
             gb.Prod(createTableColumnOptionList).Is(createTableColumnOption);
             gb.Prod(createTableColumnOptionList).Is(createTableColumnOptionList, createTableColumnOption);
             gb.Prod(createTableColumnOption).Is("NULL");
@@ -180,15 +185,15 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createTableColumnOption).Is("CHECK", "(", searchCondition, ")");
             gb.Prod(createTableColumnOption).Is("REFERENCES", qualifiedName);
             gb.Prod(createTableColumnOption).Is("REFERENCES", qualifiedName, "(", identifierList, ")");
-            gb.Prod(createTableColumnOption).Is("CONSTRAINT", strictIdentifierTerm, createTableColumnConstraintBody);
+            gb.Prod(createTableColumnOption).Is("CONSTRAINT", schemaDdlIdentifierTerm, createTableColumnConstraintBody);
 
-            gb.Prod(createTableComputedColumn).Is(identifierTerm, "AS", expression);
-            gb.Prod(createTableComputedColumn).Is(identifierTerm, "AS", expression, createTableColumnOptionList);
+            gb.Prod(createTableComputedColumn).Is(schemaDdlIdentifierTerm, "AS", expression);
+            gb.Prod(createTableComputedColumn).Is(schemaDdlIdentifierTerm, "AS", expression, createTableColumnOptionList);
 
-            gb.Prod(createTableColumnSet).Is(identifierTerm, typeSpec, "COLUMN_SET", "FOR", "ALL_SPARSE_COLUMNS");
+            gb.Prod(createTableColumnSet).Is(schemaDdlIdentifierTerm, typeSpec, "COLUMN_SET", "FOR", "ALL_SPARSE_COLUMNS");
 
             gb.Prod(createTableConstraint).Is(createTableTableConstraintBody);
-            gb.Prod(createTableConstraint).Is("CONSTRAINT", strictIdentifierTerm, createTableTableConstraintBody);
+            gb.Prod(createTableConstraint).Is("CONSTRAINT", schemaDdlIdentifierTerm, createTableTableConstraintBody);
 
             gb.Prod(createTableColumnConstraintBody).Is("PRIMARY", "KEY");
             gb.Prod(createTableColumnConstraintBody).Is("PRIMARY", "KEY", createTableColumnKeyClusterType);
@@ -218,8 +223,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createTableTableConstraintBody).Is("CHECK", "(", searchCondition, ")");
             gb.Prod(createTableTableConstraintBody).Is("FOREIGN", "KEY", "(", identifierList, ")", "REFERENCES", qualifiedName);
             gb.Prod(createTableTableConstraintBody).Is("FOREIGN", "KEY", "(", identifierList, ")", "REFERENCES", qualifiedName, "(", identifierList, ")");
-            gb.Prod(createTableTableConstraintBody).Is("DEFAULT", expression, "FOR", identifierTerm);
-            gb.Prod(createTableTableConstraintBody).Is("DEFAULT", "(", expression, ")", "FOR", identifierTerm);
+            gb.Prod(createTableTableConstraintBody).Is("DEFAULT", expression, "FOR", schemaDdlIdentifierTerm);
+            gb.Prod(createTableTableConstraintBody).Is("DEFAULT", "(", expression, ")", "FOR", schemaDdlIdentifierTerm);
 
             gb.Rule(createTableColumnKeyClusterType)
                 .CanBe("CLUSTERED")
@@ -239,20 +244,20 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod(createTableKeyColumnList).Is(createTableKeyColumn);
             gb.Prod(createTableKeyColumnList).Is(createTableKeyColumnList, ",", createTableKeyColumn);
-            gb.Prod(createTableKeyColumn).Is(identifierTerm);
-            gb.Prod(createTableKeyColumn).Is(identifierTerm, "ASC");
-            gb.Prod(createTableKeyColumn).Is(identifierTerm, "DESC");
+            gb.Prod(createTableKeyColumn).Is(schemaDdlIdentifierTerm);
+            gb.Prod(createTableKeyColumn).Is(schemaDdlIdentifierTerm, "ASC");
+            gb.Prod(createTableKeyColumn).Is(schemaDdlIdentifierTerm, "DESC");
 
-            gb.Prod(createTableTableIndex).Is("INDEX", strictIdentifierTerm, "(", createTableKeyColumnList, ")");
-            gb.Prod(createTableTableIndex).Is("INDEX", strictIdentifierTerm, "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")");
-            gb.Prod(createTableTableIndex).Is("INDEX", strictIdentifierTerm, createTableClusterType, "(", createTableKeyColumnList, ")");
-            gb.Prod(createTableTableIndex).Is("INDEX", strictIdentifierTerm, "(", createTableKeyColumnList, ")", createIndexWithClause);
-            gb.Prod(createTableTableIndex).Is("INDEX", strictIdentifierTerm, "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")", createIndexWithClause);
-            gb.Prod(createTableTableIndex).Is("INDEX", strictIdentifierTerm, createTableClusterType, "(", createTableKeyColumnList, ")", createIndexWithClause);
-            gb.Prod(createTableTableIndex).Is("INDEX", strictIdentifierTerm, "CLUSTERED", "COLUMNSTORE");
-            gb.Prod(createTableTableIndex).Is("INDEX", strictIdentifierTerm, "CLUSTERED", "COLUMNSTORE", createIndexWithClause);
+            gb.Prod(createTableTableIndex).Is("INDEX", schemaDdlIdentifierTerm, "(", createTableKeyColumnList, ")");
+            gb.Prod(createTableTableIndex).Is("INDEX", schemaDdlIdentifierTerm, "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")");
+            gb.Prod(createTableTableIndex).Is("INDEX", schemaDdlIdentifierTerm, createTableClusterType, "(", createTableKeyColumnList, ")");
+            gb.Prod(createTableTableIndex).Is("INDEX", schemaDdlIdentifierTerm, "(", createTableKeyColumnList, ")", createIndexWithClause);
+            gb.Prod(createTableTableIndex).Is("INDEX", schemaDdlIdentifierTerm, "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")", createIndexWithClause);
+            gb.Prod(createTableTableIndex).Is("INDEX", schemaDdlIdentifierTerm, createTableClusterType, "(", createTableKeyColumnList, ")", createIndexWithClause);
+            gb.Prod(createTableTableIndex).Is("INDEX", schemaDdlIdentifierTerm, "CLUSTERED", "COLUMNSTORE");
+            gb.Prod(createTableTableIndex).Is("INDEX", schemaDdlIdentifierTerm, "CLUSTERED", "COLUMNSTORE", createIndexWithClause);
 
-            gb.Prod(createTablePeriodClause).Is("PERIOD", forSystemTimeStart, "SYSTEM_TIME", "(", identifierTerm, ",", identifierTerm, ")");
+            gb.Prod(createTablePeriodClause).Is("PERIOD", forSystemTimeStart, "SYSTEM_TIME", "(", schemaDdlIdentifierTerm, ",", schemaDdlIdentifierTerm, ")");
             gb.Prod(createTableOptions).Is("WITH", "(", createTableOptionList, ")");
             gb.Prod(createTableOptionList).Is(createTableOption);
             gb.Prod(createTableOptionList).Is(createTableOptionList, ",", createTableOption);
@@ -282,34 +287,34 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(alterTableAddItem).Is(createTableConstraint);
             gb.Prod(alterTableAddItem).Is(createTableTableIndex);
             gb.Prod(alterTableAddItem).Is(createTableComputedColumn);
-            gb.Prod(alterTableAlterColumnAction).Is(identifierTerm, typeSpec);
-            gb.Prod(alterTableAlterColumnAction).Is(identifierTerm, typeSpec, alterTableColumnOptionList);
-            gb.Prod(alterTableAlterColumnAction).Is(identifierTerm, "ADD", alterTableColumnOptionList);
-            gb.Prod(alterTableAlterColumnAction).Is(identifierTerm, "DROP", alterTableColumnOptionList);
+            gb.Prod(alterTableAlterColumnAction).Is(schemaDdlIdentifierTerm, typeSpec);
+            gb.Prod(alterTableAlterColumnAction).Is(schemaDdlIdentifierTerm, typeSpec, alterTableColumnOptionList);
+            gb.Prod(alterTableAlterColumnAction).Is(schemaDdlIdentifierTerm, "ADD", alterTableColumnOptionList);
+            gb.Prod(alterTableAlterColumnAction).Is(schemaDdlIdentifierTerm, "DROP", alterTableColumnOptionList);
             gb.Prod(alterTableColumnOptionList).Is(alterTableColumnOption);
             gb.Prod(alterTableColumnOptionList).Is(alterTableColumnOptionList, alterTableColumnOption);
             gb.Prod(alterTableColumnOption).Is(createTableColumnOption);
             gb.Prod(alterTableDropItemList).Is(alterTableDropItem);
             gb.Prod(alterTableDropItemList).Is(alterTableDropItemList, ",", alterTableDropItem);
-            gb.Prod(alterTableDropItem).Is("COLUMN", identifierTerm);
-            gb.Prod(alterTableDropItem).Is("CONSTRAINT", identifierTerm);
+            gb.Prod(alterTableDropItem).Is("COLUMN", schemaDdlIdentifierTerm);
+            gb.Prod(alterTableDropItem).Is("CONSTRAINT", schemaDdlIdentifierTerm);
             gb.Prod(alterTableDropItem).Is("CONSTRAINT", "ALL");
             gb.Rule(alterTableCheckMode).Keywords("CHECK", "NOCHECK");
             gb.Rule(alterTableConstraintTarget)
-                .CanBe(identifierTerm)
+                .CanBe(schemaDdlIdentifierTerm)
                 .OrKeywords("ALL");
             gb.Rule(alterTableTriggerTarget)
-                .CanBe(identifierTerm)
+                .CanBe(schemaDdlIdentifierTerm)
                 .OrKeywords("ALL");
 
-            gb.Prod(createKeyListIndexHead).Is("CREATE", "INDEX", strictIdentifierTerm);
-            gb.Prod(createKeyListIndexHead).Is("CREATE", "UNIQUE", "INDEX", strictIdentifierTerm);
-            gb.Prod(createKeyListIndexHead).Is("CREATE", "CLUSTERED", "INDEX", strictIdentifierTerm);
-            gb.Prod(createKeyListIndexHead).Is("CREATE", "NONCLUSTERED", "INDEX", strictIdentifierTerm);
-            gb.Prod(createKeyListIndexHead).Is("CREATE", "UNIQUE", "CLUSTERED", "INDEX", strictIdentifierTerm);
-            gb.Prod(createKeyListIndexHead).Is("CREATE", "UNIQUE", "NONCLUSTERED", "INDEX", strictIdentifierTerm);
-            gb.Prod(createKeyListIndexHead).Is("CREATE", "NONCLUSTERED", "COLUMNSTORE", "INDEX", strictIdentifierTerm);
-            gb.Prod(createKeylessIndexHead).Is("CREATE", "CLUSTERED", "COLUMNSTORE", "INDEX", strictIdentifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "INDEX", schemaDdlIdentifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "UNIQUE", "INDEX", schemaDdlIdentifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "CLUSTERED", "INDEX", schemaDdlIdentifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "NONCLUSTERED", "INDEX", schemaDdlIdentifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "UNIQUE", "CLUSTERED", "INDEX", schemaDdlIdentifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "UNIQUE", "NONCLUSTERED", "INDEX", schemaDdlIdentifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "NONCLUSTERED", "COLUMNSTORE", "INDEX", schemaDdlIdentifierTerm);
+            gb.Prod(createKeylessIndexHead).Is("CREATE", "CLUSTERED", "COLUMNSTORE", "INDEX", schemaDdlIdentifierTerm);
             gb.Prod(createIndexStatement).Is(createKeyListIndexHead, "ON", qualifiedName, "(", createIndexKeyList, ")");
             gb.Prod(createIndexStatement).Is(createKeyListIndexHead, "ON", qualifiedName, "(", createIndexKeyList, ")", createIndexTailClauseList);
             gb.Prod(createIndexStatement).Is(createKeylessIndexHead, "ON", qualifiedName);
@@ -427,7 +432,7 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod(alterIndexStatement).Is("ALTER", "INDEX", alterIndexTarget, "ON", qualifiedName, alterIndexAction);
             gb.Rule(alterIndexTarget)
-                .CanBe(strictIdentifierTerm)
+                .CanBe(schemaDdlIdentifierTerm)
                 .Or(strictQualifiedName)
                 .OrKeywords("ALL");
             gb.Rule(alterIndexAction)

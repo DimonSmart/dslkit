@@ -186,6 +186,54 @@ namespace DSLKIT.Test.GrammarExamples
             parseResult.IsSuccess.Should().BeFalse(reason);
         }
 
+        [Theory]
+        [InlineData(
+            "CREATE TABLE dbo.T (WAITFOR int);",
+            "CREATE TABLE column names should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE TABLE dbo.T (Id int, WAITFOR AS 1);",
+            "Computed column names should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE TABLE dbo.T (WAITFOR XML COLUMN_SET FOR ALL_SPARSE_COLUMNS);",
+            "COLUMN_SET names should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE TABLE dbo.T (Id int, CONSTRAINT CK_T DEFAULT (1) FOR WAITFOR);",
+            "DEFAULT ... FOR targets should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            """
+            CREATE TABLE dbo.T
+            (
+                ValidFrom DATETIME2 NOT NULL,
+                ValidTo DATETIME2 NOT NULL
+            )
+            PERIOD FOR SYSTEM_TIME (WAITFOR, ValidTo);
+            """,
+            "PERIOD FOR SYSTEM_TIME column names should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE TABLE dbo.T (Id int, CONSTRAINT PK_T PRIMARY KEY (WAITFOR));",
+            "PRIMARY KEY column names should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "ALTER TABLE dbo.T ALTER COLUMN WAITFOR INT;",
+            "ALTER COLUMN targets should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "ALTER TABLE dbo.T DROP COLUMN WAITFOR;",
+            "DROP COLUMN targets should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "ALTER TABLE dbo.T DROP CONSTRAINT WAITFOR;",
+            "DROP CONSTRAINT targets should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "ALTER TABLE dbo.T CHECK CONSTRAINT WAITFOR;",
+            "CHECK CONSTRAINT targets should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "ALTER TABLE dbo.T ENABLE TRIGGER WAITFOR;",
+            "ENABLE TRIGGER targets should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        public void ParseScript_ShouldRejectTableDefinitionIdentifiers_WithContextualKeywordFallback(string script, string reason)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse(reason);
+        }
+
         [Fact]
         public void ParseScript_ShouldParseCreateTable_AsFileTable()
         {
