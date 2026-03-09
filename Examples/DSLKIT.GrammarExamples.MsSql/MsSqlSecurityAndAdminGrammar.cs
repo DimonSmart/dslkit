@@ -178,7 +178,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(dropIndexSpecList).Is(dropIndexSpecList, ",", dropIndexSpec);
             gb.Prod(dropIndexSpec).Is(qualifiedName, "ON", qualifiedName);
             gb.Prod(dropIndexSpec).Is(qualifiedName, "ON", qualifiedName, "WITH", "(", dropIndexOptionList, ")");
-            gb.Prod(dropIndexSpec).Is(qualifiedName, ".", identifierTerm);
+            gb.Prod(dropIndexSpec).Is(qualifiedName, ".", strictIdentifierTerm);
             gb.Prod(dropIndexOptionList).Is(dropIndexOption);
             gb.Prod(dropIndexOptionList).Is(dropIndexOptionList, ",", dropIndexOption);
             gb.Rule(dropIndexOption)
@@ -199,10 +199,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(dropStatisticsStatement).Is("DROP", "STATISTICS", dropStatisticsTargetList);
             gb.Prod(dropStatisticsTargetList).Is(dropStatisticsTarget);
             gb.Prod(dropStatisticsTargetList).Is(dropStatisticsTargetList, ",", dropStatisticsTarget);
-            gb.Prod(dropStatisticsTarget).Is(qualifiedName, ".", identifierTerm);
+            gb.Prod(dropStatisticsTarget).Is(qualifiedName, ".", strictIdentifierTerm);
 
-            gb.Prod(dropDatabaseStatement).Is("DROP", "DATABASE", identifierTerm);
-            gb.Prod(dropDatabaseStatement).Is("DROP", "DATABASE", dropIfExistsClause, identifierTerm);
+            gb.Prod(dropDatabaseStatement).Is("DROP", "DATABASE", strictIdentifierTerm);
+            gb.Prod(dropDatabaseStatement).Is("DROP", "DATABASE", dropIfExistsClause, strictIdentifierTerm);
 
             MsSqlExtensionsGrammar.BuildTriggerGrammar(
                 gb,
@@ -222,13 +222,13 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(dropTriggerStatement).Is("DROP", "TRIGGER", qualifiedName, "ON", "ALL", "SERVER");
             gb.Prod(dropTriggerStatement).Is("DROP", "TRIGGER", dropIfExistsClause, qualifiedName, "ON", "ALL", "SERVER");
 
-            gb.Prod(createRoleStatement).Is("CREATE", "ROLE", identifierTerm);
-            gb.Prod(createRoleStatement).Is("CREATE", "ROLE", identifierTerm, "AUTHORIZATION", identifierTerm);
+            gb.Prod(createRoleStatement).Is("CREATE", "ROLE", strictIdentifierTerm);
+            gb.Prod(createRoleStatement).Is("CREATE", "ROLE", strictIdentifierTerm, "AUTHORIZATION", strictIdentifierTerm);
 
             gb.Prod(createSchemaStatement).Is("CREATE", "SCHEMA", schemaNameClause);
-            gb.Prod(schemaNameClause).Is(identifierTerm);
-            gb.Prod(schemaNameClause).Is("AUTHORIZATION", identifierTerm);
-            gb.Prod(schemaNameClause).Is(identifierTerm, "AUTHORIZATION", identifierTerm);
+            gb.Prod(schemaNameClause).Is(strictIdentifierTerm);
+            gb.Prod(schemaNameClause).Is("AUTHORIZATION", strictIdentifierTerm);
+            gb.Prod(schemaNameClause).Is(strictIdentifierTerm, "AUTHORIZATION", strictIdentifierTerm);
         }
 
         public static void BuildPostQuery(
@@ -269,6 +269,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var expression = context.Symbols.Expression;
             var identifierList = context.Symbols.IdentifierList;
             var identifierTerm = context.Symbols.IdentifierTerm;
+            var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
             var namedOptionValue = context.Symbols.NamedOptionValue;
             var qualifiedName = context.Symbols.QualifiedName;
             var typeSpec = context.Symbols.TypeSpec;
@@ -276,13 +277,17 @@ namespace DSLKIT.GrammarExamples.MsSql
             var indexOnOffValue = context.Symbols.IndexOnOffValue;
             var queryExpression = context.Symbols.QueryExpression;
             var stringLiteral = context.StringLiteralTerminal;
+            var alterDatabaseTarget = gb.NT("AlterDatabaseTarget");
 
             gb.Prod(truncateStatement).Is("TRUNCATE", "TABLE", qualifiedName);
 
             gb.Prod(createTableAsSelectStatement).Is("CREATE", "TABLE", qualifiedName, "AS", queryExpression);
             gb.Prod(createTableAsSelectStatement).Is("CREATE", "TABLE", qualifiedName, "WITH", "(", createTableOptionList, ")", "AS", queryExpression);
 
-            gb.Prod(alterDatabaseStatement).Is("ALTER", "DATABASE", identifierTerm, "SET", alterDatabaseSetOption);
+            gb.Rule(alterDatabaseTarget)
+                .CanBe(strictIdentifierTerm)
+                .OrKeywords("CURRENT");
+            gb.Prod(alterDatabaseStatement).Is("ALTER", "DATABASE", alterDatabaseTarget, "SET", alterDatabaseSetOption);
             gb.Prod(alterDatabaseStatement).Is("ALTER", "DATABASE", "SCOPED", "CONFIGURATION", "CLEAR", identifierTerm);
             gb.Prod(alterDatabaseStatement).Is("ALTER", "DATABASE", "SCOPED", "CONFIGURATION", "SET", identifierTerm, "=", expression);
             gb.Rule(alterDatabaseSetOnOffOption).Keywords(
@@ -353,14 +358,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(alterDatabaseSetOption).Is("AUTOMATIC_TUNING", "(", indexOptionList, ")");
             gb.Prod(alterDatabaseSetOption).Is("FILESTREAM", "(", indexOptionList, ")");
 
-            gb.Prod(createLoginStatement).Is("CREATE", "LOGIN", identifierTerm, "WITH", createLoginPasswordSpec);
-            gb.Prod(createLoginStatement).Is("CREATE", "LOGIN", identifierTerm, "WITH", createLoginPasswordSpec, ",", createLoginOptionList);
-            gb.Prod(createLoginStatement).Is("CREATE", "LOGIN", identifierTerm, "FROM", "WINDOWS");
-            gb.Prod(createLoginStatement).Is("CREATE", "LOGIN", identifierTerm, "FROM", "WINDOWS", "WITH", createLoginWindowsOptionList);
-            gb.Prod(createLoginStatement).Is("CREATE", "LOGIN", identifierTerm, "FROM", "EXTERNAL", "PROVIDER");
-            gb.Prod(createLoginStatement).Is("CREATE", "LOGIN", identifierTerm, "FROM", "EXTERNAL", "PROVIDER", "WITH", "OBJECT_ID", "=", stringLiteral);
-            gb.Prod(createLoginStatement).Is("CREATE", "LOGIN", identifierTerm, "FROM", "CERTIFICATE", identifierTerm);
-            gb.Prod(createLoginStatement).Is("CREATE", "LOGIN", identifierTerm, "FROM", "ASYMMETRIC", "KEY", identifierTerm);
+            gb.Prod(createLoginStatement).Is("CREATE", "LOGIN", strictIdentifierTerm, "WITH", createLoginPasswordSpec);
+            gb.Prod(createLoginStatement).Is("CREATE", "LOGIN", strictIdentifierTerm, "WITH", createLoginPasswordSpec, ",", createLoginOptionList);
+            gb.Prod(createLoginStatement).Is("CREATE", "LOGIN", strictIdentifierTerm, "FROM", "WINDOWS");
+            gb.Prod(createLoginStatement).Is("CREATE", "LOGIN", strictIdentifierTerm, "FROM", "WINDOWS", "WITH", createLoginWindowsOptionList);
+            gb.Prod(createLoginStatement).Is("CREATE", "LOGIN", strictIdentifierTerm, "FROM", "EXTERNAL", "PROVIDER");
+            gb.Prod(createLoginStatement).Is("CREATE", "LOGIN", strictIdentifierTerm, "FROM", "EXTERNAL", "PROVIDER", "WITH", "OBJECT_ID", "=", stringLiteral);
+            gb.Prod(createLoginStatement).Is("CREATE", "LOGIN", strictIdentifierTerm, "FROM", "CERTIFICATE", strictIdentifierTerm);
+            gb.Prod(createLoginStatement).Is("CREATE", "LOGIN", strictIdentifierTerm, "FROM", "ASYMMETRIC", "KEY", strictIdentifierTerm);
             gb.Prod(createLoginPasswordSpec).Is("PASSWORD", "=", expression);
             gb.Prod(createLoginPasswordSpec).Is("PASSWORD", "=", expression, "HASHED");
             gb.Prod(createLoginPasswordSpec).Is("PASSWORD", "=", expression, "MUST_CHANGE");
@@ -376,24 +381,24 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createLoginWindowsOption).Is("DEFAULT_DATABASE", "=", namedOptionValue);
             gb.Prod(createLoginWindowsOption).Is("DEFAULT_LANGUAGE", "=", namedOptionValue);
 
-            gb.Prod(createUserStatement).Is("CREATE", "USER", identifierTerm, "FOR", "LOGIN", identifierTerm);
-            gb.Prod(createUserStatement).Is("CREATE", "USER", identifierTerm, "WITHOUT", "LOGIN");
+            gb.Prod(createUserStatement).Is("CREATE", "USER", strictIdentifierTerm, "FOR", "LOGIN", strictIdentifierTerm);
+            gb.Prod(createUserStatement).Is("CREATE", "USER", strictIdentifierTerm, "WITHOUT", "LOGIN");
 
-            gb.Prod(createStatisticsStatement).Is("CREATE", "STATISTICS", identifierTerm, "ON", qualifiedName, "(", identifierList, ")");
-            gb.Prod(createStatisticsStatement).Is("CREATE", "STATISTICS", identifierTerm, "ON", qualifiedName, "(", identifierList, ")", "WITH", "(", indexOptionList, ")");
+            gb.Prod(createStatisticsStatement).Is("CREATE", "STATISTICS", strictIdentifierTerm, "ON", qualifiedName, "(", identifierList, ")");
+            gb.Prod(createStatisticsStatement).Is("CREATE", "STATISTICS", strictIdentifierTerm, "ON", qualifiedName, "(", identifierList, ")", "WITH", "(", indexOptionList, ")");
 
             gb.Prod(dropTypeStatement).Is("DROP", "TYPE", qualifiedName);
             gb.Prod(dropTypeStatement).Is("DROP", "TYPE", "IF", "EXISTS", qualifiedName);
 
-            gb.Prod(dropColumnEncryptionKeyStatement).Is("DROP", "COLUMN", "ENCRYPTION", "KEY", identifierTerm);
-            gb.Prod(dropColumnEncryptionKeyStatement).Is("DROP", "COLUMN", "MASTER", "KEY", identifierTerm);
+            gb.Prod(dropColumnEncryptionKeyStatement).Is("DROP", "COLUMN", "ENCRYPTION", "KEY", strictIdentifierTerm);
+            gb.Prod(dropColumnEncryptionKeyStatement).Is("DROP", "COLUMN", "MASTER", "KEY", strictIdentifierTerm);
 
             gb.Rule(revertStatement).OneOf(
                 "REVERT",
                 gb.Seq("REVERT", "WITH", "COOKIE", "=", expression));
             gb.Rule(dropEventSessionStatement).OneOf(
-                gb.Seq("DROP", "EVENT", "SESSION", identifierTerm, "ON", "DATABASE"),
-                gb.Seq("DROP", "EVENT", "SESSION", identifierTerm, "ON", "SERVER"));
+                gb.Seq("DROP", "EVENT", "SESSION", strictIdentifierTerm, "ON", "DATABASE"),
+                gb.Seq("DROP", "EVENT", "SESSION", strictIdentifierTerm, "ON", "SERVER"));
 
             gb.Prod(createTypeStatement).Is("CREATE", "TYPE", qualifiedName, "AS", tableTypeDefinition);
             gb.Prod(createTypeStatement).Is("CREATE", "TYPE", qualifiedName, "FROM", typeSpec);

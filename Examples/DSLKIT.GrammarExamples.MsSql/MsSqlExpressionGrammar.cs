@@ -147,7 +147,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(unaryExpression).Is("~", unaryExpression);
 
             gb.Prod(collateExpression).Is(primaryExpression);
-            gb.Prod(collateExpression).Is(collateExpression, "COLLATE", identifierTerm);
+            gb.Prod(collateExpression).Is(collateExpression, "COLLATE", strictIdentifierTerm);
 
             gb.Prod(primaryExpression).Is(literal);
             gb.Prod(primaryExpression).Is(unicodeStringLiteral);

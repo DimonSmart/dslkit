@@ -34,6 +34,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var expression = context.Symbols.Expression;
             var identifierTerm = context.Symbols.IdentifierTerm;
             var qualifiedName = context.Symbols.QualifiedName;
+            var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
             var typeSpec = context.Symbols.TypeSpec;
             var unicodeStringLiteral = context.Symbols.UnicodeStringLiteral;
             var variableReference = context.Symbols.VariableReference;
@@ -84,9 +85,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(executeColumnDefList).Is(executeColumnDef);
             gb.Prod(executeColumnDefList).Is(executeColumnDefList, ",", executeColumnDef);
             gb.Prod(executeColumnDef).Is(identifierTerm, typeSpec);
-            gb.Prod(executeColumnDef).Is(identifierTerm, typeSpec, "COLLATE", identifierTerm);
+            gb.Prod(executeColumnDef).Is(identifierTerm, typeSpec, "COLLATE", strictIdentifierTerm);
             gb.Prod(executeColumnDef).Is(identifierTerm, typeSpec, executeNullability);
-            gb.Prod(executeColumnDef).Is(identifierTerm, typeSpec, "COLLATE", identifierTerm, executeNullability);
+            gb.Prod(executeColumnDef).Is(identifierTerm, typeSpec, "COLLATE", strictIdentifierTerm, executeNullability);
             gb.Rule(executeNullability)
                 .CanBe("NULL")
                 .Or("NOT", "NULL");
@@ -109,12 +110,12 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .Or("AS", "USER", "=", stringLiteral)
                 .Or("AS", "LOGIN", "=", unicodeStringLiteral)
                 .Or("AS", "USER", "=", unicodeStringLiteral)
-                .Or("AS", "LOGIN", "=", identifierTerm)
-                .Or("AS", "USER", "=", identifierTerm);
+                .Or("AS", "LOGIN", "=", strictIdentifierTerm)
+                .Or("AS", "USER", "=", strictIdentifierTerm);
             gb.Prod(executeAtClause).Is("AT", identifierTerm);
             gb.Prod(executeAtClause).Is("AT", "DATA_SOURCE", identifierTerm);
 
-            gb.Prod(useStatement).Is("USE", identifierTerm);
+            gb.Prod(useStatement).Is("USE", strictIdentifierTerm);
         }
     }
 }

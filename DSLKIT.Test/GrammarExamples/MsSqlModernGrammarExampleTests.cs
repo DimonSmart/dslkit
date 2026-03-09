@@ -113,6 +113,79 @@ namespace DSLKIT.Test.GrammarExamples
             parseResult.IsSuccess.Should().BeFalse(reason);
         }
 
+        [Theory]
+        [InlineData(
+            "SELECT Name COLLATE PATH FROM dbo.Company;",
+            "COLLATE should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE DATABASE Sales COLLATE PATH;",
+            "CREATE DATABASE COLLATE should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "EXECUTE dbo.usp_DoWork WITH RESULT SETS ((Name NVARCHAR(100) COLLATE PATH));",
+            "RESULT SETS column COLLATE should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        public void ParseScript_ShouldRejectCollate_WithContextualKeywordFallback(string script, string reason)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse(reason);
+        }
+
+        [Theory]
+        [InlineData(
+            "USE PATH;",
+            "USE should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE DATABASE PATH;",
+            "CREATE DATABASE should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "DROP DATABASE PATH;",
+            "DROP DATABASE should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "ALTER DATABASE PATH SET READ_ONLY;",
+            "ALTER DATABASE database names should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE ROLE PATH;",
+            "CREATE ROLE should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE SCHEMA PATH;",
+            "CREATE SCHEMA should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE LOGIN PATH WITH PASSWORD = N'P@ssw0rd!';",
+            "CREATE LOGIN should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE USER PATH WITHOUT LOGIN;",
+            "CREATE USER should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE STATISTICS PATH ON dbo.Customers (CustomerId);",
+            "CREATE STATISTICS should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "DROP COLUMN ENCRYPTION KEY PATH;",
+            "DROP COLUMN ENCRYPTION KEY should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "DROP EVENT SESSION PATH ON SERVER;",
+            "DROP EVENT SESSION should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE TABLE dbo.T (ID int, CONSTRAINT PATH PRIMARY KEY (ID));",
+            "Named table constraints should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "CREATE INDEX PATH ON dbo.T (ID);",
+            "CREATE INDEX should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "DROP INDEX dbo.T.PATH;",
+            "DROP INDEX should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "DROP STATISTICS dbo.T.PATH;",
+            "DROP STATISTICS should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        [InlineData(
+            "ALTER INDEX GRAPH ON dbo.T DISABLE;",
+            "ALTER INDEX should not accept contextual keywords through broad IdentifierTerm fallback.")]
+        public void ParseScript_ShouldRejectObjectNames_WithContextualKeywordFallback(string script, string reason)
+        {
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeFalse(reason);
+        }
+
         [Fact]
         public void ParseScript_ShouldParseCreateTable_AsFileTable()
         {

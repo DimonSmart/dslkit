@@ -9,6 +9,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var identifierList = context.Symbols.IdentifierList;
             var identifierTerm = context.Symbols.IdentifierTerm;
             var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
+            var strictQualifiedName = context.Symbols.StrictQualifiedName;
             var qualifiedName = context.Symbols.QualifiedName;
             var searchCondition = context.Symbols.SearchCondition;
             var typeSpec = context.Symbols.TypeSpec;
@@ -187,7 +188,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createTableColumnSet).Is(identifierTerm, typeSpec, "COLUMN_SET", "FOR", "ALL_SPARSE_COLUMNS");
 
             gb.Prod(createTableConstraint).Is(createTableTableConstraintBody);
-            gb.Prod(createTableConstraint).Is("CONSTRAINT", identifierTerm, createTableTableConstraintBody);
+            gb.Prod(createTableConstraint).Is("CONSTRAINT", strictIdentifierTerm, createTableTableConstraintBody);
 
             gb.Prod(createTableColumnConstraintBody).Is("PRIMARY", "KEY");
             gb.Prod(createTableColumnConstraintBody).Is("PRIMARY", "KEY", createTableColumnKeyClusterType);
@@ -242,14 +243,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createTableKeyColumn).Is(identifierTerm, "ASC");
             gb.Prod(createTableKeyColumn).Is(identifierTerm, "DESC");
 
-            gb.Prod(createTableTableIndex).Is("INDEX", identifierTerm, "(", createTableKeyColumnList, ")");
-            gb.Prod(createTableTableIndex).Is("INDEX", identifierTerm, "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")");
-            gb.Prod(createTableTableIndex).Is("INDEX", identifierTerm, createTableClusterType, "(", createTableKeyColumnList, ")");
-            gb.Prod(createTableTableIndex).Is("INDEX", identifierTerm, "(", createTableKeyColumnList, ")", createIndexWithClause);
-            gb.Prod(createTableTableIndex).Is("INDEX", identifierTerm, "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")", createIndexWithClause);
-            gb.Prod(createTableTableIndex).Is("INDEX", identifierTerm, createTableClusterType, "(", createTableKeyColumnList, ")", createIndexWithClause);
-            gb.Prod(createTableTableIndex).Is("INDEX", identifierTerm, "CLUSTERED", "COLUMNSTORE");
-            gb.Prod(createTableTableIndex).Is("INDEX", identifierTerm, "CLUSTERED", "COLUMNSTORE", createIndexWithClause);
+            gb.Prod(createTableTableIndex).Is("INDEX", strictIdentifierTerm, "(", createTableKeyColumnList, ")");
+            gb.Prod(createTableTableIndex).Is("INDEX", strictIdentifierTerm, "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")");
+            gb.Prod(createTableTableIndex).Is("INDEX", strictIdentifierTerm, createTableClusterType, "(", createTableKeyColumnList, ")");
+            gb.Prod(createTableTableIndex).Is("INDEX", strictIdentifierTerm, "(", createTableKeyColumnList, ")", createIndexWithClause);
+            gb.Prod(createTableTableIndex).Is("INDEX", strictIdentifierTerm, "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")", createIndexWithClause);
+            gb.Prod(createTableTableIndex).Is("INDEX", strictIdentifierTerm, createTableClusterType, "(", createTableKeyColumnList, ")", createIndexWithClause);
+            gb.Prod(createTableTableIndex).Is("INDEX", strictIdentifierTerm, "CLUSTERED", "COLUMNSTORE");
+            gb.Prod(createTableTableIndex).Is("INDEX", strictIdentifierTerm, "CLUSTERED", "COLUMNSTORE", createIndexWithClause);
 
             gb.Prod(createTablePeriodClause).Is("PERIOD", forSystemTimeStart, "SYSTEM_TIME", "(", identifierTerm, ",", identifierTerm, ")");
             gb.Prod(createTableOptions).Is("WITH", "(", createTableOptionList, ")");
@@ -301,14 +302,14 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .CanBe(identifierTerm)
                 .OrKeywords("ALL");
 
-            gb.Prod(createKeyListIndexHead).Is("CREATE", "INDEX", identifierTerm);
-            gb.Prod(createKeyListIndexHead).Is("CREATE", "UNIQUE", "INDEX", identifierTerm);
-            gb.Prod(createKeyListIndexHead).Is("CREATE", "CLUSTERED", "INDEX", identifierTerm);
-            gb.Prod(createKeyListIndexHead).Is("CREATE", "NONCLUSTERED", "INDEX", identifierTerm);
-            gb.Prod(createKeyListIndexHead).Is("CREATE", "UNIQUE", "CLUSTERED", "INDEX", identifierTerm);
-            gb.Prod(createKeyListIndexHead).Is("CREATE", "UNIQUE", "NONCLUSTERED", "INDEX", identifierTerm);
-            gb.Prod(createKeyListIndexHead).Is("CREATE", "NONCLUSTERED", "COLUMNSTORE", "INDEX", identifierTerm);
-            gb.Prod(createKeylessIndexHead).Is("CREATE", "CLUSTERED", "COLUMNSTORE", "INDEX", identifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "INDEX", strictIdentifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "UNIQUE", "INDEX", strictIdentifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "CLUSTERED", "INDEX", strictIdentifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "NONCLUSTERED", "INDEX", strictIdentifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "UNIQUE", "CLUSTERED", "INDEX", strictIdentifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "UNIQUE", "NONCLUSTERED", "INDEX", strictIdentifierTerm);
+            gb.Prod(createKeyListIndexHead).Is("CREATE", "NONCLUSTERED", "COLUMNSTORE", "INDEX", strictIdentifierTerm);
+            gb.Prod(createKeylessIndexHead).Is("CREATE", "CLUSTERED", "COLUMNSTORE", "INDEX", strictIdentifierTerm);
             gb.Prod(createIndexStatement).Is(createKeyListIndexHead, "ON", qualifiedName, "(", createIndexKeyList, ")");
             gb.Prod(createIndexStatement).Is(createKeyListIndexHead, "ON", qualifiedName, "(", createIndexKeyList, ")", createIndexTailClauseList);
             gb.Prod(createIndexStatement).Is(createKeylessIndexHead, "ON", qualifiedName);
@@ -426,8 +427,8 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod(alterIndexStatement).Is("ALTER", "INDEX", alterIndexTarget, "ON", qualifiedName, alterIndexAction);
             gb.Rule(alterIndexTarget)
-                .CanBe(identifierTerm)
-                .Or(qualifiedName)
+                .CanBe(strictIdentifierTerm)
+                .Or(strictQualifiedName)
                 .OrKeywords("ALL");
             gb.Rule(alterIndexAction)
                 .CanBe("REBUILD")
@@ -456,6 +457,7 @@ namespace DSLKIT.GrammarExamples.MsSql
         {
             var gb = context.Gb;
             var identifierTerm = context.Symbols.IdentifierTerm;
+            var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
             var number = context.NumberTerminal;
             var stringLiteral = context.StringLiteralTerminal;
 
@@ -489,8 +491,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             var createDatabaseCollateClauseOpt = gb.NT("CreateDatabaseCollateClauseOpt");
             var createDatabaseWithClauseOpt = gb.NT("CreateDatabaseWithClauseOpt");
 
-            gb.Prod(createDatabaseStatement).Is("CREATE", "DATABASE", identifierTerm);
-            gb.Prod(createDatabaseStatement).Is("CREATE", "DATABASE", identifierTerm, createDatabaseClauseList);
+            gb.Prod(createDatabaseStatement).Is("CREATE", "DATABASE", strictIdentifierTerm);
+            gb.Prod(createDatabaseStatement).Is("CREATE", "DATABASE", strictIdentifierTerm, createDatabaseClauseList);
             gb.Prod(createDatabaseClauseList).Is(
                 createDatabaseContainmentClause,
                 createDatabaseOnClauseOpt,
@@ -519,13 +521,13 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createDatabaseFilespecList).Is(createDatabaseFilespec);
             gb.Prod(createDatabaseFilespecList).Is(createDatabaseFilespecList, ",", createDatabaseFilespec);
 
-            gb.Prod(createDatabaseFilegroup).Is("FILEGROUP", identifierTerm, createDatabaseOnFilespecSequence);
-            gb.Prod(createDatabaseFilegroup).Is("FILEGROUP", identifierTerm, "DEFAULT", createDatabaseOnFilespecSequence);
-            gb.Prod(createDatabaseFilegroup).Is("FILEGROUP", identifierTerm, "CONTAINS", "FILESTREAM", createDatabaseOnFilespecSequence);
-            gb.Prod(createDatabaseFilegroup).Is("FILEGROUP", identifierTerm, "CONTAINS", "FILESTREAM", "DEFAULT", createDatabaseOnFilespecSequence);
-            gb.Prod(createDatabaseFilegroup).Is("FILEGROUP", identifierTerm, "CONTAINS", "MEMORY_OPTIMIZED_DATA", createDatabaseOnFilespecSequence);
+            gb.Prod(createDatabaseFilegroup).Is("FILEGROUP", strictIdentifierTerm, createDatabaseOnFilespecSequence);
+            gb.Prod(createDatabaseFilegroup).Is("FILEGROUP", strictIdentifierTerm, "DEFAULT", createDatabaseOnFilespecSequence);
+            gb.Prod(createDatabaseFilegroup).Is("FILEGROUP", strictIdentifierTerm, "CONTAINS", "FILESTREAM", createDatabaseOnFilespecSequence);
+            gb.Prod(createDatabaseFilegroup).Is("FILEGROUP", strictIdentifierTerm, "CONTAINS", "FILESTREAM", "DEFAULT", createDatabaseOnFilespecSequence);
+            gb.Prod(createDatabaseFilegroup).Is("FILEGROUP", strictIdentifierTerm, "CONTAINS", "MEMORY_OPTIMIZED_DATA", createDatabaseOnFilespecSequence);
 
-            gb.Prod(createDatabaseCollateClause).Is("COLLATE", identifierTerm);
+            gb.Prod(createDatabaseCollateClause).Is("COLLATE", strictIdentifierTerm);
 
             gb.Prod(createDatabaseWithClause).Is("WITH", createDatabaseOptionList);
             gb.Prod(createDatabaseOptionList).Is(createDatabaseOption);
@@ -587,7 +589,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 createDatabaseFilespecOptionList,
                 ")");
 
-            gb.Prod(createDatabaseFileName).Is(identifierTerm);
+            gb.Prod(createDatabaseFileName).Is(strictIdentifierTerm);
             gb.Prod(createDatabaseFileName).Is(stringLiteral);
 
             gb.Prod(createDatabaseFilespecOptionList).Is(createDatabaseFilespecOption);
