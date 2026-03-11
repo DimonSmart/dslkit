@@ -781,6 +781,32 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void TryFormat_ShouldWriteOneInsertRowPerLine_WhenInsertValuesStyleIsRowsPerLine()
+        {
+            const string sourceSql = "INSERT INTO dbo.TargetRows (Id, Region, TypeId, Score) VALUES (@id,'EU',1,10),(@id+1,'US',2,20);";
+            var options = new SqlFormattingOptions
+            {
+                Dml = new SqlDmlFormattingOptions
+                {
+                    InsertValuesStyle = SqlDmlListStyle.RowsPerLine
+                },
+                Statement = new SqlStatementFormattingOptions
+                {
+                    TerminateWithSemicolon = SqlStatementTerminationMode.Always
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            result.IsSuccess.Should().BeTrue(result.ErrorMessage);
+
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+            formattedSql.Should().Contain("VALUES\n");
+            formattedSql.Should().Contain("    (@id, 'EU', 1, 10),\n");
+            formattedSql.Should().Contain("    (@id + 1, 'US', 2, 20);");
+            formattedSql.Should().NotContain("(\n        @id");
+        }
+
+        [Fact]
         public void TryFormat_ShouldApplyStage8CommentFormatting()
         {
             const string sourceSql = "SELECT a /*  keep   spacing */ AS b FROM dbo.t AS t";

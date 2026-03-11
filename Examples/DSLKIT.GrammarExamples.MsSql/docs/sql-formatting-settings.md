@@ -90,7 +90,8 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
 
 - `dml.updateSetStyle`: `OnePerLine | WrapByWidth`
 - `dml.insertColumnsStyle`: `OnePerLine | WrapByWidth`
-- `dml.insertValuesStyle`: `OnePerLine | WrapByWidth`
+- `dml.insertValuesStyle`: `OnePerLine | RowsPerLine | WrapByWidth`
+  - `RowsPerLine` keeps each `(... )` row on a single line while splitting multi-row `VALUES` lists across lines.
   - Applies to single-row and multi-row `INSERT ... VALUES ...`; `OUTPUT` clauses keep their inline form and stay attached to the `INSERT` header.
 - `ddl.createProcLayout`: `Expanded | Compact`
 

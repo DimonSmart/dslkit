@@ -581,7 +581,9 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 .ToList();
             var useMultilineValues = rowValueLayoutInfos.Any(layoutInfo => layoutInfo.IsMultiline);
             var useMultilineRowLayout = rowValueLayoutInfos.Count > 1 &&
-                (_options.Dml.InsertValuesStyle == SqlDmlListStyle.OnePerLine || useMultilineValues);
+                (_options.Dml.InsertValuesStyle == SqlDmlListStyle.OnePerLine ||
+                 _options.Dml.InsertValuesStyle == SqlDmlListStyle.RowsPerLine ||
+                 useMultilineValues);
 
             _writer.WriteToken($"{insertKeyword} {targetPrefixText}");
             if (columnListNode != null)
@@ -2168,6 +2170,11 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             if (listStyle == SqlDmlListStyle.OnePerLine)
             {
                 return true;
+            }
+
+            if (listStyle == SqlDmlListStyle.RowsPerLine)
+            {
+                return false;
             }
 
             var inlineLength = clausePrefixLength + string.Join(GetInlineCommaSeparator(), itemTexts).Length;

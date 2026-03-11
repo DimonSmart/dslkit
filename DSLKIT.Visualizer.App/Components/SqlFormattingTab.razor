@@ -585,10 +585,11 @@
                                             </select>
                                         </div>
 
-                                        <div class="dsl-sql-property-row" hidden='@HideOption("dml insert values style one per line wrap by width")'>
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("dml insert values style one per line rows per line wrap by width")'>
                                             <SqlOptionLabel ForId="sql-insert-values-style" Text="INSERT VALUES style" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <select id="sql-insert-values-style" class="form-select form-select-sm" @bind="insertValuesStyle" @bind:after="OnOptionValueChangedAsync">
                                                 <option value="@SqlDmlListStyle.OnePerLine">One per line</option>
+                                                <option value="@SqlDmlListStyle.RowsPerLine">Rows per line</option>
                                                 <option value="@SqlDmlListStyle.WrapByWidth">Wrap by width</option>
                                             </select>
                                         </div>

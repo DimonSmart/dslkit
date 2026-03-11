@@ -63,6 +63,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
     public enum SqlDmlListStyle
     {
         OnePerLine,
+        RowsPerLine,
         WrapByWidth
     }
 
