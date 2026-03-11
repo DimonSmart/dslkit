@@ -1,3 +1,5 @@
+@using DSLKIT.Visualizer.App.Components.SqlFormatting
+
 <div class="dsl-sql-option-label-group">
     <label for="@ForId">@Text</label>
     <div class="dsl-sql-option-help">
@@ -35,13 +37,13 @@
     public string Text { get; set; } = string.Empty;
 
     [Parameter]
-    public EventCallback<string> OnExampleRequested { get; set; }
+    public string? ExampleSql { get; set; }
 
-    [CascadingParameter]
-    public IReadOnlyDictionary<string, string>? OptionExamples { get; set; }
+    [Parameter]
+    public EventCallback<SqlOptionExampleRequest> OnExampleRequested { get; set; }
 
     private string? examplePreview =>
-        BuildPreview(FindExampleSql());
+        BuildPreview(ExampleSql);
 
     private Task OnExampleRequestedInternalAsync()
     {
@@ -50,25 +52,10 @@
             return Task.CompletedTask;
         }
 
-        return OnExampleRequested.InvokeAsync(ForId);
+        return OnExampleRequested.InvokeAsync(new SqlOptionExampleRequest(ForId, ExampleSql));
     }
 
     private string GetHelpAriaLabel() => $"Show help for {Text}";
-
-    private string? FindExampleSql()
-    {
-        if (OptionExamples is null)
-        {
-            return null;
-        }
-
-        if (!OptionExamples.TryGetValue(ForId, out var exampleSql))
-        {
-            return null;
-        }
-
-        return exampleSql;
-    }
 
     private static string? BuildPreview(string? sql)
     {
