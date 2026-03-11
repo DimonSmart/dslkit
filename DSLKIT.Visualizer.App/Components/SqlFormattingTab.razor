@@ -825,6 +825,10 @@ update dbo.A set Region='EU',Status=1,Score=10 where Id=@id;
 insert into dbo.AuditEntries(EntryId,Region,Status,Score) output inserted.EntryId values(@id,'EU',1,10),(@id+1,'US',2,20);
 create proc p as begin select 1 end;";
 
+    private const string CreateProcLayoutExampleSql =
+        @"-- CREATE PROC layout: compare expanded and compact procedure body formatting.
+create proc p as begin select 1 as value end;";
+
     private const string CommentsExampleSql =
         @"-- Comment whitespace: compare original spacing with safe whitespace normalization.
 select a.Id /*    keep   spacing   */ as id_alias --line    comment
@@ -891,7 +895,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         ["sql-update-set-style"] = DmlAndDdlExampleSql,
         ["sql-insert-columns-style"] = DmlAndDdlExampleSql,
         ["sql-insert-values-style"] = DmlAndDdlExampleSql,
-        ["sql-create-proc-layout"] = DmlAndDdlExampleSql,
+        ["sql-create-proc-layout"] = CreateProcLayoutExampleSql,
         ["sql-comments-preserve-attachment"] = CommentsExampleSql,
         ["sql-comments-formatting"] = CommentsExampleSql,
         ["sql-inside-parentheses"] = SpacingExampleSql,
