@@ -298,6 +298,8 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
         public SqlDmlListStyle InsertColumnsStyle { get; init; } = SqlDmlListStyle.OnePerLine;
 
+        public bool InsertColumnsStartOnNewLine { get; init; }
+
         public SqlDmlListStyle InsertValuesStyle { get; init; } = SqlDmlListStyle.OnePerLine;
     }
 

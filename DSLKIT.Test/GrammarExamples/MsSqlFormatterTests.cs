@@ -807,6 +807,30 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void TryFormat_ShouldStartInsertColumnsOnNewLine_WhenOptionEnabled()
+        {
+            const string sourceSql = "INSERT INTO dbo.TargetRows (A, B) VALUES (1, 2);";
+            var options = new SqlFormattingOptions
+            {
+                Dml = new SqlDmlFormattingOptions
+                {
+                    InsertColumnsStyle = SqlDmlListStyle.OnePerLine,
+                    InsertColumnsStartOnNewLine = true
+                },
+                Statement = new SqlStatementFormattingOptions
+                {
+                    TerminateWithSemicolon = SqlStatementTerminationMode.Always
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            result.IsSuccess.Should().BeTrue(result.ErrorMessage);
+
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+            formattedSql.Should().Contain("INSERT INTO dbo.TargetRows\n(\n    A,\n    B\n)\nVALUES");
+        }
+
+        [Fact]
         public void TryFormat_ShouldApplyStage8CommentFormatting()
         {
             const string sourceSql = "SELECT a /*  keep   spacing */ AS b FROM dbo.t AS t";

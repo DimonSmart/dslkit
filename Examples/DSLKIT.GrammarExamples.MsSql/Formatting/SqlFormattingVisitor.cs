@@ -588,6 +588,15 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             _writer.WriteToken($"{insertKeyword} {targetPrefixText}");
             if (columnListNode != null)
             {
+                if (_options.Dml.InsertColumnsStartOnNewLine)
+                {
+                    _writer.WriteLine();
+                }
+                else
+                {
+                    _writer.WriteSpace();
+                }
+
                 WriteParenthesizedList(columnListNode, multilineColumns);
             }
 
@@ -740,6 +749,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             {
                 for (var rowIndex = 0; rowIndex < rowValueLayoutInfos.Count; rowIndex++)
                 {
+                    _writer.WriteSpace();
                     WriteParenthesizedList(rowValueLayoutInfos[rowIndex].ValueListNode, rowValueLayoutInfos[rowIndex].IsMultiline);
                     if (rowIndex >= rowValueLayoutInfos.Count - 1)
                     {
@@ -757,6 +767,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             {
                 for (var rowIndex = 0; rowIndex < rowValueLayoutInfos.Count; rowIndex++)
                 {
+                    _writer.WriteSpace();
                     WriteParenthesizedList(rowValueLayoutInfos[rowIndex].ValueListNode, rowValueLayoutInfos[rowIndex].IsMultiline);
                     if (rowIndex >= rowValueLayoutInfos.Count - 1)
                     {
@@ -771,7 +782,6 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
         private void WriteParenthesizedList(NonTerminalNode listNode, bool multiline)
         {
-            _writer.WriteSpace();
             _writer.WriteToken("(");
             UpdatePreviousToken(CreateSymbolToken("("));
             Visit(listNode);
