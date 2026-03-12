@@ -254,7 +254,7 @@
                                             <input id="sql-predicates-inline-enable" class="form-check-input" type="checkbox" disabled="@(!state.ArePredicateInlineSettingsEnabled)" @bind="state.PredicatesInlineSimpleEnabled" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
-                                        <div class="@GetPropertyRowClass(disabled: !state.ArePredicateInlineSecondarySettingsEnabled)" hidden='@HideOption("predicates inline simple predicate max conditions short predicate")'>
+                                        <div class="@($"{GetPropertyRowClass(disabled: !state.ArePredicateInlineSecondarySettingsEnabled)} dsl-sql-property-row--nested")" hidden='@HideOption("predicates inline simple predicate max conditions short predicate")'>
                                             <SqlOptionLabel ForId="sql-predicates-inline-max-conditions" Text="Short WHERE/HAVING predicate max conditions" ExampleSql="@SqlFormattingExamples.PredicatesInlineExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-predicates-inline-max-conditions"
                                                    class="form-control form-control-sm"
@@ -265,7 +265,7 @@
                                                    @bind="state.PredicatesInlineSimpleMaxConditions" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
-                                        <div class="@GetPropertyRowClass(disabled: !state.ArePredicateInlineSecondarySettingsEnabled)" hidden='@HideOption("predicates inline simple predicate max line length")'>
+                                        <div class="@($"{GetPropertyRowClass(disabled: !state.ArePredicateInlineSecondarySettingsEnabled)} dsl-sql-property-row--nested")" hidden='@HideOption("predicates inline simple predicate max line length")'>
                                             <SqlOptionLabel ForId="sql-predicates-inline-max-line-length" Text="Short WHERE/HAVING predicate max line length" ExampleSql="@SqlFormattingExamples.PredicatesInlineExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-predicates-inline-max-line-length"
                                                    class="form-control form-control-sm"
@@ -276,7 +276,7 @@
                                                    @bind="state.PredicatesInlineSimpleMaxLineLength" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
-                                        <div class="@GetPropertyRowClass(disabled: !state.ArePredicateInlineSecondarySettingsEnabled, isCheck: true)" hidden='@HideOption("predicates inline simple predicate allow only and")'>
+                                        <div class="@($"{GetPropertyRowClass(disabled: !state.ArePredicateInlineSecondarySettingsEnabled, isCheck: true)} dsl-sql-property-row--nested")" hidden='@HideOption("predicates inline simple predicate allow only and")'>
                                             <SqlOptionLabel ForId="sql-predicates-inline-allow-only-and" Text="Only keep AND-only WHERE/HAVING predicates on one line" ExampleSql="@SqlFormattingExamples.PredicateAllowOnlyAndExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-predicates-inline-allow-only-and" class="form-check-input" type="checkbox" disabled="@(!state.ArePredicateInlineSecondarySettingsEnabled)" @bind="state.PredicatesInlineSimpleAllowOnlyAnd" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
