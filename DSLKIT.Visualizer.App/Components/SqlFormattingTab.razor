@@ -240,38 +240,33 @@
                                     <summary>Predicates</summary>
                                     <div class="dsl-sql-property-grid">
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("predicates multiline where having")'>
-                                            <SqlOptionLabel ForId="sql-predicates-multiline-where" Text="Multiline WHERE/HAVING" ExampleSql="@SqlFormattingExamples.PredicatesExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <SqlOptionLabel ForId="sql-predicates-multiline-where" Text="Break WHERE/HAVING predicates into multiple lines" ExampleSql="@SqlFormattingExamples.PredicatesExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-predicates-multiline-where" class="form-check-input" type="checkbox" @bind="state.PredicatesMultilineWhere" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
-                                        <div class="dsl-sql-property-note text-muted small">
-                                            Multiline predicate layout
+                                        <div class="@GetPropertyRowClass(disabled: !state.ArePredicateMultilineLayoutSettingsEnabled, isCheck: true)" hidden='@HideOption("predicates logical operator line break before after")'>
+                                            <SqlOptionLabel ForId="sql-predicates-logical-break" Text="Place AND/OR at the start of a new line in WHERE/HAVING" ExampleSql="@SqlFormattingExamples.PredicatesExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <input id="sql-predicates-logical-break" class="form-check-input" type="checkbox" disabled="@(!state.ArePredicateMultilineLayoutSettingsEnabled)" @bind="state.PredicatesLogicalOperatorsAtLineStart" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
-                                        <div class="@GetPropertyRowClass(disabled: !state.ArePredicateMultilineLayoutSettingsEnabled)" hidden='@HideOption("predicates logical operator line break before after")'>
-                                            <SqlOptionLabel ForId="sql-predicates-logical-break" Text="Logical operator break" ExampleSql="@SqlFormattingExamples.PredicatesExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
-                                            <select id="sql-predicates-logical-break"
-                                                    class="form-select form-select-sm"
-                                                    disabled="@(!state.ArePredicateMultilineLayoutSettingsEnabled)"
-                                                    @bind="state.PredicatesLogicalOperatorLineBreak" @bind:after="OnOptionValueChangedAsync">
-                                                <option value="@SqlLogicalOperatorLineBreakMode.BeforeOperator">Before operator</option>
-                                                <option value="@SqlLogicalOperatorLineBreakMode.AfterOperator">After operator</option>
-                                            </select>
+                                        <div class="@GetPropertyRowClass(disabled: !state.ArePredicateInlineSettingsEnabled, isCheck: true)" hidden='@HideOption("predicates inline simple predicate keep short where having one line")'>
+                                            <SqlOptionLabel ForId="sql-predicates-inline-enable" Text="Keep short WHERE/HAVING predicates on one line" ExampleSql="@SqlFormattingExamples.PredicatesInlineExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <input id="sql-predicates-inline-enable" class="form-check-input" type="checkbox" disabled="@(!state.ArePredicateInlineSettingsEnabled)" @bind="state.PredicatesInlineSimpleEnabled" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
-                                        <div class="@GetPropertyRowClass(disabled: !state.ArePredicateInlineSettingsEnabled)" hidden='@HideOption("predicates inline simple predicate max conditions")'>
-                                            <SqlOptionLabel ForId="sql-predicates-inline-max-conditions" Text="Inline max conditions" ExampleSql="@SqlFormattingExamples.PredicatesInlineExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                        <div class="@GetPropertyRowClass(disabled: !state.ArePredicateInlineSecondarySettingsEnabled)" hidden='@HideOption("predicates inline simple predicate max conditions short predicate")'>
+                                            <SqlOptionLabel ForId="sql-predicates-inline-max-conditions" Text="Short WHERE/HAVING predicate max conditions" ExampleSql="@SqlFormattingExamples.PredicatesInlineExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-predicates-inline-max-conditions"
                                                    class="form-control form-control-sm"
                                                    type="number"
                                                    min="0"
                                                    step="1"
-                                                   disabled="@(!state.ArePredicateInlineSettingsEnabled)"
+                                                   disabled="@(!state.ArePredicateInlineSecondarySettingsEnabled)"
                                                    @bind="state.PredicatesInlineSimpleMaxConditions" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="@GetPropertyRowClass(disabled: !state.ArePredicateInlineSecondarySettingsEnabled)" hidden='@HideOption("predicates inline simple predicate max line length")'>
-                                            <SqlOptionLabel ForId="sql-predicates-inline-max-line-length" Text="Inline max line length" ExampleSql="@SqlFormattingExamples.PredicatesInlineExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <SqlOptionLabel ForId="sql-predicates-inline-max-line-length" Text="Short WHERE/HAVING predicate max line length" ExampleSql="@SqlFormattingExamples.PredicatesInlineExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-predicates-inline-max-line-length"
                                                    class="form-control form-control-sm"
                                                    type="number"
@@ -282,20 +277,16 @@
                                         </div>
 
                                         <div class="@GetPropertyRowClass(disabled: !state.ArePredicateInlineSecondarySettingsEnabled, isCheck: true)" hidden='@HideOption("predicates inline simple predicate allow only and")'>
-                                            <SqlOptionLabel ForId="sql-predicates-inline-allow-only-and" Text="Inline allow only AND" ExampleSql="@SqlFormattingExamples.PredicateAllowOnlyAndExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <SqlOptionLabel ForId="sql-predicates-inline-allow-only-and" Text="Only keep AND-only WHERE/HAVING predicates on one line" ExampleSql="@SqlFormattingExamples.PredicateAllowOnlyAndExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-predicates-inline-allow-only-and" class="form-check-input" type="checkbox" disabled="@(!state.ArePredicateInlineSecondarySettingsEnabled)" @bind="state.PredicatesInlineSimpleAllowOnlyAnd" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-note text-muted small">
-                                            Inline predicate settings are active when <code>Multiline WHERE/HAVING</code> is enabled. Line length and AND-only rules also require <code>Inline max conditions</code> to be greater than <code>0</code>.
-                                        </div>
-
-                                        <div class="dsl-sql-property-note text-muted small">
-                                            Mixed AND/OR handling
+                                            Short predicate settings are active when multiline WHERE/HAVING layout is enabled.
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("predicates mixed and or parenthesize or groups")'>
-                                            <SqlOptionLabel ForId="sql-predicates-mixed-and-or-parenthesize-or-groups" Text="Parenthesize OR groups" ExampleSql="@SqlFormattingExamples.PredicatesExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <SqlOptionLabel ForId="sql-predicates-mixed-and-or-parenthesize-or-groups" Text="Add parentheses to mixed AND/OR groups in WHERE/HAVING" ExampleSql="@SqlFormattingExamples.PredicatesExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-predicates-mixed-and-or-parenthesize-or-groups"
                                                    class="form-check-input"
                                                    type="checkbox"
@@ -303,7 +294,7 @@
                                         </div>
 
                                         <div class="@GetPropertyRowClass(disabled: !state.ArePredicateMultilineLayoutSettingsEnabled, isCheck: true)" hidden='@HideOption("predicates mixed and or break or groups")'>
-                                            <SqlOptionLabel ForId="sql-predicates-mixed-and-or-break-or-groups" Text="Break OR groups" ExampleSql="@SqlFormattingExamples.PredicatesExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <SqlOptionLabel ForId="sql-predicates-mixed-and-or-break-or-groups" Text="Put OR groups on separate lines in mixed WHERE/HAVING predicates" ExampleSql="@SqlFormattingExamples.PredicatesExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-predicates-mixed-and-or-break-or-groups"
                                                    class="form-check-input"
                                                    type="checkbox"
@@ -312,7 +303,7 @@
                                         </div>
 
                                         <div class="dsl-sql-property-note text-muted small">
-                                            <code>Logical operator break</code> and <code>Break OR groups</code> are active only when <code>Multiline WHERE/HAVING</code> is enabled. <code>Parenthesize OR groups</code> also affects inline predicates.
+                                            Line-start AND/OR and OR-group line breaks are active only when multiline WHERE/HAVING layout is enabled.
                                         </div>
                                     </div>
                                 </details>

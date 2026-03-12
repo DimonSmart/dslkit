@@ -177,7 +177,8 @@ public partial class SqlFormattingTab
             state.JoinsMultilineOnBreakOnOr = true;
         }
 
-        var isPredicateInlineOption = string.Equals(optionId, "sql-predicates-inline-max-conditions", StringComparison.Ordinal) ||
+        var isPredicateInlineOption = string.Equals(optionId, "sql-predicates-inline-enable", StringComparison.Ordinal) ||
+            string.Equals(optionId, "sql-predicates-inline-max-conditions", StringComparison.Ordinal) ||
             string.Equals(optionId, "sql-predicates-inline-max-line-length", StringComparison.Ordinal) ||
             string.Equals(optionId, "sql-predicates-inline-allow-only-and", StringComparison.Ordinal);
         if (isPredicateInlineOption)
@@ -187,6 +188,12 @@ public partial class SqlFormattingTab
             {
                 state.PredicatesInlineSimpleMaxConditions = 2;
             }
+        }
+
+        if (string.Equals(optionId, "sql-predicates-inline-enable", StringComparison.Ordinal))
+        {
+            state.PredicatesInlineSimpleMaxConditions = Math.Max(state.PredicatesInlineSimpleMaxConditions, 2);
+            state.PredicatesInlineSimpleMaxLineLength = Math.Max(state.PredicatesInlineSimpleMaxLineLength, 120);
         }
 
         if (string.Equals(optionId, "sql-predicates-inline-max-line-length", StringComparison.Ordinal))

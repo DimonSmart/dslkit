@@ -158,6 +158,29 @@ internal sealed class SqlFormattingState
             : SqlParenthesesSpacing.Never;
     }
 
+    public bool PredicatesLogicalOperatorsAtLineStart
+    {
+        get => PredicatesLogicalOperatorLineBreak == SqlLogicalOperatorLineBreakMode.BeforeOperator;
+        set => PredicatesLogicalOperatorLineBreak = value
+            ? SqlLogicalOperatorLineBreakMode.BeforeOperator
+            : SqlLogicalOperatorLineBreakMode.AfterOperator;
+    }
+
+    public bool PredicatesInlineSimpleEnabled
+    {
+        get => PredicatesInlineSimpleMaxConditions > 0;
+        set
+        {
+            if (value)
+            {
+                PredicatesInlineSimpleMaxConditions = Math.Max(2, PredicatesInlineSimpleMaxConditions);
+                return;
+            }
+
+            PredicatesInlineSimpleMaxConditions = 0;
+        }
+    }
+
     public bool AreJoinBreakOptionsEnabled => JoinsMultilineOnMaxTokensSingleLine > 0;
 
     public bool ArePredicateMultilineLayoutSettingsEnabled => PredicatesMultilineWhere;
