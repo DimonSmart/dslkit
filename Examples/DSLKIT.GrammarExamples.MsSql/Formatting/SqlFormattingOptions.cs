@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DSLKIT.GrammarExamples.MsSql;
 
 namespace DSLKIT.GrammarExamples.MsSql.Formatting
 {
@@ -87,6 +88,8 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
     public sealed record SqlFormattingOptions
     {
+        public SqlDialect Dialect { get; init; } = SqlDialect.SqlServer;
+
         public SqlKeywordCase KeywordCase { get; init; } = SqlKeywordCase.Upper;
 
         public SqlSpacesFormattingOptions Spaces { get; init; } = new();
@@ -163,6 +166,8 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         public bool GroupBy { get; init; } = true;
 
         public bool Having { get; init; } = true;
+
+        public bool Qualify { get; init; } = true;
 
         public bool OrderBy { get; init; } = true;
 

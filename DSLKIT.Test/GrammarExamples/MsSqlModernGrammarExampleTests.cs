@@ -2500,6 +2500,49 @@ namespace DSLKIT.Test.GrammarExamples
             parseResult.IsSuccess.Should().BeFalse("CTAS should be gated behind SynapseExtensions feature.");
         }
 
+        [Fact]
+        public void ParseScript_ShouldRejectSnowflakeViewSyntax_WhenSqlServerDialectSelected()
+        {
+            const string script = """
+                CREATE OR REPLACE VIEW ADP_DX_DSE_PO_BOT.PRODUCT.V_CURRENT_USER_DIRECT_REPORTS AS
+                WITH me AS (
+                    SELECT PERSONNEL_NR
+                    FROM CDP_CORPORATE_DSG_S4_USER.PRODUCT.V_DIM_HR_COMMUNICATION
+                    WHERE CURRENT_DATE() BETWEEN START_DT::DATE AND END_DT::DATE
+                )
+                SELECT PERSONNEL_NR
+                FROM me
+                QUALIFY ROW_NUMBER() OVER (ORDER BY PERSONNEL_NR DESC) = 1;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script, SqlDialect.SqlServer);
+
+            parseResult.IsSuccess.Should().BeFalse("Snowflake-only syntax should stay disabled in the default SQL Server dialect.");
+        }
+
+        [Fact]
+        public void ParseScript_ShouldParseSnowflakeViewSyntax_WhenSnowflakeDialectSelected()
+        {
+            const string script = """
+                CREATE OR REPLACE VIEW ADP_DX_DSE_PO_BOT.PRODUCT.V_CURRENT_USER_DIRECT_REPORTS AS
+                WITH me AS (
+                    SELECT
+                        PERSONNEL_NR
+                    FROM CDP_CORPORATE_DSG_S4_USER.PRODUCT.V_DIM_HR_COMMUNICATION
+                    WHERE CURRENT_DATE() BETWEEN START_DT::DATE AND END_DT::DATE
+                )
+                SELECT
+                    PERSONNEL_NR
+                FROM me
+                QUALIFY ROW_NUMBER() OVER (ORDER BY PERSONNEL_NR DESC) = 1;
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script, SqlDialect.Snowflake);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"Snowflake syntax should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
+
         public static IEnumerable<object[]> ValidSqlScripts()
         {
             var scriptsRoot = ResolveScriptsRoot();

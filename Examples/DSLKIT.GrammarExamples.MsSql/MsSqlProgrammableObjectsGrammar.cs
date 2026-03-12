@@ -292,9 +292,6 @@ namespace DSLKIT.GrammarExamples.MsSql
                 createFunctionWithClause,
                 createFunctionTableVariableBody);
 
-            gb.Prod(createViewHead).Is("CREATE", "VIEW");
-            gb.Prod(createViewHead).Is("CREATE", "OR", "ALTER", "VIEW");
-            gb.Prod(createViewHead).Is("ALTER", "VIEW");
             gb.Prod(viewColumnIdentifierList).Is(strictIdentifierTerm);
             gb.Prod(viewColumnIdentifierList).Is(viewColumnIdentifierList, ",", strictIdentifierTerm);
             gb.Prod(createViewColumnList).Is("(", viewColumnIdentifierList, ")");

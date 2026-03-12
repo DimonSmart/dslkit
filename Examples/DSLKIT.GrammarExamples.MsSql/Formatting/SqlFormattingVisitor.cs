@@ -20,6 +20,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             Where,
             GroupBy,
             Having,
+            Qualify,
             OrderBy,
             Option
         }
@@ -51,13 +52,15 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             ",",
             ")",
             ";",
-            "."
+            ".",
+            "::"
         };
 
         private static readonly HashSet<string> TokensWithoutTrailingSpace = new(StringComparer.Ordinal)
         {
             "(",
-            "."
+            ".",
+            "::"
         };
 
         private static readonly HashSet<string> BinaryOperatorTokens = new(StringComparer.Ordinal)
@@ -2885,6 +2888,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 "WHERE" => ClauseKind.Where,
                 "GROUP" => ClauseKind.GroupBy,
                 "HAVING" => ClauseKind.Having,
+                "QUALIFY" => ClauseKind.Qualify,
                 "ORDER" => ClauseKind.OrderBy,
                 "OPTION" => ClauseKind.Option,
                 _ => ClauseKind.None
@@ -2901,6 +2905,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 ClauseKind.Where => _options.Layout.NewlineBeforeClause.Where,
                 ClauseKind.GroupBy => _options.Layout.NewlineBeforeClause.GroupBy,
                 ClauseKind.Having => _options.Layout.NewlineBeforeClause.Having,
+                ClauseKind.Qualify => _options.Layout.NewlineBeforeClause.Qualify,
                 ClauseKind.OrderBy => _options.Layout.NewlineBeforeClause.OrderBy,
                 ClauseKind.Option => _options.Layout.NewlineBeforeClause.Option,
                 _ => false
@@ -2915,6 +2920,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 ClauseKind.Where or
                 ClauseKind.GroupBy or
                 ClauseKind.Having or
+                ClauseKind.Qualify or
                 ClauseKind.OrderBy or
                 ClauseKind.Option;
         }

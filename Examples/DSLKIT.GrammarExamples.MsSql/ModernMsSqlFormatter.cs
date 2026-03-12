@@ -12,7 +12,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             ArgumentNullException.ThrowIfNull(source);
 
             var formattingOptions = options ?? new SqlFormattingOptions();
-            var documentParseResult = ModernMsSqlGrammarExample.ParseDocument(source);
+            var documentParseResult = ModernMsSqlGrammarExample.ParseDocument(source, formattingOptions.Dialect);
             if (!documentParseResult.IsSuccess || documentParseResult.Document == null)
             {
                 return SqlFormattingResult.Failure(documentParseResult.Error?.ToString() ?? "Parse failed.");

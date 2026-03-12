@@ -19,6 +19,7 @@ namespace DSLKIT.GrammarExamples.MsSql
         public INonTerminal QuerySpecification { get; init; } = null!;
         public INonTerminal QuerySpecificationWhereClause { get; init; } = null!;
         public INonTerminal QuerySpecificationHavingOpt { get; init; } = null!;
+        public INonTerminal QuerySpecificationQualifyOpt { get; init; } = null!;
         public INonTerminal QuerySpecificationGroupByWithOpt { get; init; } = null!;
         public INonTerminal QuerySpecificationGroupByExpressionList { get; init; } = null!;
         public INonTerminal QuerySpecificationGroupByGroupingSets { get; init; } = null!;

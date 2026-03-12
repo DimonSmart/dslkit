@@ -20,6 +20,7 @@ namespace DSLKIT.GrammarExamples.MsSql
         SynapseExtensions = 4,
         GraphExtensions = 8,
         SqlCmdPreprocessing = 16,
+        SnowflakeCompat = 32,
         All = SqlServerCore | ExternalObjects | SynapseExtensions | GraphExtensions | SqlCmdPreprocessing
     }
 
@@ -36,6 +37,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             return BuildGrammar(MsSqlDialectFeatures.All);
         }
 
+        public static IGrammar BuildGrammar(SqlDialect dialect)
+        {
+            return BuildGrammar(SqlDialectGrammarModules.GetDefaultFeatures(dialect));
+        }
+
         public static IGrammar BuildGrammar(MsSqlDialectFeatures dialectFeatures)
         {
             return GetGrammarResources(dialectFeatures).Grammar;
@@ -44,6 +50,11 @@ namespace DSLKIT.GrammarExamples.MsSql
         public static ParseResult ParseBatch(string source)
         {
             return ParseBatch(source, MsSqlDialectFeatures.All);
+        }
+
+        public static ParseResult ParseBatch(string source, SqlDialect dialect)
+        {
+            return ParseBatch(source, SqlDialectGrammarModules.GetDefaultFeatures(dialect));
         }
 
         public static ParseResult ParseBatch(string source, MsSqlDialectFeatures dialectFeatures)
@@ -84,6 +95,11 @@ namespace DSLKIT.GrammarExamples.MsSql
         public static SqlScriptDocumentParseResult ParseDocument(string source)
         {
             return ParseDocument(source, MsSqlDialectFeatures.All);
+        }
+
+        public static SqlScriptDocumentParseResult ParseDocument(string source, SqlDialect dialect)
+        {
+            return ParseDocument(source, SqlDialectGrammarModules.GetDefaultFeatures(dialect));
         }
 
         public static SqlScriptDocumentParseResult ParseDocument(string source, MsSqlDialectFeatures dialectFeatures)
@@ -752,6 +768,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var querySpecificationGroupByGroupingSets = gb.NT("QuerySpecificationGroupByGroupingSets");
             var querySpecificationGroupByWithOpt = gb.NT("QuerySpecificationGroupByWithOpt");
             var querySpecificationHavingOpt = gb.NT("QuerySpecificationHavingOpt");
+            var querySpecificationQualifyOpt = gb.NT("QuerySpecificationQualifyOpt");
             var setQuantifier = gb.NT("SetQuantifier");
             var topClause = gb.NT("TopClause");
             var topClauseTail = gb.NT("TopClauseTail");
@@ -838,6 +855,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 QuerySpecification = querySpecification,
                 QuerySpecificationWhereClause = querySpecificationWhereClause,
                 QuerySpecificationHavingOpt = querySpecificationHavingOpt,
+                QuerySpecificationQualifyOpt = querySpecificationQualifyOpt,
                 QuerySpecificationGroupByWithOpt = querySpecificationGroupByWithOpt,
                 QuerySpecificationGroupByExpressionList = querySpecificationGroupByExpressionList,
                 QuerySpecificationGroupByGroupingSets = querySpecificationGroupByGroupingSets,
@@ -946,6 +964,34 @@ namespace DSLKIT.GrammarExamples.MsSql
                 forSystemTimeStart,
                 forPathStart,
                 graphColumnRef);
+            var dialectModuleContext = new SqlDialectGrammarModuleContext(
+                grammarContext,
+                new SqlDialectGrammarExtensionPoints(
+                    withClause,
+                    createViewHead,
+                    bulkInsertStatement,
+                    bulkInsertOptionList,
+                    matchGraphPath,
+                    matchGraphStep,
+                    matchGraphStepChain,
+                    matchGraphShortestPath,
+                    matchGraphShortestPathBody,
+                    createTableAsSelectStatement,
+                    predictArgList,
+                    predictArg,
+                    createSecurityPolicyStatement,
+                    alterSecurityPolicyStatement,
+                    securityPolicyClauseList,
+                    securityPolicyClause,
+                    securityPolicyOptionList,
+                    securityPolicyOption,
+                    securityPolicyOptionName,
+                    createExternalTableStatement,
+                    externalTableOptionList,
+                    createExternalDataSourceStatement,
+                    externalDataSourceOptionList,
+                    mergeStatement,
+                    createTableElementList));
             var schemaDdlSymbols = new MsSqlSchemaDdlSymbols
             {
                 CreateTableFileTableClause = createTableFileTableClause,
@@ -1089,7 +1135,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             statementRegistry.Add(cursorOperationStatement);
             statementRegistry.Add(waitforStatement);
             statementRegistry.Add(createLoginStatement);
-            statementRegistry.Add(bulkInsertStatement);
             statementRegistry.Add(checkpointStatement);
             statementRegistry.Add(createUserStatement);
             statementRegistry.Add(createStatisticsStatement);
@@ -1099,25 +1144,15 @@ namespace DSLKIT.GrammarExamples.MsSql
             statementRegistry.Add(revertStatement);
             statementRegistry.Add(dropEventSessionStatement);
             statementRegistry.Add(createTypeStatement);
-            statementRegistry.Add(createSecurityPolicyStatement);
-            statementRegistry.Add(alterSecurityPolicyStatement);
-            statementRegistry.Add(mergeStatement);
-
-            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.SynapseExtensions))
-            {
-                statementRegistry.Add(createTableAsSelectStatement);
-            }
-
-            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.ExternalObjects))
-            {
-                statementRegistry.Add(createExternalTableStatement);
-                statementRegistry.Add(createExternalDataSourceStatement);
-            }
+            SqlDialectGrammarModules.Resolve(dialectFeatures).RegisterStatements(statementRegistry, dialectModuleContext);
 
             var statementNoLeadingWithAlternatives = statementRegistry.CreateTopLevelAlternatives();
             var implicitStatementNoLeadingWithAlternatives = statementRegistry.CreateImplicitAlternatives();
             var createFunctionPreludeStatementNoLeadingWithAlternatives = statementRegistry.CreateFunctionPreludeAlternatives();
             var createFunctionImplicitPreludeStatementNoLeadingWithAlternatives = statementRegistry.CreateFunctionImplicitPreludeAlternatives();
+            var leadingWithStatementAlternatives = SqlDialectGrammarModules
+                .Resolve(dialectFeatures)
+                .CreateLeadingWithStatementAlternatives(dialectModuleContext);
 
             void BuildQueryExpressionGrammar() => MsSqlQueryGrammar.Build(grammarContext);
 
@@ -1185,10 +1220,10 @@ namespace DSLKIT.GrammarExamples.MsSql
                 updateStatement,
                 insertStatement,
                 deleteStatement,
-                mergeStatement,
                 queryExpression,
                 implicitQueryExpression,
                 optionClause,
+                leadingWithStatementAlternatives,
                 statementNoLeadingWithAlternatives,
                 implicitStatementNoLeadingWithAlternatives);
 
@@ -1461,7 +1496,6 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             BuildPostQuerySecurityAndAdminGrammar();
             BuildUpdateStatisticsGrammar();
-
             MsSqlExtensionsGrammar.BuildMergeGrammar(
                 gb,
                 mergeTargetTable,
@@ -1483,65 +1517,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 updateSetList,
                 insertColumnList,
                 insertValueList);
-
-            MsSqlExtensionsGrammar.BuildBulkInsertGrammar(
-                gb,
-                bulkInsertOptionList,
-                qualifiedName,
-                expression,
-                namedOptionValue,
-                createTableKeyColumnList);
-
-            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.GraphExtensions))
-            {
-                MsSqlExtensionsGrammar.BuildGraphGrammar(
-                    gb,
-                    matchGraphPattern,
-                    matchGraphPath,
-                    matchGraphStep,
-                    matchGraphStepChain,
-                    matchGraphShortestPath,
-                    matchGraphShortestPathBody,
-                    strictIdentifierTerm,
-                    number);
-            }
-
-            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.SynapseExtensions))
-            {
-                MsSqlExtensionsGrammar.BuildSynapseGrammar(
-                    gb,
-                    functionCall,
-                    predictArgList,
-                    predictArg,
-                    strictIdentifierTerm,
-                    expression);
-            }
-
-            MsSqlExtensionsGrammar.BuildSecurityPolicyGrammar(
-                gb,
-                createSecurityPolicyStatement,
-                alterSecurityPolicyStatement,
-                securityPolicyClauseList,
-                securityPolicyClause,
-                securityPolicyOptionList,
-                securityPolicyOption,
-                securityPolicyOptionName,
-                functionCall,
-                qualifiedName);
-
-            if (HasFeature(dialectFeatures, MsSqlDialectFeatures.ExternalObjects))
-            {
-                MsSqlExtensionsGrammar.BuildExternalObjectGrammar(
-                    gb,
-                    createExternalTableStatement,
-                    externalTableOptionList,
-                    createExternalDataSourceStatement,
-                    externalDataSourceOptionList,
-                    qualifiedName,
-                    strictIdentifierTerm,
-                    createTableElementList,
-                    namedOptionValue);
-            }
+            SqlDialectGrammarModules.Resolve(dialectFeatures).Apply(dialectModuleContext);
 
             return gb.BuildGrammar("Start");
         }
@@ -1615,10 +1591,7 @@ namespace DSLKIT.GrammarExamples.MsSql
 
         private static MsSqlDialectFeatures NormalizeGrammarFeatures(MsSqlDialectFeatures dialectFeatures)
         {
-            return dialectFeatures & (
-                MsSqlDialectFeatures.ExternalObjects |
-                MsSqlDialectFeatures.SynapseExtensions |
-                MsSqlDialectFeatures.GraphExtensions);
+            return SqlDialectGrammarModules.NormalizeFeatures(dialectFeatures);
         }
 
         private static IToken WithLeadingTrivia(IToken token, IEnumerable<IToken> leadingTrivia)

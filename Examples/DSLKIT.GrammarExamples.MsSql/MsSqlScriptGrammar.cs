@@ -29,10 +29,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             INonTerminal updateStatement,
             INonTerminal insertStatement,
             INonTerminal deleteStatement,
-            INonTerminal mergeStatement,
             INonTerminal queryExpression,
             INonTerminal implicitQueryExpression,
             INonTerminal optionClause,
+            IReadOnlyCollection<object> additionalWithClauseLeadingAlternatives,
             IReadOnlyCollection<object> statementNoLeadingWithAlternatives,
             IReadOnlyCollection<object> implicitStatementNoLeadingWithAlternatives)
         {
@@ -68,17 +68,20 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule(statement).OneOf(statementNoLeadingWith, leadingWithStatement);
             gb.Rule(statementNoLeadingWith).OneOf([.. statementNoLeadingWithAlternatives]);
             gb.Rule(implicitStatementNoLeadingWith).OneOf([.. implicitStatementNoLeadingWithAlternatives]);
-            gb.Rule(leadingWithStatement).OneOf(
+            var leadingWithAlternatives = new List<object>
+            {
                 gb.Seq(withClause, queryExpression),
                 gb.Seq(withClause, queryExpression, optionClause),
                 gb.Seq(withClause, updateStatement),
                 gb.Seq(withClause, insertStatement),
                 gb.Seq(withClause, deleteStatement),
-                gb.Seq(withClause, mergeStatement),
                 gb.Seq(withXmlNamespacesClause, updateStatement),
                 gb.Seq(withXmlNamespacesClause, insertStatement),
                 gb.Seq(withXmlNamespacesClause, deleteStatement),
-                gb.Seq(withXmlNamespacesClause, queryStatement));
+                gb.Seq(withXmlNamespacesClause, queryStatement)
+            };
+            leadingWithAlternatives.AddRange(additionalWithClauseLeadingAlternatives);
+            gb.Rule(leadingWithStatement).OneOf([.. leadingWithAlternatives]);
 
             gb.Rule(queryStatement).OneOf(
                 queryExpression,

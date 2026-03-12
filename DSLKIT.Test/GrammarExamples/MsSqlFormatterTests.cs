@@ -1184,6 +1184,37 @@ namespace DSLKIT.Test.GrammarExamples
                 "formatted INSERT EXEC variants should preserve significant SQL tokens.");
         }
 
+        [Fact]
+        public void TryFormat_ShouldFormatSnowflakeViewSyntax_WhenSnowflakeDialectSelected()
+        {
+            const string sourceSql = """
+                CREATE OR REPLACE VIEW ADP_DX_DSE_PO_BOT.PRODUCT.V_CURRENT_USER_DIRECT_REPORTS AS
+                WITH me AS (
+                    SELECT PERSONNEL_NR
+                    FROM CDP_CORPORATE_DSG_S4_USER.PRODUCT.V_DIM_HR_COMMUNICATION
+                    WHERE CURRENT_DATE() BETWEEN START_DT::DATE AND END_DT::DATE
+                )
+                SELECT PERSONNEL_NR
+                FROM me
+                QUALIFY ROW_NUMBER() OVER (ORDER BY PERSONNEL_NR DESC) = 1;
+                """;
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, new SqlFormattingOptions
+            {
+                Dialect = SqlDialect.Snowflake
+            });
+
+            result.IsSuccess.Should().BeTrue(result.ErrorMessage);
+
+            var formattedSql = NormalizeLineEndings(result.FormattedSql!);
+            NormalizeSql(formattedSql).Should().Be(
+                NormalizeSql(sourceSql),
+                "formatted Snowflake SQL should preserve significant tokens.");
+            formattedSql.Should().Contain("START_DT::DATE");
+            formattedSql.Should().Contain("\nQUALIFY ROW_NUMBER() OVER");
+            formattedSql.Should().Contain("CREATE OR REPLACE VIEW");
+        }
+
         public static IEnumerable<object[]> ValidFormattingScripts()
         {
             var scriptsRoot = ResolveScriptsRoot();

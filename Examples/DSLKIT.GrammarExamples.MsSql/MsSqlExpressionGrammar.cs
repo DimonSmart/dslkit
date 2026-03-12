@@ -170,8 +170,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(functionCall).Is(qualifiedName, "(", ")");
             gb.Prod(functionCall).Is(qualifiedName, "(", "*", ")");
             gb.Prod(functionCall).Is(qualifiedName, "(", functionArgumentList, ")");
-            gb.Prod(functionCall).Is("::", qualifiedName, "(", ")");
-            gb.Prod(functionCall).Is("::", qualifiedName, "(", functionArgumentList, ")");
             gb.Prod(functionCall).Is(qualifiedName, "(", "DISTINCT", functionArgumentList, ")");
             gb.Prod(functionCall).Is(qualifiedName, "(", "ALL", functionArgumentList, ")");
             gb.Prod(functionCall).Is(qualifiedName, "(", functionArgumentList, ",", "*", ",", functionArgumentList, ")");
