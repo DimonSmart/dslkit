@@ -2926,6 +2926,11 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 _writer.WriteLine();
             }
 
+            for (var i = 0; i < _options.Statement.BlankLinesBetweenStatements; i++)
+            {
+                _writer.WriteLine();
+            }
+
             _currentClause = ClauseKind.None;
             _lastMajorClause = null;
             _tokenBeforePrevious = null;

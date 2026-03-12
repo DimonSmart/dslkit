@@ -22,6 +22,8 @@ internal sealed class SqlFormattingState
 
     public SqlStatementTerminationMode TerminateWithSemicolon { get; set; } = SqlStatementTerminationMode.ExistingOnly;
 
+    public int BlankLinesBetweenStatements { get; set; }
+
     public bool BlankLineBetweenClauses { get; set; }
 
     public SqlCommaStyle CommaStyle { get; set; } = SqlCommaStyle.Trailing;
@@ -201,6 +203,7 @@ internal sealed class SqlFormattingState
         KeywordCase = SqlKeywordCase.Upper;
         InsideParentheses = SqlParenthesesSpacing.Never;
         TerminateWithSemicolon = SqlStatementTerminationMode.ExistingOnly;
+        BlankLinesBetweenStatements = 0;
         BlankLineBetweenClauses = false;
         CommaStyle = SqlCommaStyle.Trailing;
         SelectItemsStyle = SqlListLayoutStyle.OnePerLine;

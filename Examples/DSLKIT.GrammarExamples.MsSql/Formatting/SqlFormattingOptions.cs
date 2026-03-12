@@ -130,6 +130,8 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
     public sealed record SqlStatementFormattingOptions
     {
         public SqlStatementTerminationMode TerminateWithSemicolon { get; init; } = SqlStatementTerminationMode.ExistingOnly;
+
+        public int BlankLinesBetweenStatements { get; init; }
     }
 
     public sealed record SqlEndOfFileFormattingOptions

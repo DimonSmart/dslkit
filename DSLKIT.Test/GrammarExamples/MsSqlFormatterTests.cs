@@ -755,6 +755,30 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void TryFormat_ShouldInsertConfiguredBlankLinesBetweenStatements()
+        {
+            const string sourceSql = "UPDATE dbo.t SET a=1 WHERE id=@id; CREATE PROC p AS BEGIN SELECT 1 END";
+            var options = new SqlFormattingOptions
+            {
+                Ddl = new SqlDdlFormattingOptions
+                {
+                    CreateProcLayout = SqlCreateProcLayout.Expanded
+                },
+                Statement = new SqlStatementFormattingOptions
+                {
+                    TerminateWithSemicolon = SqlStatementTerminationMode.Always,
+                    BlankLinesBetweenStatements = 1
+                }
+            };
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, options);
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+
+            result.IsSuccess.Should().BeTrue();
+            formattedSql.Should().Contain("WHERE id = @id;\n\nCREATE PROC p\nAS\nBEGIN\n");
+        }
+
+        [Fact]
         public void TryFormat_ShouldApplyInsertColumnsAndValuesStyles_ForOutputAndMultiRowValues()
         {
             const string sourceSql = "INSERT INTO dbo.TargetRows (A, B) OUTPUT INSERTED.A VALUES (1,2),(3,4);";

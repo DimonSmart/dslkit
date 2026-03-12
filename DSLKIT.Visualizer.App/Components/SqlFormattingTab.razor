@@ -106,6 +106,16 @@
                                             </select>
                                         </div>
 
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("statement blank lines between statements separator spacing")'>
+                                            <SqlOptionLabel ForId="sql-statement-blank-lines" Text="Blank lines between statements" ExampleSql="@SqlFormattingExamples.DmlAndDdlExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <input id="sql-statement-blank-lines"
+                                                   class="form-control form-control-sm"
+                                                   type="number"
+                                                   min="0"
+                                                   step="1"
+                                                   @bind="state.BlankLinesBetweenStatements" @bind:after="OnOptionValueChangedAsync" />
+                                        </div>
+
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("end of file eof newline new line")'>
                                             <SqlOptionLabel ForId="sql-eof-newline" Text="EOF newline" ExampleSql="@SqlFormattingExamples.SemicolonAndEofExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-eof-newline" class="form-check-input" type="checkbox" @bind="state.EofNewline" @bind:after="OnOptionValueChangedAsync" />

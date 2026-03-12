@@ -16,6 +16,8 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
 - `spaces.insideParentheses`: `Never | Always`
 - `spaces.beforeSemicolon`: `true | false`
 - `statement.terminateWithSemicolon`: `Never | ExistingOnly | Always`
+- `statement.blankLinesBetweenStatements`: `0 | 1 | 2 | ...`
+  - Inserts the configured number of empty lines after a statement boundary such as `;` or `GO`.
 - `eof.newline`: `true | false`
 
 ## Stage 2. Query Skeleton

@@ -424,6 +424,28 @@ namespace DSLKIT.Test.GrammarExamples
 
             yield return
             [
+                "sql-statement-blank-lines",
+                DmlAndDdlExampleSql,
+                new SqlFormattingOptions
+                {
+                    Statement = new SqlStatementFormattingOptions
+                    {
+                        TerminateWithSemicolon = SqlStatementTerminationMode.Always,
+                        BlankLinesBetweenStatements = 0
+                    }
+                },
+                new SqlFormattingOptions
+                {
+                    Statement = new SqlStatementFormattingOptions
+                    {
+                        TerminateWithSemicolon = SqlStatementTerminationMode.Always,
+                        BlankLinesBetweenStatements = 1
+                    }
+                }
+            ];
+
+            yield return
+            [
                 "sql-wrap-column",
                 ListsExampleSql,
                 new SqlFormattingOptions
@@ -697,6 +719,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
         {
             ["sql-keyword-case"] = KeywordCaseExampleSql,
             ["sql-statement-semicolon"] = SemicolonAndEofExampleSql,
+            ["sql-statement-blank-lines"] = DmlAndDdlExampleSql,
             ["sql-eof-newline"] = SemicolonAndEofExampleSql,
             ["sql-align-select-aliases"] = AlignAliasesExampleSql,
             ["sql-indent-size"] = LayoutClausesExampleSql,

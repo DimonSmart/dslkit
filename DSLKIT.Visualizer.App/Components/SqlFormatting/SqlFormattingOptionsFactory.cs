@@ -18,7 +18,8 @@ internal static class SqlFormattingOptionsFactory
             },
             Statement = new SqlStatementFormattingOptions
             {
-                TerminateWithSemicolon = state.TerminateWithSemicolon
+                TerminateWithSemicolon = state.TerminateWithSemicolon,
+                BlankLinesBetweenStatements = Math.Max(0, state.BlankLinesBetweenStatements)
             },
             Eof = new SqlEndOfFileFormattingOptions
             {
