@@ -899,6 +899,10 @@ code {
     grid-template-columns: minmax(0, 1fr) auto;
 }
 
+.dsl-sql-property-row--nested {
+    padding-left: 1.25rem;
+}
+
 .dsl-sql-property-row--check .form-check-input {
     margin-top: 0;
 }
