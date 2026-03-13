@@ -398,7 +398,7 @@ namespace DSLKIT.Test.GrammarExamples
                     OnNewLine = true,
                     MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
                     {
-                        MaxTokensSingleLine = 5,
+                        MaxConditionsSingleLine = 2,
                         BreakOnAnd = true,
                         BreakOnOr = false
                     }
@@ -416,9 +416,36 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
-        public void TryFormat_ShouldApplyJoinBreakOnFlags()
+        public void TryFormat_ShouldKeepParenthesizedOnGroupInline_WhenConditionThresholdAllowsIt()
         {
-            const string sourceSql = "SELECT a AS A FROM dbo.A AS a INNER JOIN dbo.B AS b ON a.Id=b.Id AND a.Type=b.Type OR a.Flag=b.Flag";
+            const string sourceSql = "SELECT a AS A FROM dbo.A AS a INNER JOIN dbo.B AS b ON a.Id=b.Id AND (a.Region=b.Region OR a.Kind=b.Kind)";
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, new SqlFormattingOptions
+            {
+                Joins = new SqlJoinsFormattingOptions
+                {
+                    NewlinePerJoin = true,
+                    OnNewLine = true,
+                    MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
+                    {
+                        MaxConditionsSingleLine = 2,
+                        BreakOnAnd = true,
+                        BreakOnOr = true
+                    }
+                }
+            });
+
+            var formattedSql = NormalizeLineEndings(result.FormattedSql);
+
+            result.IsSuccess.Should().BeTrue();
+            formattedSql.Should().Contain("ON a.Id = b.Id AND (a.Region = b.Region OR a.Kind = b.Kind)");
+            formattedSql.Should().NotContain("\n        AND");
+        }
+
+        [Fact]
+        public void TryFormat_ShouldGroupMixedOnPredicateByPrecedence()
+        {
+            const string sourceSql = "SELECT a AS A FROM dbo.A AS a INNER JOIN dbo.B AS b ON a.Id=b.Id AND a.Region=b.Region OR a.Flag=b.Flag";
 
             var andOnlyOptions = new SqlFormattingOptions
             {
@@ -428,7 +455,7 @@ namespace DSLKIT.Test.GrammarExamples
                     OnNewLine = true,
                     MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
                     {
-                        MaxTokensSingleLine = 1,
+                        MaxConditionsSingleLine = 1,
                         BreakOnAnd = true,
                         BreakOnOr = false
                     }
@@ -439,7 +466,10 @@ namespace DSLKIT.Test.GrammarExamples
             var andOnlyFormattedSql = NormalizeLineEndings(andOnlyResult.FormattedSql);
 
             andOnlyResult.IsSuccess.Should().BeTrue();
-            andOnlyFormattedSql.Should().MatchRegex("AND\\s+a\\.TYPE\\s*=\\s*b\\.TYPE\\s+OR\\s+a\\.Flag\\s*=\\s*b\\.Flag");
+            andOnlyFormattedSql.Should().Contain("ON (\n");
+            andOnlyFormattedSql.Should().MatchRegex("\\n\\s+AND\\s+a\\.Region\\s*=\\s*b\\.Region\\n");
+            andOnlyFormattedSql.Should().Contain(") OR a.Flag = b.Flag");
+            andOnlyFormattedSql.Should().NotContain("AND a.Region = b.Region OR a.Flag = b.Flag");
 
             var andOrOptions = new SqlFormattingOptions
             {
@@ -449,7 +479,7 @@ namespace DSLKIT.Test.GrammarExamples
                     OnNewLine = true,
                     MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
                     {
-                        MaxTokensSingleLine = 1,
+                        MaxConditionsSingleLine = 1,
                         BreakOnAnd = true,
                         BreakOnOr = true
                     }
@@ -460,6 +490,7 @@ namespace DSLKIT.Test.GrammarExamples
             var andOrFormattedSql = NormalizeLineEndings(andOrResult.FormattedSql);
 
             andOrResult.IsSuccess.Should().BeTrue();
+            andOrFormattedSql.Should().Contain("ON (\n");
             andOrFormattedSql.Should().MatchRegex("\\n\\s+OR\\s+a\\.Flag\\s*=\\s*b\\.Flag");
         }
 

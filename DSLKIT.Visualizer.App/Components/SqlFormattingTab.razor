@@ -218,14 +218,14 @@
                                             <input id="sql-joins-on-new-line" class="form-check-input" type="checkbox" @bind="state.JoinsOnNewLine" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
-                                        <div class="dsl-sql-property-row" hidden='@HideOption("joins multiline on threshold max tokens single line split on tokens exceed")'>
-                                            <SqlOptionLabel ForId="sql-joins-multiline-threshold" Text="Split ON when tokens exceed" ExampleSql="@SqlFormattingExamples.JoinsExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                        <div class="dsl-sql-property-row" hidden='@HideOption("joins multiline on threshold max conditions single line split on after conditions top-level")'>
+                                            <SqlOptionLabel ForId="sql-joins-multiline-threshold" Text="Split ON after N conditions" ExampleSql="@SqlFormattingExamples.JoinsExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-joins-multiline-threshold"
                                                    class="form-control form-control-sm"
                                                    type="number"
                                                    min="0"
                                                    step="1"
-                                                   @bind="state.JoinsMultilineOnMaxTokensSingleLine" @bind:after="OnOptionValueChangedAsync" />
+                                                   @bind="state.JoinsMultilineOnMaxConditionsSingleLine" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="@GetPropertyRowClass(disabled: !state.AreJoinBreakOptionsEnabled, isCheck: true)" hidden='@HideOption("joins multiline on threshold break on and")'>
@@ -239,7 +239,7 @@
                                         </div>
 
                                         <div class="dsl-sql-property-note text-muted small">
-                                            Break options are active when the <code>ON</code> token threshold is greater than <code>0</code>.
+                                            Counts top-level conditions. Break options activate when the condition limit is greater than <code>0</code>. Mixed <code>AND</code>/<code>OR</code> in multiline <code>ON</code> is grouped by precedence automatically.
                                         </div>
                                     </div>
                                 </details>

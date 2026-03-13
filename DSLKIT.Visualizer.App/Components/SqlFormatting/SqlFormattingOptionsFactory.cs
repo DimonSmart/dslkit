@@ -73,7 +73,7 @@ internal static class SqlFormattingOptionsFactory
                 OnNewLine = state.JoinsOnNewLine,
                 MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
                 {
-                    MaxTokensSingleLine = Math.Max(0, state.JoinsMultilineOnMaxTokensSingleLine),
+                    MaxConditionsSingleLine = Math.Max(0, state.JoinsMultilineOnMaxConditionsSingleLine),
                     BreakOnAnd = state.JoinsMultilineOnBreakOnAnd,
                     BreakOnOr = state.JoinsMultilineOnBreakOnOr
                 }

@@ -162,9 +162,9 @@ public partial class SqlFormattingTab
         var isJoinBreakOption = string.Equals(optionId, "sql-joins-break-on-and", StringComparison.Ordinal) ||
             string.Equals(optionId, "sql-joins-break-on-or", StringComparison.Ordinal) ||
             string.Equals(optionId, "sql-joins-multiline-threshold", StringComparison.Ordinal);
-        if (isJoinBreakOption && state.JoinsMultilineOnMaxTokensSingleLine == 0)
+        if (isJoinBreakOption && state.JoinsMultilineOnMaxConditionsSingleLine == 0)
         {
-            state.JoinsMultilineOnMaxTokensSingleLine = 12;
+            state.JoinsMultilineOnMaxConditionsSingleLine = 2;
         }
 
         if (string.Equals(optionId, "sql-joins-break-on-and", StringComparison.Ordinal))
@@ -234,7 +234,7 @@ public partial class SqlFormattingTab
         if (isInlineShortOption)
         {
             state.SelectItemsStyle = SqlListLayoutStyle.OnePerLine;
-            state.JoinsMultilineOnMaxTokensSingleLine = Math.Max(state.JoinsMultilineOnMaxTokensSingleLine, 12);
+            state.JoinsMultilineOnMaxConditionsSingleLine = Math.Max(state.JoinsMultilineOnMaxConditionsSingleLine, 1);
             state.JoinsMultilineOnBreakOnAnd = true;
             state.PredicatesMultilineWhere = true;
             state.InlineShortExpressionMaxTokens = Math.Max(state.InlineShortExpressionMaxTokens, 20);

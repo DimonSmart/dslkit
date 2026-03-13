@@ -45,9 +45,10 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
 - `joins.newlinePerJoin`: `true | false`
 - `joins.onNewLine`: `true | false`
 - `[HEURISTIC] joins.multilineOnThreshold`:
-  - `maxTokensSingleLine`
+  - `maxConditionsSingleLine`
   - `breakOnAnd = true | false`
   - `breakOnOr = true | false`
+  - When multiline `ON` mixes top-level `AND` and `OR`, formatter groups by boolean precedence before applying line breaks so visual blocks match the evaluation order.
 
 ## Stage 5. WHERE/HAVING Boolean Logic
 

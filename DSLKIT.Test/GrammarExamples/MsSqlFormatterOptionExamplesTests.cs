@@ -128,7 +128,7 @@ namespace DSLKIT.Test.GrammarExamples
                         OnNewLine = true,
                         MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
                         {
-                            MaxTokensSingleLine = 0,
+                            MaxConditionsSingleLine = 2,
                             BreakOnAnd = true,
                             BreakOnOr = true
                         }
@@ -142,7 +142,7 @@ namespace DSLKIT.Test.GrammarExamples
                         OnNewLine = true,
                         MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
                         {
-                            MaxTokensSingleLine = 12,
+                            MaxConditionsSingleLine = 3,
                             BreakOnAnd = true,
                             BreakOnOr = true
                         }
@@ -310,7 +310,7 @@ namespace DSLKIT.Test.GrammarExamples
                         OnNewLine = true,
                         MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
                         {
-                            MaxTokensSingleLine = 12,
+                            MaxConditionsSingleLine = 1,
                             BreakOnAnd = true,
                             BreakOnOr = false
                         }
@@ -338,7 +338,7 @@ namespace DSLKIT.Test.GrammarExamples
                         OnNewLine = true,
                         MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
                         {
-                            MaxTokensSingleLine = 12,
+                            MaxConditionsSingleLine = 1,
                             BreakOnAnd = true,
                             BreakOnOr = false
                         }
@@ -372,7 +372,7 @@ namespace DSLKIT.Test.GrammarExamples
                         OnNewLine = true,
                         MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
                         {
-                            MaxTokensSingleLine = 12,
+                            MaxConditionsSingleLine = 1,
                             BreakOnAnd = true,
                             BreakOnOr = false
                         }
@@ -400,7 +400,7 @@ namespace DSLKIT.Test.GrammarExamples
                         OnNewLine = true,
                         MultilineOnThreshold = new SqlJoinMultilineOnThresholdOptions
                         {
-                            MaxTokensSingleLine = 12,
+                            MaxConditionsSingleLine = 1,
                             BreakOnAnd = true,
                             BreakOnOr = false
                         }
@@ -648,7 +648,7 @@ from seed;";
 select o.CustomerId,o.TotalAmount from dbo.Orders as o option (recompile);";
 
         private const string JoinsExampleSql =
-            @"-- JOIN layout: try ON token limits such as 0, 12, 18 and toggle break on AND/OR.
+            @"-- JOIN layout: try ON condition limits such as 0, 2, 3 and compare mixed AND/OR grouping.
 select a.Id,a.Region
 from dbo.A as a
 inner join dbo.B as b on a.Id=b.Id and b.Flag=1

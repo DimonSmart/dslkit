@@ -54,7 +54,7 @@ internal sealed class SqlFormattingState
 
     public bool JoinsMultilineOnBreakOnOr { get; set; }
 
-    public int JoinsMultilineOnMaxTokensSingleLine { get; set; }
+    public int JoinsMultilineOnMaxConditionsSingleLine { get; set; }
 
     public bool PredicatesMultilineWhere { get; set; }
 
@@ -183,7 +183,7 @@ internal sealed class SqlFormattingState
         }
     }
 
-    public bool AreJoinBreakOptionsEnabled => JoinsMultilineOnMaxTokensSingleLine > 0;
+    public bool AreJoinBreakOptionsEnabled => JoinsMultilineOnMaxConditionsSingleLine > 0;
 
     public bool ArePredicateMultilineLayoutSettingsEnabled => PredicatesMultilineWhere;
 
@@ -244,7 +244,7 @@ internal sealed class SqlFormattingState
         JoinsOnNewLine = true;
         JoinsMultilineOnBreakOnAnd = true;
         JoinsMultilineOnBreakOnOr = false;
-        JoinsMultilineOnMaxTokensSingleLine = 0;
+        JoinsMultilineOnMaxConditionsSingleLine = 0;
         PredicatesMultilineWhere = false;
         PredicatesLogicalOperatorLineBreak = SqlLogicalOperatorLineBreakMode.BeforeOperator;
         PredicatesInlineSimpleMaxConditions = 0;

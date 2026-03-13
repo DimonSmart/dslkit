@@ -223,7 +223,7 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
     public sealed record SqlJoinMultilineOnThresholdOptions
     {
-        public int MaxTokensSingleLine { get; init; } = 0;
+        public int MaxConditionsSingleLine { get; init; } = 0;
 
         public bool BreakOnAnd { get; init; } = true;
 
