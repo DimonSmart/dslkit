@@ -210,6 +210,66 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void TryFormat_ShouldIndentCteBody_WhenConfigured()
+        {
+            const string sourceSql =
+                "CREATE VIEW dbo.v_recent AS WITH seed AS (SELECT TOP (1) o.CustomerId FROM dbo.Orders AS o) SELECT CustomerId FROM seed";
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, new SqlFormattingOptions
+            {
+                Layout = new SqlLayoutFormattingOptions
+                {
+                    IndentCteBody = true
+                }
+            });
+
+            result.IsSuccess.Should().BeTrue();
+            NormalizeLineEndings(result.FormattedSql!).Should().Be(
+                """
+                CREATE VIEW dbo.v_recent AS
+                WITH seed AS (
+                    SELECT TOP (1)
+                        o.CustomerId
+                    FROM dbo.Orders AS o
+                )
+                SELECT
+                    CustomerId
+                FROM seed
+                """);
+        }
+
+        [Fact]
+        public void TryFormat_ShouldPlaceMultipleCtesOnSeparateLines_WhenCteBodyIsIndented()
+        {
+            const string sourceSql =
+                "WITH first_cte AS (SELECT a.Id FROM dbo.A AS a), second_cte AS (SELECT b.Id FROM dbo.B AS b) SELECT first_cte.Id, second_cte.Id FROM first_cte INNER JOIN second_cte ON first_cte.Id = second_cte.Id";
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql, new SqlFormattingOptions
+            {
+                Layout = new SqlLayoutFormattingOptions
+                {
+                    IndentCteBody = true
+                }
+            });
+
+            result.IsSuccess.Should().BeTrue();
+            var formattedSql = NormalizeLineEndings(result.FormattedSql!);
+            formattedSql.Should().Contain(
+                """
+                WITH first_cte AS (
+                    SELECT
+                        a.Id
+                    FROM dbo.A AS a
+                ),
+                second_cte AS (
+                    SELECT
+                        b.Id
+                    FROM dbo.B AS b
+                )
+                """);
+        }
+
+        [Fact]
         public void TryFormat_ShouldApplyStage3ListSettings()
         {
             const string sourceSql = "SELECT SUM(x) AS Total, COUNT(*) AS Cnt FROM dbo.t AS t";

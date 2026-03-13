@@ -29,6 +29,7 @@ internal static class SqlFormattingOptionsFactory
             {
                 IndentSize = Math.Max(1, state.IndentSize),
                 WrapColumn = Math.Max(10, state.WrapColumn),
+                IndentCteBody = state.IndentCteBody,
                 NewlineBeforeClause = new SqlClauseNewlineOptions
                 {
                     With = state.NewlineBeforeWith,

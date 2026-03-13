@@ -152,6 +152,11 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                     return;
                 }
 
+                if (TryWriteCteDefinition(node, nonTerminalName))
+                {
+                    return;
+                }
+
                 if (TryWriteShortQueryExpression(node, nonTerminalName))
                 {
                     return;
@@ -354,6 +359,93 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
             _writer.WriteToken(RenderNodeInline(node));
             UpdatePreviousTokenFromNode(node);
+            return true;
+        }
+
+        private bool TryWriteCteDefinition(NonTerminalNode node, string nonTerminalName)
+        {
+            if (!string.Equals(nonTerminalName, "CteDefinition", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            if (!_options.Layout.IndentCteBody)
+            {
+                return false;
+            }
+
+            if (!TryExtractCteDefinitionComponents(node, out var prefixNodes, out var queryExpressionNode))
+            {
+                return false;
+            }
+
+            if (_writer.HasContent && !_writer.IsLineStart)
+            {
+                if (string.Equals(_previousToken, ",", StringComparison.Ordinal))
+                {
+                    _writer.WriteLine();
+                }
+                else
+                {
+                    _writer.WriteSpace();
+                }
+            }
+
+            _writer.WriteToken(RenderNodesInline(prefixNodes));
+            _writer.WriteLine();
+            using (_writer.PushIndent())
+            {
+                Visit(queryExpressionNode);
+            }
+
+            if (!_writer.IsLineStart)
+            {
+                _writer.WriteLine();
+            }
+
+            _writer.WriteToken(")");
+            UpdatePreviousTokenFromNode(node);
+            return true;
+        }
+
+        private static bool TryExtractCteDefinitionComponents(
+            NonTerminalNode cteDefinitionNode,
+            out IReadOnlyList<ParseTreeNode> prefixNodes,
+            out NonTerminalNode queryExpressionNode)
+        {
+            prefixNodes = [];
+            queryExpressionNode = null!;
+
+            var queryExpressionIndex = -1;
+            for (var childIndex = 0; childIndex < cteDefinitionNode.Children.Count; childIndex++)
+            {
+                if (cteDefinitionNode.Children[childIndex] is not NonTerminalNode candidateNode)
+                {
+                    continue;
+                }
+
+                if (!string.Equals(candidateNode.NonTerminal.Name, "QueryExpression", StringComparison.Ordinal) &&
+                    !string.Equals(candidateNode.NonTerminal.Name, "ImplicitQueryExpression", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                queryExpressionNode = candidateNode;
+                queryExpressionIndex = childIndex;
+                break;
+            }
+
+            if (queryExpressionIndex <= 0 ||
+                queryExpressionIndex >= cteDefinitionNode.Children.Count - 1 ||
+                cteDefinitionNode.Children[queryExpressionIndex - 1] is not TerminalNode openTerminal ||
+                !string.Equals(openTerminal.Token.OriginalString, "(", StringComparison.Ordinal) ||
+                cteDefinitionNode.Children[queryExpressionIndex + 1] is not TerminalNode closeTerminal ||
+                !string.Equals(closeTerminal.Token.OriginalString, ")", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            prefixNodes = cteDefinitionNode.Children.Take(queryExpressionIndex).ToArray();
             return true;
         }
 

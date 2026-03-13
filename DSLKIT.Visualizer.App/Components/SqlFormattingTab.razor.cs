@@ -336,6 +336,11 @@ public partial class SqlFormattingTab
             state.InListItemsStyle = SqlInListItemsStyle.WrapByWidth;
             state.WrapColumn = 60;
         }
+
+        if (string.Equals(optionId, "sql-indent-cte-body", StringComparison.Ordinal))
+        {
+            state.IndentCteBody = true;
+        }
     }
 
     private Task OnFormatRequestedAsync()

@@ -446,6 +446,20 @@ namespace DSLKIT.Test.GrammarExamples
 
             yield return
             [
+                "sql-indent-cte-body",
+                IndentCteBodyExampleSql,
+                new SqlFormattingOptions(),
+                new SqlFormattingOptions
+                {
+                    Layout = new SqlLayoutFormattingOptions
+                    {
+                        IndentCteBody = true
+                    }
+                }
+            ];
+
+            yield return
+            [
                 "sql-wrap-column",
                 ListsExampleSql,
                 new SqlFormattingOptions
@@ -623,6 +637,12 @@ group by CustomerId,Region
 having sum(TotalAmount)>150
 order by CustomerId;";
 
+        private const string IndentCteBodyExampleSql =
+            @"-- Indent CTE body: toggle whether the query inside AS (...) shifts right.
+create view dbo.v_recent as with seed as (select top(1) o.CustomerId from dbo.Orders as o)
+select CustomerId
+from seed;";
+
         private const string LayoutOptionClauseExampleSql =
             @"-- OPTION clause newline: check whether OPTION moves to a dedicated line.
 select o.CustomerId,o.TotalAmount from dbo.Orders as o option (recompile);";
@@ -723,6 +743,7 @@ select(a.Id+a.Score),a.Region from dbo.A as a where a.Id=1 and a.Score>=10;";
             ["sql-eof-newline"] = SemicolonAndEofExampleSql,
             ["sql-align-select-aliases"] = AlignAliasesExampleSql,
             ["sql-indent-size"] = LayoutClausesExampleSql,
+            ["sql-indent-cte-body"] = IndentCteBodyExampleSql,
             ["sql-wrap-column"] = ListsExampleSql,
             ["sql-blank-line-between-clauses"] = LayoutClausesExampleSql,
             ["sql-newline-with"] = LayoutWithClauseExampleSql,

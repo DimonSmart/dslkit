@@ -24,6 +24,7 @@ Formatter works in canonical mode only. Outside string literals/comments, extra 
 
 - `layout.indentSize`: `2 | 4 | ...`
 - `layout.wrapColumn`: `80 | 100 | 120 | ...`
+- `layout.indentCteBody`: `true | false`
 - `layout.newlineBeforeClause`: flags for `WITH/SELECT/FROM/WHERE/GROUP BY/HAVING/ORDER BY/OPTION`
 - `layout.blankLineBetweenClauses`: `None | BetweenMajorClauses`
 

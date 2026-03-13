@@ -46,6 +46,12 @@ group by CustomerId,Region
 having sum(TotalAmount)>150
 order by CustomerId;";
 
+    public const string IndentCteBodyExampleSql =
+        @"-- Indent CTE body: toggle whether the query inside AS (...) shifts right.
+create view dbo.v_recent as with seed as (select top(1) o.CustomerId from dbo.Orders as o)
+select CustomerId
+from seed;";
+
     public const string LayoutOptionClauseExampleSql =
         @"-- OPTION clause newline: check whether OPTION moves to a dedicated line.
 select o.CustomerId,o.TotalAmount from dbo.Orders as o option (recompile);";

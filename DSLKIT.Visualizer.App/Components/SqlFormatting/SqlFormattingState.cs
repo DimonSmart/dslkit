@@ -136,6 +136,8 @@ internal sealed class SqlFormattingState
 
     public int WrapColumn { get; set; } = 120;
 
+    public bool IndentCteBody { get; set; }
+
     public int SelectCompactMaxItems { get; set; }
 
     public int SelectCompactMaxLineLength { get; set; } = 120;
@@ -283,6 +285,7 @@ internal sealed class SqlFormattingState
         NewlineBeforeOption = true;
         IndentSize = 4;
         WrapColumn = 120;
+        IndentCteBody = false;
         SelectCompactMaxItems = 0;
         SelectCompactMaxLineLength = 120;
         InlineInListMaxItems = 0;

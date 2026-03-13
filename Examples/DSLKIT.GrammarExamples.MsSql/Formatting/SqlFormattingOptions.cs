@@ -148,6 +148,8 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
 
         public int WrapColumn { get; init; } = 120;
 
+        public bool IndentCteBody { get; init; }
+
         public SqlClauseNewlineOptions NewlineBeforeClause { get; init; } = new();
 
         public SqlBlankLineBetweenClausesMode BlankLineBetweenClauses { get; init; } = SqlBlankLineBetweenClausesMode.None;
