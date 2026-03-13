@@ -210,7 +210,7 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
-        public void TryFormat_ShouldIndentCteBody_WhenConfigured()
+        public void TryFormat_ShouldIndentCteBody_WithoutMovingClosingParenthesis_WhenConfigured()
         {
             const string sourceSql =
                 "CREATE VIEW dbo.v_recent AS WITH seed AS (SELECT TOP (1) o.CustomerId FROM dbo.Orders AS o) SELECT CustomerId FROM seed";
@@ -230,8 +230,7 @@ namespace DSLKIT.Test.GrammarExamples
                 WITH seed AS (
                     SELECT TOP (1)
                         o.CustomerId
-                    FROM dbo.Orders AS o
-                )
+                    FROM dbo.Orders AS o)
                 SELECT
                     CustomerId
                 FROM seed
@@ -259,13 +258,11 @@ namespace DSLKIT.Test.GrammarExamples
                 WITH first_cte AS (
                     SELECT
                         a.Id
-                    FROM dbo.A AS a
-                ),
+                    FROM dbo.A AS a),
                 second_cte AS (
                     SELECT
                         b.Id
-                    FROM dbo.B AS b
-                )
+                    FROM dbo.B AS b)
                 """);
         }
 

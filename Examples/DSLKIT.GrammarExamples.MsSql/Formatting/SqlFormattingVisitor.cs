@@ -398,11 +398,6 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 Visit(queryExpressionNode);
             }
 
-            if (!_writer.IsLineStart)
-            {
-                _writer.WriteLine();
-            }
-
             _writer.WriteToken(")");
             UpdatePreviousTokenFromNode(node);
             return true;
