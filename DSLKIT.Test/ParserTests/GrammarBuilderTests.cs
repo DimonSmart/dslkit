@@ -6,7 +6,6 @@ using DSLKIT.Terminals;
 using DSLKIT.Test.Common;
 using DSLKIT.Tokens;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace DSLKIT.Test.ParserTests
 {

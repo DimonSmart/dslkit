@@ -6,7 +6,6 @@ using DSLKIT.Test.Common;
 using FluentAssertions;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace DSLKIT.Test.ParserTests
 {

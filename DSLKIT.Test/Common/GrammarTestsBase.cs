@@ -5,7 +5,7 @@ using DSLKIT.Helpers;
 using DSLKIT.Parser;
 using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace DSLKIT.Test.Common
 {

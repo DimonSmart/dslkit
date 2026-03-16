@@ -457,12 +457,9 @@ code {
 }
 
 .dsl-sql-formatter-panel {
+    display: flex;
     flex: 1 1 auto;
     min-height: 0;
-}
-
-.dsl-sql-formatter-panel > .card-body {
-    flex: 1 1 auto;
 }
 
 .dsl-result-tabs {
@@ -601,7 +598,7 @@ code {
 .dsl-sql-header-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: 0.75rem;
     flex-wrap: wrap;
 }
@@ -712,6 +709,7 @@ code {
     justify-content: space-between;
     gap: 0.6rem;
     background: #f8fafc;
+    font-size: 0.84rem;
 }
 
 .dsl-sql-pane-tabs {

@@ -4,7 +4,6 @@ using DSLKIT.Terminals;
 using DSLKIT.Test.Common;
 using FluentAssertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace DSLKIT.Test.ParserTests
 {

@@ -6,7 +6,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using DSLKIT.GrammarExamples.MsSql;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace DSLKIT.Test.GrammarExamples
 {

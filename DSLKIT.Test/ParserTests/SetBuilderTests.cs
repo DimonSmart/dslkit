@@ -3,7 +3,6 @@ using DSLKIT.Terminals;
 using DSLKIT.Visualizers;
 using DSLKIT.Test.Utils;
 using Xunit;
-using Xunit.Abstractions;
 using DSLKIT.Test.Common;
 
 namespace DSLKIT.Test.ParserTests

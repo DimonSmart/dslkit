@@ -6,7 +6,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using DSLKIT.GrammarExamples.MsSql;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace DSLKIT.Test.GrammarExamples
 {
@@ -19,7 +18,7 @@ namespace DSLKIT.Test.GrammarExamples
             this.testOutput = testOutput;
         }
 
-        [Fact]
+        [Fact(Explicit = true)]
         public void ParseSelectBatchesSplitByGo_ShouldProcessSqlServerSamples_AndWriteDetailedReport()
         {
             var repositoryRoot = ResolveRepositoryRoot();

@@ -5,10 +5,6 @@
 
 <section class="dsl-sql-formatting-tab">
     <div class="dsl-sql-header-row">
-        <div class="text-muted small">
-            Keep the formatted result visible while you tune options or source input.
-        </div>
-
         <div class="dsl-sql-header-actions">
             <button class="btn btn-primary btn-sm"
                     @onclick="OnFormatRequestedAsync"
@@ -676,7 +672,6 @@
                 <section class="card dsl-sql-output-panel">
                     <div class="card-header dsl-sql-output-header">
                         <span>Formatted SQL</span>
-                        <span class="text-muted small">Always visible</span>
                     </div>
                     <div class="card-body d-flex flex-column dsl-sql-output-body">
                         @if (state.IsFormatterInitializing)
