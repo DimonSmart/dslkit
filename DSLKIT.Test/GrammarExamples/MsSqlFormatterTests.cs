@@ -43,6 +43,9 @@ namespace DSLKIT.Test.GrammarExamples
 
             result.IsSuccess.Should().BeFalse();
             result.ErrorMessage.Should().NotBeNullOrWhiteSpace();
+            result.ParseError.Should().NotBeNull();
+            result.ParseError!.ActualTokenText.Should().Be("FROM");
+            result.ParseError.ExpectedTokens.Should().NotBeEmpty();
             result.FormattedSql.Should().BeNull();
         }
 

@@ -680,6 +680,26 @@
                                 Preparing formatter...
                             </div>
                         }
+                        else if (state.FormattingParseError != null)
+                        {
+                            <div class="alert alert-danger dsl-sql-error" role="alert">
+                                <div class="d-flex align-items-start justify-content-between gap-2 flex-wrap">
+                                    <div>
+                                        <div>@GetFormattingErrorSummary(state.FormattingParseError)</div>
+                                        <div class="small mt-1">@GetFormattingErrorPositionText(state.FormattingParseError)</div>
+                                    </div>
+
+                                    @if (CanGoToFormattingError)
+                                    {
+                                        <button class="btn btn-outline-danger btn-sm"
+                                                type="button"
+                                                @onclick="OnGoToFormattingErrorAsync">
+                                            Go
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
                         else if (!string.IsNullOrWhiteSpace(state.FormattingError))
                         {
                             <div class="alert alert-danger dsl-sql-error" role="alert">

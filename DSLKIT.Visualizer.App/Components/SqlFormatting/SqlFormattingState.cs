@@ -1,3 +1,4 @@
+using DSLKIT.Parser;
 using DSLKIT.GrammarExamples.MsSql.Formatting;
 
 namespace DSLKIT.Visualizer.App.Components.SqlFormatting;
@@ -9,6 +10,8 @@ internal sealed class SqlFormattingState
     public string FormattedSql { get; set; } = string.Empty;
 
     public string? FormattingError { get; set; }
+
+    public ParseErrorDescription? FormattingParseError { get; set; }
 
     public string OptionSearch { get; set; } = string.Empty;
 

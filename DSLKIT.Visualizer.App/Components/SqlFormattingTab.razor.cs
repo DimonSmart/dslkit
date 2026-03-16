@@ -1,5 +1,6 @@
 using DSLKIT.GrammarExamples.MsSql;
 using DSLKIT.GrammarExamples.MsSql.Formatting;
+using DSLKIT.Parser;
 using DSLKIT.Visualizer.App.Components.SqlFormatting;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -43,6 +44,7 @@ public partial class SqlFormattingTab
 
         state.IsFormatterInitializing = true;
         state.FormattingError = null;
+        state.FormattingParseError = null;
         state.FormattedSql = string.Empty;
         await InvokeAsync(StateHasChanged);
 
@@ -354,6 +356,36 @@ public partial class SqlFormattingTab
         return Task.CompletedTask;
     }
 
+    private bool CanGoToFormattingError => state.FormattingParseError is { ErrorPosition: >= 0 };
+
+    private static string GetFormattingErrorSummary(ParseErrorDescription parseError)
+    {
+        return parseError.Message;
+    }
+
+    private static string GetFormattingErrorPositionText(ParseErrorDescription parseError)
+    {
+        return $"Position: {parseError.ErrorPosition}";
+    }
+
+    private async Task OnGoToFormattingErrorAsync()
+    {
+        if (state.FormattingParseError == null)
+        {
+            return;
+        }
+
+        var selectionStart = Math.Max(0, state.FormattingParseError.ErrorPosition);
+        var selectionLength = string.IsNullOrEmpty(state.FormattingParseError.ActualTokenText)
+            ? 0
+            : state.FormattingParseError.ActualTokenText.Length;
+        await JsRuntime.InvokeVoidAsync(
+            "dslkitSourceEditor.revealSelectionById",
+            "sql-source-input",
+            selectionStart,
+            selectionStart + selectionLength);
+    }
+
     private Task OnResetOptionsRequestedAsync()
     {
         if (state.IsFormatterInitializing)
@@ -380,16 +412,21 @@ public partial class SqlFormattingTab
             if (!result.IsSuccess)
             {
                 state.FormattedSql = string.Empty;
-                state.FormattingError = result.ErrorMessage ?? "Parse failed.";
+                state.FormattingParseError = result.ParseError;
+                state.FormattingError = result.ParseError == null
+                    ? result.ErrorMessage ?? "Parse failed."
+                    : null;
                 return;
             }
 
+            state.FormattingParseError = null;
             state.FormattingError = null;
             state.FormattedSql = result.FormattedSql ?? string.Empty;
         }
         catch (Exception ex)
         {
             state.FormattedSql = string.Empty;
+            state.FormattingParseError = null;
             state.FormattingError = $"Unexpected formatter error: {ex.Message}";
         }
         finally

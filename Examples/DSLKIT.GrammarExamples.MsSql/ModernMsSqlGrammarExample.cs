@@ -71,9 +71,12 @@ namespace DSLKIT.GrammarExamples.MsSql
             {
                 return new ParseResult
                 {
-                    Error = new ParseErrorDescription(
-                        $"Lexer error: {lexerError.ErrorMessage}",
-                        lexerError.Position)
+                    Error = new ParseErrorDescription
+                    {
+                        Message = $"Lexer error: {lexerError.ErrorMessage}",
+                        ErrorPosition = lexerError.Position,
+                        ActualTokenText = lexerError.OriginalString
+                    }
                 };
             }
 

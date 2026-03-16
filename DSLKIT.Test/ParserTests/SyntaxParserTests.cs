@@ -100,7 +100,10 @@ namespace DSLKIT.Test.ParserTests
 
             // Assert
             result.IsSuccess.Should().BeFalse("parsing should fail for invalid input");
-            result.Error.Message.Should().NotBeNull("should provide error message");
+            result.Error.Should().NotBeNull("should provide error details");
+            result.Error!.Message.Should().NotBeNull("should provide error message");
+            result.Error.ActualTokenText.Should().Be("y");
+            result.Error.ExpectedTokens.Should().Contain("x");
         }
 
         [Fact]
@@ -121,6 +124,9 @@ namespace DSLKIT.Test.ParserTests
 
             // Assert
             result.IsSuccess.Should().BeFalse("parsing should fail for empty input");
+            result.Error.Should().NotBeNull("should provide error details");
+            result.Error!.ActualTokenText.Should().BeNull();
+            result.Error.ExpectedTokens.Should().Contain("x");
         }
 
         [Fact]

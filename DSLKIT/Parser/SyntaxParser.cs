@@ -1,20 +1,25 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using DSLKIT.SpecialTerms;
+using DSLKIT.Terminals;
 using DSLKIT.Tokens;
 
 namespace DSLKIT.Parser
 {
     public class SyntaxParser
     {
-        private static readonly ConditionalWeakTable<IGrammar, IntParserTables> TablesCache = new();
+        private static readonly ConditionalWeakTable<IGrammar, IntParserRuntimeData> RuntimeDataCache = new();
         private readonly IGrammar _grammar;
+        private readonly IntParserDiagnosticsData _diagnostics;
         private readonly IntParserTables _tables;
 
         public SyntaxParser(IGrammar grammar)
         {
             _grammar = grammar;
-            _tables = TablesCache.GetValue(grammar, IntParserTables.Create);
+            var runtimeData = RuntimeDataCache.GetValue(grammar, IntParserRuntimeData.Create);
+            _tables = runtimeData.Tables;
+            _diagnostics = runtimeData.Diagnostics;
         }
 
         public ParseResult Parse(IEnumerable<IToken> tokens)
@@ -35,7 +40,12 @@ namespace DSLKIT.Parser
                 {
                     return new ParseResult
                     {
-                        Error = new ParseErrorDescription("Token terminal is null.", currentToken.Position),
+                        Error = new ParseErrorDescription
+                        {
+                            Message = "Token terminal is null.",
+                            ErrorPosition = currentToken.Position,
+                            ActualTokenText = currentToken.OriginalString
+                        },
                         Productions = output.ToArray()
                     };
                 }
@@ -85,7 +95,7 @@ namespace DSLKIT.Parser
                 if (gotoStateId < 0)
                 {
                     throw new System.InvalidOperationException(
-                        $"No goto found for non-terminal '{production.LeftNonTerminal.Name}' in state {_tables.GetStateSetNumber(newCurrentStateId)}");
+                        $"No goto found for non-terminal '{production.LeftNonTerminal.Name}' in state {_diagnostics.GetStateSetNumber(newCurrentStateId)}");
                 }
 
                 stateStack.Push(gotoStateId);
@@ -109,13 +119,105 @@ namespace DSLKIT.Parser
 
         private ParseResult BuildNoActionResult(IToken currentToken, int currentStateId, List<int> output)
         {
+            var expectedTokens = GetExpectedTokenDescriptions(currentStateId);
+
             return new ParseResult
             {
-                Error = new ParseErrorDescription(
-                    $"No action found for terminal '{currentToken.Terminal?.Name}' in state {_tables.GetStateSetNumber(currentStateId)}",
-                    currentToken.Position),
+                Error = new ParseErrorDescription
+                {
+                    Message = BuildUnexpectedTokenMessage(currentToken, expectedTokens),
+                    ErrorPosition = currentToken.Position,
+                    ActualTokenText = currentToken.Terminal is IEofTerminal ? null : currentToken.OriginalString,
+                    ExpectedTokens = expectedTokens
+                },
                 Productions = output.ToArray()
             };
+        }
+
+        private IReadOnlyList<string> GetExpectedTokenDescriptions(int currentStateId)
+        {
+            var expectedTokens = new List<string>();
+            var seen = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+
+            foreach (var terminal in _diagnostics.GetExpectedTerminals(currentStateId))
+            {
+                var description = DescribeTerminal(terminal);
+                if (!seen.Add(description))
+                {
+                    continue;
+                }
+
+                expectedTokens.Add(description);
+            }
+
+            return expectedTokens;
+        }
+
+        private static string BuildUnexpectedTokenMessage(IToken currentToken, IReadOnlyList<string> expectedTokens)
+        {
+            var tokenText = currentToken.Terminal is IEofTerminal
+                ? "Unexpected end of input."
+                : $"Unexpected token '{CreateTokenPreview(currentToken.OriginalString)}'.";
+            if (expectedTokens.Count == 0)
+            {
+                return tokenText;
+            }
+
+            return $"{tokenText} Expected: {FormatExpectedTokens(expectedTokens)}.";
+        }
+
+        private static string DescribeTerminal(ITerminal terminal)
+        {
+            if (terminal is IEofTerminal)
+            {
+                return "end of input";
+            }
+
+            if (terminal.Flags == TermFlags.Identifier)
+            {
+                return "identifier";
+            }
+
+            return terminal.Name switch
+            {
+                "Id" => "identifier",
+                "String" => "string literal",
+                "Number" => "number",
+                var name when name.Contains("Identifier", System.StringComparison.OrdinalIgnoreCase) => "identifier",
+                var name when name.Contains("Variable", System.StringComparison.OrdinalIgnoreCase) => "variable",
+                _ => terminal.Name
+            };
+        }
+
+        private static string CreateTokenPreview(string? tokenText)
+        {
+            if (string.IsNullOrEmpty(tokenText))
+            {
+                return "?";
+            }
+
+            var normalizedToken = tokenText
+                .Replace("\r", "\\r")
+                .Replace("\n", "\\n")
+                .Replace("\t", "\\t");
+
+            const int maxLength = 24;
+            return normalizedToken.Length <= maxLength
+                ? normalizedToken
+                : $"{normalizedToken[..maxLength]}...";
+        }
+
+        private static string FormatExpectedTokens(IReadOnlyList<string> expectedTokens)
+        {
+            const int maxTokenCount = 8;
+            if (expectedTokens.Count <= maxTokenCount)
+            {
+                return string.Join(", ", expectedTokens);
+            }
+
+            var visibleTokens = string.Join(", ", expectedTokens.Take(maxTokenCount));
+            var remainingCount = expectedTokens.Count - maxTokenCount;
+            return $"{visibleTokens}, and {remainingCount} more";
         }
 
         private IToken GetCurrentToken(IList<IToken> tokens, int position)

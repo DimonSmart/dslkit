@@ -15,7 +15,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             var documentParseResult = ModernMsSqlGrammarExample.ParseDocument(source, formattingOptions.Dialect);
             if (!documentParseResult.IsSuccess || documentParseResult.Document == null)
             {
-                return SqlFormattingResult.Failure(documentParseResult.Error?.ToString() ?? "Parse failed.");
+                return documentParseResult.Error != null
+                    ? SqlFormattingResult.Failure(documentParseResult.Error)
+                    : SqlFormattingResult.Failure("Parse failed.");
             }
 
             var formattedSegments = new List<string>(documentParseResult.Document.Segments.Count);
@@ -70,10 +72,10 @@ namespace DSLKIT.GrammarExamples.MsSql
                         {
                             ErrorPosition = parseResult.Error.ErrorPosition + startPosition
                         };
-                    return SqlFormattingResult.Failure(error.ToString());
+                    return SqlFormattingResult.Failure(error);
                 }
 
-                return SqlFormattingResult.Failure(parseResult.Error?.ToString() ?? "Parse failed.");
+                return SqlFormattingResult.Failure("Parse failed.");
             }
 
             if (!HasTerminalNodes(parseResult.ParseTree))

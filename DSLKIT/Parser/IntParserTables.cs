@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using DSLKIT.Base;
 using DSLKIT.NonTerminals;
 using DSLKIT.Terminals;
 
@@ -9,15 +7,13 @@ namespace DSLKIT.Parser
 {
     public sealed class IntParserTables
     {
-        private readonly IReadOnlyList<RuleSet> _statesById;
         private readonly IReadOnlyList<Production> _productionsById;
         private readonly IReadOnlyDictionary<ITerminal, int> _terminalToId;
         private readonly IReadOnlyDictionary<INonTerminal, int> _nonTerminalToId;
         private readonly int[] _popLengthByProductionId;
         private readonly int[] _leftNonTerminalIdByProductionId;
 
-        private IntParserTables(
-            IReadOnlyList<RuleSet> statesById,
+        internal IntParserTables(
             IReadOnlyList<Production> productionsById,
             IReadOnlyDictionary<ITerminal, int> terminalToId,
             IReadOnlyDictionary<INonTerminal, int> nonTerminalToId,
@@ -27,7 +23,6 @@ namespace DSLKIT.Parser
             IntGotoTable gotoTable,
             int startStateId)
         {
-            _statesById = statesById;
             _productionsById = productionsById;
             _terminalToId = terminalToId;
             _nonTerminalToId = nonTerminalToId;
@@ -47,11 +42,6 @@ namespace DSLKIT.Parser
             return _terminalToId.TryGetValue(terminal, out terminalId);
         }
 
-        public int GetStateSetNumber(int stateId)
-        {
-            return _statesById[stateId].SetNumber;
-        }
-
         public Production GetProduction(int productionId)
         {
             return _productionsById[productionId];
@@ -69,75 +59,10 @@ namespace DSLKIT.Parser
 
         public static IntParserTables Create(IGrammar grammar)
         {
-            ArgumentNullException.ThrowIfNull(grammar);
-
-            var statesById = grammar.RuleSets
-                .OrderBy(ruleSet => ruleSet.SetNumber)
-                .ToList();
-            var stateToId = new Dictionary<RuleSet, int>(statesById.Count, ReferenceEqualityComparer.Instance);
-            for (var stateId = 0; stateId < statesById.Count; stateId++)
-            {
-                stateToId[statesById[stateId]] = stateId;
-            }
-
-            var terminals = new List<ITerminal>(grammar.Terminals.Count + 1);
-            var terminalToId = new Dictionary<ITerminal, int>(grammar.Terminals.Count + 1, ReferenceEqualityComparer.Instance);
-            RegisterTerminalSet(grammar, terminals, terminalToId);
-
-            var nonTerminals = new List<INonTerminal>(grammar.NonTerminals.Count + 1);
-            var nonTerminalToId = new Dictionary<INonTerminal, int>(grammar.NonTerminals.Count + 1, ReferenceEqualityComparer.Instance);
-            RegisterNonTerminalSet(grammar, nonTerminals, nonTerminalToId);
-
-            var productionsById = grammar.Productions.ToList();
-            var productionToId = new Dictionary<Production, int>(productionsById.Count);
-            var popLengthByProductionId = new int[productionsById.Count];
-            var leftNonTerminalIdByProductionId = new int[productionsById.Count];
-            for (var productionId = 0; productionId < productionsById.Count; productionId++)
-            {
-                var production = productionsById[productionId];
-                productionToId[production] = productionId;
-                popLengthByProductionId[productionId] = production.ProductionDefinition.Count;
-                if (!nonTerminalToId.TryGetValue(production.LeftNonTerminal, out var leftNonTerminalId))
-                {
-                    throw new InvalidOperationException(
-                        $"Production references unknown non-terminal '{production.LeftNonTerminal.Name}'.");
-                }
-
-                leftNonTerminalIdByProductionId[productionId] = leftNonTerminalId;
-            }
-
-            var actionTable = BuildActionTable(
-                grammar,
-                stateToId,
-                terminalToId,
-                productionToId,
-                popLengthByProductionId);
-
-            var gotoTable = BuildGotoTable(
-                grammar,
-                stateToId,
-                nonTerminalToId);
-
-            var initialState = statesById.FirstOrDefault(ruleSet => ruleSet.SetNumber == 0)
-                ?? throw new InvalidOperationException("State with SetNumber=0 was not found.");
-            if (!stateToId.TryGetValue(initialState, out var startStateId))
-            {
-                throw new InvalidOperationException("Failed to resolve start state id.");
-            }
-
-            return new IntParserTables(
-                statesById,
-                productionsById,
-                terminalToId,
-                nonTerminalToId,
-                popLengthByProductionId,
-                leftNonTerminalIdByProductionId,
-                actionTable,
-                gotoTable,
-                startStateId);
+            return IntParserRuntimeData.Create(grammar).Tables;
         }
 
-        private static void RegisterTerminalSet(
+        internal static void RegisterTerminalSet(
             IGrammar grammar,
             List<ITerminal> terminals,
             Dictionary<ITerminal, int> terminalToId)
@@ -157,7 +82,7 @@ namespace DSLKIT.Parser
             }
         }
 
-        private static void RegisterNonTerminalSet(
+        internal static void RegisterNonTerminalSet(
             IGrammar grammar,
             List<INonTerminal> nonTerminals,
             Dictionary<INonTerminal, int> nonTerminalToId)
@@ -174,7 +99,7 @@ namespace DSLKIT.Parser
             }
         }
 
-        private static IntActionTable BuildActionTable(
+        internal static IntActionTable BuildActionTable(
             IGrammar grammar,
             IReadOnlyDictionary<RuleSet, int> stateToId,
             IReadOnlyDictionary<ITerminal, int> terminalToId,
@@ -216,7 +141,7 @@ namespace DSLKIT.Parser
             return actionTable;
         }
 
-        private static IntGotoTable BuildGotoTable(
+        internal static IntGotoTable BuildGotoTable(
             IGrammar grammar,
             IReadOnlyDictionary<RuleSet, int> stateToId,
             IReadOnlyDictionary<INonTerminal, int> nonTerminalToId)
