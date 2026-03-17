@@ -95,6 +95,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             var procExecuteAsIdentifierTerm = gb.NT("ProcExecuteAsIdentifierTerm");
             var nativeAtomicOnOffValue = gb.NT("NativeAtomicOnOffValue");
             var viewColumnIdentifierList = gb.NT("ViewColumnIdentifierList");
+            var viewColumnDefinition = gb.NT("ViewColumnDefinition");
+            var viewColumnDefinitionList = gb.NT("ViewColumnDefinitionList");
+            var viewColumnComment = gb.NT("ViewColumnComment");
+            var viewColumnCommentOpt = gb.NT("ViewColumnCommentOpt");
 
             gb.Prod(createProcKeyword).Is("PROC");
             gb.Prod(createProcKeyword).Is("PROCEDURE");
@@ -292,10 +296,29 @@ namespace DSLKIT.GrammarExamples.MsSql
                 createFunctionWithClause,
                 createFunctionTableVariableBody);
 
-            gb.Prod(viewColumnIdentifierList).Is(strictIdentifierTerm);
-            gb.Prod(viewColumnIdentifierList).Is(viewColumnIdentifierList, ",", strictIdentifierTerm);
-            gb.Prod(createViewColumnList).Is("(", viewColumnIdentifierList, ")");
+            if (context.HasFeature(MsSqlDialectFeatures.SnowflakeCompat))
+            {
+                gb.Prod(viewColumnComment).Is("COMMENT", stringLiteral);
+                gb.Prod(viewColumnComment).Is("COMMENT", unicodeStringLiteral);
+                gb.Opt(viewColumnCommentOpt, viewColumnComment);
+                gb.Prod(viewColumnDefinition).Is(strictIdentifierTerm, viewColumnCommentOpt);
+                gb.Prod(viewColumnDefinitionList).Is(viewColumnDefinition);
+                gb.Prod(viewColumnDefinitionList).Is(viewColumnDefinitionList, ",", viewColumnDefinition);
+                gb.Prod(createViewColumnList).Is("(", viewColumnDefinitionList, ")");
+            }
+            else
+            {
+                gb.Prod(viewColumnIdentifierList).Is(strictIdentifierTerm);
+                gb.Prod(viewColumnIdentifierList).Is(viewColumnIdentifierList, ",", strictIdentifierTerm);
+                gb.Prod(createViewColumnList).Is("(", viewColumnIdentifierList, ")");
+            }
+
             gb.Prod(createViewOptionClause).Is("WITH", createViewOptionList);
+            if (context.HasFeature(MsSqlDialectFeatures.SnowflakeCompat))
+            {
+                gb.Prod(createViewOptionClause).Is(createViewOption);
+            }
+
             gb.Prod(createViewQuery).Is(queryExpression);
             gb.Prod(createViewQuery).Is(withClause, queryExpression);
             gb.Prod(createViewBody).Is("AS", createViewQuery);
@@ -307,6 +330,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createViewStatement).Is(createViewHead, qualifiedName, createViewColumnList, createViewOptionClause, createViewBody);
             gb.Rule(createViewOptionList).SeparatedBy(",", createViewOption);
             gb.Rule(createViewOption).Keywords("ENCRYPTION", "SCHEMABINDING", "VIEW_METADATA");
+            if (context.HasFeature(MsSqlDialectFeatures.SnowflakeCompat))
+            {
+                gb.Prod(createViewOption).Is("COMMENT", "=", stringLiteral);
+                gb.Prod(createViewOption).Is("COMMENT", "=", unicodeStringLiteral);
+            }
         }
     }
 }
