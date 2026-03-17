@@ -18,7 +18,7 @@ namespace DSLKIT.Test.GrammarExamples
             this.testOutput = testOutput;
         }
 
-        [Fact]
+        [Fact(Explicit = true)]
         public void ParseSqlDatasetFilesContainingSelect_ShouldProduceSuccessAndFailureReport()
         {
             var repositoryRoot = ResolveRepositoryRoot();

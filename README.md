@@ -45,4 +45,3 @@ dotnet test DSLKIT.sln
 - `DSLKIT/` - core lexer/parser implementation
 - `DSLKIT.Test/` - unit tests
 - `DSLKIT.Visualizers/` - table/state visualizers and exporters
-- `DSLKIT.Visualizers.Tests/` - visualizer tests
