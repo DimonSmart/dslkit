@@ -611,6 +611,13 @@ code {
     flex-wrap: wrap;
 }
 
+.dsl-sql-title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
 .dsl-sql-dialect-picker {
     display: inline-flex;
     align-items: center;
