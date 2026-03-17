@@ -5,6 +5,20 @@
 
 <section class="dsl-sql-formatting-tab">
     <div class="dsl-sql-header-row">
+        <div class="dsl-sql-header-primary">
+            <label class="dsl-sql-dialect-picker" for="sql-dialect">
+                <span class="dsl-sql-dialect-label">Dialect</span>
+                <select id="sql-dialect"
+                        class="form-select form-select-sm"
+                        @bind="state.Dialect"
+                        @bind:after="OnOptionValueChangedAsync"
+                        disabled="@state.IsFormatterInitializing">
+                    <option value="@SqlDialect.SqlServer">SQL Server</option>
+                    <option value="@SqlDialect.Snowflake">Snowflake</option>
+                </select>
+            </label>
+        </div>
+
         <div class="dsl-sql-header-actions">
             <button class="btn btn-primary btn-sm"
                     @onclick="OnFormatRequestedAsync"
@@ -187,6 +201,15 @@
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout newline having")'>
                                             <SqlOptionLabel ForId="sql-newline-having" Text="New line before HAVING" ExampleSql="@SqlFormattingExamples.LayoutClausesExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
                                             <input id="sql-newline-having" class="form-check-input" type="checkbox" @bind="state.NewlineBeforeHaving" @bind:after="OnOptionValueChangedAsync" />
+                                        </div>
+
+                                        <div class="@GetPropertyRowClass(disabled: !state.IsSnowflakeDialect, isCheck: true)" hidden='@HideOption("layout newline qualify snowflake")'>
+                                            <SqlOptionLabel ForId="sql-newline-qualify" Text="New line before QUALIFY" ExampleSql="@SqlFormattingExamples.LayoutQualifyClauseExampleSql" OnExampleRequested="OnOptionExampleRequestedAsync" />
+                                            <input id="sql-newline-qualify"
+                                                   class="form-check-input"
+                                                   type="checkbox"
+                                                   disabled="@(!state.IsSnowflakeDialect)"
+                                                   @bind="state.NewlineBeforeQualify" @bind:after="OnOptionValueChangedAsync" />
                                         </div>
 
                                         <div class="dsl-sql-property-row dsl-sql-property-row--check" hidden='@HideOption("layout newline order by")'>

@@ -136,7 +136,7 @@ public partial class SqlFormattingTab
             return Task.CompletedTask;
         }
 
-        state.SourceSql = SqlFormattingExamples.DemoSql;
+        state.SourceSql = GetDemoSql(state.Dialect);
         FormatCurrentSql();
         return Task.CompletedTask;
     }
@@ -343,6 +343,18 @@ public partial class SqlFormattingTab
         {
             state.IndentCteBody = true;
         }
+
+        if (string.Equals(optionId, "sql-newline-qualify", StringComparison.Ordinal))
+        {
+            state.Dialect = SqlDialect.Snowflake;
+        }
+    }
+
+    private static string GetDemoSql(SqlDialect dialect)
+    {
+        return dialect == SqlDialect.Snowflake
+            ? SqlFormattingExamples.SnowflakeDemoSql
+            : SqlFormattingExamples.DemoSql;
     }
 
     private Task OnFormatRequestedAsync()

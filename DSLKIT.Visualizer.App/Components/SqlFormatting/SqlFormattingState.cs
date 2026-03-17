@@ -1,3 +1,4 @@
+using DSLKIT.GrammarExamples.MsSql;
 using DSLKIT.Parser;
 using DSLKIT.GrammarExamples.MsSql.Formatting;
 
@@ -18,6 +19,8 @@ internal sealed class SqlFormattingState
     public bool AutoFormat { get; set; } = true;
 
     public bool AutoFormatOptions { get; set; } = true;
+
+    public SqlDialect Dialect { get; set; } = SqlDialect.SqlServer;
 
     public SqlKeywordCase KeywordCase { get; set; } = SqlKeywordCase.Upper;
 
@@ -131,6 +134,8 @@ internal sealed class SqlFormattingState
 
     public bool NewlineBeforeHaving { get; set; } = true;
 
+    public bool NewlineBeforeQualify { get; set; } = true;
+
     public bool NewlineBeforeOrderBy { get; set; } = true;
 
     public bool NewlineBeforeOption { get; set; } = true;
@@ -188,6 +193,8 @@ internal sealed class SqlFormattingState
 
     public bool AreJoinBreakOptionsEnabled => JoinsMultilineOnMaxConditionsSingleLine > 0;
 
+    public bool IsSnowflakeDialect => Dialect == SqlDialect.Snowflake;
+
     public bool ArePredicateMultilineLayoutSettingsEnabled => PredicatesMultilineWhere;
 
     public bool ArePredicateInlineSettingsEnabled => PredicatesMultilineWhere;
@@ -228,6 +235,7 @@ internal sealed class SqlFormattingState
 
     public void ResetOptions()
     {
+        Dialect = SqlDialect.SqlServer;
         KeywordCase = SqlKeywordCase.Upper;
         InsideParentheses = SqlParenthesesSpacing.Never;
         TerminateWithSemicolon = SqlStatementTerminationMode.ExistingOnly;
@@ -284,6 +292,7 @@ internal sealed class SqlFormattingState
         NewlineBeforeWhere = true;
         NewlineBeforeGroupBy = true;
         NewlineBeforeHaving = true;
+        NewlineBeforeQualify = true;
         NewlineBeforeOrderBy = true;
         NewlineBeforeOption = true;
         IndentSize = 4;

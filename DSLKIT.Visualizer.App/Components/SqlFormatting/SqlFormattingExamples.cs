@@ -1,3 +1,5 @@
+using DSLKIT.GrammarExamples.MsSql;
+
 namespace DSLKIT.Visualizer.App.Components.SqlFormatting;
 
 internal static class SqlFormattingExamples
@@ -14,6 +16,21 @@ order by r.CustomerId desc,r.Region;
 update dbo.Customers set Region='EU',IsActive=1 where CustomerId=@customerId;
 insert into dbo.AuditLog(CustomerId,Region,Amount) values(@customerId,'EU',100);
 create proc p as begin select case when @flag=1 then 'Y' else 'N' end as v end;";
+
+    public const string SnowflakeDemoSql = @"create or replace view analytics.current_user_direct_reports as
+with me as (
+select personnel_nr
+from corporate_hr.dim_hr_communication
+where current_date() between start_dt::date and end_dt::date
+),
+direct_reports as (
+select personnel_nr,manager_personnel_nr,last_name
+from corporate_hr.dim_hr_communication
+where manager_personnel_nr in (select personnel_nr from me)
+)
+select personnel_nr,last_name
+from direct_reports
+qualify row_number() over (partition by manager_personnel_nr order by personnel_nr desc)=1;";
 
     public const string KeywordCaseExampleSql =
         @"-- Keyword case: watch SELECT/FROM/WHERE keyword casing after formatting.
@@ -55,6 +72,12 @@ from seed;";
     public const string LayoutOptionClauseExampleSql =
         @"-- OPTION clause newline: check whether OPTION moves to a dedicated line.
 select o.CustomerId,o.TotalAmount from dbo.Orders as o option (recompile);";
+
+    public const string LayoutQualifyClauseExampleSql =
+        @"-- QUALIFY clause newline: Snowflake only.
+select personnel_nr,last_name
+from corporate_hr.dim_hr_communication
+qualify row_number() over (partition by manager_personnel_nr order by personnel_nr desc)=1;";
 
     public const string JoinsExampleSql =
         @"-- JOIN layout: try ON condition limits such as 0, 2, 3 and compare mixed AND/OR grouping.

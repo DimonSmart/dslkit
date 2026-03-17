@@ -8,6 +8,7 @@ internal static class SqlFormattingOptionsFactory
     {
         return new SqlFormattingOptions
         {
+            Dialect = state.Dialect,
             KeywordCase = state.KeywordCase,
             Spaces = new SqlSpacesFormattingOptions
             {
@@ -38,6 +39,7 @@ internal static class SqlFormattingOptionsFactory
                     Where = state.NewlineBeforeWhere,
                     GroupBy = state.NewlineBeforeGroupBy,
                     Having = state.NewlineBeforeHaving,
+                    Qualify = state.NewlineBeforeQualify,
                     OrderBy = state.NewlineBeforeOrderBy,
                     Option = state.NewlineBeforeOption
                 },
