@@ -6,7 +6,7 @@ namespace DSLKIT.Visualizer.App.Components.SqlFormatting;
 
 internal sealed class SqlFormattingState
 {
-    public string SourceSql { get; set; } = SqlFormattingExamples.DemoSql;
+    public string SourceSql { get; set; } = GetDemoSql(SqlDialect.SqlServer);
 
     public string FormattedSql { get; set; } = string.Empty;
 
@@ -231,6 +231,30 @@ internal sealed class SqlFormattingState
         }
 
         return contexts;
+    }
+
+    public bool TrySwitchDialectDemoSql()
+    {
+        if (!IsDialectDemoSql(SourceSql))
+        {
+            return false;
+        }
+
+        SourceSql = GetDemoSql(Dialect);
+        return true;
+    }
+
+    public static string GetDemoSql(SqlDialect dialect)
+    {
+        return dialect == SqlDialect.Snowflake
+            ? SqlFormattingExamples.SnowflakeDemoSql
+            : SqlFormattingExamples.DemoSql;
+    }
+
+    private static bool IsDialectDemoSql(string sourceSql)
+    {
+        return string.Equals(sourceSql, SqlFormattingExamples.DemoSql, StringComparison.Ordinal) ||
+            string.Equals(sourceSql, SqlFormattingExamples.SnowflakeDemoSql, StringComparison.Ordinal);
     }
 
     public void ResetOptions()

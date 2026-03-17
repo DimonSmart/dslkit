@@ -6,17 +6,21 @@
 <section class="dsl-sql-formatting-tab">
     <div class="dsl-sql-header-row">
         <div class="dsl-sql-header-primary">
-            <label class="dsl-sql-dialect-picker" for="sql-dialect">
-                <span class="dsl-sql-dialect-label">Dialect</span>
-                <select id="sql-dialect"
-                        class="form-select form-select-sm"
-                        @bind="state.Dialect"
-                        @bind:after="OnOptionValueChangedAsync"
-                        disabled="@state.IsFormatterInitializing">
-                    <option value="@SqlDialect.SqlServer">SQL Server</option>
-                    <option value="@SqlDialect.Snowflake">Snowflake</option>
-                </select>
-            </label>
+            <div class="dsl-sql-title-group">
+                <MudText Typo="Typo.h5" Class="m-0">SQL Formatter</MudText>
+
+                <label class="dsl-sql-dialect-picker" for="sql-dialect">
+                    <span class="dsl-sql-dialect-label">Dialect</span>
+                    <select id="sql-dialect"
+                            class="form-select form-select-sm"
+                            value="@state.Dialect"
+                            @onchange="OnDialectChangedAsync"
+                            disabled="@state.IsFormatterInitializing">
+                        <option value="@SqlDialect.SqlServer">SQL Server</option>
+                        <option value="@SqlDialect.Snowflake">Snowflake</option>
+                    </select>
+                </label>
+            </div>
         </div>
 
         <div class="dsl-sql-header-actions">

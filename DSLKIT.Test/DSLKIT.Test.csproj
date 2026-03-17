@@ -37,6 +37,7 @@
         <ProjectReference Include="..\DSLKIT\DSLKIT.csproj" />
         <ProjectReference Include="..\Examples\DSLKIT.GrammarExamples\DSLKIT.GrammarExamples.csproj" />
         <ProjectReference Include="..\DSLKIT.Visualizers\DSLKIT.Visualizers.csproj" />
+        <ProjectReference Include="..\DSLKIT.Visualizer.App\DSLKIT.Visualizer.App.csproj" />
         <ProjectReference Include="..\Examples\DSLKIT.GrammarExamples.MsSql\DSLKIT.GrammarExamples.MsSql.csproj" />
         <ProjectReference Include="..\Examples\DSLKIT.GrammarExamples.Ini\DSLKIT.GrammarExamples.Ini.csproj" />
         <ProjectReference Include="..\Examples\DSLKIT.GrammarExamples.SJackson\DSLKIT.GrammarExamples.SJackson.csproj" />

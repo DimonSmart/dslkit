@@ -129,6 +129,34 @@ public partial class SqlFormattingTab
         }
     }
 
+    private async Task OnDialectChangedAsync(ChangeEventArgs args)
+    {
+        if (state.IsFormatterInitializing)
+        {
+            return;
+        }
+
+        if (!Enum.TryParse<SqlDialect>(args.Value?.ToString(), out var dialect))
+        {
+            return;
+        }
+
+        if (state.Dialect == dialect)
+        {
+            return;
+        }
+
+        state.Dialect = dialect;
+        var demoSqlApplied = state.TrySwitchDialectDemoSql();
+        if (!demoSqlApplied && !state.AutoFormatOptions)
+        {
+            return;
+        }
+
+        await Task.Yield();
+        FormatCurrentSql();
+    }
+
     private Task OnLoadDemoRequestedAsync()
     {
         if (state.IsFormatterInitializing)
@@ -136,7 +164,7 @@ public partial class SqlFormattingTab
             return Task.CompletedTask;
         }
 
-        state.SourceSql = GetDemoSql(state.Dialect);
+        state.SourceSql = SqlFormattingState.GetDemoSql(state.Dialect);
         FormatCurrentSql();
         return Task.CompletedTask;
     }
@@ -348,13 +376,6 @@ public partial class SqlFormattingTab
         {
             state.Dialect = SqlDialect.Snowflake;
         }
-    }
-
-    private static string GetDemoSql(SqlDialect dialect)
-    {
-        return dialect == SqlDialect.Snowflake
-            ? SqlFormattingExamples.SnowflakeDemoSql
-            : SqlFormattingExamples.DemoSql;
     }
 
     private Task OnFormatRequestedAsync()
