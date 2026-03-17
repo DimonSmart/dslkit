@@ -701,13 +701,7 @@
                         <span>Formatted SQL</span>
                     </div>
                     <div class="card-body d-flex flex-column dsl-sql-output-body">
-                        @if (state.IsFormatterInitializing)
-                        {
-                            <div class="alert alert-info dsl-sql-error" role="status">
-                                Preparing formatter...
-                            </div>
-                        }
-                        else if (state.FormattingParseError != null)
+                        @if (state.FormattingParseError != null)
                         {
                             <div class="alert alert-danger dsl-sql-error" role="alert">
                                 <div class="d-flex align-items-start justify-content-between gap-2 flex-wrap">
