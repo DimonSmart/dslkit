@@ -728,13 +728,14 @@ code {
 
 .dsl-sql-workspace-divider::before {
     width: 10px;
-    background: linear-gradient(to right, transparent 0, #dbe4ee 18%, #cbd5e1 50%, #dbe4ee 82%, transparent 100%);
+    background: transparent;
     pointer-events: none;
 }
 
 .dsl-sql-workspace-divider::after {
     width: 2px;
-    background: transparent;
+    background: #cbd5e1;
+    box-shadow: 0 0 0 1px #dbe4ee;
     pointer-events: auto;
     cursor: ew-resize;
     z-index: 1;
