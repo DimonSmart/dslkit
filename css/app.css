@@ -711,6 +711,40 @@ code {
     min-height: 0;
 }
 
+.dsl-sql-workspace-divider {
+    position: relative;
+    pointer-events: none;
+}
+
+.dsl-sql-workspace-divider::before,
+.dsl-sql-workspace-divider::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.dsl-sql-workspace-divider::before {
+    width: 10px;
+    background: linear-gradient(to right, transparent 0, #dbe4ee 18%, #cbd5e1 50%, #dbe4ee 82%, transparent 100%);
+    pointer-events: none;
+}
+
+.dsl-sql-workspace-divider::after {
+    width: 2px;
+    background: transparent;
+    pointer-events: auto;
+    cursor: ew-resize;
+    z-index: 1;
+}
+
+.dsl-sql-workspace-divider:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
 .dsl-sql-workspace-panel {
     display: flex;
     flex-direction: column;
