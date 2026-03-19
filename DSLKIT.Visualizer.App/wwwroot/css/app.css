@@ -1015,8 +1015,6 @@ code {
 
 .dsl-sql-source-editor {
     min-height: 8rem;
-    max-height: 20rem;
-    overflow-y: auto !important;
 }
 
 .dsl-sql-editor {

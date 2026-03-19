@@ -10,6 +10,8 @@ namespace DSLKIT.Visualizer.App.Components;
 public partial class SqlFormattingTab
 {
     private const int SourcePreviewLength = 80;
+    private const int SourceEditorMinHeightPx = 170;
+    private const int SourceEditorAutoMaxHeightPx = 320;
 
     private readonly SqlFormattingState state = new();
 
@@ -32,7 +34,8 @@ public partial class SqlFormattingTab
         await JsRuntime.InvokeVoidAsync(
             "dslkitSqlEditor.autoSizeTextAreaById",
             "sql-source-input",
-            170);
+            SourceEditorMinHeightPx,
+            SourceEditorAutoMaxHeightPx);
     }
 
     private async Task InitializeFormatterAsync()

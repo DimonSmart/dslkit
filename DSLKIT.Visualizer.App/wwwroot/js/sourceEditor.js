@@ -30,7 +30,7 @@ window.dslkitSourceEditor = {
 };
 
 window.dslkitSqlEditor = {
-    autoSizeTextAreaById(elementId, minHeight) {
+    autoSizeTextAreaById(elementId, minHeight, maxAutoHeight) {
         if (typeof elementId !== "string" || !elementId) {
             return;
         }
@@ -41,17 +41,34 @@ window.dslkitSqlEditor = {
         }
 
         const safeMinHeight = Math.max(0, Number(minHeight) || 0);
+        const requestedMaxAutoHeight = Number(maxAutoHeight);
+        const safeMaxAutoHeight = Number.isFinite(requestedMaxAutoHeight) && requestedMaxAutoHeight > 0
+            ? Math.max(safeMinHeight, requestedMaxAutoHeight)
+            : 0;
+        const previousAutoHeight = Math.max(0, Number(element.dataset.dslkitAutoHeight) || 0);
+        const currentHeight = Math.round(element.getBoundingClientRect().height);
+        const manualHeight = previousAutoHeight > 0 && Math.abs(currentHeight - previousAutoHeight) > 2
+            ? currentHeight
+            : 0;
 
-        element.style.overflowY = "hidden";
         element.style.height = "auto";
 
-        const nextHeight = Math.max(safeMinHeight, element.scrollHeight);
+        const desiredHeight = Math.max(safeMinHeight, element.scrollHeight);
+        const autoHeight = safeMaxAutoHeight > 0
+            ? Math.min(desiredHeight, safeMaxAutoHeight)
+            : desiredHeight;
+        const nextHeight = manualHeight > 0
+            ? Math.max(safeMinHeight, manualHeight)
+            : autoHeight;
+
         element.style.height = `${nextHeight}px`;
+        element.style.overflowY = desiredHeight > nextHeight ? "auto" : "hidden";
+        element.dataset.dslkitAutoHeight = `${autoHeight}`;
     },
 
-    autoSizeEditors(sourceInputId, formattedOutputId, minHeight) {
-        this.autoSizeTextAreaById(sourceInputId, minHeight);
-        this.autoSizeTextAreaById(formattedOutputId, minHeight);
+    autoSizeEditors(sourceInputId, formattedOutputId, minHeight, maxAutoHeight) {
+        this.autoSizeTextAreaById(sourceInputId, minHeight, maxAutoHeight);
+        this.autoSizeTextAreaById(formattedOutputId, minHeight, maxAutoHeight);
     },
 
     positionHelpPopover(triggerElement, popoverElement) {
