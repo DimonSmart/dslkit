@@ -1038,7 +1038,7 @@ code {
     min-height: 12rem !important;
     height: 100%;
     overflow: auto !important;
-    resize: none;
+    resize: vertical;
 }
 
 .dsl-sql-error {
