@@ -1069,6 +1069,12 @@ code {
 }
 
 @media (max-width: 991.98px) {
+    .dsl-workspace,
+    .dsl-sql-formatter-page {
+        width: 100%;
+        min-width: 0;
+    }
+
     .dsl-sql-formatter-page {
         height: auto;
         min-height: 0;
@@ -1086,19 +1092,28 @@ code {
         min-width: 0;
     }
 
-    .dsl-sql-workspace {
-        width: 100%;
-    }
-
+    .dsl-workspace-split,
     .dsl-sql-workspace-split {
         flex-direction: column;
         gap: 0.75rem;
         height: auto;
+        min-width: 0;
     }
 
+    .dsl-workspace-split > .child-panel,
     .dsl-sql-workspace-split > .child-panel {
         width: 100% !important;
         height: auto !important;
+    }
+
+    .dsl-workspace-split > .divider,
+    .dsl-sql-workspace-split > .divider {
+        display: none;
+    }
+
+    .dsl-workspace-panel,
+    .dsl-sql-workspace-panel {
+        height: auto;
     }
 
     .dsl-sql-workspace-split > .child-panel:first-of-type {
@@ -1107,14 +1122,6 @@ code {
 
     .dsl-sql-workspace-split > .child-panel:last-of-type {
         order: 1;
-    }
-
-    .dsl-sql-workspace-divider {
-        display: none;
-    }
-
-    .dsl-sql-workspace-panel {
-        height: auto;
     }
 
     .dsl-sql-source-summary {
