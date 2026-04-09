@@ -1275,6 +1275,43 @@ namespace DSLKIT.Test.GrammarExamples
                 "formatted INSERT EXEC variants should preserve significant SQL tokens.");
         }
 
+        [Fact]
+        public void TryFormat_ShouldFormatNamedCommitAndRollbackInsideTryCatch()
+        {
+            const string sourceSql = """
+                BEGIN TRANSACTION tran1
+                BEGIN TRY
+                    UPDATE [SalesLT].[Customer]
+                    SET [CompanyName] = 'TranCompany'
+                    WHERE [CustomerID] = 1
+
+                    UPDATE [SalesLT].[Customer]
+                    SET [LastName] = 'Kowalski'
+                    WHERE [CustomerID] = 2
+
+                    ;THROW 60000, 'Wojciecherroormsg', 1 -- ERROR!!!!
+
+                    UPDATE [SalesLT].[Customer]
+                    SET [LastName] = 'Nowak'
+                    WHERE [CustomerID] = 3
+
+                    COMMIT TRANSACTION tran1
+                END TRY
+                BEGIN CATCH
+                    SELECT ERROR_MESSAGE() AS ErrorMessage;
+                    ROLLBACK TRANSACTION tran1
+                END CATCH
+                """;
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql);
+
+            result.IsSuccess.Should().BeTrue(result.ErrorMessage);
+            var formattedSql = NormalizeLineEndings(result.FormattedSql!);
+            formattedSql.Should().Contain("COMMIT TRANSACTION tran1");
+            formattedSql.Should().Contain("ROLLBACK TRANSACTION tran1");
+            formattedSql.Should().Contain("THROW 60000, 'Wojciecherroormsg', 1");
+        }
+
         public static IEnumerable<object[]> ValidFormattingScripts()
         {
             var scriptsRoot = ResolveScriptsRoot();

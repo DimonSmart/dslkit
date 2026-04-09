@@ -222,5 +222,35 @@ namespace DSLKIT.Test.GrammarExamples
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
+
+        [Fact]
+        public void ParseScript_ShouldParseNamedCommitAndRollbackInsideTryCatch()
+        {
+            const string script = """
+                BEGIN TRANSACTION tran1
+                BEGIN TRY
+                    UPDATE [SalesLT].[Customer]
+                    SET [CompanyName] = 'TranCompany'
+                    WHERE [CustomerID] = 1
+
+                    UPDATE [SalesLT].[Customer]
+                    SET [LastName] = 'Kowalski'
+                    WHERE [CustomerID] = 2
+
+                    ;THROW 60000, 'Wojciecherroormsg', 1
+
+                    COMMIT TRANSACTION tran1
+                END TRY
+                BEGIN CATCH
+                    SELECT ERROR_MESSAGE() AS ErrorMessage;
+                    ROLLBACK TRANSACTION tran1
+                END CATCH
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
     }
 }

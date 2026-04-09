@@ -141,9 +141,13 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .Or("COMMIT")
                 .Or("COMMIT", "TRAN")
                 .Or("COMMIT", "TRANSACTION")
+                .Or("COMMIT", "TRAN", strictIdentifierTerm)
+                .Or("COMMIT", "TRANSACTION", strictIdentifierTerm)
                 .Or("ROLLBACK")
                 .Or("ROLLBACK", "TRAN")
-                .Or("ROLLBACK", "TRANSACTION");
+                .Or("ROLLBACK", "TRANSACTION")
+                .Or("ROLLBACK", "TRAN", strictIdentifierTerm)
+                .Or("ROLLBACK", "TRANSACTION", strictIdentifierTerm);
 
             gb.Prod(raiserrorStatement).Is("RAISERROR", "(", raiserrorArgList, ")");
             gb.Prod(raiserrorStatement).Is("RAISERROR", "(", raiserrorArgList, ")", "WITH", raiserrorWithOptionList);
