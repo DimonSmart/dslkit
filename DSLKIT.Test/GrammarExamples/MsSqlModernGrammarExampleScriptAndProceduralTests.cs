@@ -252,5 +252,40 @@ namespace DSLKIT.Test.GrammarExamples
             parseResult.IsSuccess.Should().BeTrue(
                 $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
         }
+
+        [Fact]
+        public void ParseScript_ShouldParseSaveTransactionSavepointFlow()
+        {
+            const string script = """
+                BEGIN TRANSACTION tran1
+
+                UPDATE [SalesLT].[Customer]
+                SET [CompanyName] = 'CoolCompany'
+                WHERE [CustomerID] = 1
+
+                SAVE TRANSACTION Savepoint
+
+                UPDATE [SalesLT].[Customer]
+                SET [LastName] = 'CoolLastName'
+                WHERE [CustomerID] = 1
+
+                ROLLBACK TRANSACTION Savepoint
+
+                UPDATE [SalesLT].[Customer]
+                SET [FirstName] = 'CoolFirstName'
+                WHERE [CustomerID] = 1
+
+                COMMIT TRANSACTION tran1 -- HERE !!
+
+                SELECT *
+                FROM [SalesLT].[Customer]
+                WHERE [CustomerID] IN (1)
+                """;
+
+            var parseResult = ModernMsSqlGrammarExample.ParseBatch(script);
+
+            parseResult.IsSuccess.Should().BeTrue(
+                $"script should parse, but failed at {parseResult.Error?.ErrorPosition}: {parseResult.Error?.Message}");
+        }
     }
 }

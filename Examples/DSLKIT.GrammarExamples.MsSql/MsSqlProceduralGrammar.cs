@@ -138,6 +138,8 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .Or("BEGIN", "TRANSACTION")
                 .Or("BEGIN", "TRAN", strictIdentifierTerm)
                 .Or("BEGIN", "TRANSACTION", strictIdentifierTerm)
+                .Or("SAVE", "TRAN", strictIdentifierTerm)
+                .Or("SAVE", "TRANSACTION", strictIdentifierTerm)
                 .Or("COMMIT")
                 .Or("COMMIT", "TRAN")
                 .Or("COMMIT", "TRANSACTION")

@@ -1312,6 +1312,44 @@ namespace DSLKIT.Test.GrammarExamples
             formattedSql.Should().Contain("THROW 60000, 'Wojciecherroormsg', 1");
         }
 
+        [Fact]
+        public void TryFormat_ShouldFormatSaveTransactionSavepointFlow()
+        {
+            const string sourceSql = """
+                BEGIN TRANSACTION tran1
+
+                UPDATE [SalesLT].[Customer]
+                SET [CompanyName] = 'CoolCompany'
+                WHERE [CustomerID] = 1
+
+                SAVE TRANSACTION Savepoint
+
+                UPDATE [SalesLT].[Customer]
+                SET [LastName] = 'CoolLastName'
+                WHERE [CustomerID] = 1
+
+                ROLLBACK TRANSACTION Savepoint
+
+                UPDATE [SalesLT].[Customer]
+                SET [FirstName] = 'CoolFirstName'
+                WHERE [CustomerID] = 1
+
+                COMMIT TRANSACTION tran1 -- HERE !!
+
+                SELECT *
+                FROM [SalesLT].[Customer]
+                WHERE [CustomerID] IN (1)
+                """;
+
+            var result = ModernMsSqlFormatter.TryFormat(sourceSql);
+
+            result.IsSuccess.Should().BeTrue(result.ErrorMessage);
+            var formattedSql = NormalizeLineEndings(result.FormattedSql!);
+            formattedSql.Should().Contain("SAVE TRANSACTION Savepoint");
+            formattedSql.Should().Contain("ROLLBACK TRANSACTION Savepoint");
+            formattedSql.Should().Contain("COMMIT TRANSACTION tran1 -- HERE !!");
+        }
+
         public static IEnumerable<object[]> ValidFormattingScripts()
         {
             var scriptsRoot = ResolveScriptsRoot();
