@@ -36,6 +36,14 @@ namespace DSLKIT.Terminals
         private readonly Dictionary<INonTerminal, AstNodeBinding> _nonTerminalAstBindings =
             new Dictionary<INonTerminal, AstNodeBinding>(64);
 
+        private readonly Dictionary<RepetitionRulePattern, INonTerminal> _inlineRepetitions =
+            new Dictionary<RepetitionRulePattern, INonTerminal>();
+
+        private readonly HashSet<string> _generatedRepetitionNames =
+            new HashSet<string>(StringComparer.Ordinal);
+
+        private int _nextRepetitionId;
+
         private IEofTerminal _eof = EofTerminal.Instance;
 
         private string _name = string.Empty;
@@ -223,7 +231,10 @@ namespace DSLKIT.Terminals
             }
             else
             {
-                root = _productions.First().LeftNonTerminal;
+                // Inline repetitions are materialized before the containing production.
+                // They must not become the implicit start symbol.
+                root = _productions.FirstOrDefault(production =>
+                    !_generatedRepetitionNames.Contains(production.LeftNonTerminal.Name))?.LeftNonTerminal;
             }
 
             if (root is null)
@@ -287,6 +298,52 @@ namespace DSLKIT.Terminals
         public OptionalRulePattern Optional(params object[] terms)
         {
             return new OptionalRulePattern(terms);
+        }
+
+        /// <summary>
+        /// Defines alternatives inside a production, without generating additional non-terminals.
+        /// Use Seq(...) for an alternative containing multiple terms.
+        /// </summary>
+        public ChoiceRulePattern Choice(params object[] alternatives)
+        {
+            return new ChoiceRulePattern(alternatives);
+        }
+
+        /// <summary>
+        /// Matches zero or more occurrences of a non-empty sequence inside a production.
+        /// An internal recursive non-terminal is generated when the pattern is used.
+        /// </summary>
+        public RepetitionRulePattern Many(params object[] terms)
+        {
+            return new RepetitionRulePattern(0, terms);
+        }
+
+        /// <summary>
+        /// Matches one or more occurrences of a non-empty sequence inside a production.
+        /// </summary>
+        public RepetitionRulePattern OneOrMore(params object[] terms)
+        {
+            return new RepetitionRulePattern(1, terms);
+        }
+
+        /// <summary>
+        /// Matches one or more items separated by a delimiter inside a production.
+        /// The delimiter comes first, matching Rule(...).SeparatedBy(delimiter, item).
+        /// Wrap in Optional(...) to permit an empty list.
+        /// </summary>
+        public RepetitionRulePattern SeparatedBy(object delimiter, object item)
+        {
+            if (item == null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
+
+            if (delimiter == null)
+            {
+                throw new ArgumentNullException(nameof(delimiter));
+            }
+
+            return new RepetitionRulePattern(1, new[] { item }, delimiter);
         }
 
         public ProductionBuilder AddProduction(string ruleName)
@@ -648,6 +705,45 @@ namespace DSLKIT.Terminals
             }
 
             return this;
+        }
+
+        internal INonTerminal MaterializeRepetition(RepetitionRulePattern pattern)
+        {
+            if (_inlineRepetitions.TryGetValue(pattern, out var existing))
+            {
+                return existing;
+            }
+
+            string name;
+            do
+            {
+                name = $"__dslkit_repeat_{++_nextRepetitionId}";
+            }
+            while (_nonTerminals.ContainsKey(name));
+
+            var repeated = GetOrAddNonTerminal(name);
+            _inlineRepetitions.Add(pattern, repeated);
+            _generatedRepetitionNames.Add(name);
+
+            if (pattern.MinimumOccurrences == 0)
+            {
+                Prod(name).Is(Empty);
+            }
+            else
+            {
+                Prod(name).Is(pattern.Terms);
+            }
+
+            if (pattern.Delimiter == null)
+            {
+                Prod(name).Is(repeated, new RulePattern(pattern.Terms));
+            }
+            else
+            {
+                Prod(name).Is(repeated, pattern.Delimiter, new RulePattern(pattern.Terms));
+            }
+
+            return repeated;
         }
 
         private INonTerminal GetRequiredListNonTerminal(string listNonTerminalName)

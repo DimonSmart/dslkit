@@ -33,6 +33,35 @@ Key test suites:
 - `DSLKIT.Test/ParserTests/FollowCalculatorTests.cs`
 - `DSLKIT.Test/ParserTests/SyntaxParserTests.cs`
 
+## Inline Grammar Patterns
+
+Fluent grammar rules support nested EBNF-like patterns:
+
+```csharp
+var gb = new GrammarBuilder();
+var expression = gb.NT("Expression");
+var table = gb.NT("Table");
+
+gb.Rule("Start").CanBe(
+    "SELECT",
+    gb.Choice("ALL", "DISTINCT"),
+    gb.SeparatedBy(",", expression),
+    gb.Optional("FROM", table));
+
+gb.Rule(expression).CanBe("x");
+gb.Rule(table).CanBe("t");
+
+// Other examples: gb.Many("JOIN", table), gb.OneOrMore(expression)
+```
+
+`Seq(...)` groups terms; `Choice(...)` and `Optional(...)` expand into ordinary
+productions without additional non-terminals. `Many(...)`, `OneOrMore(...)`,
+and inline `SeparatedBy(delimiter, item)` create internal recursive non-terminals
+when used in a production. Repeated expressions and separators must not be
+nullable; `Optional(SeparatedBy(...))` allows an empty separated list.
+Generated repetition nodes appear in the parse tree. The existing named
+`Opt`, `Star`, `Plus`, and `SeparatedBy` APIs remain available.
+
 ## Build And Test
 
 ```powershell

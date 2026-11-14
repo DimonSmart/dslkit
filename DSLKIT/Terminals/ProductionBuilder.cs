@@ -92,7 +92,7 @@ namespace DSLKIT.Terminals
             var leftNonTerminal = _grammarBuilder.GetOrAddNonTerminal(_leftNonTerminalName);
             var uniqueProductions = new HashSet<Production>();
 
-            foreach (var expandedTerms in ExpandOptionalTerms(terms))
+            foreach (var expandedTerms in ExpandInlinePatterns(terms))
             {
                 var definition = BuildRuleDefinition(
                     expandedTerms.Length == 0 && terms.Length > 0
@@ -128,7 +128,7 @@ namespace DSLKIT.Terminals
             return _grammarBuilder;
         }
 
-        private static List<object[]> ExpandOptionalTerms(object[] terms)
+        private List<object[]> ExpandInlinePatterns(object[] terms)
         {
             var expanded = new List<object[]> { Array.Empty<object>() };
 
@@ -138,11 +138,27 @@ namespace DSLKIT.Terminals
                 switch (term)
                 {
                     case RulePattern pattern:
-                        variants = ExpandOptionalTerms(pattern.Terms);
+                        variants = ExpandInlinePatterns(pattern.Terms);
                         break;
                     case OptionalRulePattern optional:
-                        variants = ExpandOptionalTerms(optional.Terms);
+                        variants = ExpandInlinePatterns(optional.Terms);
                         variants.Insert(0, Array.Empty<object>());
+                        break;
+                    case ChoiceRulePattern choice:
+                        variants = new List<object[]>();
+                        foreach (var alternative in choice.Alternatives)
+                        {
+                            variants.AddRange(ExpandInlinePatterns(new[] { alternative }));
+                        }
+                        break;
+                    case RepetitionRulePattern repetition:
+                        variants = new List<object[]>
+                        {
+                            new object[] { _grammarBuilder.MaterializeRepetition(repetition) }
+                        };
+                        break;
+                    case EmptyTerm _:
+                        variants = new List<object[]> { Array.Empty<object>() };
                         break;
                     default:
                         variants = new List<object[]> { new[] { term } };
