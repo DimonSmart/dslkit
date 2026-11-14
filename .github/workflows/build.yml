@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   build:
@@ -45,7 +44,7 @@ jobs:
             raise SystemExit("Test runner did not produce a TRX report")
 
         total = sum(
-            int(element.attrib["total"])
+            int(element.attrib["executed"])
             for report in reports
             for element in ElementTree.parse(report).getroot().iter()
             if element.tag.rsplit("}", 1)[-1] == "Counters"
@@ -58,9 +57,9 @@ jobs:
         print(f"Verified {total} executed tests and a Cobertura coverage report")
         PY
 
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v5
+    - name: Upload test and coverage reports
+      uses: actions/upload-artifact@v4
       with:
-        directory: ./coverage
-        use_oidc: true
-        fail_ci_if_error: true
+        name: test-and-coverage-reports
+        path: ./coverage
+        if-no-files-found: error
