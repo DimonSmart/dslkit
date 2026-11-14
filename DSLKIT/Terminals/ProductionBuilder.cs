@@ -13,6 +13,7 @@ namespace DSLKIT.Terminals
         private readonly GrammarBuilder _grammarBuilder;
         private readonly string _leftNonTerminalName;
         private AstNodeBinding? _pendingAstBinding;
+        private readonly List<Production> _definedProductions = new List<Production>();
 
         public ProductionBuilder(GrammarBuilder grammarBuilder, string leftNonTerminalName)
         {
@@ -46,7 +47,10 @@ namespace DSLKIT.Terminals
         {
             if (Production != null)
             {
-                _grammarBuilder.BindAst(Production, binding);
+                foreach (var production in _definedProductions)
+                {
+                    _grammarBuilder.BindAst(production, binding);
+                }
             }
             else
             {
@@ -80,18 +84,37 @@ namespace DSLKIT.Terminals
                 throw new InvalidOperationException("Production has already been defined for this builder instance.");
             }
 
-            var leftNonTerminal = _grammarBuilder.GetOrAddNonTerminal(_leftNonTerminalName);
-            var ruleDefinition = BuildRuleDefinition(terms);
-
-            Production = new Production(leftNonTerminal, ruleDefinition);
-            _grammarBuilder.AddProduction(Production);
-
-            if (_pendingAstBinding != null)
+            if (terms == null)
             {
-                _grammarBuilder.BindAst(Production, _pendingAstBinding);
-                _pendingAstBinding = null;
+                throw new ArgumentNullException(nameof(terms));
             }
 
+            var leftNonTerminal = _grammarBuilder.GetOrAddNonTerminal(_leftNonTerminalName);
+            var uniqueProductions = new HashSet<Production>();
+
+            foreach (var expandedTerms in ExpandOptionalTerms(terms))
+            {
+                var definition = BuildRuleDefinition(
+                    expandedTerms.Length == 0 && terms.Length > 0
+                        ? new object[] { EmptyTerm.Empty }
+                        : expandedTerms);
+                var production = new Production(leftNonTerminal, definition);
+                if (!uniqueProductions.Add(production))
+                {
+                    continue;
+                }
+
+                Production ??= production;
+                _definedProductions.Add(production);
+                _grammarBuilder.AddProduction(production);
+
+                if (_pendingAstBinding != null)
+                {
+                    _grammarBuilder.BindAst(production, _pendingAstBinding);
+                }
+            }
+
+            _pendingAstBinding = null;
             return this;
         }
 
@@ -103,6 +126,45 @@ namespace DSLKIT.Terminals
             }
 
             return _grammarBuilder;
+        }
+
+        private static List<object[]> ExpandOptionalTerms(object[] terms)
+        {
+            var expanded = new List<object[]> { Array.Empty<object>() };
+
+            foreach (var term in terms)
+            {
+                List<object[]> variants;
+                switch (term)
+                {
+                    case RulePattern pattern:
+                        variants = ExpandOptionalTerms(pattern.Terms);
+                        break;
+                    case OptionalRulePattern optional:
+                        variants = ExpandOptionalTerms(optional.Terms);
+                        variants.Insert(0, Array.Empty<object>());
+                        break;
+                    default:
+                        variants = new List<object[]> { new[] { term } };
+                        break;
+                }
+
+                var next = new List<object[]>();
+                foreach (var prefix in expanded)
+                {
+                    foreach (var variant in variants)
+                    {
+                        var combination = new object[prefix.Length + variant.Length];
+                        Array.Copy(prefix, 0, combination, 0, prefix.Length);
+                        Array.Copy(variant, 0, combination, prefix.Length, variant.Length);
+                        next.Add(combination);
+                    }
+                }
+
+                expanded = next;
+            }
+
+            return expanded;
         }
 
         private List<ITerm> BuildRuleDefinition(params object[] terms)
