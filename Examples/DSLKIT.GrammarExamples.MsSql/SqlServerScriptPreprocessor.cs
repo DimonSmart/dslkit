@@ -36,10 +36,24 @@ namespace DSLKIT.GrammarExamples.MsSql
             var currentBatchBuilder = new StringBuilder();
             var currentBatchStart = 0;
             var hasBatchLines = false;
+            var lexicalState = new SqlLexicalState();
 
             foreach (var line in EnumerateLines(source))
             {
-                if (TryCreateControlSegment(line, enableSqlcmdCommands, out var controlSegment))
+                var startsOutsideSqlConstruct = lexicalState.IsOutsideSqlConstruct;
+                var isSqlcmdCommand = startsOutsideSqlConstruct &&
+                    enableSqlcmdCommands &&
+                    IsSqlcmdCommandLine(line.Text);
+
+                // SQLCMD commands are not SQL: their arguments must not affect lexical state.
+                if (!isSqlcmdCommand)
+                {
+                    lexicalState.ScanLine(line.Text);
+                }
+
+                if (startsOutsideSqlConstruct &&
+                    (isSqlcmdCommand || lexicalState.IsOutsideSqlConstruct) &&
+                    TryCreateControlSegment(line, enableSqlcmdCommands, out var controlSegment))
                 {
                     FlushBatch(segments, currentBatchBuilder, currentBatchStart, hasBatchLines);
                     hasBatchLines = false;
@@ -105,6 +119,79 @@ namespace DSLKIT.GrammarExamples.MsSql
             return false;
         }
 
+        /// <summary>
+        /// Tracks multiline SQL constructs so a GO or SQLCMD line inside a
+        /// comment or quoted value is not mistaken for a control line.
+        /// </summary>
+        private sealed class SqlLexicalState
+        {
+            private int _blockCommentDepth;
+            private char _quoteEnd;
+
+            public bool IsOutsideSqlConstruct => _blockCommentDepth == 0 && _quoteEnd == '\0';
+
+            public void ScanLine(string line)
+            {
+                for (var index = 0; index < line.Length; index++)
+                {
+                    var current = line[index];
+                    var next = index + 1 < line.Length ? line[index + 1] : '\0';
+
+                    if (_blockCommentDepth > 0)
+                    {
+                        if (current == '/' && next == '*')
+                        {
+                            _blockCommentDepth++;
+                            index++;
+                        }
+                        else if (current == '*' && next == '/')
+                        {
+                            _blockCommentDepth--;
+                            index++;
+                        }
+
+                        continue;
+                    }
+
+                    if (_quoteEnd != '\0')
+                    {
+                        if (current == _quoteEnd)
+                        {
+                            if (next == _quoteEnd)
+                            {
+                                index++; // Escaped quote ('' or "") or bracket (]]).
+                            }
+                            else
+                            {
+                                _quoteEnd = '\0';
+                            }
+                        }
+
+                        continue;
+                    }
+
+                    if (current == '-' && next == '-')
+                    {
+                        return; // Single-line comment does not carry over to the next line.
+                    }
+
+                    if (current == '/' && next == '*')
+                    {
+                        _blockCommentDepth++;
+                        index++;
+                    }
+                    else if (current == '\'' || current == '"')
+                    {
+                        _quoteEnd = current;
+                    }
+                    else if (current == '[')
+                    {
+                        _quoteEnd = ']';
+                    }
+                }
+            }
+        }
+
         private static bool TryParseGoSeparator(string line, out int? batchRepeatCount)
         {
             var match = GoSeparatorPattern.Match(line);
@@ -114,9 +201,21 @@ namespace DSLKIT.GrammarExamples.MsSql
                 return false;
             }
 
-            batchRepeatCount = match.Groups["count"].Success
-                ? int.Parse(match.Groups["count"].Value)
-                : null;
+            if (match.Groups["count"].Success)
+            {
+                if (!int.TryParse(match.Groups["count"].Value, out var count))
+                {
+                    batchRepeatCount = null;
+                    return false;
+                }
+
+                batchRepeatCount = count;
+            }
+            else
+            {
+                batchRepeatCount = null;
+            }
+
             return true;
         }
 
