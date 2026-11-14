@@ -11,6 +11,7 @@ on:
       - DSLKIT/**
       - Examples/**
       - .github/workflows/deploy-visualizer-pages.yml
+      - global.json
   workflow_dispatch:
 
 permissions:
@@ -36,8 +37,8 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore DSLKIT.Visualizer.App/DSLKIT.Visualizer.App.csproj
 
-    - name: Install wasm-tools workload
-      run: dotnet workload install wasm-tools
+    - name: Restore WebAssembly workloads
+      run: dotnet workload restore DSLKIT.Visualizer.App/DSLKIT.Visualizer.App.csproj
 
     - name: Update base href in index.html
       run: sed -i 's|<base href="/" />|<base href="/dslkit/" />|g' DSLKIT.Visualizer.App/wwwroot/index.html
