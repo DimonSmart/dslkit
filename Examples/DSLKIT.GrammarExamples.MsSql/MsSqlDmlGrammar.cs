@@ -72,10 +72,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule(dmlTableHintQualifiedName).SeparatedBy(".", tableHintLimitedName);
             gb.Prod(dmlTableHintQualifiedName).Is(dmlTableHintQualifiedName, ".", ".", tableHintLimitedName);
 
-            gb.Prod(updateStatement).Is("UPDATE", tableFactor, "SET", updateSetList);
-            gb.Prod(updateStatement).Is("UPDATE", tableFactor, "SET", updateSetList, "WHERE", searchCondition);
-            gb.Prod(updateStatement).Is("UPDATE", tableFactor, "SET", updateSetList, "FROM", tableSourceList);
-            gb.Prod(updateStatement).Is("UPDATE", tableFactor, "SET", updateSetList, "FROM", tableSourceList, "WHERE", searchCondition);
+            gb.Rule(updateStatement).CanBe(
+                "UPDATE", tableFactor, "SET", updateSetList,
+                gb.Optional("FROM", tableSourceList),
+                gb.Optional("WHERE", searchCondition));
             gb.Rule(updateSetList).SeparatedBy(",", updateSetItem);
             gb.Prod(updateSetItem).Is(qualifiedName, "=", expression);
             gb.Prod(updateSetItem).Is(qualifiedName, compoundAssignOp, expression);
