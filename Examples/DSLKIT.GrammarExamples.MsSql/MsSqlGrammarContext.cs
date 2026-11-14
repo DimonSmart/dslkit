@@ -5,7 +5,6 @@ namespace DSLKIT.GrammarExamples.MsSql
     internal sealed class MsSqlGrammarContext(
         GrammarBuilder gb,
         MsSqlDialectFeatures dialectFeatures,
-        MsSqlGrammarSymbols symbols,
         ITerminal identifierTerminal,
         ITerminal bracketIdentifierTerminal,
         ITerminal quotedIdentifierTerminal,
@@ -20,7 +19,6 @@ namespace DSLKIT.GrammarExamples.MsSql
     {
         public GrammarBuilder Gb { get; } = gb;
         public MsSqlDialectFeatures DialectFeatures { get; } = dialectFeatures;
-        public MsSqlGrammarSymbols Symbols { get; } = symbols;
         public ITerminal IdentifierTerminal { get; } = identifierTerminal;
         public ITerminal BracketIdentifierTerminal { get; } = bracketIdentifierTerminal;
         public ITerminal QuotedIdentifierTerminal { get; } = quotedIdentifierTerminal;

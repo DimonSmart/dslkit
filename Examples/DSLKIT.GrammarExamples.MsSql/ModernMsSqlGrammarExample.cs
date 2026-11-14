@@ -362,600 +362,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.OnShiftReduce("QueryUnionExpression", "UNION", Resolve.Reduce);
             gb.OnShiftReduce("QueryUnionExpression", "EXCEPT", Resolve.Reduce);
             gb.OnShiftReduce("QueryIntersectExpression", "INTERSECT", Resolve.Reduce);
-            var script = gb.NT("Script");
-            var statementList = gb.NT("StatementList");
-            var statementListOpt = gb.NT("StatementListOpt");
-            var statementSeparator = gb.NT("StatementSeparator");
-            var statementSeparatorList = gb.NT("StatementSeparatorList");
-            var statement = gb.NT("Statement");
-            var statementNoLeadingWith = gb.NT("StatementNoLeadingWith");
-            var implicitStatementNoLeadingWith = gb.NT("ImplicitStatementNoLeadingWith");
-            var leadingWithStatement = gb.NT("LeadingWithStatement");
-            var queryStatement = gb.NT("QueryStatement");
-            var queryStatementNoLeadingWith = gb.NT("QueryStatementNoLeadingWith");
-            var updateStatement = gb.NT("UpdateStatement");
-            var updateSetList = gb.NT("UpdateSetList");
-            var updateSetItem = gb.NT("UpdateSetItem");
-            var compoundAssignOp = gb.NT("CompoundAssignOp");
-            var insertStatement = gb.NT("InsertStatement");
-            var insertTarget = gb.NT("InsertTarget");
-            var insertColumnList = gb.NT("InsertColumnList");
-            var insertValueList = gb.NT("InsertValueList");
-            var rowValue = gb.NT("RowValue");
-            var rowValueList = gb.NT("RowValueList");
-            var deleteStatement = gb.NT("DeleteStatement");
-            var deleteTopClause = gb.NT("DeleteTopClause");
-            var deleteTarget = gb.NT("DeleteTarget");
-            var deleteTargetSimple = gb.NT("DeleteTargetSimple");
-            var deleteTargetRowset = gb.NT("DeleteTargetRowset");
-            var rowsetFunctionLimited = gb.NT("RowsetFunctionLimited");
-            var tableHintLimitedList = gb.NT("TableHintLimitedList");
-            var tableHintLimited = gb.NT("TableHintLimited");
-            var tableHintLimitedName = gb.NT("TableHintLimitedName");
-            var deleteStatementTail = gb.NT("DeleteStatementTail");
-            var deleteStatementTailNoOutput = gb.NT("DeleteStatementTailNoOutput");
-            var deleteStatementTailNoFrom = gb.NT("DeleteStatementTailNoFrom");
-            var deleteOptionOpt = gb.NT("DeleteOptionOpt");
-            var dmlOutputClause = gb.NT("DeleteOutputClause");
-            var dmlOutputTarget = gb.NT("DeleteOutputTarget");
-            var dmlOutputIntoColumnListOpt = gb.NT("DeleteOutputIntoColumnListOpt");
-            var deleteSourceFromClause = gb.NT("DeleteSourceFromClause");
-            var deleteWhereClause = gb.NT("DeleteWhereClause");
-            var queryOptionClause = gb.NT("DeleteOptionClause");
-            var queryHintList = gb.NT("DeleteQueryHintList");
-            var queryHint = gb.NT("DeleteQueryHint");
-            var queryHintName = gb.NT("DeleteQueryHintName");
-            var optionClause = gb.NT("OptionClause");
-            var ifStatement = gb.NT("IfStatement");
-            var ifBranchStatement = gb.NT("IfBranchStatement");
-            var beginEndStatement = gb.NT("BeginEndStatement");
-            var setStatement = gb.NT("SetStatement");
-            var setOptionName = gb.NT("SetOptionName");
-            var setStatisticsOption = gb.NT("SetStatisticsOption");
-            var setTransactionIsolationLevel = gb.NT("SetTransactionIsolationLevel");
-            var printStatement = gb.NT("PrintStatement");
-            var declareStatement = gb.NT("DeclareStatement");
-            var declareItemList = gb.NT("DeclareItemList");
-            var declareItem = gb.NT("DeclareItem");
-            var declareTableVariable = gb.NT("DeclareTableVariable");
-            var tableTypeDefinition = gb.NT("TableTypeDefinition");
-            var typeSpec = gb.NT("TypeSpec");
-            var typeArgument = gb.NT("TypeArgument");
-            var executeStatement = gb.NT("ExecuteStatement");
-            var executeModuleCall = gb.NT("ExecuteModuleCall");
-            var executeModuleCallCore = gb.NT("ExecuteModuleCallCore");
-            var executeReturnAssignment = gb.NT("ExecuteReturnAssignment");
-            var executeModuleTarget = gb.NT("ExecuteModuleTarget");
-            var executeArgList = gb.NT("ExecuteArgList");
-            var executeArg = gb.NT("ExecuteArg");
-            var executeArgNamePrefix = gb.NT("ExecuteArgNamePrefix");
-            var executeArgValue = gb.NT("ExecuteArgValue");
-            var executeWithOptions = gb.NT("ExecuteWithOptions");
-            var executeOptionList = gb.NT("ExecuteOptionList");
-            var executeOption = gb.NT("ExecuteOption");
-            var executeResultSetsDefList = gb.NT("ExecuteResultSetsDefList");
-            var executeResultSetsDef = gb.NT("ExecuteResultSetsDef");
-            var executeColumnDefList = gb.NT("ExecuteColumnDefList");
-            var executeColumnDef = gb.NT("ExecuteColumnDef");
-            var executeNullability = gb.NT("ExecuteNullability");
-            var executeDynamicCall = gb.NT("ExecuteDynamicCall");
-            var executeLinkedArgList = gb.NT("ExecuteLinkedArgList");
-            var executeLinkedArg = gb.NT("ExecuteLinkedArg");
-            var executeAsContext = gb.NT("ExecuteAsContext");
-            var executeAtClause = gb.NT("ExecuteAtClause");
-            var useStatement = gb.NT("UseStatement");
-            var createProcStatement = gb.NT("CreateProcStatement");
-            var createFunctionStatement = gb.NT("CreateFunctionStatement");
-            var createFunctionHead = gb.NT("CreateFunctionHead");
-            var createFunctionName = gb.NT("CreateFunctionName");
-            var createFunctionSignature = gb.NT("CreateFunctionSignature");
-            var createFunctionSignatureParameterListOpt = gb.NT("CreateFunctionSignatureParameterListOpt");
-            var createFunctionParameterList = gb.NT("CreateFunctionParameterList");
-            var createFunctionParameter = gb.NT("CreateFunctionParameter");
-            var createFunctionParameterOptionList = gb.NT("CreateFunctionParameterOptionList");
-            var createFunctionParameterOption = gb.NT("CreateFunctionParameterOption");
-            var createFunctionScalarReturnsClause = gb.NT("CreateFunctionScalarReturnsClause");
-            var createFunctionInlineTableReturnsClause = gb.NT("CreateFunctionInlineTableReturnsClause");
-            var createFunctionTableVariableReturnsClause = gb.NT("CreateFunctionTableVariableReturnsClause");
-            var createFunctionWithClause = gb.NT("CreateFunctionWithClause");
-            var createFunctionOptionList = gb.NT("CreateFunctionOptionList");
-            var createFunctionOption = gb.NT("CreateFunctionOption");
-            var createFunctionPreludeStatement = gb.NT("CreateFunctionPreludeStatement");
-            var createFunctionPreludeStatementNoLeadingWith = gb.NT("CreateFunctionPreludeStatementNoLeadingWith");
-            var createFunctionImplicitPreludeStatementNoLeadingWith = gb.NT("CreateFunctionImplicitPreludeStatementNoLeadingWith");
-            var createFunctionPreludeStatementList = gb.NT("CreateFunctionPreludeStatementList");
-            var createFunctionPreludeBeforeReturnOpt = gb.NT("CreateFunctionPreludeBeforeReturnOpt");
-            var createFunctionBodyTrailingSeparatorsOpt = gb.NT("CreateFunctionBodyTrailingSeparatorsOpt");
-            var createFunctionScalarReturnStatement = gb.NT("CreateFunctionScalarReturnStatement");
-            var createFunctionTableVariableReturnStatement = gb.NT("CreateFunctionTableVariableReturnStatement");
-            var createFunctionScalarBody = gb.NT("CreateFunctionScalarBody");
-            var createFunctionInlineTableBody = gb.NT("CreateFunctionInlineTableBody");
-            var createFunctionTableVariableBody = gb.NT("CreateFunctionTableVariableBody");
-            var createFunctionTableReturnDefinition = gb.NT("CreateFunctionTableReturnDefinition");
-            var createFunctionTableReturnItemList = gb.NT("CreateFunctionTableReturnItemList");
-            var createFunctionTableReturnItem = gb.NT("CreateFunctionTableReturnItem");
-            var grantStatement = gb.NT("GrantStatement");
-            var grantPermissionSet = gb.NT("GrantPermissionSet");
-            var grantPermissionList = gb.NT("GrantPermissionList");
-            var grantPermissionItem = gb.NT("GrantPermissionItem");
-            var grantPermission = gb.NT("GrantPermission");
-            var grantPermissionWord = gb.NT("GrantPermissionWord");
-            var grantOnClause = gb.NT("GrantOnClause");
-            var grantClassType = gb.NT("GrantClassType");
-            var grantSecurable = gb.NT("GrantSecurable");
-            var grantPrincipalList = gb.NT("GrantPrincipalList");
-            var grantPrincipal = gb.NT("GrantPrincipal");
-            var dbccStatement = gb.NT("DbccStatement");
-            var dbccCommand = gb.NT("DbccCommand");
-            var dbccParamList = gb.NT("DbccParamList");
-            var dbccParam = gb.NT("DbccParam");
-            var dbccOptionList = gb.NT("DbccOptionList");
-            var dbccOption = gb.NT("DbccOption");
-            var dbccOptionName = gb.NT("DbccOptionName");
-            var dbccOptionValue = gb.NT("DbccOptionValue");
-            var dropProcStatement = gb.NT("DropProcStatement");
-            var dropTableStatement = gb.NT("DropTableStatement");
-            var dropViewStatement = gb.NT("DropViewStatement");
-            var dropIndexStatement = gb.NT("DropIndexStatement");
-            var dropStatisticsStatement = gb.NT("DropStatisticsStatement");
-            var dropIfExistsClause = gb.NT("DropIfExistsClause");
-            var dropTableTargetList = gb.NT("DropTableTargetList");
-            var dropViewTargetList = gb.NT("DropViewTargetList");
-            var dropIndexSpecList = gb.NT("DropIndexSpecList");
-            var dropIndexSpec = gb.NT("DropIndexSpec");
-            var dropIndexOptionList = gb.NT("DropIndexOptionList");
-            var dropIndexOption = gb.NT("DropIndexOption");
-            var dropMoveToTarget = gb.NT("DropMoveToTarget");
-            var dropFileStreamTarget = gb.NT("DropFileStreamTarget");
-            var dropStatisticsTargetList = gb.NT("DropStatisticsTargetList");
-            var dropStatisticsTarget = gb.NT("DropStatisticsTarget");
-            var createTriggerStatement = gb.NT("CreateTriggerStatement");
-            var createTriggerHead = gb.NT("CreateTriggerHead");
-            var createTriggerFireClause = gb.NT("CreateTriggerFireClause");
-            var createTriggerEventList = gb.NT("CreateTriggerEventList");
-            var createTriggerEvent = gb.NT("CreateTriggerEvent");
-            var createTriggerWithOptionList = gb.NT("CreateTriggerWithOptionList");
-            var createTriggerWithOption = gb.NT("CreateTriggerWithOption");
-            var dropTriggerStatement = gb.NT("DropTriggerStatement");
-            var createProcHead = gb.NT("CreateProcHead");
-            var createProcKeyword = gb.NT("CreateProcKeyword");
-            var createProcName = gb.NT("CreateProcName");
-            var createProcSignature = gb.NT("CreateProcSignature");
-            var createProcSignatureParameterListOpt = gb.NT("CreateProcSignatureParameterListOpt");
-            var createProcSignatureWithClauseOpt = gb.NT("CreateProcSignatureWithClauseOpt");
-            var createProcSignatureForReplicationOpt = gb.NT("CreateProcSignatureForReplicationOpt");
-            var createProcParameterList = gb.NT("CreateProcParameterList");
-            var createProcParameter = gb.NT("CreateProcParameter");
-            var createProcParameterOptionList = gb.NT("CreateProcParameterOptionList");
-            var createProcParameterOption = gb.NT("CreateProcParameterOption");
-            var createProcWithClause = gb.NT("CreateProcWithClause");
-            var createProcOptionList = gb.NT("CreateProcOptionList");
-            var createProcOption = gb.NT("CreateProcOption");
-            var createProcExecuteAsClause = gb.NT("CreateProcExecuteAsClause");
-            var createProcForReplicationClause = gb.NT("CreateProcForReplicationClause");
-            var createProcBody = gb.NT("CreateProcBody");
-            var createProcBodyBlock = gb.NT("CreateProcBodyBlock");
-            var createProcExternalName = gb.NT("CreateProcExternalName");
-            var createProcNativeWithClause = gb.NT("CreateProcNativeWithClause");
-            var createProcNativeAtomicOptionList = gb.NT("CreateProcNativeAtomicOptionList");
-            var createProcNativeAtomicOption = gb.NT("CreateProcNativeAtomicOption");
-            var whileStatement = gb.NT("WhileStatement");
-            var returnStatement = gb.NT("ReturnStatement");
-            var transactionStatement = gb.NT("TransactionStatement");
-            var raiserrorStatement = gb.NT("RaiserrorStatement");
-            var raiserrorArgList = gb.NT("RaiserrorArgList");
-            var raiserrorWithOptionList = gb.NT("RaiserrorWithOptionList");
-            var raiserrorWithOption = gb.NT("RaiserrorWithOption");
-            var throwStatement = gb.NT("ThrowStatement");
-            var loopControlStatement = gb.NT("LoopControlStatement");
-            var gotoStatement = gb.NT("GotoStatement");
-            var labelStatement = gb.NT("LabelStatement");
-            var labelOnlyStatement = gb.NT("LabelOnlyStatement");
-            var createRoleStatement = gb.NT("CreateRoleStatement");
-            var createSchemaStatement = gb.NT("CreateSchemaStatement");
-            var schemaNameClause = gb.NT("SchemaNameClause");
-            var createViewHead = gb.NT("CreateViewHead");
-            var createViewStatement = gb.NT("CreateViewStatement");
-            var createViewColumnList = gb.NT("CreateViewColumnList");
-            var createViewOptionClause = gb.NT("CreateViewOptionClause");
-            var createViewBody = gb.NT("CreateViewBody");
-            var createViewQuery = gb.NT("CreateViewQuery");
-            var createViewCheckOptionOpt = gb.NT("CreateViewCheckOptionOpt");
-            var createViewOptionList = gb.NT("CreateViewOptionList");
-            var createViewOption = gb.NT("CreateViewOption");
-            var createTableStatement = gb.NT("CreateTableStatement");
-            var createTableFileTableClause = gb.NT("CreateTableFileTableClause");
-            var createTableElementList = gb.NT("CreateTableElementList");
-            var createTableElement = gb.NT("CreateTableElement");
-            var createTableColumnDefinition = gb.NT("CreateTableColumnDefinition");
-            var createTableColumnOptionList = gb.NT("CreateTableColumnOptionList");
-            var createTableColumnOption = gb.NT("CreateTableColumnOption");
-            var createTableComputedColumn = gb.NT("CreateTableComputedColumn");
-            var createTableColumnSet = gb.NT("CreateTableColumnSet");
-            var createTableConstraint = gb.NT("CreateTableConstraint");
-            var createTableColumnConstraintBody = gb.NT("CreateTableColumnConstraintBody");
-            var createTableTableConstraintBody = gb.NT("CreateTableTableConstraintBody");
-            var createTableColumnKeyClusterType = gb.NT("CreateTableColumnKeyClusterType");
-            var createTableConstraintClusterType = gb.NT("CreateTableConstraintClusterType");
-            var createTableClusterType = gb.NT("CreateTableClusterType");
-            var createTableKeyColumnList = gb.NT("CreateTableKeyColumnList");
-            var createTableKeyColumn = gb.NT("CreateTableKeyColumn");
-            var createTableTableIndex = gb.NT("CreateTableTableIndex");
-            var createTablePeriodClause = gb.NT("CreateTablePeriodClause");
-            var createTableTailClauseList = gb.NT("CreateTableTailClauseList");
-            var createTableTailClause = gb.NT("CreateTableTailClause");
-            var createTableOptions = gb.NT("CreateTableOptions");
-            var createTableOptionList = gb.NT("CreateTableOptionList");
-            var createTableOption = gb.NT("CreateTableOption");
-            var createTableDurabilityMode = gb.NT("CreateTableDurabilityMode");
-            var createTableOnClause = gb.NT("CreateTableOnClause");
-            var createTableTextImageClause = gb.NT("CreateTableTextImageClause");
-            var alterTableStatement = gb.NT("AlterTableStatement");
-            var alterTableAction = gb.NT("AlterTableAction");
-            var alterTableAddItemList = gb.NT("AlterTableAddItemList");
-            var alterTableAddItem = gb.NT("AlterTableAddItem");
-            var alterTableAlterColumnAction = gb.NT("AlterTableAlterColumnAction");
-            var alterTableColumnOptionList = gb.NT("AlterTableColumnOptionList");
-            var alterTableColumnOption = gb.NT("AlterTableColumnOption");
-            var alterTableDropItemList = gb.NT("AlterTableDropItemList");
-            var alterTableDropItem = gb.NT("AlterTableDropItem");
-            var alterTableCheckMode = gb.NT("AlterTableCheckMode");
-            var alterTableConstraintTarget = gb.NT("AlterTableConstraintTarget");
-            var alterTableTriggerTarget = gb.NT("AlterTableTriggerTarget");
-            var createIndexStatement = gb.NT("CreateIndexStatement");
-            var createKeyListIndexHead = gb.NT("CreateKeyListIndexHead");
-            var createKeylessIndexHead = gb.NT("CreateKeylessIndexHead");
-            var createIndexKeyList = gb.NT("CreateIndexKeyList");
-            var createIndexKeyItem = gb.NT("CreateIndexKeyItem");
-            var createIndexTailClauseList = gb.NT("CreateIndexTailClauseList");
-            var createIndexTailClause = gb.NT("CreateIndexTailClause");
-            var createIndexIncludeClause = gb.NT("CreateIndexIncludeClause");
-            var createIndexIncludeList = gb.NT("CreateIndexIncludeList");
-            var createIndexWhereClause = gb.NT("CreateIndexWhereClause");
-            var createIndexWithClause = gb.NT("CreateIndexWithClause");
-            var createIndexStorageClause = gb.NT("CreateIndexStorageClause");
-            var createIndexFileStreamClause = gb.NT("CreateIndexFileStreamClause");
-            var indexOptionList = gb.NT("IndexOptionList");
-            var indexOption = gb.NT("IndexOption");
-            var indexOptionName = gb.NT("IndexOptionName");
-            var indexOptionValue = gb.NT("IndexOptionValue");
-            var indexOnOffValue = gb.NT("IndexOnOffValue");
-            var namedOptionValue = gb.NT("NamedOptionValue");
-            var maskingOptionList = gb.NT("MaskingOptionList");
-            var encryptionOptionList = gb.NT("EncryptionOptionList");
-            var indexPartitionList = gb.NT("IndexPartitionList");
-            var indexPartitionItem = gb.NT("IndexPartitionItem");
-            var indexStorageTarget = gb.NT("IndexStorageTarget");
-            var indexFileStreamTarget = gb.NT("IndexFileStreamTarget");
-            var alterIndexStatement = gb.NT("AlterIndexStatement");
-            var alterIndexTarget = gb.NT("AlterIndexTarget");
-            var alterIndexAction = gb.NT("AlterIndexAction");
-            var alterIndexRebuildSpec = gb.NT("AlterIndexRebuildSpec");
-            var alterIndexReorganizeSpec = gb.NT("AlterIndexReorganizeSpec");
-            var alterIndexResumeSpec = gb.NT("AlterIndexResumeSpec");
-            var alterIndexPartitionSelector = gb.NT("AlterIndexPartitionSelector");
-            var createDatabaseStatement = gb.NT("CreateDatabaseStatement");
-            var dropDatabaseStatement = gb.NT("DropDatabaseStatement");
-            var createDatabaseClauseList = gb.NT("CreateDatabaseClauseList");
-            var createDatabaseClause = gb.NT("CreateDatabaseClause");
-            var createDatabaseContainmentClause = gb.NT("CreateDatabaseContainmentClause");
-            var createDatabaseOnClause = gb.NT("CreateDatabaseOnClause");
-            var createDatabaseOnFilespecSequence = gb.NT("CreateDatabaseOnFilespecSequence");
-            var createDatabaseFilespecList = gb.NT("CreateDatabaseFilespecList");
-            var createDatabaseFilegroup = gb.NT("CreateDatabaseFilegroup");
-            var createDatabaseCollateClause = gb.NT("CreateDatabaseCollateClause");
-            var createDatabaseWithClause = gb.NT("CreateDatabaseWithClause");
-            var createDatabaseOptionList = gb.NT("CreateDatabaseOptionList");
-            var createDatabaseOption = gb.NT("CreateDatabaseOption");
-            var createDatabaseOptionValue = gb.NT("CreateDatabaseOptionValue");
-            var createDatabaseOnOffValue = gb.NT("CreateDatabaseOnOffValue");
-            var createDatabaseFilespec = gb.NT("CreateDatabaseFilespec");
-            var createDatabaseFileName = gb.NT("CreateDatabaseFileName");
-            var createDatabaseFilespecOptionList = gb.NT("CreateDatabaseFilespecOptionList");
-            var createDatabaseFilespecOption = gb.NT("CreateDatabaseFilespecOption");
-            var createDatabaseSizeSpec = gb.NT("CreateDatabaseSizeSpec");
-            var createDatabaseMaxSizeSpec = gb.NT("CreateDatabaseMaxSizeSpec");
-            var createDatabaseGrowthSpec = gb.NT("CreateDatabaseGrowthSpec");
-            var createDatabaseSizeUnit = gb.NT("CreateDatabaseSizeUnit");
-            var createDatabaseGrowthUnit = gb.NT("CreateDatabaseGrowthUnit");
-            var createDatabaseFilestreamOptionList = gb.NT("CreateDatabaseFilestreamOptionList");
-            var createDatabaseFilestreamOption = gb.NT("CreateDatabaseFilestreamOption");
-            var createDatabaseNonTransactedAccessValue = gb.NT("CreateDatabaseNonTransactedAccessValue");
-            var procStatementList = gb.NT("ProcStatementList");
-            var tryCatchStatement = gb.NT("TryCatchStatement");
-            var truncateStatement = gb.NT("TruncateStatement");
-            var createTableAsSelectStatement = gb.NT("CreateTableAsSelectStatement");
-            var alterDatabaseStatement = gb.NT("AlterDatabaseStatement");
-            var alterDatabaseSetOption = gb.NT("AlterDatabaseSetOption");
-            var alterDatabaseSetOnOffOption = gb.NT("AlterDatabaseSetOnOffOption");
-            var alterDatabaseSetEqualsOnOffOption = gb.NT("AlterDatabaseSetEqualsOnOffOption");
-            var alterDatabaseSetModeOption = gb.NT("AlterDatabaseSetModeOption");
-            var alterDatabaseTerminationClause = gb.NT("AlterDatabaseTerminationClause");
-            var alterDatabaseTerminationOpt = gb.NT("AlterDatabaseTerminationOpt");
-            var alterDatabaseRecoveryModel = gb.NT("AlterDatabaseRecoveryModel");
-            var alterDatabasePageVerifyMode = gb.NT("AlterDatabasePageVerifyMode");
-            var alterDatabaseCursorDefaultMode = gb.NT("AlterDatabaseCursorDefaultMode");
-            var alterDatabaseParameterizationMode = gb.NT("AlterDatabaseParameterizationMode");
-            var alterDatabaseTargetRecoveryUnit = gb.NT("AlterDatabaseTargetRecoveryUnit");
-            var alterDatabaseDelayedDurabilityMode = gb.NT("AlterDatabaseDelayedDurabilityMode");
-            var declareCursorStatement = gb.NT("DeclareCursorStatement");
-            var cursorReference = gb.NT("CursorReference");
-            var cursorOptionList = gb.NT("CursorOptionList");
-            var cursorOption = gb.NT("CursorOption");
-            var cursorOperationStatement = gb.NT("CursorOperationStatement");
-            var fetchStatement = gb.NT("FetchStatement");
-            var fetchDirection = gb.NT("FetchDirection");
-            var fetchTargetList = gb.NT("FetchTargetList");
-            var waitforStatement = gb.NT("WaitforStatement");
-            var waitforTimeValue = gb.NT("WaitforTimeValue");
-            var createLoginStatement = gb.NT("CreateLoginStatement");
-            var createLoginPasswordSpec = gb.NT("CreateLoginPasswordSpec");
-            var createLoginOptionList = gb.NT("CreateLoginOptionList");
-            var createLoginOption = gb.NT("CreateLoginOption");
-            var createLoginWindowsOptionList = gb.NT("CreateLoginWindowsOptionList");
-            var createLoginWindowsOption = gb.NT("CreateLoginWindowsOption");
-            var bulkInsertStatement = gb.NT("BulkInsertStatement");
-            var bulkInsertOptionList = gb.NT("BulkInsertOptionList");
-            var checkpointStatement = gb.NT("CheckpointStatement");
-            var createUserStatement = gb.NT("CreateUserStatement");
-            var createStatisticsStatement = gb.NT("CreateStatisticsStatement");
-            var updateStatisticsStatement = gb.NT("UpdateStatisticsStatement");
-            var updateStatisticsOptionList = gb.NT("UpdateStatisticsOptionList");
-            var updateStatisticsOption = gb.NT("UpdateStatisticsOption");
-            var updateStatisticsSimpleOption = gb.NT("UpdateStatisticsSimpleOption");
-            var updateStatisticsOnOffOptionName = gb.NT("UpdateStatisticsOnOffOptionName");
-            var dropTypeStatement = gb.NT("DropTypeStatement");
-            var dropColumnEncryptionKeyStatement = gb.NT("DropColumnEncryptionKeyStatement");
-            var matchGraphPattern = gb.NT("MatchGraphPattern");
-            var matchGraphPath = gb.NT("MatchGraphPath");
-            var matchGraphStep = gb.NT("MatchGraphStep");
-            var matchGraphStepChain = gb.NT("MatchGraphStepChain");
-            var matchGraphShortestPath = gb.NT("MatchGraphShortestPath");
-            var matchGraphShortestPathBody = gb.NT("MatchGraphShortestPathBody");
-            var graphWithinGroupClause = gb.NT("GraphWithinGroupClause");
-            var predictArgList = gb.NT("PredictArgList");
-            var predictArg = gb.NT("PredictArg");
-            var openRowsetBulk = gb.NT("OpenRowsetBulk");
-            var openRowsetBulkOptionList = gb.NT("OpenRowsetBulkOptionList");
-            var openRowsetBulkOption = gb.NT("OpenRowsetBulkOption");
-            var revertStatement = gb.NT("RevertStatement");
-            var dropEventSessionStatement = gb.NT("DropEventSessionStatement");
-            var createTypeStatement = gb.NT("CreateTypeStatement");
-            var createSecurityPolicyStatement = gb.NT("CreateSecurityPolicyStatement");
-            var alterSecurityPolicyStatement = gb.NT("AlterSecurityPolicyStatement");
-            var securityPolicyClauseList = gb.NT("SecurityPolicyClauseList");
-            var securityPolicyClause = gb.NT("SecurityPolicyClause");
-            var securityPolicyOptionList = gb.NT("SecurityPolicyOptionList");
-            var securityPolicyOption = gb.NT("SecurityPolicyOption");
-            var securityPolicyOptionName = gb.NT("SecurityPolicyOptionName");
-            var createExternalTableStatement = gb.NT("CreateExternalTableStatement");
-            var externalTableOptionList = gb.NT("ExternalTableOptionList");
-            var createExternalDataSourceStatement = gb.NT("CreateExternalDataSourceStatement");
-            var externalDataSourceOptionList = gb.NT("ExternalDataSourceOptionList");
-            var mergeStatement = gb.NT("MergeStatement");
-            var mergeTargetTable = gb.NT("MergeTargetTable");
-            var mergeSourceTable = gb.NT("MergeSourceTable");
-            var mergeOutputClauseOpt = gb.NT("MergeOutputClauseOpt");
-            var mergeOptionClauseOpt = gb.NT("MergeOptionClauseOpt");
-            var mergeWhenList = gb.NT("MergeWhenList");
-            var mergeWhen = gb.NT("MergeWhen");
-            var mergeMatchedAction = gb.NT("MergeMatchedAction");
-            var mergeNotMatchedAction = gb.NT("MergeNotMatchedAction");
-            var withClause = gb.NT("WithClause");
-            var withXmlNamespacesClause = gb.NT("WithXmlNamespacesClause");
-            var xmlNamespaceItemList = gb.NT("XmlNamespaceItemList");
-            var xmlNamespaceItem = gb.NT("XmlNamespaceItem");
-            var cteDefinitionList = gb.NT("CteDefinitionList");
-            var cteDefinition = gb.NT("CteDefinition");
-            var implicitQueryStatementNoLeadingWith = gb.NT("ImplicitQueryStatementNoLeadingWith");
-            var implicitQueryExpression = gb.NT("ImplicitQueryExpression");
-            var implicitQueryUnionExpression = gb.NT("ImplicitQueryUnionExpression");
-            var implicitQueryIntersectExpression = gb.NT("ImplicitQueryIntersectExpression");
-            var queryExpression = gb.NT("QueryExpression");
-            var queryUnionExpression = gb.NT("QueryUnionExpression");
-            var queryIntersectExpression = gb.NT("QueryIntersectExpression");
-            var setOperator = gb.NT("SetOperator");
-            var queryPrimary = gb.NT("QueryPrimary");
-            var queryExpressionTail = gb.NT("QueryExpressionTail");
-            var queryExpressionOrderByAndOffsetOpt = gb.NT("QueryExpressionOrderByAndOffsetOpt");
-            var queryExpressionForOpt = gb.NT("QueryExpressionForOpt");
-            var queryExpressionOptionOpt = gb.NT("QueryExpressionOptionOpt");
-            var querySpecification = gb.NT("QuerySpecification");
-            var selectCore = gb.NT("SelectCore");
-            var selectCorePrefix = gb.NT("SelectCorePrefix");
-            var selectCoreTail = gb.NT("SelectCoreTail");
-            var selectCoreIntoClause = gb.NT("SelectCoreIntoClause");
-            var querySpecificationWhereClause = gb.NT("QuerySpecificationWhereClause");
-            var querySpecificationGroupByClause = gb.NT("QuerySpecificationGroupByClause");
-            var querySpecificationGroupByExpressionList = gb.NT("QuerySpecificationGroupByExpressionList");
-            var querySpecificationGroupByGroupingSets = gb.NT("QuerySpecificationGroupByGroupingSets");
-            var querySpecificationGroupByWithOpt = gb.NT("QuerySpecificationGroupByWithOpt");
-            var querySpecificationHavingOpt = gb.NT("QuerySpecificationHavingOpt");
-            var querySpecificationQualifyOpt = gb.NT("QuerySpecificationQualifyOpt");
-            var setQuantifier = gb.NT("SetQuantifier");
-            var topClause = gb.NT("TopClause");
-            var topClauseTail = gb.NT("TopClauseTail");
-            var topValue = gb.NT("TopValue");
-            var selectList = gb.NT("SelectList");
-            var selectItemList = gb.NT("SelectItemList");
-            var selectItem = gb.NT("SelectItem");
-            var tableSourceList = gb.NT("TableSourceList");
-            var tableSource = gb.NT("TableSource");
-            var tableFactor = gb.NT("TableFactor");
-            var temporalClause = gb.NT("TemporalClause");
-            var pivotClause = gb.NT("PivotClause");
-            var pivotValueList = gb.NT("PivotValueList");
-            var unpivotClause = gb.NT("UnpivotClause");
-            var unpivotColumnList = gb.NT("UnpivotColumnList");
-            var openJsonCall = gb.NT("OpenJsonCall");
-            var openJsonWithClause = gb.NT("OpenJsonWithClause");
-            var openJsonColumnList = gb.NT("OpenJsonColumnList");
-            var openJsonColumnDef = gb.NT("OpenJsonColumnDef");
-            var openJsonPath = gb.NT("OpenJsonPath");
-            var joinPart = gb.NT("JoinPart");
-            var joinType = gb.NT("JoinType");
-            var orderByClause = gb.NT("OrderByClause");
-            var orderItemList = gb.NT("OrderItemList");
-            var orderItem = gb.NT("OrderItem");
-            var groupingSetList = gb.NT("GroupingSetList");
-            var groupingSet = gb.NT("GroupingSet");
-            var offsetFetchClause = gb.NT("OffsetFetchClause");
-            var searchCondition = gb.NT("SearchCondition");
-            var expression = gb.NT("Expression");
-            var booleanOrExpression = gb.NT("BooleanOrExpression");
-            var booleanAndExpression = gb.NT("BooleanAndExpression");
-            var booleanNotExpression = gb.NT("BooleanNotExpression");
-            var booleanPrimary = gb.NT("BooleanPrimary");
-            var comparisonOperator = gb.NT("ComparisonOperator");
-            var inPredicateValue = gb.NT("InPredicateValue");
-            var additiveExpression = gb.NT("AdditiveExpression");
-            var multiplicativeExpression = gb.NT("MultiplicativeExpression");
-            var unaryExpression = gb.NT("UnaryExpression");
-            var collateExpression = gb.NT("CollateExpression");
-            var primaryExpression = gb.NT("PrimaryExpression");
-            var overClause = gb.NT("OverClause");
-            var overSpec = gb.NT("OverSpec");
-            var overPartitionClause = gb.NT("OverPartitionClause");
-            var overOrderClause = gb.NT("OverOrderClause");
-            var overFrameExtentOpt = gb.NT("OverFrameExtentOpt");
-            var frameClause = gb.NT("FrameClause");
-            var frameBoundary = gb.NT("FrameBoundary");
-            var functionCall = gb.NT("FunctionCall");
-            var functionArgumentList = gb.NT("FunctionArgumentList");
-            var iifArgumentList = gb.NT("IifArgumentList");
-            var literal = gb.NT("Literal");
-            var unicodeStringLiteral = gb.NT("UnicodeStringLiteral");
-            var caseExpression = gb.NT("CaseExpression");
-            var caseWhenList = gb.NT("CaseWhenList");
-            var caseWhen = gb.NT("CaseWhen");
-            var expressionList = gb.NT("ExpressionList");
-            var strictIdentifierTerm = gb.NT("StrictIdentifierTerm");
-            var contextualIdentifierTerm = gb.NT("ContextualIdentifierTerm");
-            var strictQualifiedName = gb.NT("StrictQualifiedName");
-            var qualifiedName = gb.NT("QualifiedName");
-            var variableReference = gb.NT("VariableReference");
-            var forClause = gb.NT("ForClause");
-            var forJsonMode = gb.NT("ForJsonMode");
-            var forJsonOptionList = gb.NT("ForJsonOptionList");
-            var forJsonOption = gb.NT("ForJsonOption");
-            var forXmlMode = gb.NT("ForXmlMode");
-            var forXmlOptionList = gb.NT("ForXmlOptionList");
-            var forXmlOption = gb.NT("ForXmlOption");
-            var symbols = new MsSqlGrammarSymbols
-            {
-                ImplicitQueryExpression = implicitQueryExpression,
-                ImplicitQueryUnionExpression = implicitQueryUnionExpression,
-                ImplicitQueryIntersectExpression = implicitQueryIntersectExpression,
-                QueryExpression = queryExpression,
-                QueryUnionExpression = queryUnionExpression,
-                QueryIntersectExpression = queryIntersectExpression,
-                SetOperator = setOperator,
-                QueryExpressionTail = queryExpressionTail,
-                QueryExpressionOrderByAndOffsetOpt = queryExpressionOrderByAndOffsetOpt,
-                QueryExpressionForOpt = queryExpressionForOpt,
-                QueryExpressionOptionOpt = queryExpressionOptionOpt,
-                QueryPrimary = queryPrimary,
-                QuerySpecification = querySpecification,
-                QuerySpecificationWhereClause = querySpecificationWhereClause,
-                QuerySpecificationHavingOpt = querySpecificationHavingOpt,
-                QuerySpecificationQualifyOpt = querySpecificationQualifyOpt,
-                QuerySpecificationGroupByWithOpt = querySpecificationGroupByWithOpt,
-                QuerySpecificationGroupByExpressionList = querySpecificationGroupByExpressionList,
-                QuerySpecificationGroupByGroupingSets = querySpecificationGroupByGroupingSets,
-                QuerySpecificationGroupByClause = querySpecificationGroupByClause,
-                ForClause = forClause,
-                ForJsonMode = forJsonMode,
-                ForJsonOptionList = forJsonOptionList,
-                ForJsonOption = forJsonOption,
-                ForXmlMode = forXmlMode,
-                ForXmlOptionList = forXmlOptionList,
-                ForXmlOption = forXmlOption,
-                SelectCorePrefix = selectCorePrefix,
-                SelectCoreTail = selectCoreTail,
-                SelectCoreIntoClause = selectCoreIntoClause,
-                SelectCore = selectCore,
-                SetQuantifier = setQuantifier,
-                TopClauseTail = topClauseTail,
-                TopClause = topClause,
-                TopValue = topValue,
-                SelectList = selectList,
-                SelectItemList = selectItemList,
-                SelectItem = selectItem,
-                OrderByClause = orderByClause,
-                OrderItemList = orderItemList,
-                OrderItem = orderItem,
-                OffsetFetchClause = offsetFetchClause,
-                Expression = expression,
-                ExpressionList = expressionList,
-                GroupingSetList = groupingSetList,
-                GroupingSet = groupingSet,
-                ContextualIdentifierTerm = contextualIdentifierTerm,
-                StrictIdentifierTerm = strictIdentifierTerm,
-                StrictQualifiedName = strictQualifiedName,
-                QualifiedName = qualifiedName,
-                VariableReference = variableReference,
-                SearchCondition = searchCondition,
-                BooleanOrExpression = booleanOrExpression,
-                BooleanAndExpression = booleanAndExpression,
-                BooleanNotExpression = booleanNotExpression,
-                BooleanPrimary = booleanPrimary,
-                InPredicateValue = inPredicateValue,
-                ComparisonOperator = comparisonOperator,
-                AdditiveExpression = additiveExpression,
-                MultiplicativeExpression = multiplicativeExpression,
-                UnaryExpression = unaryExpression,
-                CollateExpression = collateExpression,
-                PrimaryExpression = primaryExpression,
-                FunctionCall = functionCall,
-                FunctionArgumentList = functionArgumentList,
-                IifArgumentList = iifArgumentList,
-                Literal = literal,
-                UnicodeStringLiteral = unicodeStringLiteral,
-                CaseExpression = caseExpression,
-                CaseWhenList = caseWhenList,
-                CaseWhen = caseWhen,
-                OverClause = overClause,
-                OverSpec = overSpec,
-                OverPartitionClause = overPartitionClause,
-                OverFrameExtentOpt = overFrameExtentOpt,
-                OverOrderClause = overOrderClause,
-                FrameClause = frameClause,
-                FrameBoundary = frameBoundary,
-                GraphWithinGroupClause = graphWithinGroupClause,
-                TypeSpec = typeSpec,
-                OpenRowsetBulk = openRowsetBulk,
-                OpenRowsetBulkOptionList = openRowsetBulkOptionList,
-                OpenRowsetBulkOption = openRowsetBulkOption,
-                NamedOptionValue = namedOptionValue,
-                CreateTableKeyColumnList = createTableKeyColumnList,
-                MatchGraphPattern = matchGraphPattern,
-                TableSourceList = tableSourceList,
-                TableSource = tableSource,
-                TableFactor = tableFactor,
-                TableHintLimitedList = tableHintLimitedList,
-                TemporalClause = temporalClause,
-                InsertColumnList = insertColumnList,
-                RowValueList = rowValueList,
-                OpenJsonCall = openJsonCall,
-                OpenJsonWithClause = openJsonWithClause,
-                OpenJsonColumnList = openJsonColumnList,
-                OpenJsonColumnDef = openJsonColumnDef,
-                OpenJsonPath = openJsonPath,
-                JoinPart = joinPart,
-                JoinType = joinType,
-                PivotClause = pivotClause,
-                PivotValueList = pivotValueList,
-                UnpivotClause = unpivotClause,
-                UnpivotColumnList = unpivotColumnList,
-                CompoundAssignOp = compoundAssignOp,
-                OptionClause = optionClause,
-                IndexOptionList = indexOptionList,
-                IndexOnOffValue = indexOnOffValue
-            };
             var grammarContext = new MsSqlGrammarContext(
                 gb,
                 dialectFeatures,
-                symbols,
                 identifier,
                 bracketIdentifier,
                 quotedIdentifier,
@@ -970,183 +379,87 @@ namespace DSLKIT.GrammarExamples.MsSql
             var dialectModuleContext = new SqlDialectGrammarModuleContext(
                 grammarContext,
                 new SqlDialectGrammarExtensionPoints(
-                    withClause,
-                    createViewHead,
-                    bulkInsertStatement,
-                    bulkInsertOptionList,
-                    matchGraphPath,
-                    matchGraphStep,
-                    matchGraphStepChain,
-                    matchGraphShortestPath,
-                    matchGraphShortestPathBody,
-                    createTableAsSelectStatement,
-                    predictArgList,
-                    predictArg,
-                    createSecurityPolicyStatement,
-                    alterSecurityPolicyStatement,
-                    securityPolicyClauseList,
-                    securityPolicyClause,
-                    securityPolicyOptionList,
-                    securityPolicyOption,
-                    securityPolicyOptionName,
-                    createExternalTableStatement,
-                    externalTableOptionList,
-                    createExternalDataSourceStatement,
-                    externalDataSourceOptionList,
-                    mergeStatement,
-                    createTableElementList));
-            var schemaDdlSymbols = new MsSqlSchemaDdlSymbols
-            {
-                CreateTableFileTableClause = createTableFileTableClause,
-                CreateTableStatement = createTableStatement,
-                CreateIndexFileStreamClause = createIndexFileStreamClause,
-                CreateTableOptions = createTableOptions,
-                CreateTableElementList = createTableElementList,
-                CreateTableTailClauseList = createTableTailClauseList,
-                CreateTableTailClause = createTableTailClause,
-                CreateTablePeriodClause = createTablePeriodClause,
-                CreateTableOnClause = createTableOnClause,
-                CreateTableTextImageClause = createTableTextImageClause,
-                CreateTableElement = createTableElement,
-                CreateTableColumnDefinition = createTableColumnDefinition,
-                CreateTableComputedColumn = createTableComputedColumn,
-                CreateTableColumnSet = createTableColumnSet,
-                CreateTableConstraint = createTableConstraint,
-                CreateTableTableIndex = createTableTableIndex,
-                CreateTableColumnOptionList = createTableColumnOptionList,
-                CreateTableColumnOption = createTableColumnOption,
-                MaskingOptionList = maskingOptionList,
-                EncryptionOptionList = encryptionOptionList,
-                CreateTableColumnConstraintBody = createTableColumnConstraintBody,
-                CreateTableTableConstraintBody = createTableTableConstraintBody,
-                CreateTableColumnKeyClusterType = createTableColumnKeyClusterType,
-                CreateTableConstraintClusterType = createTableConstraintClusterType,
-                CreateTableClusterType = createTableClusterType,
-                CreateTableKeyColumn = createTableKeyColumn,
-                CreateIndexWithClause = createIndexWithClause,
-                CreateTableOptionList = createTableOptionList,
-                CreateTableOption = createTableOption,
-                CreateTableDurabilityMode = createTableDurabilityMode,
-                AlterTableStatement = alterTableStatement,
-                AlterTableAction = alterTableAction,
-                AlterTableAddItemList = alterTableAddItemList,
-                AlterTableAddItem = alterTableAddItem,
-                AlterTableAlterColumnAction = alterTableAlterColumnAction,
-                AlterTableColumnOptionList = alterTableColumnOptionList,
-                AlterTableColumnOption = alterTableColumnOption,
-                AlterTableDropItemList = alterTableDropItemList,
-                AlterTableDropItem = alterTableDropItem,
-                AlterTableCheckMode = alterTableCheckMode,
-                AlterTableConstraintTarget = alterTableConstraintTarget,
-                AlterTableTriggerTarget = alterTableTriggerTarget,
-                CreateKeyListIndexHead = createKeyListIndexHead,
-                CreateKeylessIndexHead = createKeylessIndexHead,
-                CreateIndexStatement = createIndexStatement,
-                CreateIndexKeyList = createIndexKeyList,
-                CreateIndexKeyItem = createIndexKeyItem,
-                CreateIndexTailClauseList = createIndexTailClauseList,
-                CreateIndexTailClause = createIndexTailClause,
-                CreateIndexIncludeClause = createIndexIncludeClause,
-                CreateIndexIncludeList = createIndexIncludeList,
-                CreateIndexWhereClause = createIndexWhereClause,
-                CreateIndexStorageClause = createIndexStorageClause,
-                IndexStorageTarget = indexStorageTarget,
-                IndexFileStreamTarget = indexFileStreamTarget,
-                IndexOption = indexOption,
-                IndexOptionName = indexOptionName,
-                IndexOptionValue = indexOptionValue,
-                IndexPartitionList = indexPartitionList,
-                IndexPartitionItem = indexPartitionItem,
-                AlterIndexStatement = alterIndexStatement,
-                AlterIndexTarget = alterIndexTarget,
-                AlterIndexAction = alterIndexAction,
-                AlterIndexRebuildSpec = alterIndexRebuildSpec,
-                AlterIndexReorganizeSpec = alterIndexReorganizeSpec,
-                AlterIndexResumeSpec = alterIndexResumeSpec,
-                AlterIndexPartitionSelector = alterIndexPartitionSelector,
-                CreateDatabaseStatement = createDatabaseStatement,
-                CreateDatabaseClauseList = createDatabaseClauseList,
-                CreateDatabaseClause = createDatabaseClause,
-                CreateDatabaseContainmentClause = createDatabaseContainmentClause,
-                CreateDatabaseOnClause = createDatabaseOnClause,
-                CreateDatabaseOnFilespecSequence = createDatabaseOnFilespecSequence,
-                CreateDatabaseFilespec = createDatabaseFilespec,
-                CreateDatabaseFilegroup = createDatabaseFilegroup,
-                CreateDatabaseFilespecList = createDatabaseFilespecList,
-                CreateDatabaseCollateClause = createDatabaseCollateClause,
-                CreateDatabaseWithClause = createDatabaseWithClause,
-                CreateDatabaseOptionList = createDatabaseOptionList,
-                CreateDatabaseOption = createDatabaseOption,
-                CreateDatabaseOptionValue = createDatabaseOptionValue,
-                CreateDatabaseOnOffValue = createDatabaseOnOffValue,
-                CreateDatabaseFilestreamOptionList = createDatabaseFilestreamOptionList,
-                CreateDatabaseFilestreamOption = createDatabaseFilestreamOption,
-                CreateDatabaseNonTransactedAccessValue = createDatabaseNonTransactedAccessValue,
-                CreateDatabaseFileName = createDatabaseFileName,
-                CreateDatabaseFilespecOptionList = createDatabaseFilespecOptionList,
-                CreateDatabaseFilespecOption = createDatabaseFilespecOption,
-                CreateDatabaseSizeSpec = createDatabaseSizeSpec,
-                CreateDatabaseMaxSizeSpec = createDatabaseMaxSizeSpec,
-                CreateDatabaseGrowthSpec = createDatabaseGrowthSpec,
-                CreateDatabaseSizeUnit = createDatabaseSizeUnit,
-                CreateDatabaseGrowthUnit = createDatabaseGrowthUnit
-            };
+                    gb.NT("WithClause"),
+                    gb.NT("CreateViewHead"),
+                    gb.NT("BulkInsertStatement"),
+                    gb.NT("BulkInsertOptionList"),
+                    gb.NT("MatchGraphPath"),
+                    gb.NT("MatchGraphStep"),
+                    gb.NT("MatchGraphStepChain"),
+                    gb.NT("MatchGraphShortestPath"),
+                    gb.NT("MatchGraphShortestPathBody"),
+                    gb.NT("CreateTableAsSelectStatement"),
+                    gb.NT("PredictArgList"),
+                    gb.NT("PredictArg"),
+                    gb.NT("CreateSecurityPolicyStatement"),
+                    gb.NT("AlterSecurityPolicyStatement"),
+                    gb.NT("SecurityPolicyClauseList"),
+                    gb.NT("SecurityPolicyClause"),
+                    gb.NT("SecurityPolicyOptionList"),
+                    gb.NT("SecurityPolicyOption"),
+                    gb.NT("SecurityPolicyOptionName"),
+                    gb.NT("CreateExternalTableStatement"),
+                    gb.NT("ExternalTableOptionList"),
+                    gb.NT("CreateExternalDataSourceStatement"),
+                    gb.NT("ExternalDataSourceOptionList"),
+                    gb.NT("MergeStatement"),
+                    gb.NT("CreateTableElementList")));
             var statementRegistry = new MsSqlStatementRegistry();
-            statementRegistry.Add(queryStatementNoLeadingWith, implicitQueryStatementNoLeadingWith);
-            statementRegistry.Add(updateStatement);
-            statementRegistry.Add(insertStatement);
-            statementRegistry.Add(deleteStatement);
-            statementRegistry.Add(ifStatement);
-            statementRegistry.Add(beginEndStatement);
-            statementRegistry.Add(whileStatement);
-            statementRegistry.Add(setStatement);
-            statementRegistry.Add(printStatement);
-            statementRegistry.Add(declareStatement);
-            statementRegistry.Add(returnStatement, allowedInFunctionPrelude: false);
-            statementRegistry.Add(transactionStatement);
-            statementRegistry.Add(raiserrorStatement);
-            statementRegistry.Add(throwStatement);
-            statementRegistry.Add(loopControlStatement);
-            statementRegistry.Add(gotoStatement);
-            statementRegistry.Add(labelStatement, labelOnlyStatement);
-            statementRegistry.Add(executeStatement);
-            statementRegistry.Add(useStatement);
-            statementRegistry.Add(createProcStatement);
-            statementRegistry.Add(createFunctionStatement);
-            statementRegistry.Add(grantStatement);
-            statementRegistry.Add(dbccStatement);
-            statementRegistry.Add(dropProcStatement);
-            statementRegistry.Add(dropTableStatement);
-            statementRegistry.Add(dropViewStatement);
-            statementRegistry.Add(dropIndexStatement);
-            statementRegistry.Add(dropStatisticsStatement);
-            statementRegistry.Add(dropDatabaseStatement);
-            statementRegistry.Add(createRoleStatement);
-            statementRegistry.Add(createSchemaStatement);
-            statementRegistry.Add(createViewStatement);
-            statementRegistry.Add(createTableStatement);
-            statementRegistry.Add(alterTableStatement);
-            statementRegistry.Add(createIndexStatement);
-            statementRegistry.Add(alterIndexStatement);
-            statementRegistry.Add(createDatabaseStatement);
-            statementRegistry.Add(createTriggerStatement);
-            statementRegistry.Add(dropTriggerStatement);
-            statementRegistry.Add(tryCatchStatement);
-            statementRegistry.Add(truncateStatement);
-            statementRegistry.Add(alterDatabaseStatement);
-            statementRegistry.Add(declareCursorStatement);
-            statementRegistry.Add(cursorOperationStatement);
-            statementRegistry.Add(waitforStatement);
-            statementRegistry.Add(createLoginStatement);
-            statementRegistry.Add(checkpointStatement);
-            statementRegistry.Add(createUserStatement);
-            statementRegistry.Add(createStatisticsStatement);
-            statementRegistry.Add(updateStatisticsStatement);
-            statementRegistry.Add(dropTypeStatement);
-            statementRegistry.Add(dropColumnEncryptionKeyStatement);
-            statementRegistry.Add(revertStatement);
-            statementRegistry.Add(dropEventSessionStatement);
-            statementRegistry.Add(createTypeStatement);
+            statementRegistry.Add(gb.NT("QueryStatementNoLeadingWith"), gb.NT("ImplicitQueryStatementNoLeadingWith"));
+            statementRegistry.Add(gb.NT("UpdateStatement"));
+            statementRegistry.Add(gb.NT("InsertStatement"));
+            statementRegistry.Add(gb.NT("DeleteStatement"));
+            statementRegistry.Add(gb.NT("IfStatement"));
+            statementRegistry.Add(gb.NT("BeginEndStatement"));
+            statementRegistry.Add(gb.NT("WhileStatement"));
+            statementRegistry.Add(gb.NT("SetStatement"));
+            statementRegistry.Add(gb.NT("PrintStatement"));
+            statementRegistry.Add(gb.NT("DeclareStatement"));
+            statementRegistry.Add(gb.NT("ReturnStatement"), allowedInFunctionPrelude: false);
+            statementRegistry.Add(gb.NT("TransactionStatement"));
+            statementRegistry.Add(gb.NT("RaiserrorStatement"));
+            statementRegistry.Add(gb.NT("ThrowStatement"));
+            statementRegistry.Add(gb.NT("LoopControlStatement"));
+            statementRegistry.Add(gb.NT("GotoStatement"));
+            statementRegistry.Add(gb.NT("LabelStatement"), gb.NT("LabelOnlyStatement"));
+            statementRegistry.Add(gb.NT("ExecuteStatement"));
+            statementRegistry.Add(gb.NT("UseStatement"));
+            statementRegistry.Add(gb.NT("CreateProcStatement"));
+            statementRegistry.Add(gb.NT("CreateFunctionStatement"));
+            statementRegistry.Add(gb.NT("GrantStatement"));
+            statementRegistry.Add(gb.NT("DbccStatement"));
+            statementRegistry.Add(gb.NT("DropProcStatement"));
+            statementRegistry.Add(gb.NT("DropTableStatement"));
+            statementRegistry.Add(gb.NT("DropViewStatement"));
+            statementRegistry.Add(gb.NT("DropIndexStatement"));
+            statementRegistry.Add(gb.NT("DropStatisticsStatement"));
+            statementRegistry.Add(gb.NT("DropDatabaseStatement"));
+            statementRegistry.Add(gb.NT("CreateRoleStatement"));
+            statementRegistry.Add(gb.NT("CreateSchemaStatement"));
+            statementRegistry.Add(gb.NT("CreateViewStatement"));
+            statementRegistry.Add(gb.NT("CreateTableStatement"));
+            statementRegistry.Add(gb.NT("AlterTableStatement"));
+            statementRegistry.Add(gb.NT("CreateIndexStatement"));
+            statementRegistry.Add(gb.NT("AlterIndexStatement"));
+            statementRegistry.Add(gb.NT("CreateDatabaseStatement"));
+            statementRegistry.Add(gb.NT("CreateTriggerStatement"));
+            statementRegistry.Add(gb.NT("DropTriggerStatement"));
+            statementRegistry.Add(gb.NT("TryCatchStatement"));
+            statementRegistry.Add(gb.NT("TruncateStatement"));
+            statementRegistry.Add(gb.NT("AlterDatabaseStatement"));
+            statementRegistry.Add(gb.NT("DeclareCursorStatement"));
+            statementRegistry.Add(gb.NT("CursorOperationStatement"));
+            statementRegistry.Add(gb.NT("WaitforStatement"));
+            statementRegistry.Add(gb.NT("CreateLoginStatement"));
+            statementRegistry.Add(gb.NT("CheckpointStatement"));
+            statementRegistry.Add(gb.NT("CreateUserStatement"));
+            statementRegistry.Add(gb.NT("CreateStatisticsStatement"));
+            statementRegistry.Add(gb.NT("UpdateStatisticsStatement"));
+            statementRegistry.Add(gb.NT("DropTypeStatement"));
+            statementRegistry.Add(gb.NT("DropColumnEncryptionKeyStatement"));
+            statementRegistry.Add(gb.NT("RevertStatement"));
+            statementRegistry.Add(gb.NT("DropEventSessionStatement"));
+            statementRegistry.Add(gb.NT("CreateTypeStatement"));
             SqlDialectGrammarModules.Resolve(dialectFeatures).RegisterStatements(statementRegistry, dialectModuleContext);
 
             var statementNoLeadingWithAlternatives = statementRegistry.CreateTopLevelAlternatives();
@@ -1157,369 +470,33 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .Resolve(dialectFeatures)
                 .CreateLeadingWithStatementAlternatives(dialectModuleContext);
 
-            void BuildQueryExpressionGrammar() => MsSqlQueryGrammar.Build(grammarContext);
 
-            void BuildTableSourceGrammar() => MsSqlTableSourceGrammar.Build(grammarContext);
 
-            void BuildExpressionGrammar() => MsSqlExpressionGrammar.Build(grammarContext);
 
-            void BuildDmlGrammar() => MsSqlDmlGrammar.Build(
-                grammarContext,
-                updateStatement,
-                updateSetList,
-                updateSetItem,
-                compoundAssignOp,
-                insertStatement,
-                insertTarget,
-                insertColumnList,
-                insertValueList,
-                rowValue,
-                rowValueList,
-                deleteStatement,
-                deleteTopClause,
-                deleteTarget,
-                deleteTargetSimple,
-                deleteTargetRowset,
-                rowsetFunctionLimited,
-                tableHintLimitedList,
-                tableHintLimited,
-                tableHintLimitedName,
-                deleteStatementTail,
-                deleteStatementTailNoOutput,
-                deleteStatementTailNoFrom,
-                deleteOptionOpt,
-                dmlOutputClause,
-                dmlOutputTarget,
-                dmlOutputIntoColumnListOpt,
-                deleteSourceFromClause,
-                deleteWhereClause,
-                queryOptionClause,
-                queryHintList,
-                queryHint,
-                queryHintName,
-                optionClause,
-                executeStatement);
 
-            void BuildScriptGrammar() => MsSqlScriptGrammar.Build(
-                grammarContext,
-                script,
-                statementList,
-                statementListOpt,
-                statementSeparator,
-                statementSeparatorList,
-                statement,
-                statementNoLeadingWith,
-                implicitStatementNoLeadingWith,
-                leadingWithStatement,
-                queryStatement,
-                queryStatementNoLeadingWith,
-                implicitQueryStatementNoLeadingWith,
-                withXmlNamespacesClause,
-                xmlNamespaceItemList,
-                xmlNamespaceItem,
-                withClause,
-                cteDefinitionList,
-                cteDefinition,
-                updateStatement,
-                insertStatement,
-                deleteStatement,
-                queryExpression,
-                implicitQueryExpression,
-                optionClause,
-                leadingWithStatementAlternatives,
-                statementNoLeadingWithAlternatives,
-                implicitStatementNoLeadingWithAlternatives);
 
-            void BuildProceduralGrammar() => MsSqlProceduralGrammar.Build(
-                grammarContext,
-                ifBranchStatement,
-                statement,
-                statementListOpt,
-                ifStatement,
-                beginEndStatement,
-                whileStatement,
-                setOptionName,
-                setStatisticsOption,
-                setStatement,
-                setTransactionIsolationLevel,
-                printStatement,
-                returnStatement,
-                transactionStatement,
-                raiserrorStatement,
-                raiserrorArgList,
-                raiserrorWithOptionList,
-                raiserrorWithOption,
-                throwStatement,
-                loopControlStatement,
-                gotoStatement,
-                labelOnlyStatement,
-                labelStatement,
-                declareStatement,
-                declareItemList,
-                declareItem,
-                declareTableVariable,
-                tableTypeDefinition,
-                createTableElementList,
-                createTableOptions,
-                typeArgument,
-                procStatementList,
-                statementSeparatorList,
-                implicitStatementNoLeadingWith,
-                tryCatchStatement,
-                cursorReference,
-                declareCursorStatement,
-                cursorOptionList,
-                cursorOption,
-                cursorOperationStatement,
-                fetchStatement,
-                fetchDirection,
-                fetchTargetList,
-                waitforTimeValue,
-                waitforStatement);
 
-            void BuildExecutionGrammar() => MsSqlExecutionGrammar.Build(
-                grammarContext,
-                executeStatement,
-                executeModuleCall,
-                executeModuleCallCore,
-                executeWithOptions,
-                executeDynamicCall,
-                executeAsContext,
-                executeAtClause,
-                executeReturnAssignment,
-                executeModuleTarget,
-                executeArgList,
-                executeArg,
-                executeArgNamePrefix,
-                executeArgValue,
-                executeOptionList,
-                executeOption,
-                executeResultSetsDefList,
-                executeResultSetsDef,
-                executeColumnDefList,
-                executeColumnDef,
-                executeNullability,
-                executeLinkedArgList,
-                executeLinkedArg,
-                useStatement);
 
-            void BuildProgrammableObjectsGrammar() => MsSqlProgrammableObjectsGrammar.Build(
-                grammarContext,
-                createProcKeyword,
-                createProcHead,
-                createProcName,
-                createProcSignature,
-                createProcSignatureParameterListOpt,
-                createProcSignatureWithClauseOpt,
-                createProcSignatureForReplicationOpt,
-                createProcParameterList,
-                createProcParameter,
-                createProcParameterOptionList,
-                createProcParameterOption,
-                createProcWithClause,
-                createProcOptionList,
-                createProcOption,
-                createProcExecuteAsClause,
-                createProcForReplicationClause,
-                createProcBody,
-                createProcBodyBlock,
-                createProcNativeWithClause,
-                createProcNativeAtomicOptionList,
-                createProcNativeAtomicOption,
-                setTransactionIsolationLevel,
-                createProcExternalName,
-                createProcStatement,
-                createFunctionHead,
-                createFunctionName,
-                createFunctionSignature,
-                createFunctionSignatureParameterListOpt,
-                createFunctionParameterList,
-                createFunctionParameter,
-                createFunctionParameterOptionList,
-                createFunctionParameterOption,
-                createFunctionScalarReturnsClause,
-                createFunctionInlineTableReturnsClause,
-                createFunctionTableVariableReturnsClause,
-                createFunctionTableReturnDefinition,
-                createFunctionTableReturnItemList,
-                createFunctionTableReturnItem,
-                createFunctionWithClause,
-                createFunctionOptionList,
-                createFunctionOption,
-                createFunctionPreludeStatement,
-                createFunctionPreludeStatementNoLeadingWith,
-                createFunctionImplicitPreludeStatementNoLeadingWith,
-                createFunctionPreludeStatementList,
-                createFunctionPreludeBeforeReturnOpt,
-                createFunctionBodyTrailingSeparatorsOpt,
-                createFunctionScalarReturnStatement,
-                createFunctionTableVariableReturnStatement,
-                createFunctionScalarBody,
-                createFunctionInlineTableBody,
-                createFunctionTableVariableBody,
-                createFunctionStatement,
-                createViewHead,
-                createViewColumnList,
-                createViewOptionClause,
-                createViewQuery,
-                createViewBody,
-                createViewCheckOptionOpt,
-                createViewOptionList,
-                createViewOption,
-                createViewStatement,
-                createTableColumnDefinition,
-                createTableComputedColumn,
-                createTableConstraint,
-                createTableTableIndex,
-                leadingWithStatement,
-                statementList,
-                statementSeparatorList,
-                withClause,
-                withCheckOptionStart,
-                createFunctionPreludeStatementNoLeadingWithAlternatives,
-                createFunctionImplicitPreludeStatementNoLeadingWithAlternatives);
 
-            void BuildTableAndIndexSchemaDdlGrammar() => MsSqlSchemaDdlGrammar.BuildTableAndIndexGrammar(
-                grammarContext,
-                schemaDdlSymbols);
+            MsSqlScriptGrammar.Build(grammarContext, leadingWithStatementAlternatives, statementNoLeadingWithAlternatives, implicitStatementNoLeadingWithAlternatives);
+            MsSqlDmlGrammar.Build(grammarContext);
+            MsSqlProceduralGrammar.Build(grammarContext);
 
-            void BuildDatabaseSchemaDdlGrammar() => MsSqlSchemaDdlGrammar.BuildDatabaseGrammar(
-                grammarContext,
-                schemaDdlSymbols);
+            MsSqlExecutionGrammar.Build(grammarContext);
+            MsSqlProgrammableObjectsGrammar.Build(grammarContext, withCheckOptionStart, createFunctionPreludeStatementNoLeadingWithAlternatives, createFunctionImplicitPreludeStatementNoLeadingWithAlternatives);
 
-            void BuildPreQuerySecurityAndAdminGrammar() => MsSqlSecurityAndAdminGrammar.BuildPreQuery(
-                grammarContext,
-                grantPermissionSet,
-                grantPermissionList,
-                grantPermissionItem,
-                grantPermission,
-                grantPermissionWord,
-                grantOnClause,
-                grantClassType,
-                grantSecurable,
-                grantPrincipalList,
-                grantPrincipal,
-                grantStatement,
-                dbccCommand,
-                dbccParamList,
-                dbccParam,
-                dbccOptionList,
-                dbccOption,
-                dbccOptionName,
-                dbccOptionValue,
-                dbccStatement,
-                dropProcStatement,
-                dropIfExistsClause,
-                dropTableStatement,
-                dropTableTargetList,
-                dropViewStatement,
-                dropViewTargetList,
-                dropIndexStatement,
-                dropIndexSpecList,
-                dropIndexSpec,
-                dropIndexOptionList,
-                dropIndexOption,
-                dropMoveToTarget,
-                dropFileStreamTarget,
-                dropStatisticsStatement,
-                dropStatisticsTargetList,
-                dropStatisticsTarget,
-                dropDatabaseStatement,
-                createTriggerHead,
-                createTriggerFireClause,
-                createTriggerEventList,
-                createTriggerEvent,
-                createTriggerWithOptionList,
-                createTriggerWithOption,
-                createTriggerStatement,
-                createProcExecuteAsClause,
-                createProcBodyBlock,
-                dropTriggerStatement,
-                createRoleStatement,
-                createSchemaStatement,
-                schemaNameClause);
+            MsSqlSecurityAndAdminGrammar.BuildPreQuery(grammarContext);
+            MsSqlSchemaDdlGrammar.BuildTableAndIndexGrammar(grammarContext);
 
-            void BuildPostQuerySecurityAndAdminGrammar() => MsSqlSecurityAndAdminGrammar.BuildPostQuery(
-                grammarContext,
-                truncateStatement,
-                createTableAsSelectStatement,
-                createTableOptionList,
-                alterDatabaseStatement,
-                alterDatabaseSetOption,
-                alterDatabaseSetOnOffOption,
-                alterDatabaseSetEqualsOnOffOption,
-                alterDatabaseSetModeOption,
-                alterDatabaseRecoveryModel,
-                alterDatabasePageVerifyMode,
-                alterDatabaseCursorDefaultMode,
-                alterDatabaseParameterizationMode,
-                alterDatabaseTargetRecoveryUnit,
-                alterDatabaseDelayedDurabilityMode,
-                alterDatabaseTerminationClause,
-                alterDatabaseTerminationOpt,
-                createLoginPasswordSpec,
-                createLoginOptionList,
-                createLoginOption,
-                createLoginWindowsOptionList,
-                createLoginWindowsOption,
-                createLoginStatement,
-                createUserStatement,
-                createStatisticsStatement,
-                dropTypeStatement,
-                dropColumnEncryptionKeyStatement,
-                revertStatement,
-                dropEventSessionStatement,
-                createTypeStatement,
-                tableTypeDefinition,
-                checkpointStatement);
+            MsSqlSchemaDdlGrammar.BuildDatabaseGrammar(grammarContext);
 
-            void BuildUpdateStatisticsGrammar() => MsSqlUpdateStatisticsGrammar.Build(
-                grammarContext,
-                updateStatisticsStatement,
-                updateStatisticsOptionList,
-                updateStatisticsSimpleOption,
-                updateStatisticsOnOffOptionName,
-                updateStatisticsOption);
+            MsSqlQueryGrammar.Build(grammarContext);
+            MsSqlTableSourceGrammar.Build(grammarContext);
+            MsSqlExpressionGrammar.Build(grammarContext);
 
-            BuildScriptGrammar();
-            BuildDmlGrammar();
-            BuildProceduralGrammar();
-
-            BuildExecutionGrammar();
-            BuildProgrammableObjectsGrammar();
-
-            BuildPreQuerySecurityAndAdminGrammar();
-            BuildTableAndIndexSchemaDdlGrammar();
-
-            BuildDatabaseSchemaDdlGrammar();
-
-            BuildQueryExpressionGrammar();
-            BuildTableSourceGrammar();
-            BuildExpressionGrammar();
-
-            BuildPostQuerySecurityAndAdminGrammar();
-            BuildUpdateStatisticsGrammar();
-            MsSqlExtensionsGrammar.BuildMergeGrammar(
-                gb,
-                mergeTargetTable,
-                mergeSourceTable,
-                mergeOutputClauseOpt,
-                mergeOptionClauseOpt,
-                mergeWhenList,
-                mergeWhen,
-                mergeMatchedAction,
-                mergeNotMatchedAction,
-                qualifiedName,
-                strictIdentifierTerm,
-                tableHintLimitedList,
-                tableSource,
-                dmlOutputClause,
-                optionClause,
-                topValue,
-                searchCondition,
-                updateSetList,
-                insertColumnList,
-                insertValueList);
+            MsSqlSecurityAndAdminGrammar.BuildPostQuery(grammarContext);
+            MsSqlUpdateStatisticsGrammar.Build(grammarContext);
+            MsSqlExtensionsGrammar.BuildMergeGrammar(gb);
             SqlDialectGrammarModules.Resolve(dialectFeatures).Apply(dialectModuleContext);
 
             return gb.BuildGrammar("Start");
