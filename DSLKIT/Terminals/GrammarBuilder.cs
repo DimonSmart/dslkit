@@ -219,7 +219,7 @@ namespace DSLKIT.Terminals
             INonTerminal? root;
             if (!string.IsNullOrEmpty(rootProductionName))
             {
-                root = _productions.SingleOrDefault(i => i.LeftNonTerminal.Name == rootProductionName)?.LeftNonTerminal;
+                root = _productions.FirstOrDefault(i => i.LeftNonTerminal.Name == rootProductionName)?.LeftNonTerminal;
             }
             else
             {
@@ -277,6 +277,16 @@ namespace DSLKIT.Terminals
         public RulePattern Seq(params object[] terms)
         {
             return new RulePattern(terms);
+        }
+
+        /// <summary>
+        /// Represents an optional sequence inside a production.
+        /// Alternatives are expanded directly, without synthetic non-terminals.
+        /// Example: Rule("Start").CanBe("a", Optional("b"), "c") defines "a c" and "a b c".
+        /// </summary>
+        public OptionalRulePattern Optional(params object[] terms)
+        {
+            return new OptionalRulePattern(terms);
         }
 
         public ProductionBuilder AddProduction(string ruleName)

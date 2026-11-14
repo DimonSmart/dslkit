@@ -45,8 +45,20 @@ namespace DSLKIT.Parser
 
         public IReadOnlyDictionary<IExNonTerminal, IReadOnlyCollection<ITerm>> Calculate()
         {
-            _follow.Add(_exProductions.Select(p => p.ExLeftNonTerminal)
-                .Single(p => p.NonTerminal == _root && p.To == null), new HashSet<ITerm> { _eof });
+            var rootSymbols = _exProductions.Select(p => p.ExLeftNonTerminal)
+                .Where(p => p.NonTerminal == _root && p.To == null)
+                .Distinct()
+                .ToList();
+
+            if (rootSymbols.Count == 0)
+            {
+                throw new InvalidOperationException($"No extended root non-terminal found for '{_root.Name}'.");
+            }
+
+            foreach (var rootSymbol in rootSymbols)
+            {
+                _follow.Add(rootSymbol, new HashSet<ITerm> { _eof });
+            }
 
             bool updated;
             do

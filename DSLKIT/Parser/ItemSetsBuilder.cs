@@ -26,22 +26,16 @@ namespace DSLKIT.Parser
 
         public ICollection<RuleSet> Build()
         {
-            Production? startProduction = null;
-            foreach (var production in _productions)
-            {
-                if (production.LeftNonTerminal == _root)
-                {
-                    startProduction = production;
-                    break;
-                }
-            }
+            var startProductions = _productions
+                .Where(production => production.LeftNonTerminal == _root)
+                .ToList();
 
-            if (startProduction is null)
+            if (startProductions.Count == 0)
             {
                 throw new InvalidOperationException($"No start production found for root non-terminal '{_root.Name}'.");
             }
 
-            var startSet = new RuleSet(_sets.Count, new Rule(startProduction));
+            var startSet = new RuleSet(_sets.Count, startProductions.Select(production => new Rule(production)));
             _sets.Add(startSet);
             RegisterSet(startSet);
             FillRuleSet(startSet);
