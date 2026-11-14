@@ -1,4 +1,3 @@
-using DSLKIT.NonTerminals;
 using DSLKIT.SpecialTerms;
 using DSLKIT.Terminals;
 
@@ -8,88 +7,88 @@ namespace DSLKIT.GrammarExamples.MsSql
     {
         public static void Build(
             MsSqlGrammarContext context,
-            INonTerminal createProcKeyword,
-            INonTerminal createProcHead,
-            INonTerminal createProcName,
-            INonTerminal createProcSignature,
-            INonTerminal createProcSignatureParameterListOpt,
-            INonTerminal createProcSignatureWithClauseOpt,
-            INonTerminal createProcSignatureForReplicationOpt,
-            INonTerminal createProcParameterList,
-            INonTerminal createProcParameter,
-            INonTerminal createProcParameterOptionList,
-            INonTerminal createProcParameterOption,
-            INonTerminal createProcWithClause,
-            INonTerminal createProcOptionList,
-            INonTerminal createProcOption,
-            INonTerminal createProcExecuteAsClause,
-            INonTerminal createProcForReplicationClause,
-            INonTerminal createProcBody,
-            INonTerminal createProcBodyBlock,
-            INonTerminal createProcNativeWithClause,
-            INonTerminal createProcNativeAtomicOptionList,
-            INonTerminal createProcNativeAtomicOption,
-            INonTerminal setTransactionIsolationLevel,
-            INonTerminal createProcExternalName,
-            INonTerminal createProcStatement,
-            INonTerminal createFunctionHead,
-            INonTerminal createFunctionName,
-            INonTerminal createFunctionSignature,
-            INonTerminal createFunctionSignatureParameterListOpt,
-            INonTerminal createFunctionParameterList,
-            INonTerminal createFunctionParameter,
-            INonTerminal createFunctionParameterOptionList,
-            INonTerminal createFunctionParameterOption,
-            INonTerminal createFunctionScalarReturnsClause,
-            INonTerminal createFunctionInlineTableReturnsClause,
-            INonTerminal createFunctionTableVariableReturnsClause,
-            INonTerminal createFunctionTableReturnDefinition,
-            INonTerminal createFunctionTableReturnItemList,
-            INonTerminal createFunctionTableReturnItem,
-            INonTerminal createFunctionWithClause,
-            INonTerminal createFunctionOptionList,
-            INonTerminal createFunctionOption,
-            INonTerminal createFunctionPreludeStatement,
-            INonTerminal createFunctionPreludeStatementNoLeadingWith,
-            INonTerminal createFunctionImplicitPreludeStatementNoLeadingWith,
-            INonTerminal createFunctionPreludeStatementList,
-            INonTerminal createFunctionPreludeBeforeReturnOpt,
-            INonTerminal createFunctionBodyTrailingSeparatorsOpt,
-            INonTerminal createFunctionScalarReturnStatement,
-            INonTerminal createFunctionTableVariableReturnStatement,
-            INonTerminal createFunctionScalarBody,
-            INonTerminal createFunctionInlineTableBody,
-            INonTerminal createFunctionTableVariableBody,
-            INonTerminal createFunctionStatement,
-            INonTerminal createViewHead,
-            INonTerminal createViewColumnList,
-            INonTerminal createViewOptionClause,
-            INonTerminal createViewQuery,
-            INonTerminal createViewBody,
-            INonTerminal createViewCheckOptionOpt,
-            INonTerminal createViewOptionList,
-            INonTerminal createViewOption,
-            INonTerminal createViewStatement,
-            INonTerminal createTableColumnDefinition,
-            INonTerminal createTableComputedColumn,
-            INonTerminal createTableConstraint,
-            INonTerminal createTableTableIndex,
-            INonTerminal leadingWithStatement,
-            INonTerminal statementList,
-            INonTerminal statementSeparatorList,
-            INonTerminal withClause,
             ITerminal withCheckOptionStart,
             object[] createFunctionPreludeStatementNoLeadingWithAlternatives,
             object[] createFunctionImplicitPreludeStatementNoLeadingWithAlternatives)
         {
             var gb = context.Gb;
-            var expression = context.Symbols.Expression;
-            var qualifiedName = context.Symbols.QualifiedName;
-            var queryExpression = context.Symbols.QueryExpression;
-            var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
-            var typeSpec = context.Symbols.TypeSpec;
-            var unicodeStringLiteral = context.Symbols.UnicodeStringLiteral;
-            var variableReference = context.Symbols.VariableReference;
+            var createProcKeyword = gb.NT("CreateProcKeyword");
+            var createProcHead = gb.NT("CreateProcHead");
+            var createProcName = gb.NT("CreateProcName");
+            var createProcSignature = gb.NT("CreateProcSignature");
+            var createProcSignatureParameterListOpt = gb.NT("CreateProcSignatureParameterListOpt");
+            var createProcSignatureWithClauseOpt = gb.NT("CreateProcSignatureWithClauseOpt");
+            var createProcSignatureForReplicationOpt = gb.NT("CreateProcSignatureForReplicationOpt");
+            var createProcParameterList = gb.NT("CreateProcParameterList");
+            var createProcParameter = gb.NT("CreateProcParameter");
+            var createProcParameterOptionList = gb.NT("CreateProcParameterOptionList");
+            var createProcParameterOption = gb.NT("CreateProcParameterOption");
+            var createProcWithClause = gb.NT("CreateProcWithClause");
+            var createProcOptionList = gb.NT("CreateProcOptionList");
+            var createProcOption = gb.NT("CreateProcOption");
+            var createProcExecuteAsClause = gb.NT("CreateProcExecuteAsClause");
+            var createProcForReplicationClause = gb.NT("CreateProcForReplicationClause");
+            var createProcBody = gb.NT("CreateProcBody");
+            var createProcBodyBlock = gb.NT("CreateProcBodyBlock");
+            var createProcNativeWithClause = gb.NT("CreateProcNativeWithClause");
+            var createProcNativeAtomicOptionList = gb.NT("CreateProcNativeAtomicOptionList");
+            var createProcNativeAtomicOption = gb.NT("CreateProcNativeAtomicOption");
+            var setTransactionIsolationLevel = gb.NT("SetTransactionIsolationLevel");
+            var createProcExternalName = gb.NT("CreateProcExternalName");
+            var createProcStatement = gb.NT("CreateProcStatement");
+            var createFunctionHead = gb.NT("CreateFunctionHead");
+            var createFunctionName = gb.NT("CreateFunctionName");
+            var createFunctionSignature = gb.NT("CreateFunctionSignature");
+            var createFunctionSignatureParameterListOpt = gb.NT("CreateFunctionSignatureParameterListOpt");
+            var createFunctionParameterList = gb.NT("CreateFunctionParameterList");
+            var createFunctionParameter = gb.NT("CreateFunctionParameter");
+            var createFunctionParameterOptionList = gb.NT("CreateFunctionParameterOptionList");
+            var createFunctionParameterOption = gb.NT("CreateFunctionParameterOption");
+            var createFunctionScalarReturnsClause = gb.NT("CreateFunctionScalarReturnsClause");
+            var createFunctionInlineTableReturnsClause = gb.NT("CreateFunctionInlineTableReturnsClause");
+            var createFunctionTableVariableReturnsClause = gb.NT("CreateFunctionTableVariableReturnsClause");
+            var createFunctionTableReturnDefinition = gb.NT("CreateFunctionTableReturnDefinition");
+            var createFunctionTableReturnItemList = gb.NT("CreateFunctionTableReturnItemList");
+            var createFunctionTableReturnItem = gb.NT("CreateFunctionTableReturnItem");
+            var createFunctionWithClause = gb.NT("CreateFunctionWithClause");
+            var createFunctionOptionList = gb.NT("CreateFunctionOptionList");
+            var createFunctionOption = gb.NT("CreateFunctionOption");
+            var createFunctionPreludeStatement = gb.NT("CreateFunctionPreludeStatement");
+            var createFunctionPreludeStatementNoLeadingWith = gb.NT("CreateFunctionPreludeStatementNoLeadingWith");
+            var createFunctionImplicitPreludeStatementNoLeadingWith = gb.NT("CreateFunctionImplicitPreludeStatementNoLeadingWith");
+            var createFunctionPreludeStatementList = gb.NT("CreateFunctionPreludeStatementList");
+            var createFunctionPreludeBeforeReturnOpt = gb.NT("CreateFunctionPreludeBeforeReturnOpt");
+            var createFunctionBodyTrailingSeparatorsOpt = gb.NT("CreateFunctionBodyTrailingSeparatorsOpt");
+            var createFunctionScalarReturnStatement = gb.NT("CreateFunctionScalarReturnStatement");
+            var createFunctionTableVariableReturnStatement = gb.NT("CreateFunctionTableVariableReturnStatement");
+            var createFunctionScalarBody = gb.NT("CreateFunctionScalarBody");
+            var createFunctionInlineTableBody = gb.NT("CreateFunctionInlineTableBody");
+            var createFunctionTableVariableBody = gb.NT("CreateFunctionTableVariableBody");
+            var createFunctionStatement = gb.NT("CreateFunctionStatement");
+            var createViewHead = gb.NT("CreateViewHead");
+            var createViewColumnList = gb.NT("CreateViewColumnList");
+            var createViewOptionClause = gb.NT("CreateViewOptionClause");
+            var createViewQuery = gb.NT("CreateViewQuery");
+            var createViewBody = gb.NT("CreateViewBody");
+            var createViewCheckOptionOpt = gb.NT("CreateViewCheckOptionOpt");
+            var createViewOptionList = gb.NT("CreateViewOptionList");
+            var createViewOption = gb.NT("CreateViewOption");
+            var createViewStatement = gb.NT("CreateViewStatement");
+            var createTableColumnDefinition = gb.NT("CreateTableColumnDefinition");
+            var createTableComputedColumn = gb.NT("CreateTableComputedColumn");
+            var createTableConstraint = gb.NT("CreateTableConstraint");
+            var createTableTableIndex = gb.NT("CreateTableTableIndex");
+            var leadingWithStatement = gb.NT("LeadingWithStatement");
+            var statementList = gb.NT("StatementList");
+            var statementSeparatorList = gb.NT("StatementSeparatorList");
+            var withClause = gb.NT("WithClause");
+            var expression = gb.NT("Expression");
+            var qualifiedName = gb.NT("QualifiedName");
+            var queryExpression = gb.NT("QueryExpression");
+            var strictIdentifierTerm = gb.NT("StrictIdentifierTerm");
+            var typeSpec = gb.NT("TypeSpec");
+            var unicodeStringLiteral = gb.NT("UnicodeStringLiteral");
+            var variableReference = gb.NT("VariableReference");
             var number = context.NumberTerminal;
             var stringLiteral = context.StringLiteralTerminal;
             var procExecuteAsIdentifierTerm = gb.NT("ProcExecuteAsIdentifierTerm");

@@ -1,59 +1,58 @@
-using DSLKIT.NonTerminals;
 
 namespace DSLKIT.GrammarExamples.MsSql
 {
     internal static class MsSqlDmlGrammar
     {
         public static void Build(
-            MsSqlGrammarContext context,
-            INonTerminal updateStatement,
-            INonTerminal updateSetList,
-            INonTerminal updateSetItem,
-            INonTerminal compoundAssignOp,
-            INonTerminal insertStatement,
-            INonTerminal insertTarget,
-            INonTerminal insertColumnList,
-            INonTerminal insertValueList,
-            INonTerminal rowValue,
-            INonTerminal rowValueList,
-            INonTerminal deleteStatement,
-            INonTerminal deleteTopClause,
-            INonTerminal deleteTarget,
-            INonTerminal deleteTargetSimple,
-            INonTerminal deleteTargetRowset,
-            INonTerminal rowsetFunctionLimited,
-            INonTerminal tableHintLimitedList,
-            INonTerminal tableHintLimited,
-            INonTerminal tableHintLimitedName,
-            INonTerminal deleteStatementTail,
-            INonTerminal deleteStatementTailNoOutput,
-            INonTerminal deleteStatementTailNoFrom,
-            INonTerminal deleteOptionOpt,
-            INonTerminal dmlOutputClause,
-            INonTerminal dmlOutputTarget,
-            INonTerminal dmlOutputIntoColumnListOpt,
-            INonTerminal deleteSourceFromClause,
-            INonTerminal deleteWhereClause,
-            INonTerminal queryOptionClause,
-            INonTerminal queryHintList,
-            INonTerminal queryHint,
-            INonTerminal queryHintName,
-            INonTerminal optionClause,
-            INonTerminal executeStatement)
+            MsSqlGrammarContext context)
         {
             var gb = context.Gb;
-            var expression = context.Symbols.Expression;
-            var expressionList = context.Symbols.ExpressionList;
-            var functionCall = context.Symbols.FunctionCall;
+            var updateStatement = gb.NT("UpdateStatement");
+            var updateSetList = gb.NT("UpdateSetList");
+            var updateSetItem = gb.NT("UpdateSetItem");
+            var compoundAssignOp = gb.NT("CompoundAssignOp");
+            var insertStatement = gb.NT("InsertStatement");
+            var insertTarget = gb.NT("InsertTarget");
+            var insertColumnList = gb.NT("InsertColumnList");
+            var insertValueList = gb.NT("InsertValueList");
+            var rowValue = gb.NT("RowValue");
+            var rowValueList = gb.NT("RowValueList");
+            var deleteStatement = gb.NT("DeleteStatement");
+            var deleteTopClause = gb.NT("DeleteTopClause");
+            var deleteTarget = gb.NT("DeleteTarget");
+            var deleteTargetSimple = gb.NT("DeleteTargetSimple");
+            var deleteTargetRowset = gb.NT("DeleteTargetRowset");
+            var rowsetFunctionLimited = gb.NT("RowsetFunctionLimited");
+            var tableHintLimitedList = gb.NT("TableHintLimitedList");
+            var tableHintLimited = gb.NT("TableHintLimited");
+            var tableHintLimitedName = gb.NT("TableHintLimitedName");
+            var deleteStatementTail = gb.NT("DeleteStatementTail");
+            var deleteStatementTailNoOutput = gb.NT("DeleteStatementTailNoOutput");
+            var deleteStatementTailNoFrom = gb.NT("DeleteStatementTailNoFrom");
+            var deleteOptionOpt = gb.NT("DeleteOptionOpt");
+            var dmlOutputClause = gb.NT("DeleteOutputClause");
+            var dmlOutputTarget = gb.NT("DeleteOutputTarget");
+            var dmlOutputIntoColumnListOpt = gb.NT("DeleteOutputIntoColumnListOpt");
+            var deleteSourceFromClause = gb.NT("DeleteSourceFromClause");
+            var deleteWhereClause = gb.NT("DeleteWhereClause");
+            var queryOptionClause = gb.NT("DeleteOptionClause");
+            var queryHintList = gb.NT("DeleteQueryHintList");
+            var queryHint = gb.NT("DeleteQueryHint");
+            var queryHintName = gb.NT("DeleteQueryHint");
+            var optionClause = gb.NT("OptionClause");
+            var executeStatement = gb.NT("ExecuteStatement");
+            var expression = gb.NT("Expression");
+            var expressionList = gb.NT("ExpressionList");
+            var functionCall = gb.NT("FunctionCall");
             var graphColumnRef = context.GraphColumnRefTerminal;
-            var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
-            var qualifiedName = context.Symbols.QualifiedName;
-            var queryExpression = context.Symbols.QueryExpression;
-            var searchCondition = context.Symbols.SearchCondition;
-            var selectItemList = context.Symbols.SelectItemList;
-            var tableFactor = context.Symbols.TableFactor;
-            var tableSourceList = context.Symbols.TableSourceList;
-            var variableReference = context.Symbols.VariableReference;
+            var strictIdentifierTerm = gb.NT("StrictIdentifierTerm");
+            var qualifiedName = gb.NT("QualifiedName");
+            var queryExpression = gb.NT("QueryExpression");
+            var searchCondition = gb.NT("SearchCondition");
+            var selectItemList = gb.NT("SelectItemList");
+            var tableFactor = gb.NT("TableFactor");
+            var tableSourceList = gb.NT("TableSourceList");
+            var variableReference = gb.NT("VariableReference");
             var dmlIdentifierTerm = gb.NT("DmlIdentifierTerm");
             var dmlIdentifierList = gb.NT("DmlIdentifierList");
             var dmlObjectIdentifierTerm = gb.NT("DmlObjectIdentifierTerm");

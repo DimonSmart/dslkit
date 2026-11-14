@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using DSLKIT.NonTerminals;
 using DSLKIT.SpecialTerms;
 
 namespace DSLKIT.GrammarExamples.MsSql
@@ -8,40 +7,40 @@ namespace DSLKIT.GrammarExamples.MsSql
     {
         public static void Build(
             MsSqlGrammarContext context,
-            INonTerminal script,
-            INonTerminal statementList,
-            INonTerminal statementListOpt,
-            INonTerminal statementSeparator,
-            INonTerminal statementSeparatorList,
-            INonTerminal statement,
-            INonTerminal statementNoLeadingWith,
-            INonTerminal implicitStatementNoLeadingWith,
-            INonTerminal leadingWithStatement,
-            INonTerminal queryStatement,
-            INonTerminal queryStatementNoLeadingWith,
-            INonTerminal implicitQueryStatementNoLeadingWith,
-            INonTerminal withXmlNamespacesClause,
-            INonTerminal xmlNamespaceItemList,
-            INonTerminal xmlNamespaceItem,
-            INonTerminal withClause,
-            INonTerminal cteDefinitionList,
-            INonTerminal cteDefinition,
-            INonTerminal updateStatement,
-            INonTerminal insertStatement,
-            INonTerminal deleteStatement,
-            INonTerminal queryExpression,
-            INonTerminal implicitQueryExpression,
-            INonTerminal optionClause,
             IReadOnlyCollection<object> additionalWithClauseLeadingAlternatives,
             IReadOnlyCollection<object> statementNoLeadingWithAlternatives,
             IReadOnlyCollection<object> implicitStatementNoLeadingWithAlternatives)
         {
             var gb = context.Gb;
-            var expression = context.Symbols.Expression;
-            var contextualIdentifierTerm = context.Symbols.ContextualIdentifierTerm;
-            var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
-            var strictQualifiedName = context.Symbols.StrictQualifiedName;
-            var qualifiedName = context.Symbols.QualifiedName;
+            var script = gb.NT("Script");
+            var statementList = gb.NT("StatementList");
+            var statementListOpt = gb.NT("StatementListOpt");
+            var statementSeparator = gb.NT("StatementSeparator");
+            var statementSeparatorList = gb.NT("StatementSeparatorList");
+            var statement = gb.NT("Statement");
+            var statementNoLeadingWith = gb.NT("StatementNoLeadingWith");
+            var implicitStatementNoLeadingWith = gb.NT("ImplicitStatementNoLeadingWith");
+            var leadingWithStatement = gb.NT("LeadingWithStatement");
+            var queryStatement = gb.NT("QueryStatement");
+            var queryStatementNoLeadingWith = gb.NT("QueryStatementNoLeadingWith");
+            var implicitQueryStatementNoLeadingWith = gb.NT("ImplicitQueryStatementNoLeadingWith");
+            var withXmlNamespacesClause = gb.NT("WithXmlNamespacesClause");
+            var xmlNamespaceItemList = gb.NT("XmlNamespaceItemList");
+            var xmlNamespaceItem = gb.NT("XmlNamespaceItem");
+            var withClause = gb.NT("WithClause");
+            var cteDefinitionList = gb.NT("CteDefinitionList");
+            var cteDefinition = gb.NT("CteDefinition");
+            var updateStatement = gb.NT("UpdateStatement");
+            var insertStatement = gb.NT("InsertStatement");
+            var deleteStatement = gb.NT("DeleteStatement");
+            var queryExpression = gb.NT("QueryExpression");
+            var implicitQueryExpression = gb.NT("ImplicitQueryExpression");
+            var optionClause = gb.NT("OptionClause");
+            var expression = gb.NT("Expression");
+            var contextualIdentifierTerm = gb.NT("ContextualIdentifierTerm");
+            var strictIdentifierTerm = gb.NT("StrictIdentifierTerm");
+            var strictQualifiedName = gb.NT("StrictQualifiedName");
+            var qualifiedName = gb.NT("QualifiedName");
             var graphColumnRef = context.GraphColumnRefTerminal;
             var cteIdentifierTerm = gb.NT("CteIdentifierTerm");
             var cteIdentifierList = gb.NT("CteIdentifierList");

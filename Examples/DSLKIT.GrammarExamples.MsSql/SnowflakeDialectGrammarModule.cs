@@ -25,22 +25,21 @@ namespace DSLKIT.GrammarExamples.MsSql
         public override void Apply(SqlDialectGrammarModuleContext context)
         {
             var gb = context.GrammarContext.Gb;
-            var symbols = context.GrammarContext.Symbols;
             var extensionPoints = context.ExtensionPoints;
 
             gb.Prod(extensionPoints.CreateViewHead).Is("CREATE", "OR", "REPLACE", "VIEW");
-            gb.Prod(symbols.QuerySpecificationQualifyOpt).Is("QUALIFY", symbols.SearchCondition);
-            gb.Prod(symbols.CollateExpression).Is(symbols.CollateExpression, "::", symbols.TypeSpec);
+            gb.Prod(gb.NT("QuerySpecificationQualifyOpt")).Is("QUALIFY", gb.NT("SearchCondition"));
+            gb.Prod(gb.NT("CollateExpression")).Is(gb.NT("CollateExpression"), "::", gb.NT("TypeSpec"));
 
-            gb.Rule(symbols.QuerySpecification).OneOf(
-                gb.Seq(symbols.SelectCore, symbols.QuerySpecificationQualifyOpt),
-                gb.Seq(symbols.SelectCore, symbols.QuerySpecificationWhereClause, symbols.QuerySpecificationQualifyOpt),
-                gb.Seq(symbols.SelectCore, symbols.QuerySpecificationGroupByClause, symbols.QuerySpecificationQualifyOpt),
+            gb.Rule(gb.NT("QuerySpecification")).OneOf(
+                gb.Seq(gb.NT("SelectCore"), gb.NT("QuerySpecificationQualifyOpt")),
+                gb.Seq(gb.NT("SelectCore"), gb.NT("QuerySpecificationWhereClause"), gb.NT("QuerySpecificationQualifyOpt")),
+                gb.Seq(gb.NT("SelectCore"), gb.NT("QuerySpecificationGroupByClause"), gb.NT("QuerySpecificationQualifyOpt")),
                 gb.Seq(
-                    symbols.SelectCore,
-                    symbols.QuerySpecificationWhereClause,
-                    symbols.QuerySpecificationGroupByClause,
-                    symbols.QuerySpecificationQualifyOpt));
+                    gb.NT("SelectCore"),
+                    gb.NT("QuerySpecificationWhereClause"),
+                    gb.NT("QuerySpecificationGroupByClause"),
+                    gb.NT("QuerySpecificationQualifyOpt")));
         }
     }
 }

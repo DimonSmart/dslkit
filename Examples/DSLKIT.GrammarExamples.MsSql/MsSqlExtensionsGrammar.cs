@@ -88,28 +88,27 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule(matchGraphStepChain).Plus(matchGraphStep);
         }
 
-        public static void BuildMergeGrammar(
-            GrammarBuilder gb,
-            INonTerminal mergeTargetTable,
-            INonTerminal mergeSourceTable,
-            INonTerminal mergeOutputClauseOpt,
-            INonTerminal mergeOptionClauseOpt,
-            INonTerminal mergeWhenList,
-            INonTerminal mergeWhen,
-            INonTerminal mergeMatchedAction,
-            INonTerminal mergeNotMatchedAction,
-            INonTerminal qualifiedName,
-            INonTerminal strictIdentifierTerm,
-            INonTerminal tableHintLimitedList,
-            INonTerminal tableSource,
-            INonTerminal dmlOutputClause,
-            INonTerminal optionClause,
-            INonTerminal topValue,
-            INonTerminal searchCondition,
-            INonTerminal updateSetList,
-            INonTerminal insertColumnList,
-            INonTerminal insertValueList)
+        public static void BuildMergeGrammar(GrammarBuilder gb)
         {
+            var mergeTargetTable = gb.NT("MergeTargetTable");
+            var mergeSourceTable = gb.NT("MergeSourceTable");
+            var mergeOutputClauseOpt = gb.NT("MergeOutputClauseOpt");
+            var mergeOptionClauseOpt = gb.NT("MergeOptionClauseOpt");
+            var mergeWhenList = gb.NT("MergeWhenList");
+            var mergeWhen = gb.NT("MergeWhen");
+            var mergeMatchedAction = gb.NT("MergeMatchedAction");
+            var mergeNotMatchedAction = gb.NT("MergeNotMatchedAction");
+            var qualifiedName = gb.NT("QualifiedName");
+            var strictIdentifierTerm = gb.NT("StrictIdentifierTerm");
+            var tableHintLimitedList = gb.NT("TableHintLimitedList");
+            var tableSource = gb.NT("TableSource");
+            var dmlOutputClause = gb.NT("DeleteOutputClause");
+            var optionClause = gb.NT("OptionClause");
+            var topValue = gb.NT("TopValue");
+            var searchCondition = gb.NT("SearchCondition");
+            var updateSetList = gb.NT("UpdateSetList");
+            var insertColumnList = gb.NT("InsertColumnList");
+            var insertValueList = gb.NT("InsertValueList");
             var mergeAliasTerm = gb.NT("MergeAliasTerm");
 
             gb.Rule(mergeAliasTerm)
