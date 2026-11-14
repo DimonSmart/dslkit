@@ -20,7 +20,7 @@ namespace DSLKIT.Test.GrammarExamples
             result.IsSuccess.Should().BeTrue(
                 $"SQL should parse without splitting inside a comment or string: {result.Error?.Message}");
             var batch = result.Document!.Segments.Should().ContainSingle()
-                .Which.Should().BeOfType<SqlBatchDocumentNode>().Subject;
+                .Which.Should().BeOfType<SqlBatchDocumentNode>().Which;
             batch.Text.Should().Be(sql);
             batch.StartPosition.Should().Be(0);
         }
@@ -39,7 +39,7 @@ namespace DSLKIT.Test.GrammarExamples
             result.Document.Segments[0].Should().BeOfType<SqlBatchDocumentNode>()
                 .Which.Text.Should().Be(firstBatch);
             var go = result.Document.Segments[1].Should()
-                .BeOfType<SqlBatchSeparatorDocumentNode>().Subject;
+                .BeOfType<SqlBatchSeparatorDocumentNode>().Which;
             go.Text.Should().Be(separator.TrimEnd('\n'));
             go.StartPosition.Should().Be(firstBatch.Length);
             go.RepeatCount.Should().Be(3);
