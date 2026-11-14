@@ -470,14 +470,6 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .Resolve(dialectFeatures)
                 .CreateLeadingWithStatementAlternatives(dialectModuleContext);
 
-
-
-
-
-
-
-
-
             MsSqlScriptGrammar.Build(grammarContext, leadingWithStatementAlternatives, statementNoLeadingWithAlternatives, implicitStatementNoLeadingWithAlternatives);
             MsSqlDmlGrammar.Build(grammarContext);
             MsSqlProceduralGrammar.Build(grammarContext);
