@@ -37,8 +37,8 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore DSLKIT.Visualizer.App/DSLKIT.Visualizer.App.csproj
 
-    - name: Restore WebAssembly workloads
-      run: dotnet workload restore DSLKIT.Visualizer.App/DSLKIT.Visualizer.App.csproj
+    - name: Install WebAssembly workloads
+      run: dotnet workload install wasm-tools
 
     - name: Update base href in index.html
       run: sed -i 's|<base href="/" />|<base href="/dslkit/" />|g' DSLKIT.Visualizer.App/wwwroot/index.html
