@@ -1,22 +1,21 @@
-using DSLKIT.NonTerminals;
 
 namespace DSLKIT.GrammarExamples.MsSql
 {
     internal static class MsSqlUpdateStatisticsGrammar
     {
         public static void Build(
-            MsSqlGrammarContext context,
-            INonTerminal updateStatisticsStatement,
-            INonTerminal updateStatisticsOptionList,
-            INonTerminal updateStatisticsSimpleOption,
-            INonTerminal updateStatisticsOnOffOptionName,
-            INonTerminal updateStatisticsOption)
+            MsSqlGrammarContext context)
         {
             var gb = context.Gb;
-            var expression = context.Symbols.Expression;
-            var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
-            var qualifiedName = context.Symbols.QualifiedName;
-            var indexOnOffValue = context.Symbols.IndexOnOffValue;
+            var updateStatisticsStatement = gb.NT("UpdateStatisticsStatement");
+            var updateStatisticsOptionList = gb.NT("UpdateStatisticsOptionList");
+            var updateStatisticsSimpleOption = gb.NT("UpdateStatisticsSimpleOption");
+            var updateStatisticsOnOffOptionName = gb.NT("UpdateStatisticsOnOffOptionName");
+            var updateStatisticsOption = gb.NT("UpdateStatisticsOption");
+            var expression = gb.NT("Expression");
+            var strictIdentifierTerm = gb.NT("StrictIdentifierTerm");
+            var qualifiedName = gb.NT("QualifiedName");
+            var indexOnOffValue = gb.NT("IndexOnOffValue");
 
             gb.Rule(updateStatisticsStatement)
                 .CanBe("UPDATE", "STATISTICS", qualifiedName)

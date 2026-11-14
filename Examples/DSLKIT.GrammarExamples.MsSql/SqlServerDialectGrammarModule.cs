@@ -49,35 +49,34 @@ namespace DSLKIT.GrammarExamples.MsSql
         {
             var grammarContext = context.GrammarContext;
             var gb = grammarContext.Gb;
-            var symbols = grammarContext.Symbols;
             var extensionPoints = context.ExtensionPoints;
 
             gb.Prod(extensionPoints.CreateViewHead).Is("CREATE", "VIEW");
             gb.Prod(extensionPoints.CreateViewHead).Is("CREATE", "OR", "ALTER", "VIEW");
             gb.Prod(extensionPoints.CreateViewHead).Is("ALTER", "VIEW");
 
-            gb.Prod(symbols.FunctionCall).Is("::", symbols.QualifiedName, "(", ")");
-            gb.Prod(symbols.FunctionCall).Is("::", symbols.QualifiedName, "(", symbols.FunctionArgumentList, ")");
+            gb.Prod(gb.NT("FunctionCall")).Is("::", gb.NT("QualifiedName"), "(", ")");
+            gb.Prod(gb.NT("FunctionCall")).Is("::", gb.NT("QualifiedName"), "(", gb.NT("FunctionArgumentList"), ")");
 
             MsSqlExtensionsGrammar.BuildBulkInsertGrammar(
                 gb,
                 extensionPoints.BulkInsertOptionList,
-                symbols.QualifiedName,
-                symbols.Expression,
-                symbols.NamedOptionValue,
-                symbols.CreateTableKeyColumnList);
+                gb.NT("QualifiedName"),
+                gb.NT("Expression"),
+                gb.NT("NamedOptionValue"),
+                gb.NT("CreateTableKeyColumnList"));
 
             if (grammarContext.HasFeature(MsSqlDialectFeatures.GraphExtensions))
             {
                 MsSqlExtensionsGrammar.BuildGraphGrammar(
                     gb,
-                    symbols.MatchGraphPattern,
+                    gb.NT("MatchGraphPattern"),
                     extensionPoints.MatchGraphPath,
                     extensionPoints.MatchGraphStep,
                     extensionPoints.MatchGraphStepChain,
                     extensionPoints.MatchGraphShortestPath,
                     extensionPoints.MatchGraphShortestPathBody,
-                    symbols.StrictIdentifierTerm,
+                    gb.NT("StrictIdentifierTerm"),
                     grammarContext.NumberTerminal);
             }
 
@@ -85,11 +84,11 @@ namespace DSLKIT.GrammarExamples.MsSql
             {
                 MsSqlExtensionsGrammar.BuildSynapseGrammar(
                     gb,
-                    symbols.FunctionCall,
+                    gb.NT("FunctionCall"),
                     extensionPoints.PredictArgList,
                     extensionPoints.PredictArg,
-                    symbols.StrictIdentifierTerm,
-                    symbols.Expression);
+                    gb.NT("StrictIdentifierTerm"),
+                    gb.NT("Expression"));
             }
 
             MsSqlExtensionsGrammar.BuildSecurityPolicyGrammar(
@@ -101,8 +100,8 @@ namespace DSLKIT.GrammarExamples.MsSql
                 extensionPoints.SecurityPolicyOptionList,
                 extensionPoints.SecurityPolicyOption,
                 extensionPoints.SecurityPolicyOptionName,
-                symbols.FunctionCall,
-                symbols.QualifiedName);
+                gb.NT("FunctionCall"),
+                gb.NT("QualifiedName"));
 
             if (grammarContext.HasFeature(MsSqlDialectFeatures.ExternalObjects))
             {
@@ -112,10 +111,10 @@ namespace DSLKIT.GrammarExamples.MsSql
                     extensionPoints.ExternalTableOptionList,
                     extensionPoints.CreateExternalDataSourceStatement,
                     extensionPoints.ExternalDataSourceOptionList,
-                    symbols.QualifiedName,
-                    symbols.StrictIdentifierTerm,
+                    gb.NT("QualifiedName"),
+                    gb.NT("StrictIdentifierTerm"),
                     extensionPoints.CreateTableElementList,
-                    symbols.NamedOptionValue);
+                    gb.NT("NamedOptionValue"));
             }
         }
     }

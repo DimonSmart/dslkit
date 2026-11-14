@@ -5,35 +5,34 @@ namespace DSLKIT.GrammarExamples.MsSql
         public static void Build(MsSqlGrammarContext context)
         {
             var gb = context.Gb;
-            var symbols = context.Symbols;
-            var additiveExpression = symbols.AdditiveExpression;
-            var expression = symbols.Expression;
-            var functionArgumentList = symbols.FunctionArgumentList;
-            var functionCall = symbols.FunctionCall;
-            var insertColumnList = symbols.InsertColumnList;
-            var joinPart = symbols.JoinPart;
-            var joinType = symbols.JoinType;
-            var openJsonCall = symbols.OpenJsonCall;
-            var openJsonColumnDef = symbols.OpenJsonColumnDef;
-            var openJsonColumnList = symbols.OpenJsonColumnList;
-            var openJsonPath = symbols.OpenJsonPath;
-            var openJsonWithClause = symbols.OpenJsonWithClause;
-            var pivotClause = symbols.PivotClause;
-            var pivotValueList = symbols.PivotValueList;
-            var qualifiedName = symbols.QualifiedName;
-            var queryExpression = symbols.QueryExpression;
-            var rowValueList = symbols.RowValueList;
-            var searchCondition = symbols.SearchCondition;
-            var tableFactor = symbols.TableFactor;
-            var tableHintLimitedList = symbols.TableHintLimitedList;
-            var tableSource = symbols.TableSource;
-            var tableSourceList = symbols.TableSourceList;
-            var temporalClause = symbols.TemporalClause;
-            var typeSpec = symbols.TypeSpec;
-            var unicodeStringLiteral = symbols.UnicodeStringLiteral;
-            var unpivotClause = symbols.UnpivotClause;
-            var unpivotColumnList = symbols.UnpivotColumnList;
-            var variableReference = symbols.VariableReference;
+            var additiveExpression = gb.NT("AdditiveExpression");
+            var expression = gb.NT("Expression");
+            var functionArgumentList = gb.NT("FunctionArgumentList");
+            var functionCall = gb.NT("FunctionCall");
+            var insertColumnList = gb.NT("InsertColumnList");
+            var joinPart = gb.NT("JoinPart");
+            var joinType = gb.NT("JoinType");
+            var openJsonCall = gb.NT("OpenJsonCall");
+            var openJsonColumnDef = gb.NT("OpenJsonColumnDef");
+            var openJsonColumnList = gb.NT("OpenJsonColumnList");
+            var openJsonPath = gb.NT("OpenJsonPath");
+            var openJsonWithClause = gb.NT("OpenJsonWithClause");
+            var pivotClause = gb.NT("PivotClause");
+            var pivotValueList = gb.NT("PivotValueList");
+            var qualifiedName = gb.NT("QualifiedName");
+            var queryExpression = gb.NT("QueryExpression");
+            var rowValueList = gb.NT("RowValueList");
+            var searchCondition = gb.NT("SearchCondition");
+            var tableFactor = gb.NT("TableFactor");
+            var tableHintLimitedList = gb.NT("TableHintLimitedList");
+            var tableSource = gb.NT("TableSource");
+            var tableSourceList = gb.NT("TableSourceList");
+            var temporalClause = gb.NT("TemporalClause");
+            var typeSpec = gb.NT("TypeSpec");
+            var unicodeStringLiteral = gb.NT("UnicodeStringLiteral");
+            var unpivotClause = gb.NT("UnpivotClause");
+            var unpivotColumnList = gb.NT("UnpivotColumnList");
+            var variableReference = gb.NT("VariableReference");
             var forPathStart = context.ForPathStartTerminal;
             var forSystemTimeStart = context.ForSystemTimeStartTerminal;
             var hasGraphExtensions = context.HasFeature(MsSqlDialectFeatures.GraphExtensions);
@@ -43,7 +42,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var tableSourceColumnAliasList = gb.NT("TableSourceColumnAliasList");
 
             gb.Rule(tableSourceColumnIdentifierTerm)
-                .CanBe(context.Symbols.StrictIdentifierTerm)
+                .CanBe(gb.NT("StrictIdentifierTerm"))
                 .OrKeywords("NAME");
             gb.Rule(tableSourceAliasTerm)
                 .CanBe(tableSourceColumnIdentifierTerm)

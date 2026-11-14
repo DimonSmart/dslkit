@@ -1,66 +1,65 @@
-using DSLKIT.NonTerminals;
 
 namespace DSLKIT.GrammarExamples.MsSql
 {
     internal static class MsSqlProceduralGrammar
     {
         public static void Build(
-            MsSqlGrammarContext context,
-            INonTerminal ifBranchStatement,
-            INonTerminal statement,
-            INonTerminal statementListOpt,
-            INonTerminal ifStatement,
-            INonTerminal beginEndStatement,
-            INonTerminal whileStatement,
-            INonTerminal setOptionName,
-            INonTerminal setStatisticsOption,
-            INonTerminal setStatement,
-            INonTerminal setTransactionIsolationLevel,
-            INonTerminal printStatement,
-            INonTerminal returnStatement,
-            INonTerminal transactionStatement,
-            INonTerminal raiserrorStatement,
-            INonTerminal raiserrorArgList,
-            INonTerminal raiserrorWithOptionList,
-            INonTerminal raiserrorWithOption,
-            INonTerminal throwStatement,
-            INonTerminal loopControlStatement,
-            INonTerminal gotoStatement,
-            INonTerminal labelOnlyStatement,
-            INonTerminal labelStatement,
-            INonTerminal declareStatement,
-            INonTerminal declareItemList,
-            INonTerminal declareItem,
-            INonTerminal declareTableVariable,
-            INonTerminal tableTypeDefinition,
-            INonTerminal createTableElementList,
-            INonTerminal createTableOptions,
-            INonTerminal typeArgument,
-            INonTerminal procStatementList,
-            INonTerminal statementSeparatorList,
-            INonTerminal implicitStatementNoLeadingWith,
-            INonTerminal tryCatchStatement,
-            INonTerminal cursorReference,
-            INonTerminal declareCursorStatement,
-            INonTerminal cursorOptionList,
-            INonTerminal cursorOption,
-            INonTerminal cursorOperationStatement,
-            INonTerminal fetchStatement,
-            INonTerminal fetchDirection,
-            INonTerminal fetchTargetList,
-            INonTerminal waitforTimeValue,
-            INonTerminal waitforStatement)
+            MsSqlGrammarContext context)
         {
             var gb = context.Gb;
-            var expression = context.Symbols.Expression;
-            var qualifiedName = context.Symbols.QualifiedName;
-            var queryExpression = context.Symbols.QueryExpression;
-            var searchCondition = context.Symbols.SearchCondition;
-            var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
-            var typeSpec = context.Symbols.TypeSpec;
-            var unicodeStringLiteral = context.Symbols.UnicodeStringLiteral;
-            var variableReference = context.Symbols.VariableReference;
-            var compoundAssignOp = context.Symbols.CompoundAssignOp;
+            var ifBranchStatement = gb.NT("IfBranchStatement");
+            var statement = gb.NT("Statement");
+            var statementListOpt = gb.NT("StatementListOpt");
+            var ifStatement = gb.NT("IfStatement");
+            var beginEndStatement = gb.NT("BeginEndStatement");
+            var whileStatement = gb.NT("WhileStatement");
+            var setOptionName = gb.NT("SetOptionName");
+            var setStatisticsOption = gb.NT("SetStatisticsOption");
+            var setStatement = gb.NT("SetStatement");
+            var setTransactionIsolationLevel = gb.NT("SetTransactionIsolationLevel");
+            var printStatement = gb.NT("PrintStatement");
+            var returnStatement = gb.NT("ReturnStatement");
+            var transactionStatement = gb.NT("TransactionStatement");
+            var raiserrorStatement = gb.NT("RaiserrorStatement");
+            var raiserrorArgList = gb.NT("RaiserrorArgList");
+            var raiserrorWithOptionList = gb.NT("RaiserrorWithOptionList");
+            var raiserrorWithOption = gb.NT("RaiserrorWithOption");
+            var throwStatement = gb.NT("ThrowStatement");
+            var loopControlStatement = gb.NT("LoopControlStatement");
+            var gotoStatement = gb.NT("GotoStatement");
+            var labelOnlyStatement = gb.NT("LabelOnlyStatement");
+            var labelStatement = gb.NT("LabelStatement");
+            var declareStatement = gb.NT("DeclareStatement");
+            var declareItemList = gb.NT("DeclareItemList");
+            var declareItem = gb.NT("DeclareItem");
+            var declareTableVariable = gb.NT("DeclareTableVariable");
+            var tableTypeDefinition = gb.NT("TableTypeDefinition");
+            var createTableElementList = gb.NT("CreateTableElementList");
+            var createTableOptions = gb.NT("CreateTableOptions");
+            var typeArgument = gb.NT("TypeArgument");
+            var procStatementList = gb.NT("ProcStatementList");
+            var statementSeparatorList = gb.NT("StatementSeparatorList");
+            var implicitStatementNoLeadingWith = gb.NT("ImplicitStatementNoLeadingWith");
+            var tryCatchStatement = gb.NT("TryCatchStatement");
+            var cursorReference = gb.NT("CursorReference");
+            var declareCursorStatement = gb.NT("DeclareCursorStatement");
+            var cursorOptionList = gb.NT("CursorOptionList");
+            var cursorOption = gb.NT("CursorOption");
+            var cursorOperationStatement = gb.NT("CursorOperationStatement");
+            var fetchStatement = gb.NT("FetchStatement");
+            var fetchDirection = gb.NT("FetchDirection");
+            var fetchTargetList = gb.NT("FetchTargetList");
+            var waitforTimeValue = gb.NT("WaitforTimeValue");
+            var waitforStatement = gb.NT("WaitforStatement");
+            var expression = gb.NT("Expression");
+            var qualifiedName = gb.NT("QualifiedName");
+            var queryExpression = gb.NT("QueryExpression");
+            var searchCondition = gb.NT("SearchCondition");
+            var strictIdentifierTerm = gb.NT("StrictIdentifierTerm");
+            var typeSpec = gb.NT("TypeSpec");
+            var unicodeStringLiteral = gb.NT("UnicodeStringLiteral");
+            var variableReference = gb.NT("VariableReference");
+            var compoundAssignOp = gb.NT("CompoundAssignOp");
             var stringLiteral = context.StringLiteralTerminal;
 
             gb.Prod(ifBranchStatement).Is(statement);

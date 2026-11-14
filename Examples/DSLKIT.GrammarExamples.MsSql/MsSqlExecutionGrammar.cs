@@ -1,42 +1,41 @@
-using DSLKIT.NonTerminals;
 
 namespace DSLKIT.GrammarExamples.MsSql
 {
     internal static class MsSqlExecutionGrammar
     {
         public static void Build(
-            MsSqlGrammarContext context,
-            INonTerminal executeStatement,
-            INonTerminal executeModuleCall,
-            INonTerminal executeModuleCallCore,
-            INonTerminal executeWithOptions,
-            INonTerminal executeDynamicCall,
-            INonTerminal executeAsContext,
-            INonTerminal executeAtClause,
-            INonTerminal executeReturnAssignment,
-            INonTerminal executeModuleTarget,
-            INonTerminal executeArgList,
-            INonTerminal executeArg,
-            INonTerminal executeArgNamePrefix,
-            INonTerminal executeArgValue,
-            INonTerminal executeOptionList,
-            INonTerminal executeOption,
-            INonTerminal executeResultSetsDefList,
-            INonTerminal executeResultSetsDef,
-            INonTerminal executeColumnDefList,
-            INonTerminal executeColumnDef,
-            INonTerminal executeNullability,
-            INonTerminal executeLinkedArgList,
-            INonTerminal executeLinkedArg,
-            INonTerminal useStatement)
+            MsSqlGrammarContext context)
         {
             var gb = context.Gb;
-            var expression = context.Symbols.Expression;
-            var qualifiedName = context.Symbols.QualifiedName;
-            var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
-            var typeSpec = context.Symbols.TypeSpec;
-            var unicodeStringLiteral = context.Symbols.UnicodeStringLiteral;
-            var variableReference = context.Symbols.VariableReference;
+            var executeStatement = gb.NT("ExecuteStatement");
+            var executeModuleCall = gb.NT("ExecuteModuleCall");
+            var executeModuleCallCore = gb.NT("ExecuteModuleCallCore");
+            var executeWithOptions = gb.NT("ExecuteWithOptions");
+            var executeDynamicCall = gb.NT("ExecuteDynamicCall");
+            var executeAsContext = gb.NT("ExecuteAsContext");
+            var executeAtClause = gb.NT("ExecuteAtClause");
+            var executeReturnAssignment = gb.NT("ExecuteReturnAssignment");
+            var executeModuleTarget = gb.NT("ExecuteModuleTarget");
+            var executeArgList = gb.NT("ExecuteArgList");
+            var executeArg = gb.NT("ExecuteArg");
+            var executeArgNamePrefix = gb.NT("ExecuteArgNamePrefix");
+            var executeArgValue = gb.NT("ExecuteArgValue");
+            var executeOptionList = gb.NT("ExecuteOptionList");
+            var executeOption = gb.NT("ExecuteOption");
+            var executeResultSetsDefList = gb.NT("ExecuteResultSetsDefList");
+            var executeResultSetsDef = gb.NT("ExecuteResultSetsDef");
+            var executeColumnDefList = gb.NT("ExecuteColumnDefList");
+            var executeColumnDef = gb.NT("ExecuteColumnDef");
+            var executeNullability = gb.NT("ExecuteNullability");
+            var executeLinkedArgList = gb.NT("ExecuteLinkedArgList");
+            var executeLinkedArg = gb.NT("ExecuteLinkedArg");
+            var useStatement = gb.NT("UseStatement");
+            var expression = gb.NT("Expression");
+            var qualifiedName = gb.NT("QualifiedName");
+            var strictIdentifierTerm = gb.NT("StrictIdentifierTerm");
+            var typeSpec = gb.NT("TypeSpec");
+            var unicodeStringLiteral = gb.NT("UnicodeStringLiteral");
+            var variableReference = gb.NT("VariableReference");
             var stringLiteral = context.StringLiteralTerminal;
             var executeIdentifierTerm = gb.NT("ExecuteIdentifierTerm");
 

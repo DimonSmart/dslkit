@@ -1,67 +1,66 @@
 using System.Collections.Generic;
-using DSLKIT.NonTerminals;
 
 namespace DSLKIT.GrammarExamples.MsSql
 {
     internal static class MsSqlSecurityAndAdminGrammar
     {
         public static void BuildPreQuery(
-            MsSqlGrammarContext context,
-            INonTerminal grantPermissionSet,
-            INonTerminal grantPermissionList,
-            INonTerminal grantPermissionItem,
-            INonTerminal grantPermission,
-            INonTerminal grantPermissionWord,
-            INonTerminal grantOnClause,
-            INonTerminal grantClassType,
-            INonTerminal grantSecurable,
-            INonTerminal grantPrincipalList,
-            INonTerminal grantPrincipal,
-            INonTerminal grantStatement,
-            INonTerminal dbccCommand,
-            INonTerminal dbccParamList,
-            INonTerminal dbccParam,
-            INonTerminal dbccOptionList,
-            INonTerminal dbccOption,
-            INonTerminal dbccOptionName,
-            INonTerminal dbccOptionValue,
-            INonTerminal dbccStatement,
-            INonTerminal dropProcStatement,
-            INonTerminal dropIfExistsClause,
-            INonTerminal dropTableStatement,
-            INonTerminal dropTableTargetList,
-            INonTerminal dropViewStatement,
-            INonTerminal dropViewTargetList,
-            INonTerminal dropIndexStatement,
-            INonTerminal dropIndexSpecList,
-            INonTerminal dropIndexSpec,
-            INonTerminal dropIndexOptionList,
-            INonTerminal dropIndexOption,
-            INonTerminal dropMoveToTarget,
-            INonTerminal dropFileStreamTarget,
-            INonTerminal dropStatisticsStatement,
-            INonTerminal dropStatisticsTargetList,
-            INonTerminal dropStatisticsTarget,
-            INonTerminal dropDatabaseStatement,
-            INonTerminal createTriggerHead,
-            INonTerminal createTriggerFireClause,
-            INonTerminal createTriggerEventList,
-            INonTerminal createTriggerEvent,
-            INonTerminal createTriggerWithOptionList,
-            INonTerminal createTriggerWithOption,
-            INonTerminal createTriggerStatement,
-            INonTerminal createProcExecuteAsClause,
-            INonTerminal createProcBodyBlock,
-            INonTerminal dropTriggerStatement,
-            INonTerminal createRoleStatement,
-            INonTerminal createSchemaStatement,
-            INonTerminal schemaNameClause)
+            MsSqlGrammarContext context)
         {
             var gb = context.Gb;
-            var expression = context.Symbols.Expression;
-            var qualifiedName = context.Symbols.QualifiedName;
-            var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
-            var strictQualifiedName = context.Symbols.StrictQualifiedName;
+            var grantPermissionSet = gb.NT("GrantPermissionSet");
+            var grantPermissionList = gb.NT("GrantPermissionList");
+            var grantPermissionItem = gb.NT("GrantPermissionItem");
+            var grantPermission = gb.NT("GrantPermission");
+            var grantPermissionWord = gb.NT("GrantPermissionWord");
+            var grantOnClause = gb.NT("GrantOnClause");
+            var grantClassType = gb.NT("GrantClassType");
+            var grantSecurable = gb.NT("GrantSecurable");
+            var grantPrincipalList = gb.NT("GrantPrincipalList");
+            var grantPrincipal = gb.NT("GrantPrincipal");
+            var grantStatement = gb.NT("GrantStatement");
+            var dbccCommand = gb.NT("DbccCommand");
+            var dbccParamList = gb.NT("DbccParamList");
+            var dbccParam = gb.NT("DbccParam");
+            var dbccOptionList = gb.NT("DbccOptionList");
+            var dbccOption = gb.NT("DbccOption");
+            var dbccOptionName = gb.NT("DbccOptionName");
+            var dbccOptionValue = gb.NT("DbccOptionValue");
+            var dbccStatement = gb.NT("DbccStatement");
+            var dropProcStatement = gb.NT("DropProcStatement");
+            var dropIfExistsClause = gb.NT("DropIfExistsClause");
+            var dropTableStatement = gb.NT("DropTableStatement");
+            var dropTableTargetList = gb.NT("DropTableTargetList");
+            var dropViewStatement = gb.NT("DropViewStatement");
+            var dropViewTargetList = gb.NT("DropViewTargetList");
+            var dropIndexStatement = gb.NT("DropIndexStatement");
+            var dropIndexSpecList = gb.NT("DropIndexSpecList");
+            var dropIndexSpec = gb.NT("DropIndexSpec");
+            var dropIndexOptionList = gb.NT("DropIndexOptionList");
+            var dropIndexOption = gb.NT("DropIndexOption");
+            var dropMoveToTarget = gb.NT("DropMoveToTarget");
+            var dropFileStreamTarget = gb.NT("DropFileStreamTarget");
+            var dropStatisticsStatement = gb.NT("DropStatisticsStatement");
+            var dropStatisticsTargetList = gb.NT("DropStatisticsTargetList");
+            var dropStatisticsTarget = gb.NT("DropStatisticsTarget");
+            var dropDatabaseStatement = gb.NT("DropDatabaseStatement");
+            var createTriggerHead = gb.NT("CreateTriggerHead");
+            var createTriggerFireClause = gb.NT("CreateTriggerFireClause");
+            var createTriggerEventList = gb.NT("CreateTriggerEventList");
+            var createTriggerEvent = gb.NT("CreateTriggerEvent");
+            var createTriggerWithOptionList = gb.NT("CreateTriggerWithOptionList");
+            var createTriggerWithOption = gb.NT("CreateTriggerWithOption");
+            var createTriggerStatement = gb.NT("CreateTriggerStatement");
+            var createProcExecuteAsClause = gb.NT("CreateProcExecuteAsClause");
+            var createProcBodyBlock = gb.NT("CreateProcBodyBlock");
+            var dropTriggerStatement = gb.NT("DropTriggerStatement");
+            var createRoleStatement = gb.NT("CreateRoleStatement");
+            var createSchemaStatement = gb.NT("CreateSchemaStatement");
+            var schemaNameClause = gb.NT("SchemaNameClause");
+            var expression = gb.NT("Expression");
+            var qualifiedName = gb.NT("QualifiedName");
+            var strictIdentifierTerm = gb.NT("StrictIdentifierTerm");
+            var strictQualifiedName = gb.NT("StrictQualifiedName");
             var adminIdentifierTerm = gb.NT("AdminIdentifierTerm");
             var adminIdentifierList = gb.NT("AdminIdentifierList");
 
@@ -229,48 +228,48 @@ namespace DSLKIT.GrammarExamples.MsSql
         }
 
         public static void BuildPostQuery(
-            MsSqlGrammarContext context,
-            INonTerminal truncateStatement,
-            INonTerminal createTableAsSelectStatement,
-            INonTerminal createTableOptionList,
-            INonTerminal alterDatabaseStatement,
-            INonTerminal alterDatabaseSetOption,
-            INonTerminal alterDatabaseSetOnOffOption,
-            INonTerminal alterDatabaseSetEqualsOnOffOption,
-            INonTerminal alterDatabaseSetModeOption,
-            INonTerminal alterDatabaseRecoveryModel,
-            INonTerminal alterDatabasePageVerifyMode,
-            INonTerminal alterDatabaseCursorDefaultMode,
-            INonTerminal alterDatabaseParameterizationMode,
-            INonTerminal alterDatabaseTargetRecoveryUnit,
-            INonTerminal alterDatabaseDelayedDurabilityMode,
-            INonTerminal alterDatabaseTerminationClause,
-            INonTerminal alterDatabaseTerminationOpt,
-            INonTerminal createLoginPasswordSpec,
-            INonTerminal createLoginOptionList,
-            INonTerminal createLoginOption,
-            INonTerminal createLoginWindowsOptionList,
-            INonTerminal createLoginWindowsOption,
-            INonTerminal createLoginStatement,
-            INonTerminal createUserStatement,
-            INonTerminal createStatisticsStatement,
-            INonTerminal dropTypeStatement,
-            INonTerminal dropColumnEncryptionKeyStatement,
-            INonTerminal revertStatement,
-            INonTerminal dropEventSessionStatement,
-            INonTerminal createTypeStatement,
-            INonTerminal tableTypeDefinition,
-            INonTerminal checkpointStatement)
+            MsSqlGrammarContext context)
         {
             var gb = context.Gb;
-            var expression = context.Symbols.Expression;
-            var strictIdentifierTerm = context.Symbols.StrictIdentifierTerm;
-            var namedOptionValue = context.Symbols.NamedOptionValue;
-            var qualifiedName = context.Symbols.QualifiedName;
-            var typeSpec = context.Symbols.TypeSpec;
-            var indexOptionList = context.Symbols.IndexOptionList;
-            var indexOnOffValue = context.Symbols.IndexOnOffValue;
-            var queryExpression = context.Symbols.QueryExpression;
+            var truncateStatement = gb.NT("TruncateStatement");
+            var createTableAsSelectStatement = gb.NT("CreateTableAsSelectStatement");
+            var createTableOptionList = gb.NT("CreateTableOptionList");
+            var alterDatabaseStatement = gb.NT("AlterDatabaseStatement");
+            var alterDatabaseSetOption = gb.NT("AlterDatabaseSetOption");
+            var alterDatabaseSetOnOffOption = gb.NT("AlterDatabaseSetOnOffOption");
+            var alterDatabaseSetEqualsOnOffOption = gb.NT("AlterDatabaseSetEqualsOnOffOption");
+            var alterDatabaseSetModeOption = gb.NT("AlterDatabaseSetModeOption");
+            var alterDatabaseRecoveryModel = gb.NT("AlterDatabaseRecoveryModel");
+            var alterDatabasePageVerifyMode = gb.NT("AlterDatabasePageVerifyMode");
+            var alterDatabaseCursorDefaultMode = gb.NT("AlterDatabaseCursorDefaultMode");
+            var alterDatabaseParameterizationMode = gb.NT("AlterDatabaseParameterizationMode");
+            var alterDatabaseTargetRecoveryUnit = gb.NT("AlterDatabaseTargetRecoveryUnit");
+            var alterDatabaseDelayedDurabilityMode = gb.NT("AlterDatabaseDelayedDurabilityMode");
+            var alterDatabaseTerminationClause = gb.NT("AlterDatabaseTerminationClause");
+            var alterDatabaseTerminationOpt = gb.NT("AlterDatabaseTerminationOpt");
+            var createLoginPasswordSpec = gb.NT("CreateLoginPasswordSpec");
+            var createLoginOptionList = gb.NT("CreateLoginOptionList");
+            var createLoginOption = gb.NT("CreateLoginOption");
+            var createLoginWindowsOptionList = gb.NT("CreateLoginWindowsOptionList");
+            var createLoginWindowsOption = gb.NT("CreateLoginWindowsOption");
+            var createLoginStatement = gb.NT("CreateLoginStatement");
+            var createUserStatement = gb.NT("CreateUserStatement");
+            var createStatisticsStatement = gb.NT("CreateStatisticsStatement");
+            var dropTypeStatement = gb.NT("DropTypeStatement");
+            var dropColumnEncryptionKeyStatement = gb.NT("DropColumnEncryptionKeyStatement");
+            var revertStatement = gb.NT("RevertStatement");
+            var dropEventSessionStatement = gb.NT("DropEventSessionStatement");
+            var createTypeStatement = gb.NT("CreateTypeStatement");
+            var tableTypeDefinition = gb.NT("TableTypeDefinition");
+            var checkpointStatement = gb.NT("CheckpointStatement");
+            var expression = gb.NT("Expression");
+            var strictIdentifierTerm = gb.NT("StrictIdentifierTerm");
+            var namedOptionValue = gb.NT("NamedOptionValue");
+            var qualifiedName = gb.NT("QualifiedName");
+            var typeSpec = gb.NT("TypeSpec");
+            var indexOptionList = gb.NT("IndexOptionList");
+            var indexOnOffValue = gb.NT("IndexOnOffValue");
+            var queryExpression = gb.NT("QueryExpression");
             var stringLiteral = context.StringLiteralTerminal;
             var alterDatabaseTarget = gb.NT("AlterDatabaseTarget");
             var statisticsIdentifierTerm = gb.NT("StatisticsIdentifierTerm");
