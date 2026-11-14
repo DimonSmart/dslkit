@@ -62,8 +62,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(executeModuleTarget).Is(qualifiedName);
             gb.Prod(executeModuleTarget).Is(variableReference);
 
-            gb.Prod(executeArgList).Is(executeArg);
-            gb.Prod(executeArgList).Is(executeArgList, ",", executeArg);
+            gb.Rule(executeArgList).SeparatedBy(",", executeArg);
             gb.Prod(executeArg).Is(executeArgValue);
             gb.Prod(executeArg).Is(executeArgNamePrefix, executeArgValue);
             gb.Prod(executeArgNamePrefix).Is(variableReference, "=");
@@ -73,21 +72,18 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(executeArgValue).Is("DEFAULT");
 
             gb.Prod(executeWithOptions).Is("WITH", executeOptionList);
-            gb.Prod(executeOptionList).Is(executeOption);
-            gb.Prod(executeOptionList).Is(executeOptionList, ",", executeOption);
+            gb.Rule(executeOptionList).SeparatedBy(",", executeOption);
             gb.Rule(executeOption)
                 .CanBe("RECOMPILE")
                 .Or("RESULT", "SETS", "UNDEFINED")
                 .Or("RESULT", "SETS", "NONE")
                 .Or("RESULT", "SETS", "(", executeResultSetsDefList, ")");
-            gb.Prod(executeResultSetsDefList).Is(executeResultSetsDef);
-            gb.Prod(executeResultSetsDefList).Is(executeResultSetsDefList, ",", executeResultSetsDef);
+            gb.Rule(executeResultSetsDefList).SeparatedBy(",", executeResultSetsDef);
             gb.Prod(executeResultSetsDef).Is("(", executeColumnDefList, ")");
             gb.Prod(executeResultSetsDef).Is("AS", "OBJECT", qualifiedName);
             gb.Prod(executeResultSetsDef).Is("AS", "TYPE", qualifiedName);
             gb.Prod(executeResultSetsDef).Is("AS", "FOR", "XML");
-            gb.Prod(executeColumnDefList).Is(executeColumnDef);
-            gb.Prod(executeColumnDefList).Is(executeColumnDefList, ",", executeColumnDef);
+            gb.Rule(executeColumnDefList).SeparatedBy(",", executeColumnDef);
             gb.Prod(executeColumnDef).Is(executeIdentifierTerm, typeSpec);
             gb.Prod(executeColumnDef).Is(executeIdentifierTerm, typeSpec, "COLLATE", strictIdentifierTerm);
             gb.Prod(executeColumnDef).Is(executeIdentifierTerm, typeSpec, executeNullability);

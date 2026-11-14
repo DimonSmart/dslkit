@@ -68,14 +68,12 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule(adminIdentifierTerm)
                 .CanBe(strictIdentifierTerm)
                 .OrKeywords("NAME");
-            gb.Prod(adminIdentifierList).Is(adminIdentifierTerm);
-            gb.Prod(adminIdentifierList).Is(adminIdentifierList, ",", adminIdentifierTerm);
+            gb.Rule(adminIdentifierList).SeparatedBy(",", adminIdentifierTerm);
 
             gb.Prod(grantPermissionSet).Is("ALL");
             gb.Prod(grantPermissionSet).Is("ALL", "PRIVILEGES");
             gb.Prod(grantPermissionSet).Is(grantPermissionList);
-            gb.Prod(grantPermissionList).Is(grantPermissionItem);
-            gb.Prod(grantPermissionList).Is(grantPermissionList, ",", grantPermissionItem);
+            gb.Rule(grantPermissionList).SeparatedBy(",", grantPermissionItem);
             gb.Prod(grantPermissionItem).Is(grantPermission);
             gb.Prod(grantPermissionItem).Is(grantPermission, "(", adminIdentifierList, ")");
 
@@ -107,8 +105,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(grantSecurable).Is(strictQualifiedName);
             gb.Prod(grantSecurable).Is(strictIdentifierTerm);
 
-            gb.Prod(grantPrincipalList).Is(grantPrincipal);
-            gb.Prod(grantPrincipalList).Is(grantPrincipalList, ",", grantPrincipal);
+            gb.Rule(grantPrincipalList).SeparatedBy(",", grantPrincipal);
             gb.Prod(grantPrincipal).Is(strictIdentifierTerm);
             gb.Prod(grantPrincipal).Is(strictQualifiedName);
             gb.Prod(grantPrincipal).Is("PUBLIC");
@@ -144,8 +141,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(dbccStatement).Is("DBCC", dbccCommand, "(", dbccParamList, ")");
             gb.Prod(dbccStatement).Is("DBCC", dbccCommand, "WITH", dbccOptionList);
             gb.Prod(dbccStatement).Is("DBCC", dbccCommand, "(", dbccParamList, ")", "WITH", dbccOptionList);
-            gb.Prod(dbccParamList).Is(dbccParam);
-            gb.Prod(dbccParamList).Is(dbccParamList, ",", dbccParam);
+            gb.Rule(dbccParamList).SeparatedBy(",", dbccParam);
             gb.Prod(dbccParam).Is(expression);
             gb.Prod(dbccParam).Is(strictIdentifierTerm);
             gb.Prod(dbccParam).Is(strictQualifiedName);
@@ -170,23 +166,19 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod(dropTableStatement).Is("DROP", "TABLE", dropTableTargetList);
             gb.Prod(dropTableStatement).Is("DROP", "TABLE", dropIfExistsClause, dropTableTargetList);
-            gb.Prod(dropTableTargetList).Is(qualifiedName);
-            gb.Prod(dropTableTargetList).Is(dropTableTargetList, ",", qualifiedName);
+            gb.Rule(dropTableTargetList).SeparatedBy(",", qualifiedName);
 
             gb.Prod(dropViewStatement).Is("DROP", "VIEW", dropViewTargetList);
             gb.Prod(dropViewStatement).Is("DROP", "VIEW", dropIfExistsClause, dropViewTargetList);
-            gb.Prod(dropViewTargetList).Is(qualifiedName);
-            gb.Prod(dropViewTargetList).Is(dropViewTargetList, ",", qualifiedName);
+            gb.Rule(dropViewTargetList).SeparatedBy(",", qualifiedName);
 
             gb.Prod(dropIndexStatement).Is("DROP", "INDEX", dropIndexSpecList);
             gb.Prod(dropIndexStatement).Is("DROP", "INDEX", dropIfExistsClause, dropIndexSpecList);
-            gb.Prod(dropIndexSpecList).Is(dropIndexSpec);
-            gb.Prod(dropIndexSpecList).Is(dropIndexSpecList, ",", dropIndexSpec);
+            gb.Rule(dropIndexSpecList).SeparatedBy(",", dropIndexSpec);
             gb.Prod(dropIndexSpec).Is(qualifiedName, "ON", qualifiedName);
             gb.Prod(dropIndexSpec).Is(qualifiedName, "ON", qualifiedName, "WITH", "(", dropIndexOptionList, ")");
             gb.Prod(dropIndexSpec).Is(qualifiedName, ".", strictIdentifierTerm);
-            gb.Prod(dropIndexOptionList).Is(dropIndexOption);
-            gb.Prod(dropIndexOptionList).Is(dropIndexOptionList, ",", dropIndexOption);
+            gb.Rule(dropIndexOptionList).SeparatedBy(",", dropIndexOption);
             gb.Rule(dropIndexOption)
                 .CanBe("MAXDOP", "=", expression)
                 .Or("ONLINE", "=", "ON")
@@ -203,8 +195,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .OrKeywords("DEFAULT");
 
             gb.Prod(dropStatisticsStatement).Is("DROP", "STATISTICS", dropStatisticsTargetList);
-            gb.Prod(dropStatisticsTargetList).Is(dropStatisticsTarget);
-            gb.Prod(dropStatisticsTargetList).Is(dropStatisticsTargetList, ",", dropStatisticsTarget);
+            gb.Rule(dropStatisticsTargetList).SeparatedBy(",", dropStatisticsTarget);
             gb.Prod(dropStatisticsTarget).Is(qualifiedName, ".", strictIdentifierTerm);
 
             gb.Prod(dropDatabaseStatement).Is("DROP", "DATABASE", strictIdentifierTerm);
@@ -288,8 +279,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule(statisticsIdentifierTerm)
                 .CanBe(strictIdentifierTerm)
                 .OrKeywords("NAME");
-            gb.Prod(statisticsIdentifierList).Is(statisticsIdentifierTerm);
-            gb.Prod(statisticsIdentifierList).Is(statisticsIdentifierList, ",", statisticsIdentifierTerm);
+            gb.Rule(statisticsIdentifierList).SeparatedBy(",", statisticsIdentifierTerm);
 
             gb.Prod(truncateStatement).Is("TRUNCATE", "TABLE", qualifiedName);
 

@@ -48,8 +48,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule(tableSourceAliasTerm)
                 .CanBe(tableSourceColumnIdentifierTerm)
                 .OrKeywords("SOURCE", "TARGET");
-            gb.Prod(tableSourceColumnAliasList).Is(tableSourceColumnIdentifierTerm);
-            gb.Prod(tableSourceColumnAliasList).Is(tableSourceColumnAliasList, ",", tableSourceColumnIdentifierTerm);
+            gb.Rule(tableSourceColumnAliasList).SeparatedBy(",", tableSourceColumnIdentifierTerm);
 
             gb.Rule(tableSourceList).SeparatedBy(",", tableSource);
             gb.Prod(tableSource).Is(tableFactor);
@@ -100,8 +99,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(tableFactor).Is(qualifiedName, "AS", tableSourceAliasTerm, "PIVOT", "(", pivotClause, ")", tableSourceAliasTerm);
             gb.Prod(tableFactor).Is(qualifiedName, tableSourceAliasTerm, "PIVOT", "(", pivotClause, ")", tableSourceAliasTerm);
             gb.Prod(pivotClause).Is(functionCall, "FOR", tableSourceColumnIdentifierTerm, "IN", "(", pivotValueList, ")");
-            gb.Prod(pivotValueList).Is(expression);
-            gb.Prod(pivotValueList).Is(pivotValueList, ",", expression);
+            gb.Rule(pivotValueList).SeparatedBy(",", expression);
             gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", tableSourceAliasTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", tableSourceAliasTerm);
             gb.Prod(tableFactor).Is("(", queryExpression, ")", tableSourceAliasTerm, "UNPIVOT", "(", unpivotClause, ")", "AS", tableSourceAliasTerm);
             gb.Prod(tableFactor).Is("(", queryExpression, ")", "AS", tableSourceAliasTerm, "UNPIVOT", "(", unpivotClause, ")", tableSourceAliasTerm);
@@ -113,8 +111,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(tableFactor).Is(qualifiedName, "AS", tableSourceAliasTerm, "UNPIVOT", "(", unpivotClause, ")", tableSourceAliasTerm);
             gb.Prod(tableFactor).Is(qualifiedName, tableSourceAliasTerm, "UNPIVOT", "(", unpivotClause, ")", tableSourceAliasTerm);
             gb.Prod(unpivotClause).Is(tableSourceColumnIdentifierTerm, "FOR", tableSourceColumnIdentifierTerm, "IN", "(", unpivotColumnList, ")");
-            gb.Prod(unpivotColumnList).Is(tableSourceColumnIdentifierTerm);
-            gb.Prod(unpivotColumnList).Is(unpivotColumnList, ",", tableSourceColumnIdentifierTerm);
+            gb.Rule(unpivotColumnList).SeparatedBy(",", tableSourceColumnIdentifierTerm);
             gb.Prod(tableFactor).Is("(", "VALUES", rowValueList, ")", "AS", tableSourceAliasTerm);
             gb.Prod(tableFactor).Is("(", "VALUES", rowValueList, ")", tableSourceAliasTerm);
             gb.Prod(tableFactor).Is("(", "VALUES", rowValueList, ")", "AS", tableSourceAliasTerm, "(", tableSourceColumnAliasList, ")");
@@ -126,8 +123,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(openJsonCall).Is("OPENJSON", "(", functionArgumentList, ")");
             gb.Prod(openJsonCall).Is("OPENJSON", "(", functionArgumentList, ")", openJsonWithClause);
             gb.Prod(openJsonWithClause).Is("WITH", "(", openJsonColumnList, ")");
-            gb.Prod(openJsonColumnList).Is(openJsonColumnDef);
-            gb.Prod(openJsonColumnList).Is(openJsonColumnList, ",", openJsonColumnDef);
+            gb.Rule(openJsonColumnList).SeparatedBy(",", openJsonColumnDef);
             gb.Prod(openJsonColumnDef).Is(tableSourceColumnIdentifierTerm, typeSpec);
             gb.Prod(openJsonPath).Is(stringLiteral);
             gb.Prod(openJsonPath).Is(unicodeStringLiteral);

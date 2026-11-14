@@ -30,14 +30,12 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createTriggerFireClause).Is("AFTER", createTriggerEventList);
             gb.Prod(createTriggerFireClause).Is("INSTEAD", "OF", createTriggerEventList);
 
-            gb.Prod(createTriggerEventList).Is(createTriggerEvent);
-            gb.Prod(createTriggerEventList).Is(createTriggerEventList, ",", createTriggerEvent);
+            gb.Rule(createTriggerEventList).SeparatedBy(",", createTriggerEvent);
             gb.Rule(createTriggerEvent)
                 .CanBe(strictIdentifierTerm)
                 .OrKeywords("INSERT", "UPDATE", "DELETE");
 
-            gb.Prod(createTriggerWithOptionList).Is(createTriggerWithOption);
-            gb.Prod(createTriggerWithOptionList).Is(createTriggerWithOptionList, ",", createTriggerWithOption);
+            gb.Rule(createTriggerWithOptionList).SeparatedBy(",", createTriggerWithOption);
             gb.Rule(createTriggerWithOption)
                 .CanBe(createProcExecuteAsClause)
                 .OrKeywords("ENCRYPTION", "SCHEMABINDING", "NATIVE_COMPILATION");
@@ -87,8 +85,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .CanBe("-", "(", graphIdentifierTerm, ")", "-", ">", graphIdentifierTerm)
                 .Or("<", "-", "(", graphIdentifierTerm, ")", "-", graphIdentifierTerm)
                 .Or("-", "(", graphIdentifierTerm, ")", "-", graphIdentifierTerm);
-            gb.Prod(matchGraphStepChain).Is(matchGraphStep);
-            gb.Prod(matchGraphStepChain).Is(matchGraphStepChain, matchGraphStep);
+            gb.Rule(matchGraphStepChain).Plus(matchGraphStep);
         }
 
         public static void BuildMergeGrammar(
@@ -170,16 +167,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createSecurityPolicyStatement).Is("CREATE", "SECURITY", "POLICY", qualifiedName, securityPolicyClauseList, "WITH", "(", securityPolicyOptionList, ")");
             gb.Prod(alterSecurityPolicyStatement).Is("ALTER", "SECURITY", "POLICY", qualifiedName, securityPolicyClauseList);
             gb.Prod(alterSecurityPolicyStatement).Is("ALTER", "SECURITY", "POLICY", qualifiedName, securityPolicyClauseList, "WITH", "(", securityPolicyOptionList, ")");
-            gb.Prod(securityPolicyClauseList).Is(securityPolicyClause);
-            gb.Prod(securityPolicyClauseList).Is(securityPolicyClauseList, ",", securityPolicyClause);
+            gb.Rule(securityPolicyClauseList).SeparatedBy(",", securityPolicyClause);
             gb.Rule(securityPolicyClause)
                 .CanBe("ADD", "FILTER", "PREDICATE", functionCall, "ON", qualifiedName)
                 .Or("ADD", "BLOCK", "PREDICATE", functionCall, "ON", qualifiedName)
                 .Or("DROP", "FILTER", "PREDICATE", "ON", qualifiedName)
                 .Or("DROP", "BLOCK", "PREDICATE", "ON", qualifiedName);
             gb.Rule(securityPolicyOptionName).Keywords("STATE", "SCHEMABINDING");
-            gb.Prod(securityPolicyOptionList).Is(securityPolicyOption);
-            gb.Prod(securityPolicyOptionList).Is(securityPolicyOptionList, ",", securityPolicyOption);
+            gb.Rule(securityPolicyOptionList).SeparatedBy(",", securityPolicyOption);
             gb.Prod(securityPolicyOption).Is(securityPolicyOptionName, "=", "ON");
             gb.Prod(securityPolicyOption).Is(securityPolicyOptionName, "=", "OFF");
         }
@@ -201,8 +196,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule(externalObjectIdentifierTerm)
                 .CanBe(strictIdentifierTerm)
                 .OrKeywords("NAME");
-            gb.Prod(externalObjectQualifiedName).Is(externalObjectIdentifierTerm);
-            gb.Prod(externalObjectQualifiedName).Is(externalObjectQualifiedName, ".", externalObjectIdentifierTerm);
+            gb.Rule(externalObjectQualifiedName).SeparatedBy(".", externalObjectIdentifierTerm);
             gb.Prod(externalObjectQualifiedName).Is(externalObjectQualifiedName, ".", ".", externalObjectIdentifierTerm);
             gb.Prod(createExternalTableStatement).Is("CREATE", "EXTERNAL", "TABLE", qualifiedName, "(", createTableElementList, ")");
             gb.Prod(createExternalTableStatement).Is("CREATE", "EXTERNAL", "TABLE", qualifiedName, "(", createTableElementList, ")", "WITH", "(", externalTableOptionList, ")");
@@ -287,8 +281,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .CanBe(strictIdentifierTerm)
                 .OrKeywords("NAME", "MODEL", "DATA");
             gb.Prod(functionCall).Is("PREDICT", "(", predictArgList, ")");
-            gb.Prod(predictArgList).Is(predictArg);
-            gb.Prod(predictArgList).Is(predictArgList, ",", predictArg);
+            gb.Rule(predictArgList).SeparatedBy(",", predictArg);
             gb.Prod(predictArg).Is(predictIdentifierTerm, "=", expression);
             gb.Prod(predictArg).Is(predictIdentifierTerm, "=", expression, "AS", predictIdentifierTerm);
         }

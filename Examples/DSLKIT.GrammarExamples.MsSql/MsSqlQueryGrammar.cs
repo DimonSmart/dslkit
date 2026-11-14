@@ -94,8 +94,7 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Rule(forJsonMode).Keywords("AUTO", "PATH", "NONE");
 
-            gb.Prod(forJsonOptionList).Is(forJsonOption);
-            gb.Prod(forJsonOptionList).Is(forJsonOptionList, ",", forJsonOption);
+            gb.Rule(forJsonOptionList).SeparatedBy(",", forJsonOption);
             gb.Rule(forJsonOption).Keywords("WITHOUT_ARRAY_WRAPPER", "INCLUDE_NULL_VALUES", "ROOT");
             gb.Prod(forJsonOption).Is("ROOT", "(", expression, ")");
 
@@ -107,8 +106,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .Or("RAW", "(", expression, ")")
                 .Or("EXPLICIT");
 
-            gb.Prod(forXmlOptionList).Is(forXmlOption);
-            gb.Prod(forXmlOptionList).Is(forXmlOptionList, ",", forXmlOption);
+            gb.Rule(forXmlOptionList).SeparatedBy(",", forXmlOption);
             gb.Rule(forXmlOption)
                 .CanBe("TYPE")
                 .Or("XMLDATA")

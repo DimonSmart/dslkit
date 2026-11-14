@@ -153,10 +153,8 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod(raiserrorStatement).Is("RAISERROR", "(", raiserrorArgList, ")");
             gb.Prod(raiserrorStatement).Is("RAISERROR", "(", raiserrorArgList, ")", "WITH", raiserrorWithOptionList);
-            gb.Prod(raiserrorArgList).Is(expression);
-            gb.Prod(raiserrorArgList).Is(raiserrorArgList, ",", expression);
-            gb.Prod(raiserrorWithOptionList).Is(raiserrorWithOption);
-            gb.Prod(raiserrorWithOptionList).Is(raiserrorWithOptionList, ",", raiserrorWithOption);
+            gb.Rule(raiserrorArgList).SeparatedBy(",", expression);
+            gb.Rule(raiserrorWithOptionList).SeparatedBy(",", raiserrorWithOption);
             gb.Rule(raiserrorWithOption).Keywords("LOG", "NOWAIT", "SETERROR");
 
             gb.Rule(throwStatement)
@@ -171,8 +169,7 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod(declareStatement).Is("DECLARE", declareItemList);
             gb.Prod(declareStatement).Is("DECLARE", declareTableVariable);
-            gb.Prod(declareItemList).Is(declareItem);
-            gb.Prod(declareItemList).Is(declareItemList, ",", declareItem);
+            gb.Rule(declareItemList).SeparatedBy(",", declareItem);
             gb.Prod(declareItem).Is(variableReference, typeSpec);
             gb.Prod(declareItem).Is(variableReference, typeSpec, "=", expression);
             gb.Prod(declareItem).Is(variableReference, typeSpec, "NOT", "NULL");

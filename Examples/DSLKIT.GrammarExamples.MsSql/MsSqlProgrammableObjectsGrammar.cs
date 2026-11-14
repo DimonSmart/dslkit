@@ -100,8 +100,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var viewColumnComment = gb.NT("ViewColumnComment");
             var viewColumnCommentOpt = gb.NT("ViewColumnCommentOpt");
 
-            gb.Prod(createProcKeyword).Is("PROC");
-            gb.Prod(createProcKeyword).Is("PROCEDURE");
+            gb.Rule(createProcKeyword).Keywords("PROC", "PROCEDURE");
 
             gb.Prod(createProcHead).Is("CREATE", createProcKeyword);
             gb.Prod(createProcHead).Is("CREATE", "OR", "ALTER", createProcKeyword);
@@ -116,14 +115,12 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule(createProcSignature).OneOf(
                 gb.Seq(createProcName, createProcSignatureParameterListOpt, createProcSignatureWithClauseOpt, createProcSignatureForReplicationOpt));
 
-            gb.Prod(createProcParameterList).Is(createProcParameter);
-            gb.Prod(createProcParameterList).Is(createProcParameterList, ",", createProcParameter);
+            gb.Rule(createProcParameterList).SeparatedBy(",", createProcParameter);
             gb.Prod(createProcParameter).Is(variableReference, typeSpec);
             gb.Prod(createProcParameter).Is(variableReference, typeSpec, createProcParameterOptionList);
             gb.Prod(createProcParameter).Is(variableReference, "AS", typeSpec);
             gb.Prod(createProcParameter).Is(variableReference, "AS", typeSpec, createProcParameterOptionList);
-            gb.Prod(createProcParameterOptionList).Is(createProcParameterOption);
-            gb.Prod(createProcParameterOptionList).Is(createProcParameterOptionList, createProcParameterOption);
+            gb.Rule(createProcParameterOptionList).Plus(createProcParameterOption);
             gb.Rule(createProcParameterOption)
                 .CanBe("VARYING")
                 .Or("NULL")
@@ -134,8 +131,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .Or("READONLY");
 
             gb.Prod(createProcWithClause).Is("WITH", createProcOptionList);
-            gb.Prod(createProcOptionList).Is(createProcOption);
-            gb.Prod(createProcOptionList).Is(createProcOptionList, ",", createProcOption);
+            gb.Rule(createProcOptionList).SeparatedBy(",", createProcOption);
             gb.Rule(createProcOption)
                 .CanBe(createProcExecuteAsClause)
                 .OrKeywords("ENCRYPTION", "RECOMPILE", "NATIVE_COMPILATION", "SCHEMABINDING");
@@ -159,8 +155,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createProcNativeWithClause).Is("WITH", "NATIVE_COMPILATION", ",", "SCHEMABINDING");
             gb.Prod(createProcNativeWithClause).Is("WITH", "NATIVE_COMPILATION", ",", "SCHEMABINDING", ",", createProcExecuteAsClause);
 
-            gb.Prod(createProcNativeAtomicOptionList).Is(createProcNativeAtomicOption);
-            gb.Prod(createProcNativeAtomicOptionList).Is(createProcNativeAtomicOptionList, ",", createProcNativeAtomicOption);
+            gb.Rule(createProcNativeAtomicOptionList).SeparatedBy(",", createProcNativeAtomicOption);
             gb.Rule(nativeAtomicOnOffValue).Keywords("ON", "OFF");
             gb.Prod(createProcNativeAtomicOption).Is("LANGUAGE", "=", expression);
             gb.Prod(createProcNativeAtomicOption).Is("DELAYED_DURABILITY", "=", nativeAtomicOnOffValue);
@@ -191,14 +186,12 @@ namespace DSLKIT.GrammarExamples.MsSql
                 createFunctionSignatureParameterListOpt,
                 ")");
 
-            gb.Prod(createFunctionParameterList).Is(createFunctionParameter);
-            gb.Prod(createFunctionParameterList).Is(createFunctionParameterList, ",", createFunctionParameter);
+            gb.Rule(createFunctionParameterList).SeparatedBy(",", createFunctionParameter);
             gb.Prod(createFunctionParameter).Is(variableReference, typeSpec);
             gb.Prod(createFunctionParameter).Is(variableReference, "AS", typeSpec);
             gb.Prod(createFunctionParameter).Is(variableReference, typeSpec, createFunctionParameterOptionList);
             gb.Prod(createFunctionParameter).Is(variableReference, "AS", typeSpec, createFunctionParameterOptionList);
-            gb.Prod(createFunctionParameterOptionList).Is(createFunctionParameterOption);
-            gb.Prod(createFunctionParameterOptionList).Is(createFunctionParameterOptionList, createFunctionParameterOption);
+            gb.Rule(createFunctionParameterOptionList).Plus(createFunctionParameterOption);
             gb.Rule(createFunctionParameterOption)
                 .CanBe("NULL")
                 .Or("NOT", "NULL")
@@ -209,16 +202,14 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createFunctionInlineTableReturnsClause).Is("RETURNS", "TABLE");
             gb.Prod(createFunctionTableVariableReturnsClause).Is("RETURNS", createFunctionTableReturnDefinition);
             gb.Prod(createFunctionTableReturnDefinition).Is(variableReference, "TABLE", "(", createFunctionTableReturnItemList, ")");
-            gb.Prod(createFunctionTableReturnItemList).Is(createFunctionTableReturnItem);
-            gb.Prod(createFunctionTableReturnItemList).Is(createFunctionTableReturnItemList, ",", createFunctionTableReturnItem);
+            gb.Rule(createFunctionTableReturnItemList).SeparatedBy(",", createFunctionTableReturnItem);
             gb.Prod(createFunctionTableReturnItem).Is(createTableColumnDefinition);
             gb.Prod(createFunctionTableReturnItem).Is(createTableComputedColumn);
             gb.Prod(createFunctionTableReturnItem).Is(createTableConstraint);
             gb.Prod(createFunctionTableReturnItem).Is(createTableTableIndex);
 
             gb.Prod(createFunctionWithClause).Is("WITH", createFunctionOptionList);
-            gb.Prod(createFunctionOptionList).Is(createFunctionOption);
-            gb.Prod(createFunctionOptionList).Is(createFunctionOptionList, ",", createFunctionOption);
+            gb.Rule(createFunctionOptionList).SeparatedBy(",", createFunctionOption);
             gb.Rule(createFunctionOption)
                 .CanBe(createProcExecuteAsClause)
                 .OrKeywords("ENCRYPTION", "SCHEMABINDING")
@@ -302,14 +293,12 @@ namespace DSLKIT.GrammarExamples.MsSql
                 gb.Prod(viewColumnComment).Is("COMMENT", unicodeStringLiteral);
                 gb.Opt(viewColumnCommentOpt, viewColumnComment);
                 gb.Prod(viewColumnDefinition).Is(strictIdentifierTerm, viewColumnCommentOpt);
-                gb.Prod(viewColumnDefinitionList).Is(viewColumnDefinition);
-                gb.Prod(viewColumnDefinitionList).Is(viewColumnDefinitionList, ",", viewColumnDefinition);
+                gb.Rule(viewColumnDefinitionList).SeparatedBy(",", viewColumnDefinition);
                 gb.Prod(createViewColumnList).Is("(", viewColumnDefinitionList, ")");
             }
             else
             {
-                gb.Prod(viewColumnIdentifierList).Is(strictIdentifierTerm);
-                gb.Prod(viewColumnIdentifierList).Is(viewColumnIdentifierList, ",", strictIdentifierTerm);
+                gb.Rule(viewColumnIdentifierList).SeparatedBy(",", strictIdentifierTerm);
                 gb.Prod(createViewColumnList).Is("(", viewColumnIdentifierList, ")");
             }
 

@@ -90,26 +90,21 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule(implicitQueryStatementNoLeadingWith).OneOf(implicitQueryExpression);
 
             gb.Prod(withXmlNamespacesClause).Is("WITH", "XMLNAMESPACES", "(", xmlNamespaceItemList, ")");
-            gb.Prod(xmlNamespaceItemList).Is(xmlNamespaceItem);
-            gb.Prod(xmlNamespaceItemList).Is(xmlNamespaceItemList, ",", xmlNamespaceItem);
+            gb.Rule(xmlNamespaceItemList).SeparatedBy(",", xmlNamespaceItem);
             gb.Rule(xmlNamespaceAliasTerm).OneOf(strictIdentifierTerm);
             gb.Prod(xmlNamespaceItem).Is(expression, "AS", xmlNamespaceAliasTerm);
             gb.Prod(xmlNamespaceItem).Is("DEFAULT", expression);
 
             gb.Prod(withClause).Is("WITH", cteDefinitionList);
-            gb.Prod(cteDefinitionList).Is(cteDefinition);
-            gb.Prod(cteDefinitionList).Is(cteDefinitionList, ",", cteDefinition);
+            gb.Rule(cteDefinitionList).SeparatedBy(",", cteDefinition);
             gb.Rule(cteIdentifierTerm).OneOf(strictIdentifierTerm);
-            gb.Prod(cteIdentifierList).Is(cteIdentifierTerm);
-            gb.Prod(cteIdentifierList).Is(cteIdentifierList, ",", cteIdentifierTerm);
+            gb.Rule(cteIdentifierList).SeparatedBy(",", cteIdentifierTerm);
             gb.Prod(cteDefinition).Is(cteIdentifierTerm, "AS", "(", queryExpression, ")");
             gb.Prod(cteDefinition).Is(cteIdentifierTerm, "(", cteIdentifierList, ")", "AS", "(", queryExpression, ")");
 
-            gb.Prod(strictQualifiedName).Is(strictIdentifierTerm);
-            gb.Prod(strictQualifiedName).Is(strictQualifiedName, ".", strictIdentifierTerm);
+            gb.Rule(strictQualifiedName).SeparatedBy(".", strictIdentifierTerm);
             gb.Prod(strictQualifiedName).Is(strictQualifiedName, ".", ".", strictIdentifierTerm);
-            gb.Prod(qualifiedName).Is(contextualIdentifierTerm);
-            gb.Prod(qualifiedName).Is(qualifiedName, ".", contextualIdentifierTerm);
+            gb.Rule(qualifiedName).SeparatedBy(".", contextualIdentifierTerm);
             if (context.HasFeature(MsSqlDialectFeatures.GraphExtensions))
             {
                 gb.Prod(qualifiedName).Is(qualifiedName, ".", graphColumnRef);

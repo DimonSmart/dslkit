@@ -66,21 +66,17 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule(dmlObjectIdentifierTerm)
                 .CanBe(strictIdentifierTerm)
                 .OrKeywords("POLICY");
-            gb.Prod(dmlIdentifierList).Is(dmlIdentifierTerm);
-            gb.Prod(dmlIdentifierList).Is(dmlIdentifierList, ",", dmlIdentifierTerm);
-            gb.Prod(dmlQualifiedName).Is(dmlObjectIdentifierTerm);
-            gb.Prod(dmlQualifiedName).Is(dmlQualifiedName, ".", dmlObjectIdentifierTerm);
+            gb.Rule(dmlIdentifierList).SeparatedBy(",", dmlIdentifierTerm);
+            gb.Rule(dmlQualifiedName).SeparatedBy(".", dmlObjectIdentifierTerm);
             gb.Prod(dmlQualifiedName).Is(dmlQualifiedName, ".", ".", dmlObjectIdentifierTerm);
-            gb.Prod(dmlTableHintQualifiedName).Is(tableHintLimitedName);
-            gb.Prod(dmlTableHintQualifiedName).Is(dmlTableHintQualifiedName, ".", tableHintLimitedName);
+            gb.Rule(dmlTableHintQualifiedName).SeparatedBy(".", tableHintLimitedName);
             gb.Prod(dmlTableHintQualifiedName).Is(dmlTableHintQualifiedName, ".", ".", tableHintLimitedName);
 
             gb.Prod(updateStatement).Is("UPDATE", tableFactor, "SET", updateSetList);
             gb.Prod(updateStatement).Is("UPDATE", tableFactor, "SET", updateSetList, "WHERE", searchCondition);
             gb.Prod(updateStatement).Is("UPDATE", tableFactor, "SET", updateSetList, "FROM", tableSourceList);
             gb.Prod(updateStatement).Is("UPDATE", tableFactor, "SET", updateSetList, "FROM", tableSourceList, "WHERE", searchCondition);
-            gb.Prod(updateSetList).Is(updateSetItem);
-            gb.Prod(updateSetList).Is(updateSetList, ",", updateSetItem);
+            gb.Rule(updateSetList).SeparatedBy(",", updateSetItem);
             gb.Prod(updateSetItem).Is(qualifiedName, "=", expression);
             gb.Prod(updateSetItem).Is(qualifiedName, compoundAssignOp, expression);
             gb.Prod(updateSetItem).Is(variableReference, "=", expression);
@@ -115,19 +111,15 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(insertTarget).Is("INTO", dmlQualifiedName, "(", insertColumnList, ")", "WITH", "(", tableHintLimitedList, ")");
             gb.Prod(insertTarget).Is("INTO", dmlQualifiedName, "WITH", "(", tableHintLimitedList, ")", "(", insertColumnList, ")");
             gb.Prod(insertTarget).Is(dmlQualifiedName, "WITH", "(", tableHintLimitedList, ")", "(", insertColumnList, ")");
-            gb.Prod(insertColumnList).Is(dmlIdentifierTerm);
-            gb.Prod(insertColumnList).Is(insertColumnList, ",", dmlIdentifierTerm);
+            gb.Rule(insertColumnList).SeparatedBy(",", dmlIdentifierTerm);
             if (context.HasFeature(MsSqlDialectFeatures.GraphExtensions))
             {
-                gb.Prod(insertColumnList).Is(graphColumnRef);
-                gb.Prod(insertColumnList).Is(insertColumnList, ",", graphColumnRef);
+                gb.Rule(insertColumnList).SeparatedBy(",", graphColumnRef);
             }
 
-            gb.Prod(insertValueList).Is(expression);
-            gb.Prod(insertValueList).Is(insertValueList, ",", expression);
+            gb.Rule(insertValueList).SeparatedBy(",", expression);
             gb.Prod(rowValue).Is("(", insertValueList, ")");
-            gb.Prod(rowValueList).Is(rowValue);
-            gb.Prod(rowValueList).Is(rowValueList, ",", rowValue);
+            gb.Rule(rowValueList).SeparatedBy(",", rowValue);
 
             gb.Prod(deleteStatement).Is("DELETE", deleteTarget, deleteStatementTail);
             gb.Prod(deleteStatement).Is("DELETE", "FROM", deleteTarget, deleteStatementTail);
@@ -151,8 +143,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(rowsetFunctionLimited).Is("OPENQUERY", "(", expressionList, ")");
             gb.Prod(rowsetFunctionLimited).Is("OPENROWSET", "(", expressionList, ")");
 
-            gb.Prod(tableHintLimitedList).Is(tableHintLimited);
-            gb.Prod(tableHintLimitedList).Is(tableHintLimitedList, ",", tableHintLimited);
+            gb.Rule(tableHintLimitedList).SeparatedBy(",", tableHintLimited);
             gb.Rule(tableHintLimited)
                 .CanBe(tableHintLimitedName)
                 .Or(tableHintLimitedName, "=", expression)
@@ -206,8 +197,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .Or("WHERE", "CURRENT", "OF", "GLOBAL", variableReference);
 
             gb.Prod(queryOptionClause).Is("OPTION", "(", queryHintList, ")");
-            gb.Prod(queryHintList).Is(queryHint);
-            gb.Prod(queryHintList).Is(queryHintList, ",", queryHint);
+            gb.Rule(queryHintList).SeparatedBy(",", queryHint);
             gb.Prod(queryHint).Is(queryHintName);
             gb.Prod(queryHint).Is("MAXDOP", expression);
             gb.Prod(queryHint).Is("MAXDOP", "=", expression);

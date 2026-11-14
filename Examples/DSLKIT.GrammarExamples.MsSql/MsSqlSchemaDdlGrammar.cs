@@ -101,8 +101,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule(schemaDdlIdentifierTerm)
                 .CanBe(strictIdentifierTerm)
                 .OrKeywords("NAME");
-            gb.Prod(schemaDdlIdentifierList).Is(schemaDdlIdentifierTerm);
-            gb.Prod(schemaDdlIdentifierList).Is(schemaDdlIdentifierList, ",", schemaDdlIdentifierTerm);
+            gb.Rule(schemaDdlIdentifierList).SeparatedBy(",", schemaDdlIdentifierTerm);
 
             gb.Prod(createTableFileTableClause).Is("AS", "FILETABLE");
             gb.Prod(createTableStatement).Is("CREATE", "TABLE", qualifiedName, "(", createTableElementList, ")");
@@ -142,8 +141,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Opt(createTableTextImageClauseOpt, createTableTextImageClause);
             gb.Opt(createTableFileStreamClauseOpt, createIndexFileStreamClause);
 
-            gb.Prod(createTableElementList).Is(createTableElement);
-            gb.Prod(createTableElementList).Is(createTableElementList, ",", createTableElement);
+            gb.Rule(createTableElementList).SeparatedBy(",", createTableElement);
             gb.Prod(createTableElement).Is(createTableColumnDefinition);
             gb.Prod(createTableElement).Is(createTableComputedColumn);
             gb.Prod(createTableElement).Is(createTableColumnSet);
@@ -152,16 +150,11 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod(createTableColumnDefinition).Is(schemaDdlIdentifierTerm, typeSpec);
             gb.Prod(createTableColumnDefinition).Is(schemaDdlIdentifierTerm, typeSpec, createTableColumnOptionList);
-            gb.Prod(createTableColumnOptionList).Is(createTableColumnOption);
-            gb.Prod(createTableColumnOptionList).Is(createTableColumnOptionList, createTableColumnOption);
+            gb.Rule(createTableColumnOptionList).Plus(createTableColumnOption);
             gb.Prod(createTableColumnOption).Is("NULL");
             gb.Prod(createTableColumnOption).Is("NOT", "NULL");
             gb.Prod(createTableColumnOption).Is("PRIMARY", "KEY");
-            gb.Prod(createTableColumnOption).Is("UNIQUE");
-            gb.Prod(createTableColumnOption).Is("SPARSE");
-            gb.Prod(createTableColumnOption).Is("PERSISTED");
-            gb.Prod(createTableColumnOption).Is("ROWGUIDCOL");
-            gb.Prod(createTableColumnOption).Is("COLUMN_SET");
+            gb.Rule(createTableColumnOption).Keywords("UNIQUE", "SPARSE", "PERSISTED", "ROWGUIDCOL", "COLUMN_SET");
             gb.Prod(createTableColumnOption).Is("FOR", "ALL_SPARSE_COLUMNS");
             gb.Prod(createTableColumnOption).Is("FILESTREAM");
             gb.Prod(createTableColumnOption).Is("DEFAULT", expression);
@@ -244,8 +237,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .Or("CLUSTERED")
                 .Or("NONCLUSTERED");
 
-            gb.Prod(createTableKeyColumnList).Is(createTableKeyColumn);
-            gb.Prod(createTableKeyColumnList).Is(createTableKeyColumnList, ",", createTableKeyColumn);
+            gb.Rule(createTableKeyColumnList).SeparatedBy(",", createTableKeyColumn);
             gb.Prod(createTableKeyColumn).Is(schemaDdlIdentifierTerm);
             gb.Prod(createTableKeyColumn).Is(schemaDdlIdentifierTerm, "ASC");
             gb.Prod(createTableKeyColumn).Is(schemaDdlIdentifierTerm, "DESC");
@@ -261,8 +253,7 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod(createTablePeriodClause).Is("PERIOD", forSystemTimeStart, "SYSTEM_TIME", "(", schemaDdlIdentifierTerm, ",", schemaDdlIdentifierTerm, ")");
             gb.Prod(createTableOptions).Is("WITH", "(", createTableOptionList, ")");
-            gb.Prod(createTableOptionList).Is(createTableOption);
-            gb.Prod(createTableOptionList).Is(createTableOptionList, ",", createTableOption);
+            gb.Rule(createTableOptionList).SeparatedBy(",", createTableOption);
             gb.Prod(createTableOption).Is("MEMORY_OPTIMIZED", "=", indexOnOffValue);
             gb.Prod(createTableOption).Is("DURABILITY", "=", createTableDurabilityMode);
             gb.Prod(createTableOption).Is("FILETABLE_DIRECTORY", "=", namedOptionValue);
@@ -283,8 +274,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(alterTableAction).Is("ADD", createTablePeriodClause);
             gb.Prod(alterTableAction).Is("DROP", "PERIOD", forSystemTimeStart, "SYSTEM_TIME");
             gb.Prod(alterTableAction).Is("SET", "(", indexOptionList, ")");
-            gb.Prod(alterTableAddItemList).Is(alterTableAddItem);
-            gb.Prod(alterTableAddItemList).Is(alterTableAddItemList, ",", alterTableAddItem);
+            gb.Rule(alterTableAddItemList).SeparatedBy(",", alterTableAddItem);
             gb.Prod(alterTableAddItem).Is(createTableColumnDefinition);
             gb.Prod(alterTableAddItem).Is(createTableConstraint);
             gb.Prod(alterTableAddItem).Is(createTableTableIndex);
@@ -293,11 +283,9 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(alterTableAlterColumnAction).Is(schemaDdlIdentifierTerm, typeSpec, alterTableColumnOptionList);
             gb.Prod(alterTableAlterColumnAction).Is(schemaDdlIdentifierTerm, "ADD", alterTableColumnOptionList);
             gb.Prod(alterTableAlterColumnAction).Is(schemaDdlIdentifierTerm, "DROP", alterTableColumnOptionList);
-            gb.Prod(alterTableColumnOptionList).Is(alterTableColumnOption);
-            gb.Prod(alterTableColumnOptionList).Is(alterTableColumnOptionList, alterTableColumnOption);
+            gb.Rule(alterTableColumnOptionList).Plus(alterTableColumnOption);
             gb.Prod(alterTableColumnOption).Is(createTableColumnOption);
-            gb.Prod(alterTableDropItemList).Is(alterTableDropItem);
-            gb.Prod(alterTableDropItemList).Is(alterTableDropItemList, ",", alterTableDropItem);
+            gb.Rule(alterTableDropItemList).SeparatedBy(",", alterTableDropItem);
             gb.Prod(alterTableDropItem).Is("COLUMN", schemaDdlIdentifierTerm);
             gb.Prod(alterTableDropItem).Is("CONSTRAINT", schemaDdlIdentifierTerm);
             gb.Prod(alterTableDropItem).Is("CONSTRAINT", "ALL");
@@ -322,8 +310,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createIndexStatement).Is(createKeylessIndexHead, "ON", qualifiedName);
             gb.Prod(createIndexStatement).Is(createKeylessIndexHead, "ON", qualifiedName, createIndexTailClauseList);
 
-            gb.Prod(createIndexKeyList).Is(createIndexKeyItem);
-            gb.Prod(createIndexKeyList).Is(createIndexKeyList, ",", createIndexKeyItem);
+            gb.Rule(createIndexKeyList).SeparatedBy(",", createIndexKeyItem);
             gb.Prod(createIndexKeyItem).Is(schemaDdlIdentifierTerm);
             gb.Prod(createIndexKeyItem).Is(schemaDdlIdentifierTerm, "ASC");
             gb.Prod(createIndexKeyItem).Is(schemaDdlIdentifierTerm, "DESC");
@@ -352,8 +339,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Opt(createIndexFileStreamClauseOpt, createIndexFileStreamClause);
 
             gb.Prod(createIndexIncludeClause).Is("INCLUDE", "(", createIndexIncludeList, ")");
-            gb.Prod(createIndexIncludeList).Is(schemaDdlIdentifierTerm);
-            gb.Prod(createIndexIncludeList).Is(createIndexIncludeList, ",", schemaDdlIdentifierTerm);
+            gb.Rule(createIndexIncludeList).SeparatedBy(",", schemaDdlIdentifierTerm);
             gb.Prod(createIndexWhereClause).Is("WHERE", searchCondition);
             gb.Prod(createIndexWithClause).Is("WITH", "(", indexOptionList, ")");
             gb.Prod(createIndexStorageClause).Is("ON", indexStorageTarget);
@@ -366,8 +352,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(indexFileStreamTarget).Is("NULL");
             gb.Prod(indexFileStreamTarget).Is(qualifiedName, "(", schemaDdlIdentifierTerm, ")");
 
-            gb.Prod(indexOptionList).Is(indexOption);
-            gb.Prod(indexOptionList).Is(indexOptionList, ",", indexOption);
+            gb.Rule(indexOptionList).SeparatedBy(",", indexOption);
             gb.Prod(indexOptionList).Is(indexOptionList, ",");
             gb.Prod(indexOption).Is(indexOptionName, "=", indexOptionValue);
             gb.Prod(indexOption).Is(indexOptionName, "(", indexOptionList, ")");
@@ -399,13 +384,7 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod(indexOptionValue).Is(expression);
             gb.Prod(indexOptionValue).Is(indexOnOffValue);
-            gb.Prod(indexOptionValue).Is("NONE");
-            gb.Prod(indexOptionValue).Is("SELF");
-            gb.Prod(indexOptionValue).Is("BLOCKERS");
-            gb.Prod(indexOptionValue).Is("ROW");
-            gb.Prod(indexOptionValue).Is("PAGE");
-            gb.Prod(indexOptionValue).Is("COLUMNSTORE");
-            gb.Prod(indexOptionValue).Is("COLUMNSTORE_ARCHIVE");
+            gb.Rule(indexOptionValue).Keywords("NONE", "SELF", "BLOCKERS", "ROW", "PAGE", "COLUMNSTORE", "COLUMNSTORE_ARCHIVE");
             gb.Prod(indexOptionValue).Is(expression, "MINUTES");
             gb.Prod(indexOptionValue).Is(indexOnOffValue, "(", indexOptionList, ")");
             gb.Prod(indexOptionValue).Is("(", indexOptionList, ")");
@@ -414,8 +393,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(namedOptionValue).Is(expression);
             gb.Prod(namedOptionValue).Is(contextualIdentifierTerm);
             gb.Prod(namedOptionValue).Is(qualifiedName);
-            gb.Prod(namedOptionValue).Is("ON");
-            gb.Prod(namedOptionValue).Is("OFF");
+            gb.Rule(namedOptionValue).Keywords("ON", "OFF");
 
             gb.Prod(maskingOptionList).Is("FUNCTION", "=", expression);
 
@@ -426,8 +404,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(encryptionOptionList).Is("ENCRYPTION_TYPE", "=", namedOptionValue);
             gb.Prod(encryptionOptionList).Is("ALGORITHM", "=", namedOptionValue);
 
-            gb.Prod(indexPartitionList).Is(indexPartitionItem);
-            gb.Prod(indexPartitionList).Is(indexPartitionList, ",", indexPartitionItem);
+            gb.Rule(indexPartitionList).SeparatedBy(",", indexPartitionItem);
             gb.Prod(indexPartitionItem).Is(expression);
             gb.Prod(indexPartitionItem).Is(expression, "TO", expression);
             gb.Prod(indexPartitionItem).Is("ALL");
@@ -524,8 +501,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createDatabaseOnFilespecSequence).Is(createDatabaseFilespec, ",", createDatabaseFilegroup);
             gb.Prod(createDatabaseOnFilespecSequence).Is(createDatabaseFilespec, ",", "LOG", "ON", createDatabaseFilespecList);
 
-            gb.Prod(createDatabaseFilespecList).Is(createDatabaseFilespec);
-            gb.Prod(createDatabaseFilespecList).Is(createDatabaseFilespecList, ",", createDatabaseFilespec);
+            gb.Rule(createDatabaseFilespecList).SeparatedBy(",", createDatabaseFilespec);
 
             gb.Prod(createDatabaseFilegroup).Is("FILEGROUP", strictIdentifierTerm, createDatabaseOnFilespecSequence);
             gb.Prod(createDatabaseFilegroup).Is("FILEGROUP", strictIdentifierTerm, "DEFAULT", createDatabaseOnFilespecSequence);
@@ -536,8 +512,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createDatabaseCollateClause).Is("COLLATE", strictIdentifierTerm);
 
             gb.Prod(createDatabaseWithClause).Is("WITH", createDatabaseOptionList);
-            gb.Prod(createDatabaseOptionList).Is(createDatabaseOption);
-            gb.Prod(createDatabaseOptionList).Is(createDatabaseOptionList, ",", createDatabaseOption);
+            gb.Rule(createDatabaseOptionList).SeparatedBy(",", createDatabaseOption);
 
             gb.Prod(createDatabaseOption).Is("FILESTREAM", "(", createDatabaseFilestreamOptionList, ")");
             gb.Prod(createDatabaseOption).Is("DEFAULT_FULLTEXT_LANGUAGE", "=", createDatabaseOptionValue);
@@ -566,8 +541,7 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Rule(createDatabaseOnOffValue).Keywords("ON", "OFF");
 
-            gb.Prod(createDatabaseFilestreamOptionList).Is(createDatabaseFilestreamOption);
-            gb.Prod(createDatabaseFilestreamOptionList).Is(createDatabaseFilestreamOptionList, ",", createDatabaseFilestreamOption);
+            gb.Rule(createDatabaseFilestreamOptionList).SeparatedBy(",", createDatabaseFilestreamOption);
             gb.Prod(createDatabaseFilestreamOption).Is("NON_TRANSACTED_ACCESS", "=", createDatabaseNonTransactedAccessValue);
             gb.Prod(createDatabaseFilestreamOption).Is("DIRECTORY_NAME", "=", stringLiteral);
             gb.Rule(createDatabaseNonTransactedAccessValue).Keywords("OFF", "READ_ONLY", "FULL");
@@ -598,8 +572,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createDatabaseFileName).Is(strictIdentifierTerm);
             gb.Prod(createDatabaseFileName).Is(stringLiteral);
 
-            gb.Prod(createDatabaseFilespecOptionList).Is(createDatabaseFilespecOption);
-            gb.Prod(createDatabaseFilespecOptionList).Is(createDatabaseFilespecOptionList, ",", createDatabaseFilespecOption);
+            gb.Rule(createDatabaseFilespecOptionList).SeparatedBy(",", createDatabaseFilespecOption);
             gb.Prod(createDatabaseFilespecOption).Is("SIZE", "=", createDatabaseSizeSpec);
             gb.Prod(createDatabaseFilespecOption).Is("MAXSIZE", "=", createDatabaseMaxSizeSpec);
             gb.Prod(createDatabaseFilespecOption).Is("FILEGROWTH", "=", createDatabaseGrowthSpec);

@@ -69,8 +69,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var contextualIdentifierList = gb.NT("ContextualIdentifierList");
 
             gb.Prod(orderByClause).Is("ORDER", "BY", orderItemList);
-            gb.Prod(orderItemList).Is(orderItem);
-            gb.Prod(orderItemList).Is(orderItemList, ",", orderItem);
+            gb.Rule(orderItemList).SeparatedBy(",", orderItem);
             gb.Prod(orderItem).Is(expression);
             gb.Prod(orderItem).Is(expression, "ASC");
             gb.Prod(orderItem).Is(expression, "DESC");
@@ -186,11 +185,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(functionCall).Is("NEXT", contextualIdentifierTerm, "FOR", qualifiedName);
             gb.Prod(functionCall).Is("OPENROWSET", "(", openRowsetBulk, ")");
             gb.Prod(openRowsetBulk).Is("BULK", expression, ",", openRowsetBulkOptionList);
-            gb.Prod(openRowsetBulkOptionList).Is(openRowsetBulkOption);
-            gb.Prod(openRowsetBulkOptionList).Is(openRowsetBulkOptionList, ",", openRowsetBulkOption);
-            gb.Prod(openRowsetBulkOption).Is("SINGLE_BLOB");
-            gb.Prod(openRowsetBulkOption).Is("SINGLE_CLOB");
-            gb.Prod(openRowsetBulkOption).Is("SINGLE_NCLOB");
+            gb.Rule(openRowsetBulkOptionList).SeparatedBy(",", openRowsetBulkOption);
+            gb.Rule(openRowsetBulkOption).Keywords("SINGLE_BLOB", "SINGLE_CLOB", "SINGLE_NCLOB");
             gb.Prod(openRowsetBulkOption).Is("DATA_SOURCE", "=", namedOptionValue);
             gb.Prod(openRowsetBulkOption).Is("CODEPAGE", "=", namedOptionValue);
             gb.Prod(openRowsetBulkOption).Is("DATAFILETYPE", "=", namedOptionValue);
@@ -207,8 +203,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(openRowsetBulkOption).Is("ERRORFILE_DATA_SOURCE", "=", namedOptionValue);
             gb.Prod(openRowsetBulkOption).Is("ROWS_PER_BATCH", "=", namedOptionValue);
             gb.Prod(openRowsetBulkOption).Is("ORDER", "(", createTableKeyColumnList, ")");
-            gb.Prod(functionArgumentList).Is(expression);
-            gb.Prod(functionArgumentList).Is(functionArgumentList, ",", expression);
+            gb.Rule(functionArgumentList).SeparatedBy(",", expression);
             gb.Prod(iifArgumentList).Is(searchCondition, ",", expression, ",", expression);
             if (hasGraphExtensions)
             {
@@ -248,19 +243,15 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(caseExpression).Is("CASE", caseWhenList, "ELSE", expression, "END");
             gb.Prod(caseExpression).Is("CASE", expression, caseWhenList, "END");
             gb.Prod(caseExpression).Is("CASE", expression, caseWhenList, "ELSE", expression, "END");
-            gb.Prod(caseWhenList).Is(caseWhen);
-            gb.Prod(caseWhenList).Is(caseWhenList, caseWhen);
+            gb.Rule(caseWhenList).Plus(caseWhen);
             gb.Prod(caseWhen).Is("WHEN", searchCondition, "THEN", expression);
             gb.Prod(caseWhen).Is("WHEN", expression, "THEN", expression);
 
-            gb.Prod(expressionList).Is(expression);
-            gb.Prod(expressionList).Is(expressionList, ",", expression);
-            gb.Prod(groupingSetList).Is(groupingSet);
-            gb.Prod(groupingSetList).Is(groupingSetList, ",", groupingSet);
+            gb.Rule(expressionList).SeparatedBy(",", expression);
+            gb.Rule(groupingSetList).SeparatedBy(",", groupingSet);
             gb.Prod(groupingSet).Is("(", expressionList, ")");
             gb.Prod(groupingSet).Is("(", ")");
-            gb.Prod(contextualIdentifierList).Is(contextualIdentifierTerm);
-            gb.Prod(contextualIdentifierList).Is(contextualIdentifierList, ",", contextualIdentifierTerm);
+            gb.Rule(contextualIdentifierList).SeparatedBy(",", contextualIdentifierTerm);
 
             gb.Rule(strictIdentifierTerm).OneOf(
                 identifier,
