@@ -68,7 +68,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(executeArgValue).Is(expression);
             gb.Prod(executeArgValue).Is(variableReference, "OUTPUT");
             gb.Prod(executeArgValue).Is(variableReference, "OUT");
-            gb.Prod(executeArgValue).Is("DEFAULT");
 
             gb.Prod(executeWithOptions).Is("WITH", executeOptionList);
             gb.Rule(executeOptionList).SeparatedBy(",", executeOption);
