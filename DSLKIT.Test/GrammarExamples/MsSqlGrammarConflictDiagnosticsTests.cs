@@ -152,6 +152,30 @@ namespace DSLKIT.Test.GrammarExamples
                 .Should().BeLessThan(823);
         }
 
+        [Fact]
+        public void BuildGrammar_ShouldNotHaveRedundantParenthesizedColumnDefaultConflicts()
+        {
+            var grammar = ModernMsSqlGrammarExample.BuildGrammar(MsSqlDialectFeatures.All);
+            var conflicts = grammar.ActionAndGotoTable.Conflicts;
+
+            conflicts.Where(conflict =>
+                conflict.Kind == ParserConflictKind.ReduceReduce &&
+                conflict.Resolution == null &&
+                (IsColumnDefaultParenthesisReductionPair(conflict.ExistingProduction, conflict.IncomingProduction) ||
+                 IsColumnDefaultParenthesisReductionPair(conflict.IncomingProduction, conflict.ExistingProduction)))
+                .Should().BeEmpty(
+                    "column DEFAULT parentheses are already handled by PrimaryExpression");
+
+            conflicts.Count(conflict =>
+                    conflict.Resolution == null && conflict.Kind == ParserConflictKind.ReduceReduce)
+                .Should().BeLessThan(690);
+        }
+
+        private static bool IsColumnDefaultParenthesisReductionPair(string columnDefault, string primary) =>
+            (columnDefault?.Trim() == "CreateTableColumnOption → DEFAULT ( Expression )" ||
+             columnDefault?.Trim() == "CreateTableColumnConstraintBody → DEFAULT ( Expression )") &&
+            primary?.Trim() == "PrimaryExpression → ( Expression )";
+
         private static bool IsSqlcmdReductionPair(string primary, string identifier) =>
             primary?.Trim() == "PrimaryExpression → SqlcmdVariable" &&
             identifier?.Trim() == "StrictIdentifierTerm → SqlcmdVariable";
