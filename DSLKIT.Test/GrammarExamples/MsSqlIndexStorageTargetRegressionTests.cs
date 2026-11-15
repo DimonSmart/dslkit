@@ -98,7 +98,13 @@ namespace DSLKIT.Test.GrammarExamples
         [InlineData(SqlStatementTerminationMode.ExistingOnly)]
         public void TryFormat_ShouldRoundTripStorageClausesWithAllTerminationModes(SqlStatementTerminationMode termination)
         {
-            const string sql = "CREATE INDEX IX_T ON dbo.T (Id) WITH (FILLFACTOR = 90) ON [default] FILESTREAM_ON [PRIMARY]; CREATE TABLE dbo.U (Id INT, Payload NVARCHAR(MAX)) ON [PRIMARY] TEXTIMAGE_ON \"default\";";
+            var sqlCases = new[]
+            {
+                "CREATE INDEX IX_T ON dbo.T (Id) WITH (FILLFACTOR = 90) ON [default] FILESTREAM_ON [PRIMARY];",
+                "CREATE TABLE dbo.U (Id INT, Payload NVARCHAR(MAX)) ON [PRIMARY] TEXTIMAGE_ON \"default\";"
+            };
+            foreach (var sql in sqlCases)
+            {
             var options = new SqlFormattingOptions
             {
                 Statement = new SqlStatementFormattingOptions { TerminateWithSemicolon = termination }
@@ -108,7 +114,7 @@ namespace DSLKIT.Test.GrammarExamples
 
             var first = ModernMsSqlFormatter.TryFormat(sql, options);
             first.IsSuccess.Should().BeTrue(first.ErrorMessage);
-            first.FormattedSql.Should().Contain("[default]").And.Contain("\"default\"");
+            first.FormattedSql.Should().Contain(sql.Contains("[default]") ? "[default]" : "\"default\"");
 
             var parsed = ModernMsSqlGrammarExample.ParseBatch(first.FormattedSql!);
             parsed.IsSuccess.Should().BeTrue(parsed.Error?.Message);
@@ -121,6 +127,7 @@ namespace DSLKIT.Test.GrammarExamples
             var second = ModernMsSqlFormatter.TryFormat(first.FormattedSql!, options);
             second.IsSuccess.Should().BeTrue(second.ErrorMessage);
             second.FormattedSql.Should().Be(first.FormattedSql);
+            }
         }
 
         private static System.Collections.Generic.IEnumerable<string> StorageSignificantTokens(ParseTreeNode node)
