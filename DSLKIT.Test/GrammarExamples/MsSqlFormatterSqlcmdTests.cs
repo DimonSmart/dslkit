@@ -14,11 +14,11 @@ namespace DSLKIT.Test.GrammarExamples
         [InlineData("USE $(DatabaseName);")]
         [InlineData("DROP DATABASE $(DatabaseName);")]
         [InlineData("SELECT $(SQLCMDSERVER) AS ServerName;")]
-        [InlineData("SELECT $(Value) + 1 AS Result;")]
+        [InlineData("SELECT $(Value) + 1 AS [Result];")]
         [InlineData("INSERT INTO dbo.Info (Value) VALUES ($(DefaultValue));")]
-        [InlineData("SELECT CASE WHEN $(Flag) = 1 THEN $(Value) ELSE 0 END AS Result;")]
+        [InlineData("SELECT CASE WHEN $(Flag) = 1 THEN $(Value) ELSE 0 END AS [Result];")]
         [InlineData("SELECT t.Id FROM $(SchemaName).$(TableName) AS t;")]
-        [InlineData("SELECT $(Value) AS Result;\nGO\n:setvar DatabaseName Demo\nUSE $(DatabaseName);")]
+        [InlineData("SELECT $(Value) AS [Result];\nGO\n:setvar DatabaseName Demo\nUSE $(DatabaseName);")]
         public void TryFormat_ShouldRoundTripSqlcmdVariables_WithoutChangingTokens(string script)
         {
             var firstParse = ModernMsSqlGrammarExample.ParseDocument(script);
