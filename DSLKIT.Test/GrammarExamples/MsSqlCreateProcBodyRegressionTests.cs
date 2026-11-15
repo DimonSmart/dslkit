@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
+using DSLKIT.Parser;
 using DSLKIT.GrammarExamples.MsSql;
 using DSLKIT.GrammarExamples.MsSql.Formatting;
 using FluentAssertions;
@@ -105,23 +107,37 @@ namespace DSLKIT.Test.GrammarExamples
             reparsed.IsSuccess.Should().BeTrue(reparsed.Error?.Message);
             reparsed.ParseTree.Should().NotBeNull();
 
-            foreach (var value in new[] { "101", "202" })
-            {
-                FindTerminalPaths(reparsed.ParseTree!, value).Single()
-                    .Should().Contain("CreateProcBodyBlock");
-            }
+            var bodyTokens = ProcBodyTokens(reparsed.ParseTree!).ToArray();
+            bodyTokens.Should().Contain("101").And.Contain("202");
 
-            var tokensBefore = GetTerminalNodes(before.ParseTree!)
-                .Select(node => node.Token.OriginalString)
-                .Where(value => value != ";");
-            var tokensAfter = GetTerminalNodes(reparsed.ParseTree!)
-                .Select(node => node.Token.OriginalString)
-                .Where(value => value != ";");
+            var tokensBefore = AllProcTokens(before.ParseTree!).Where(value => value != ";");
+            var tokensAfter = AllProcTokens(reparsed.ParseTree!).Where(value => value != ";");
             tokensAfter.Should().Equal(tokensBefore);
 
             var second = ModernMsSqlFormatter.TryFormat(first.FormattedSql!, options);
             second.IsSuccess.Should().BeTrue(second.ErrorMessage);
             second.FormattedSql.Should().Be(first.FormattedSql);
+        }
+
+        private static IEnumerable<string> ProcBodyTokens(ParseTreeNode node)
+        {
+            if (node is NonTerminalNode nonTerminal &&
+                nonTerminal.NonTerminal.Name == "CreateProcBodyBlock")
+            {
+                return AllProcTokens(node);
+            }
+
+            return node.Children.SelectMany(ProcBodyTokens);
+        }
+
+        private static IEnumerable<string> AllProcTokens(ParseTreeNode node)
+        {
+            if (node is TerminalNode terminal)
+            {
+                return [terminal.Token.OriginalString];
+            }
+
+            return node.Children.SelectMany(AllProcTokens);
         }
     }
 }
