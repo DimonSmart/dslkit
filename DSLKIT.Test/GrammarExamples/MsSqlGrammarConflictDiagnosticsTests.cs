@@ -152,7 +152,7 @@ namespace DSLKIT.Test.GrammarExamples
                 .Should().BeLessThan(823);
         }
 
-        private static bool IsSqlcmdReductionPair(string? primary, string? identifier) =>
+        private static bool IsSqlcmdReductionPair(string primary, string identifier) =>
             primary == "PrimaryExpression → SqlcmdVariable" &&
             identifier == "StrictIdentifierTerm → SqlcmdVariable";
 
