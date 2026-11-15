@@ -1,0 +1,115 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Text;
+using DSLKIT.GrammarExamples.MsSql;
+using DSLKIT.Parser;
+using FluentAssertions;
+using Xunit;
+
+namespace DSLKIT.Test.GrammarExamples
+{
+    public class MsSqlGrammarConflictDiagnosticsTests
+    {
+        [Fact]
+        public void BuildGrammar_ShouldProduceReproducibleConflictReport()
+        {
+            var grammar = ModernMsSqlGrammarExample.BuildGrammar(MsSqlDialectFeatures.All);
+            var conflicts = grammar.ActionAndGotoTable.Conflicts;
+            var unresolved = conflicts.Where(conflict => conflict.Resolution == null).ToArray();
+            var families = conflicts
+                .GroupBy(conflict => new
+                {
+                    conflict.Kind,
+                    conflict.TerminalName,
+                    conflict.Resolution,
+                    conflict.ExistingProduction,
+                    conflict.IncomingProduction
+                })
+                .OrderByDescending(group => group.Key.Resolution == null)
+                .ThenByDescending(group => group.Count())
+                .ThenBy(group => group.Key.Kind)
+                .ThenBy(group => group.Key.TerminalName, StringComparer.Ordinal)
+                .ThenBy(group => group.Key.ExistingProduction, StringComparer.Ordinal)
+                .ThenBy(group => group.Key.IncomingProduction, StringComparer.Ordinal)
+                .ToArray();
+
+            var report = new StringBuilder();
+            report.AppendLine("# SQL grammar conflict diagnostic");
+            report.AppendLine();
+            report.AppendLine("Dialect features: `All`. This report is generated from the current parser table, without changing conflict resolution.");
+            report.AppendLine();
+            report.AppendLine($"- Productions: {grammar.Productions.Count}");
+            report.AppendLine($"- LR states: {grammar.RuleSets.Count}");
+            report.AppendLine($"- Conflict occurrences: {conflicts.Count}");
+            report.AppendLine($"- Unresolved occurrences: {unresolved.Length}");
+            report.AppendLine($"- Unresolved shift/reduce: {unresolved.Count(conflict => conflict.Kind == ParserConflictKind.ShiftReduce)}");
+            report.AppendLine($"- Unresolved reduce/reduce: {unresolved.Count(conflict => conflict.Kind == ParserConflictKind.ReduceReduce)}");
+            report.AppendLine($"- Explicitly resolved shift/reduce: {conflicts.Count(conflict => conflict.Kind == ParserConflictKind.ShiftReduce && conflict.Resolution != null)}");
+            report.AppendLine($"- Distinct affected LR states: {conflicts.Select(conflict => conflict.StateNumber).Distinct().Count()}");
+            report.AppendLine($"- Distinct conflict families (kind, lookahead, resolution, production pair): {families.Length}");
+            report.AppendLine();
+
+            report.AppendLine("## Most frequent unresolved lookaheads and reductions");
+            report.AppendLine();
+            report.AppendLine("| Kind | Lookahead | Existing action | Incoming action | Occurrences | States |");
+            report.AppendLine("| --- | --- | --- | --- | ---: | --- |");
+            foreach (var group in unresolved
+                .GroupBy(conflict => new { conflict.Kind, conflict.TerminalName, conflict.ExistingAction, conflict.IncomingAction })
+                .OrderByDescending(group => group.Count())
+                .ThenBy(group => group.Key.TerminalName, StringComparer.Ordinal)
+                .Take(40))
+            {
+                var states = string.Join(", ", group.Select(conflict => conflict.StateNumber).Distinct().OrderBy(number => number).Take(8));
+                report.AppendLine($"| {group.Key.Kind} | {Cell(group.Key.TerminalName)} | {Cell(group.Key.ExistingAction)} | {Cell(group.Key.IncomingAction)} | {group.Count()} | {states} |");
+            }
+
+            report.AppendLine();
+            report.AppendLine("## Full conflict families");
+            report.AppendLine();
+            for (var index = 0; index < families.Length; index++)
+            {
+                var family = families[index];
+                var example = family.OrderBy(conflict => conflict.StateNumber).First();
+                report.AppendLine($"### {index + 1}. {family.Key.Kind} on `{family.Key.TerminalName}` ({family.Count()} occurrences, {family.Key.Resolution?.ToString() ?? "unresolved"})");
+                report.AppendLine();
+                report.AppendLine($"- Existing action: `{example.ExistingAction}`");
+                report.AppendLine($"- Incoming action: `{example.IncomingAction}`");
+                report.AppendLine($"- Existing production: `{family.Key.ExistingProduction ?? "(shift / not a reduction)"}`");
+                report.AppendLine($"- Incoming production: `{family.Key.IncomingProduction ?? "(unknown)"}`");
+                report.AppendLine($"- States: {string.Join(", ", family.Select(conflict => conflict.StateNumber).Distinct().OrderBy(number => number))}");
+                report.AppendLine();
+                var state = grammar.RuleSets.FirstOrDefault(ruleSet => ruleSet.SetNumber == example.StateNumber);
+                if (state != null && example.Kind == ParserConflictKind.ShiftReduce)
+                {
+                    var shiftItems = state.Rules
+                        .Where(rule => !rule.IsFinished && string.Equals(rule.NextTerm.Name, example.TerminalName, StringComparison.Ordinal))
+                        .OrderBy(rule => rule.ToString(), StringComparer.Ordinal)
+                        .Take(8)
+                        .ToArray();
+                    if (shiftItems.Length > 0)
+                    {
+                        report.AppendLine("Items that can shift the lookahead in the sample state:");
+                        foreach (var item in shiftItems)
+                        {
+                            report.AppendLine($"- `{item}`");
+                        }
+                        report.AppendLine();
+                    }
+                }
+            }
+
+            var outputPath = Environment.GetEnvironmentVariable("DSLKIT_SQL_CONFLICT_REPORT");
+            if (!string.IsNullOrWhiteSpace(outputPath))
+            {
+                var fullPath = Path.GetFullPath(outputPath);
+                Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+                File.WriteAllText(fullPath, report.ToString());
+            }
+
+            report.ToString().Should().Contain("# SQL grammar conflict diagnostic");
+        }
+
+        private static string Cell(string value) => value.Replace("|", "\\|").Replace("\r", " ").Replace("\n", " ");
+    }
+}
