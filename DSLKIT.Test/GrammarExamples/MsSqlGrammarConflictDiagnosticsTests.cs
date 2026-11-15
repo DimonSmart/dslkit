@@ -132,6 +132,30 @@ namespace DSLKIT.Test.GrammarExamples
             report.ToString().Should().Contain("# SQL grammar conflict diagnostic");
         }
 
+        [Fact]
+        public void BuildGrammar_ShouldNotHaveSqlcmdPrimaryExpressionIdentifierReduceReduceConflict()
+        {
+            var grammar = ModernMsSqlGrammarExample.BuildGrammar(MsSqlDialectFeatures.All);
+            var conflicts = grammar.ActionAndGotoTable.Conflicts;
+
+            var targetConflicts = conflicts.Where(conflict =>
+                conflict.Kind == ParserConflictKind.ReduceReduce &&
+                conflict.Resolution == null &&
+                (IsSqlcmdReductionPair(conflict.ExistingProduction, conflict.IncomingProduction) ||
+                 IsSqlcmdReductionPair(conflict.IncomingProduction, conflict.ExistingProduction)));
+
+            targetConflicts.Should().BeEmpty(
+                "SQLCMD placeholders should reach PrimaryExpression through QualifiedName only");
+
+            conflicts.Count(conflict =>
+                    conflict.Resolution == null && conflict.Kind == ParserConflictKind.ReduceReduce)
+                .Should().BeLessThan(823);
+        }
+
+        private static bool IsSqlcmdReductionPair(string? primary, string? identifier) =>
+            primary == "PrimaryExpression → SqlcmdVariable" &&
+            identifier == "StrictIdentifierTerm → SqlcmdVariable";
+
         private static string ReducedNonTerminal(string? production)
         {
             if (string.IsNullOrEmpty(production))
