@@ -163,9 +163,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createProcExternalName).Is(qualifiedName);
 
             gb.Prod(createProcBodyBlock).Is(statementList);
-            gb.Prod(createProcBodyBlock).Is(statementList, statementSeparatorList);
             gb.Prod(createProcBodyBlock).Is(statementSeparatorList, statementList);
-            gb.Prod(createProcBodyBlock).Is(statementSeparatorList, statementList, statementSeparatorList);
             gb.Prod(createProcBodyBlock).Is("BEGIN", statementList, "END");
             gb.Prod(createProcBodyBlock).Is("BEGIN", statementList, statementSeparatorList, "END");
             gb.Prod(createProcBodyBlock).Is("BEGIN", "ATOMIC", "WITH", "(", createProcNativeAtomicOptionList, ")", statementList, "END");
