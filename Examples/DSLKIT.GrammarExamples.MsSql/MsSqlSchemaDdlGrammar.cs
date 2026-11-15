@@ -160,7 +160,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createTableColumnOption).Is("FOR", "ALL_SPARSE_COLUMNS");
             gb.Prod(createTableColumnOption).Is("FILESTREAM");
             gb.Prod(createTableColumnOption).Is("DEFAULT", expression);
-            gb.Prod(createTableColumnOption).Is("DEFAULT", "(", expression, ")");
             gb.Prod(createTableColumnOption).Is("IDENTITY");
             gb.Prod(createTableColumnOption).Is("IDENTITY", "(", expression, ",", expression, ")");
             gb.Prod(createTableColumnOption).Is("COLLATE", strictIdentifierTerm);
@@ -202,7 +201,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createTableColumnConstraintBody).Is("REFERENCES", qualifiedName);
             gb.Prod(createTableColumnConstraintBody).Is("REFERENCES", qualifiedName, "(", schemaDdlIdentifierList, ")");
             gb.Prod(createTableColumnConstraintBody).Is("DEFAULT", expression);
-            gb.Prod(createTableColumnConstraintBody).Is("DEFAULT", "(", expression, ")");
 
             gb.Prod(createTableTableConstraintBody).Is("PRIMARY", "KEY", "(", createTableKeyColumnList, ")");
             gb.Prod(createTableTableConstraintBody).Is("PRIMARY", "KEY", "NONCLUSTERED", "HASH", "(", createTableKeyColumnList, ")");
