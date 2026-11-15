@@ -219,7 +219,9 @@ namespace DSLKIT.Parser
                                     terminal.Name,
                                     existingActionText,
                                     reduceAction.ToString(),
-                                    hasResolution ? resolution : null));
+                                    hasResolution ? resolution : null,
+                                    ExistingProduction: null,
+                                    IncomingProduction: mergedRow.Production.ProductionToString()));
 
                                 if (hasResolution && resolution == Resolve.Reduce)
                                 {
@@ -243,7 +245,9 @@ namespace DSLKIT.Parser
                                 mergedRow.FinalSet.SetNumber,
                                 terminal.Name,
                                 reduceReduceExistingActionText,
-                                reduceAction.ToString()));
+                                reduceAction.ToString(),
+                                ExistingProduction: (existingAction as ReduceAction)?.Production.ProductionToString(),
+                                IncomingProduction: mergedRow.Production.ProductionToString()));
 
                             continue;
                         }
