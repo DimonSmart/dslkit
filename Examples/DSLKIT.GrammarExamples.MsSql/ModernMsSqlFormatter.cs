@@ -86,9 +86,47 @@ namespace DSLKIT.GrammarExamples.MsSql
                         : TrimTrailingLineBreaks(sourceText));
             }
 
-            var formattingVisitor = new SqlFormattingVisitor(options);
-            formattingVisitor.Visit(parseResult.ParseTree);
-            return SqlFormattingResult.Success(formattingVisitor.GetFormattedSql());
+            var formattedSql = FormatParseTree(parseResult.ParseTree, options);
+
+            // Removing a separator can make a previously valid batch invalid or change
+            // how the grammar groups statements. In that case preserve its separators.
+            if (options.Statement.TerminateWithSemicolon == SqlStatementTerminationMode.Never)
+            {
+                var reparsed = ModernMsSqlGrammarExample.ParseBatch(formattedSql, options.Dialect);
+                if (!reparsed.IsSuccess || reparsed.ParseTree == null ||
+                    CountStatements(reparsed.ParseTree) != CountStatements(parseResult.ParseTree))
+                {
+                    var preservingOptions = options with
+                    {
+                        Statement = options.Statement with
+                        {
+                            TerminateWithSemicolon = SqlStatementTerminationMode.ExistingOnly
+                        }
+                    };
+                    formattedSql = FormatParseTree(parseResult.ParseTree, preservingOptions);
+                }
+            }
+
+            return SqlFormattingResult.Success(formattedSql);
+        }
+
+        private static string FormatParseTree(ParseTreeNode parseTree, SqlFormattingOptions options)
+        {
+            var formattingVisitor = new SqlFormattingVisitor(options, parseTree);
+            formattingVisitor.Visit(parseTree);
+            return formattingVisitor.GetFormattedSql();
+        }
+
+        private static int CountStatements(ParseTreeNode node)
+        {
+            var count = node is NonTerminalNode nonTerminal &&
+                nonTerminal.NonTerminal.Name is "Statement" or "ImplicitStatementNoLeadingWith" ? 1 : 0;
+            foreach (var child in node.Children)
+            {
+                count += CountStatements(child);
+            }
+
+            return count;
         }
 
         private static bool HasTerminalNodes(ParseTreeNode node)
