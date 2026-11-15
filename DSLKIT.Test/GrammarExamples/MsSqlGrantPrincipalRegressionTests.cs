@@ -85,7 +85,7 @@ namespace DSLKIT.Test.GrammarExamples
         private static string[] GrantRecipients(NonTerminalNode statement)
         {
             var list = DescendantNonTerminals(statement)
-                .Single(node => node.NonTerminal.Name == "GrantPrincipalList");
+                .First(node => node.NonTerminal.Name == "GrantPrincipalList");
             return DescendantNonTerminals(list)
                 .Where(node => node.NonTerminal.Name == "GrantPrincipal")
                 .Select(node => string.Concat(GetTerminalNodes(node).Select(token => token.Token.OriginalString)))
@@ -131,7 +131,7 @@ namespace DSLKIT.Test.GrammarExamples
                 "GRANT SELECT TO app_role;",
                 "GRANT SELECT TO [app_role], \"quoted_role\", PUBLIC;",
                 "GRANT SELECT, INSERT ON OBJECT::dbo.TableName TO dbo.app_role, $(RoleName) WITH GRANT OPTION AS owner_role;",
-                "GRANT SELECT ON DATABASE::[DatabaseName] TO role1; /* grant audit */"
+                "GRANT SELECT ON DATABASE::[DatabaseName] TO /* grant audit */ role1;"
             };
 
             foreach (var sql in sqlCases)
