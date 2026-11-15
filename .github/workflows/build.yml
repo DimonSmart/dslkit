@@ -31,7 +31,12 @@ jobs:
       run: dotnet build DSLKIT.sln --no-restore --configuration Release
 
     - name: Test
+      env:
+        DSLKIT_SQL_CONFLICT_REPORT: ${{ github.workspace }}/coverage/sql-grammar-conflicts.md
       run: dotnet test DSLKIT.Test/DSLKIT.Test.csproj --no-build --configuration Release --logger "trx;LogFileName=tests.trx" --collect:"XPlat Code Coverage" --results-directory ./coverage
+
+    - name: Show SQL grammar conflict summary
+      run: head -n 45 coverage/sql-grammar-conflicts.md
 
     - name: Verify test execution and coverage
       run: |
