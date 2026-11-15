@@ -153,8 +153,8 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         private static bool IsSqlcmdReductionPair(string primary, string identifier) =>
-            primary == "PrimaryExpression → SqlcmdVariable" &&
-            identifier == "StrictIdentifierTerm → SqlcmdVariable";
+            primary?.Trim() == "PrimaryExpression → SqlcmdVariable" &&
+            identifier?.Trim() == "StrictIdentifierTerm → SqlcmdVariable";
 
         private static string ReducedNonTerminal(string? production)
         {
