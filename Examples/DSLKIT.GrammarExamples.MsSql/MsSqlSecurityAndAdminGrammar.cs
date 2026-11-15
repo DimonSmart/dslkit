@@ -105,7 +105,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(grantSecurable).Is(strictIdentifierTerm);
 
             gb.Rule(grantPrincipalList).SeparatedBy(",", grantPrincipal);
-            gb.Prod(grantPrincipal).Is(strictIdentifierTerm);
             gb.Prod(grantPrincipal).Is(strictQualifiedName);
             gb.Prod(grantPrincipal).Is("PUBLIC");
 
