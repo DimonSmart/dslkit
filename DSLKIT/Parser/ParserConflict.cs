@@ -14,5 +14,7 @@ namespace DSLKIT.Parser
         string TerminalName,
         string ExistingAction,
         string IncomingAction,
-        Resolve? Resolution = null);
+        Resolve? Resolution = null,
+        string? ExistingProduction = null,
+        string? IncomingProduction = null);
 }
