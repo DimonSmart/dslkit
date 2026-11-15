@@ -315,3 +315,128 @@ resolution overrides are justified by the current evidence.
 See [the follow-up specification](sql-procedure-body-batch-boundary-followup.md)
 for the separate, compatibility-aware design decision. It is **not** part of
 stage 3.
+
+## Stage 4: IndexStorageTarget / ContextualIdentifierTerm (2026-11-15)
+
+**Status: fixed with one production deletion; no unrelated conflict changes.**
+
+### Cause, grammar paths, and scope
+
+The original `MsSqlSchemaDdlGrammar.BuildTableAndIndexGrammar` contained:
+
+```csharp
+gb.Prod(indexStorageTarget).Is(qualifiedName);
+gb.Prod(indexStorageTarget).Is("DEFAULT");
+gb.Prod(indexStorageTarget).Is(qualifiedName, "(", schemaDdlIdentifierTerm, ")");
+```
+
+The expression and script grammar also provides
+`QualifiedName → ContextualIdentifierTerm` and
+`ContextualIdentifierTerm → DEFAULT`. Therefore unquoted `DEFAULT` in
+an index/table storage-target position had two paths to
+`IndexStorageTarget`: the direct keyword production and the
+`QualifiedName` path. The former competed in the LR table against
+`ContextualIdentifierTerm → DEFAULT`.
+
+The baseline full diagnostic report confirmed **51 unresolved
+reduce/reduce occurrences in one LR state**, one on each of these
+lookaheads (all for the same exact pair of productions):
+
+`) `, `,`, `;`, `ALTER`, `AS`, `BEGIN`, `BREAK`, `BULK`,
+`BracketIdentifier`, `CHECKPOINT`, `CLOSE`, `COMMIT`,
+`CONTINUE`, `CREATE`, `DBCC`, `DEALLOCATE`, `DECLARE`,
+`DELETE`, `DROP`, `ELSE`, `END`, `EXEC`, `EXECUTE`,
+`Eof`, `FETCH`, `FILESTREAM_ON`, `GOTO`, `GRANT`, `IF`,
+`INSERT`, `Id`, `MERGE`, `OPEN`, `PRINT`,
+`QuotedIdentifier`, `RAISERROR`, `RETURN`, `REVERT`,
+`ROLLBACK`, `SAVE`, `SELECT`, `SET`, `SqlcmdVariable`,
+`TEXTIMAGE_ON`, `THROW`, `TRUNCATE`, `TempIdentifier`,
+`UPDATE`, `USE`, `WAITFOR`, `WHILE`.
+
+`IndexStorageTarget` is used by `CreateIndexStorageClause`,
+`CreateTableOnClause`, `CreateTableTextImageClause`, and
+`CreateTableTableConstraintBody`. `IndexFileStreamTarget` is
+independent; it was not modified. The `DEFAULT` here denotes a
+storage target, not a column DEFAULT expression, whose rules were
+left unchanged.
+
+**Fix:** remove only `gb.Prod(indexStorageTarget).Is("DEFAULT");`.
+Retain the qualified-name and partition-scheme productions unchanged.
+The surviving path still accepts the same unquoted terminal and
+allows bracketed/quoted identifiers and named partition schemes.
+The direct parse-tree reduction can no longer appear; for unquoted
+`DEFAULT`, the surviving path adds the `QualifiedName` and
+`ContextualIdentifierTerm` nodes below `IndexStorageTarget`.
+The parse-tree assertions intentionally check the stable containing
+storage clause, token text, and statement boundaries rather than a
+particular internal reduction chain.
+
+### Before/after diagnostics and regression runs
+
+Regression tests were added before changing the grammar. The
+[baseline CI run](https://github.com/DimonSmart/dslkit/actions/runs/43706937606)
+passed **667/667 tests** (up from 627), with 939 total conflicts and
+all 51 target occurrences still present. The
+[changed CI run](https://github.com/DimonSmart/dslkit/actions/runs/43707194231)
+passed **667/667 tests**, with the target pair removed.
+
+| Metric | Baseline with tests | After deletion | Delta |
+| --- | ---: | ---: | ---: |
+| Productions | 2,193 | 2,192 | -1 |
+| LR states | 3,947 | 3,946 | -1 |
+| Conflict occurrences | 939 | 888 | -51 |
+| Unresolved shift/reduce | 382 | 382 | 0 |
+| Unresolved reduce/reduce | 556 | 505 | -51 |
+| Explicitly resolved | 1 | 1 | 0 |
+| LR states containing conflicts | 78 | 77 | -1 |
+| Target `IndexStorageTarget` / `ContextualIdentifierTerm` | 51 | 0 | -51 |
+
+The complete `sql-grammar-conflicts.md` artifacts were retrieved
+from both runs and compared as **multisets**, keyed by conflict kind,
+lookahead, exact existing/incoming production, resolution, and
+occurrence multiplicity (not LR state number). Exactly **51 keys /
+51 occurrences were removed**, all of the target pair; **zero keys
+or occurrences appeared**; all **887 remaining keys** retained
+their previous multiplicities. The diagnostic test also computes
+the SHA-256 fingerprint of the non-target conflict multiset, and
+asserts the expected result:
+
+`39FF4FA4ED0977FF611ED5DECDB21C6571607EB9F40908545F163B03912484A1`
+
+The same fingerprint appears in both CI artifacts and job logs.
+
+### Compatibility, parse trees, and formatter
+
+The new tests cover `CREATE INDEX` and `CREATE TABLE` storage clauses,
+`ON [PRIMARY]`, `ON [default]`, `ON "default"`, `ON DEFAULT`,
+ordinary/qualified/bracketed/quoted filegroup names, partition
+schemes with a column, table-level `PRIMARY KEY` and `UNIQUE`
+placement, `TEXTIMAGE_ON`, `FILESTREAM_ON`, malformed and
+misordered clauses, and multiple DDL statements. Tree checks confirm
+that each target remains under its expected `IndexStorageTarget`
+and containing DDL section, and that targets do not migrate to
+adjacent statements.
+
+For the SQL formatter, `Parse → Format → Parse → Format` passes for
+storage clauses under `Always`, `Never`, and `ExistingOnly`
+statement termination modes. Significant tokens and quoted/bracketed
+identifiers are preserved, and a second formatting pass is stable
+for individual statements. No formatter code changed.
+
+**Compatibility note:** although SQL Server requires the filegroup
+name `default` to be delimited in this placement context, DSLKit
+accepted unquoted `ON DEFAULT` before this stage and continues to
+accept it. Tightening that syntax is a separate compatibility
+decision, not part of this fix.
+
+**Previously existing limitations, not introduced by stage 4:**
+unquoted `Data` is not accepted as the selected example's table
+column identifier (tests use `Payload` instead);
+`CREATE TABLE ... ON ... FILESTREAM_ON ...` is not accepted as a
+combined tail in the current grammar, so FILESTREAM coverage uses
+supported forms; and two consecutive DDL statements formatted in
+`Never` mode are not presently idempotent because the second pass
+may collapse their line separation. The formatter regression tests
+therefore exercise individual DDL statements in all three modes,
+with a separate multi-statement parser regression. These existing
+issues were deliberately not fixed in this grammar-only stage.
