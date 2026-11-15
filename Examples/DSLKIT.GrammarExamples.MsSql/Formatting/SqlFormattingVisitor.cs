@@ -98,6 +98,8 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         private readonly SqlFormattingOptions _options;
         private readonly IndentedSqlTextWriter _writer;
         private readonly Stack<string> _nonTerminalNameStack = new();
+        private readonly HashSet<TerminalNode> _requiredSemicolons = [];
+        private bool _pendingStatementTerminator;
 
         private string? _previousToken;
         private string? _tokenBeforePrevious;
@@ -105,23 +107,23 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         private ClauseKind _currentClause = ClauseKind.None;
         private ClauseKind? _lastMajorClause;
 
-        public SqlFormattingVisitor(SqlFormattingOptions options)
+        public SqlFormattingVisitor(SqlFormattingOptions options, ParseTreeNode parseTree)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
+            ArgumentNullException.ThrowIfNull(parseTree);
             var indentUnit = new string(' ', Math.Max(1, _options.Layout.IndentSize));
             _writer = new IndentedSqlTextWriter(new StringBuilder(), indentUnit);
+
+            if (_options.Statement.TerminateWithSemicolon == SqlStatementTerminationMode.Never)
+            {
+                IdentifyRequiredSemicolons(parseTree);
+            }
         }
 
         public string GetFormattedSql()
         {
+            CompletePendingStatementTerminator();
             var formattedSql = _writer.ToString();
-            if (_options.Statement.TerminateWithSemicolon == SqlStatementTerminationMode.Always &&
-                !string.IsNullOrWhiteSpace(formattedSql) &&
-                !formattedSql.TrimEnd().EndsWith(";", StringComparison.Ordinal))
-            {
-                var semicolonPrefix = _options.Spaces.BeforeSemicolon ? " ;" : ";";
-                formattedSql = $"{formattedSql.TrimEnd()}{semicolonPrefix}";
-            }
 
             if (_options.Eof.Newline && !string.IsNullOrEmpty(formattedSql))
             {
@@ -134,6 +136,12 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
         protected override void VisitNonTerminal(NonTerminalNode node)
         {
             var nonTerminalName = node.NonTerminal.Name;
+            var isStatement = nonTerminalName is "Statement" or "ImplicitStatementNoLeadingWith";
+            if (isStatement)
+            {
+                CompletePendingStatementTerminator();
+            }
+
             _nonTerminalNameStack.Push(nonTerminalName);
             try
             {
@@ -187,6 +195,12 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             finally
             {
                 _nonTerminalNameStack.Pop();
+                if (isStatement &&
+                    _options.Statement.TerminateWithSemicolon == SqlStatementTerminationMode.Always &&
+                    !EndsWithSemicolon(node))
+                {
+                    _pendingStatementTerminator = true;
+                }
             }
         }
 
@@ -202,6 +216,19 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             var tokenForRules = isKeyword
                 ? rawToken.ToUpperInvariant()
                 : rawToken;
+
+            if (_pendingStatementTerminator)
+            {
+                if (string.Equals(tokenForRules, ";", StringComparison.Ordinal))
+                {
+                    _pendingStatementTerminator = false;
+                }
+                else
+                {
+                    CompletePendingStatementTerminator();
+                }
+            }
+
             WriteTriviaComments(node.Token.Trivia.LeadingTrivia);
 
             if (string.Equals(tokenForRules, "GO", StringComparison.Ordinal))
@@ -218,7 +245,10 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
             }
 
             if (string.Equals(tokenForRules, ";", StringComparison.Ordinal) &&
-                _options.Statement.TerminateWithSemicolon == SqlStatementTerminationMode.Never)
+                _options.Statement.TerminateWithSemicolon == SqlStatementTerminationMode.Never &&
+                !_requiredSemicolons.Contains(node) &&
+                (_nonTerminalNameStack.Contains("StatementSeparator") ||
+                 _nonTerminalNameStack.FirstOrDefault() == "ProcStatementList"))
             {
                 HandleStatementBoundary();
                 return;
@@ -3101,6 +3131,71 @@ namespace DSLKIT.GrammarExamples.MsSql.Formatting
                 ClauseKind.Qualify or
                 ClauseKind.OrderBy or
                 ClauseKind.Option;
+        }
+
+        private void CompletePendingStatementTerminator()
+        {
+            if (!_pendingStatementTerminator)
+            {
+                return;
+            }
+
+            _pendingStatementTerminator = false;
+            if (_options.Spaces.BeforeSemicolon)
+            {
+                _writer.WriteSpace();
+            }
+
+            _writer.WriteToken(";");
+            HandleStatementBoundary();
+        }
+
+        private static bool EndsWithSemicolon(ParseTreeNode node)
+        {
+            while (node is not TerminalNode && node.Children.Count > 0)
+            {
+                node = node.Children[^1];
+            }
+
+            return node is TerminalNode terminal &&
+                string.Equals(terminal.Token.OriginalString, ";", StringComparison.Ordinal);
+        }
+
+        private void IdentifyRequiredSemicolons(ParseTreeNode parseTree)
+        {
+            var terminals = CollectTerminalNodes(parseTree);
+            var hasMergeSinceLastSeparator = false;
+
+            for (var index = 0; index < terminals.Count; index++)
+            {
+                var terminal = terminals[index];
+                var tokenText = terminal.Token.OriginalString;
+                if (string.Equals(tokenText, ";", StringComparison.Ordinal))
+                {
+                    var nextIndex = index + 1;
+                    while (nextIndex < terminals.Count &&
+                           string.Equals(terminals[nextIndex].Token.OriginalString, ";", StringComparison.Ordinal))
+                    {
+                        nextIndex++;
+                    }
+
+                    var beforeRequiredTerminator = nextIndex < terminals.Count &&
+                        IsKeywordToken(terminals[nextIndex].Token) &&
+                        (string.Equals(terminals[nextIndex].Token.OriginalString, "WITH", StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(terminals[nextIndex].Token.OriginalString, "THROW", StringComparison.OrdinalIgnoreCase));
+                    if (hasMergeSinceLastSeparator || beforeRequiredTerminator)
+                    {
+                        _requiredSemicolons.Add(terminal);
+                    }
+
+                    hasMergeSinceLastSeparator = false;
+                }
+                else if (IsKeywordToken(terminal.Token) &&
+                         string.Equals(tokenText, "MERGE", StringComparison.OrdinalIgnoreCase))
+                {
+                    hasMergeSinceLastSeparator = true;
+                }
+            }
         }
 
         private void HandleStatementBoundary()
