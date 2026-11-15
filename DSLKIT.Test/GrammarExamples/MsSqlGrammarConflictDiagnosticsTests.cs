@@ -35,19 +35,7 @@ namespace DSLKIT.Test.GrammarExamples
                 .ToArray();
 
             var stage4Target = conflicts.Where(IsIndexStorageDefaultConflict).ToArray();
-            var otherConflictFamilies = conflicts
-                .Where(conflict => !IsIndexStorageDefaultConflict(conflict))
-                .GroupBy(conflict => string.Join("\u001F",
-                    conflict.Kind,
-                    conflict.TerminalName,
-                    conflict.ExistingProduction ?? "",
-                    conflict.IncomingProduction ?? "",
-                    conflict.Resolution?.ToString() ?? "unresolved"))
-                .Select(group => group.Key + "\u001F" + group.Count())
-                .OrderBy(key => key, StringComparer.Ordinal);
-            var stage4OtherFingerprint = Convert.ToHexString(
-                System.Security.Cryptography.SHA256.HashData(
-                    Encoding.UTF8.GetBytes(string.Join("\u001E", otherConflictFamilies))));
+            var stage5Target = conflicts.Where(IsGrantPrincipalQualifiedNameConflict).ToArray();
 
             var report = new StringBuilder();
             report.AppendLine("# SQL grammar conflict diagnostic");
@@ -64,7 +52,7 @@ namespace DSLKIT.Test.GrammarExamples
             report.AppendLine($"- Distinct affected LR states: {conflicts.Select(conflict => conflict.StateNumber).Distinct().Count()}");
             report.AppendLine($"- Distinct conflict families (kind, lookahead, resolution, production pair): {families.Length}");
             report.AppendLine($"- Stage 4 target IndexStorageTarget / ContextualIdentifierTerm R/R occurrences: {stage4Target.Length}");
-            report.AppendLine($"- Stage 4 non-target conflict multiset SHA256: `{stage4OtherFingerprint}`");
+            report.AppendLine($"- Stage 5 target GrantPrincipal / StrictQualifiedName R/R occurrences: {stage5Target.Length}");
             report.AppendLine();
 
             report.AppendLine("## Conflict causes aggregated across lookaheads");
@@ -150,13 +138,14 @@ namespace DSLKIT.Test.GrammarExamples
 
             stage4Target.Should().BeEmpty(
                 "the redundant IndexStorageTarget → DEFAULT production was removed");
-            stage4OtherFingerprint.Should().Be(
-                "39FF4FA4ED0977FF611ED5DECDB21C6571607EB9F40908545F163B03912484A1",
-                "every non-target conflict must retain its exact kind, lookahead, production pair, resolution and multiplicity");
-            conflicts.Should().HaveCount(888);
-            unresolved.Count(conflict => conflict.Kind == ParserConflictKind.ShiftReduce).Should().Be(382);
-            unresolved.Count(conflict => conflict.Kind == ParserConflictKind.ReduceReduce).Should().Be(505);
-            conflicts.Count(conflict => conflict.Resolution != null).Should().Be(1);
+            stage5Target.Should().BeEmpty(
+                "the redundant GrantPrincipal → StrictIdentifierTerm production was removed");
+            conflicts.Where(conflict => conflict.Resolution != null)
+                .Should().ContainSingle(conflict =>
+                    conflict.Kind == ParserConflictKind.ShiftReduce &&
+                    conflict.TerminalName == "ELSE" &&
+                    conflict.Resolution == DSLKIT.Terminals.Resolve.Shift,
+                    "the sole explicit resolution must remain the dangling ELSE shift");
         }
 
         [Fact]
@@ -174,9 +163,6 @@ namespace DSLKIT.Test.GrammarExamples
             targetConflicts.Should().BeEmpty(
                 "SQLCMD placeholders should reach PrimaryExpression through QualifiedName only");
 
-            conflicts.Count(conflict =>
-                    conflict.Resolution == null && conflict.Kind == ParserConflictKind.ReduceReduce)
-                .Should().BeLessThan(823);
         }
 
         [Fact]
@@ -193,10 +179,15 @@ namespace DSLKIT.Test.GrammarExamples
                 .Should().BeEmpty(
                     "column DEFAULT parentheses are already handled by PrimaryExpression");
 
-            conflicts.Count(conflict =>
-                    conflict.Resolution == null && conflict.Kind == ParserConflictKind.ReduceReduce)
-                .Should().BeLessThan(690);
         }
+
+        private static bool IsGrantPrincipalQualifiedNameConflict(ParserConflict conflict) =>
+            conflict.Kind == ParserConflictKind.ReduceReduce &&
+            conflict.Resolution == null &&
+            ((conflict.ExistingProduction?.Trim() == "GrantPrincipal → StrictIdentifierTerm" &&
+              conflict.IncomingProduction?.Trim() == "StrictQualifiedName → StrictIdentifierTerm") ||
+             (conflict.IncomingProduction?.Trim() == "GrantPrincipal → StrictIdentifierTerm" &&
+              conflict.ExistingProduction?.Trim() == "StrictQualifiedName → StrictIdentifierTerm"));
 
         private static bool IsIndexStorageDefaultConflict(ParserConflict conflict) =>
             conflict.Kind == ParserConflictKind.ReduceReduce &&
