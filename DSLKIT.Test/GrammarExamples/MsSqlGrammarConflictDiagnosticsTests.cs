@@ -38,6 +38,8 @@ namespace DSLKIT.Test.GrammarExamples
             var stage5Target = conflicts.Where(IsGrantPrincipalQualifiedNameConflict).ToArray();
             var stage6Target = conflicts.Where(IsDmlIdentifierObjectIdentifierConflict).ToArray();
             var stage7Target = conflicts.Where(IsExecuteDefaultContextualIdentifierConflict).ToArray();
+            var stage8IdentifierTarget = conflicts.Where(IsNamedOptionContextualIdentifierConflict).ToArray();
+            var stage8QualifiedNameTarget = conflicts.Where(IsNamedOptionQualifiedNameConflict).ToArray();
 
             var report = new StringBuilder();
             report.AppendLine("# SQL grammar conflict diagnostic");
@@ -57,6 +59,8 @@ namespace DSLKIT.Test.GrammarExamples
             report.AppendLine($"- Stage 5 target GrantPrincipal / StrictQualifiedName R/R occurrences: {stage5Target.Length}");
             report.AppendLine($"- Stage 6 target DmlIdentifierTerm / DmlObjectIdentifierTerm R/R occurrences: {stage6Target.Length}");
             report.AppendLine($"- Stage 7 target ExecuteArgValue / ContextualIdentifierTerm R/R occurrences: {stage7Target.Length}");
+            report.AppendLine($"- Stage 8 target NamedOptionValue / QualifiedName R/R occurrences: {stage8IdentifierTarget.Length}");
+            report.AppendLine($"- Stage 8 target NamedOptionValue / PrimaryExpression R/R occurrences: {stage8QualifiedNameTarget.Length}");
             report.AppendLine();
 
             report.AppendLine("## Conflict causes aggregated across lookaheads");
@@ -148,6 +152,10 @@ namespace DSLKIT.Test.GrammarExamples
                 "DELETE target identifiers must not have overlapping StrictIdentifierTerm reductions");
             stage7Target.Should().BeEmpty(
                 "EXEC DEFAULT arguments are already accepted through the Expression path");
+            stage8IdentifierTarget.Should().BeEmpty(
+                "named option identifiers are already accepted through Expression and QualifiedName");
+            stage8QualifiedNameTarget.Should().BeEmpty(
+                "named option qualified names are already accepted through Expression and PrimaryExpression");
             conflicts.Where(conflict => conflict.Resolution != null)
                 .Should().ContainSingle(conflict =>
                     conflict.Kind == ParserConflictKind.ShiftReduce &&
@@ -188,6 +196,22 @@ namespace DSLKIT.Test.GrammarExamples
                     "column DEFAULT parentheses are already handled by PrimaryExpression");
 
         }
+
+        private static bool IsNamedOptionContextualIdentifierConflict(ParserConflict conflict) =>
+            IsUnresolvedReduceReducePair(conflict,
+                "NamedOptionValue → ContextualIdentifierTerm",
+                "QualifiedName → ContextualIdentifierTerm");
+
+        private static bool IsNamedOptionQualifiedNameConflict(ParserConflict conflict) =>
+            IsUnresolvedReduceReducePair(conflict,
+                "NamedOptionValue → QualifiedName",
+                "PrimaryExpression → QualifiedName");
+
+        private static bool IsUnresolvedReduceReducePair(ParserConflict conflict, string first, string second) =>
+            conflict.Kind == ParserConflictKind.ReduceReduce &&
+            conflict.Resolution == null &&
+            ((conflict.ExistingProduction?.Trim() == first && conflict.IncomingProduction?.Trim() == second) ||
+             (conflict.ExistingProduction?.Trim() == second && conflict.IncomingProduction?.Trim() == first));
 
         private static bool IsExecuteDefaultContextualIdentifierConflict(ParserConflict conflict) =>
             conflict.Kind == ParserConflictKind.ReduceReduce &&
