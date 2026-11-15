@@ -40,6 +40,8 @@ namespace DSLKIT.Test.GrammarExamples
             var stage7Target = conflicts.Where(IsExecuteDefaultContextualIdentifierConflict).ToArray();
             var stage8IdentifierTarget = conflicts.Where(IsNamedOptionContextualIdentifierConflict).ToArray();
             var stage8QualifiedNameTarget = conflicts.Where(IsNamedOptionQualifiedNameConflict).ToArray();
+            var stage9Target = conflicts.Where(conflict => IsUnresolvedReduceReducePair(
+                conflict, "AlterIndexPartitionSelector → ALL", "ContextualIdentifierTerm → ALL")).ToArray();
 
             var report = new StringBuilder();
             report.AppendLine("# SQL grammar conflict diagnostic");
@@ -61,6 +63,7 @@ namespace DSLKIT.Test.GrammarExamples
             report.AppendLine($"- Stage 7 target ExecuteArgValue / ContextualIdentifierTerm R/R occurrences: {stage7Target.Length}");
             report.AppendLine($"- Stage 8 target NamedOptionValue / QualifiedName R/R occurrences: {stage8IdentifierTarget.Length}");
             report.AppendLine($"- Stage 8 target NamedOptionValue / PrimaryExpression R/R occurrences: {stage8QualifiedNameTarget.Length}");
+            report.AppendLine($"- Stage 9 target AlterIndexPartitionSelector / ContextualIdentifierTerm R/R occurrences: {stage9Target.Length}");
             report.AppendLine();
 
             report.AppendLine("## Conflict causes aggregated across lookaheads");
@@ -156,6 +159,8 @@ namespace DSLKIT.Test.GrammarExamples
                 "named option identifiers are already accepted through Expression and QualifiedName");
             stage8QualifiedNameTarget.Should().BeEmpty(
                 "named option qualified names are already accepted through Expression and PrimaryExpression");
+            stage9Target.Should().BeEmpty(
+                "ALTER INDEX PARTITION = ALL is already accepted through the Expression path");
             conflicts.Where(conflict => conflict.Resolution != null)
                 .Should().ContainSingle(conflict =>
                     conflict.Kind == ParserConflictKind.ShiftReduce &&
