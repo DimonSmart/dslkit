@@ -131,10 +131,16 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(deleteTarget).Is(deleteTargetSimple);
             gb.Prod(deleteTarget).Is(deleteTargetRowset);
 
-            gb.Prod(deleteTargetSimple).Is(dmlIdentifierTerm);
+            // Ordinary identifiers and POLICY use DmlQualifiedName, including one-part names.
+            // Keep NAME/SOURCE/TARGET as distinct DELETE aliases without a second StrictIdentifierTerm path.
+            gb.Prod(deleteTargetSimple).Is("NAME");
+            gb.Prod(deleteTargetSimple).Is("SOURCE");
+            gb.Prod(deleteTargetSimple).Is("TARGET");
             gb.Prod(deleteTargetSimple).Is(dmlQualifiedName);
             gb.Prod(deleteTargetSimple).Is(variableReference);
-            gb.Prod(deleteTargetSimple).Is(dmlIdentifierTerm, "WITH", "(", tableHintLimitedList, ")");
+            gb.Prod(deleteTargetSimple).Is("NAME", "WITH", "(", tableHintLimitedList, ")");
+            gb.Prod(deleteTargetSimple).Is("SOURCE", "WITH", "(", tableHintLimitedList, ")");
+            gb.Prod(deleteTargetSimple).Is("TARGET", "WITH", "(", tableHintLimitedList, ")");
             gb.Prod(deleteTargetSimple).Is(dmlQualifiedName, "WITH", "(", tableHintLimitedList, ")");
 
             gb.Prod(deleteTargetRowset).Is(rowsetFunctionLimited);
