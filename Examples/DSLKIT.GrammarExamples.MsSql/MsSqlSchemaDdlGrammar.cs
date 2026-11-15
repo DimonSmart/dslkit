@@ -390,8 +390,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule(indexOnOffValue).Keywords("ON", "OFF");
 
             gb.Prod(namedOptionValue).Is(expression);
-            gb.Prod(namedOptionValue).Is(contextualIdentifierTerm);
-            gb.Prod(namedOptionValue).Is(qualifiedName);
             gb.Rule(namedOptionValue).Keywords("ON", "OFF");
 
             gb.Prod(maskingOptionList).Is("FUNCTION", "=", expression);
