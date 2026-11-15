@@ -346,7 +346,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(createIndexFileStreamClause).Is("FILESTREAM_ON", indexFileStreamTarget);
 
             gb.Prod(indexStorageTarget).Is(qualifiedName);
-            gb.Prod(indexStorageTarget).Is("DEFAULT");
             gb.Prod(indexStorageTarget).Is(qualifiedName, "(", schemaDdlIdentifierTerm, ")");
             gb.Prod(indexFileStreamTarget).Is(qualifiedName);
             gb.Prod(indexFileStreamTarget).Is("NULL");
