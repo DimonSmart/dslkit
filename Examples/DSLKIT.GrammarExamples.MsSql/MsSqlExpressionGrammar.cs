@@ -149,7 +149,6 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod(primaryExpression).Is(literal);
             gb.Prod(primaryExpression).Is(unicodeStringLiteral);
-            gb.Prod(primaryExpression).Is(sqlcmdVariable);
             gb.Prod(primaryExpression).Is(variableReference);
             if (hasGraphExtensions)
             {
