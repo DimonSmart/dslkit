@@ -40,7 +40,7 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Theory]
-        [InlineData("CREATE INDEX IX_T ON dbo.T (Id) ON [PRIMARY];", "PRIMARY", "CreateIndexStorageClause")]
+        [InlineData("CREATE INDEX IX_T ON dbo.T (Id) ON [PRIMARY];", "[PRIMARY]", "CreateIndexStorageClause")]
         [InlineData("CREATE INDEX IX_T ON dbo.T (Id) ON [default];", "[default]", "CreateIndexStorageClause")]
         [InlineData("CREATE INDEX IX_T ON dbo.T (Id) ON \"default\";", "\"default\"", "CreateIndexStorageClause")]
         [InlineData("CREATE INDEX IX_T ON dbo.T (Id) ON DEFAULT;", "DEFAULT", "CreateIndexStorageClause")]
