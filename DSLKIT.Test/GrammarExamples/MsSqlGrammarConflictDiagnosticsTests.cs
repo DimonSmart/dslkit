@@ -37,6 +37,7 @@ namespace DSLKIT.Test.GrammarExamples
             var stage4Target = conflicts.Where(IsIndexStorageDefaultConflict).ToArray();
             var stage5Target = conflicts.Where(IsGrantPrincipalQualifiedNameConflict).ToArray();
             var stage6Target = conflicts.Where(IsDmlIdentifierObjectIdentifierConflict).ToArray();
+            var stage7Target = conflicts.Where(IsExecuteDefaultContextualIdentifierConflict).ToArray();
 
             var report = new StringBuilder();
             report.AppendLine("# SQL grammar conflict diagnostic");
@@ -55,6 +56,7 @@ namespace DSLKIT.Test.GrammarExamples
             report.AppendLine($"- Stage 4 target IndexStorageTarget / ContextualIdentifierTerm R/R occurrences: {stage4Target.Length}");
             report.AppendLine($"- Stage 5 target GrantPrincipal / StrictQualifiedName R/R occurrences: {stage5Target.Length}");
             report.AppendLine($"- Stage 6 target DmlIdentifierTerm / DmlObjectIdentifierTerm R/R occurrences: {stage6Target.Length}");
+            report.AppendLine($"- Stage 7 target ExecuteArgValue / ContextualIdentifierTerm R/R occurrences: {stage7Target.Length}");
             report.AppendLine();
 
             report.AppendLine("## Conflict causes aggregated across lookaheads");
@@ -144,6 +146,8 @@ namespace DSLKIT.Test.GrammarExamples
                 "the redundant GrantPrincipal → StrictIdentifierTerm production was removed");
             stage6Target.Should().BeEmpty(
                 "DELETE target identifiers must not have overlapping StrictIdentifierTerm reductions");
+            stage7Target.Should().BeEmpty(
+                "EXEC DEFAULT arguments are already accepted through the Expression path");
             conflicts.Where(conflict => conflict.Resolution != null)
                 .Should().ContainSingle(conflict =>
                     conflict.Kind == ParserConflictKind.ShiftReduce &&
@@ -184,6 +188,14 @@ namespace DSLKIT.Test.GrammarExamples
                     "column DEFAULT parentheses are already handled by PrimaryExpression");
 
         }
+
+        private static bool IsExecuteDefaultContextualIdentifierConflict(ParserConflict conflict) =>
+            conflict.Kind == ParserConflictKind.ReduceReduce &&
+            conflict.Resolution == null &&
+            ((conflict.ExistingProduction?.Trim() == "ExecuteArgValue → DEFAULT" &&
+              conflict.IncomingProduction?.Trim() == "ContextualIdentifierTerm → DEFAULT") ||
+             (conflict.IncomingProduction?.Trim() == "ExecuteArgValue → DEFAULT" &&
+              conflict.ExistingProduction?.Trim() == "ContextualIdentifierTerm → DEFAULT"));
 
         private static bool IsDmlIdentifierObjectIdentifierConflict(ParserConflict conflict) =>
             conflict.Kind == ParserConflictKind.ReduceReduce &&
