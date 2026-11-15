@@ -25,11 +25,11 @@ namespace DSLKIT.Test.GrammarExamples
         [InlineData("CREATE TABLE dbo.T (Id INT) ON [default];")]
         [InlineData("CREATE TABLE dbo.T (Id INT) ON \"default\";")]
         [InlineData("CREATE TABLE dbo.T (Id INT) ON DEFAULT;")]
-        [InlineData("CREATE TABLE dbo.T (Id INT, Data NVARCHAR(MAX)) ON [PRIMARY] TEXTIMAGE_ON [default];")]
+        [InlineData("CREATE TABLE dbo.T (Id INT, Payload NVARCHAR(MAX)) ON [PRIMARY] TEXTIMAGE_ON [default];")]
         [InlineData("CREATE TABLE dbo.T (Id INT, CONSTRAINT PK_T PRIMARY KEY CLUSTERED (Id) ON [PRIMARY]);")]
         [InlineData("CREATE TABLE dbo.T (Id INT, CONSTRAINT UQ_T UNIQUE NONCLUSTERED (Id) WITH (FILLFACTOR = 90) ON [default]);")]
         [InlineData("CREATE INDEX IX_T ON dbo.T (Id) WITH (FILLFACTOR = 90) ON [default] FILESTREAM_ON [PRIMARY];")]
-        [InlineData("CREATE TABLE dbo.T (Id INT) ON [PRIMARY] FILESTREAM_ON [default];")]
+        [InlineData("CREATE TABLE dbo.T (Id INT) FILESTREAM_ON [default];")]
         [InlineData("CREATE INDEX IX_T ON dbo.T (Id) FILESTREAM_ON dbo.PartScheme(Id);")]
         public void ParseScript_ShouldKeepSupportedIndexStorageTargets(string sql)
         {
@@ -45,7 +45,7 @@ namespace DSLKIT.Test.GrammarExamples
         [InlineData("CREATE INDEX IX_T ON dbo.T (Id) ON \"default\";", "\"default\"", "CreateIndexStorageClause")]
         [InlineData("CREATE INDEX IX_T ON dbo.T (Id) ON DEFAULT;", "DEFAULT", "CreateIndexStorageClause")]
         [InlineData("CREATE TABLE dbo.T (Id INT) ON [default];", "[default]", "CreateTableOnClause")]
-        [InlineData("CREATE TABLE dbo.T (Id INT, Data NVARCHAR(MAX)) ON [PRIMARY] TEXTIMAGE_ON [default];", "[default]", "CreateTableTextImageClause")]
+        [InlineData("CREATE TABLE dbo.T (Id INT, Payload NVARCHAR(MAX)) ON [PRIMARY] TEXTIMAGE_ON [default];", "[default]", "CreateTableTextImageClause")]
         public void ParseScript_ShouldPlaceStorageTargetInsideCorrectClause(string sql, string token, string clause)
         {
             var parsed = ModernMsSqlGrammarExample.ParseBatch(sql);
@@ -98,7 +98,7 @@ namespace DSLKIT.Test.GrammarExamples
         [InlineData(SqlStatementTerminationMode.ExistingOnly)]
         public void TryFormat_ShouldRoundTripStorageClausesWithAllTerminationModes(SqlStatementTerminationMode termination)
         {
-            const string sql = "CREATE INDEX IX_T ON dbo.T (Id) WITH (FILLFACTOR = 90) ON [default] FILESTREAM_ON [PRIMARY]; CREATE TABLE dbo.U (Id INT, Data NVARCHAR(MAX)) ON [PRIMARY] TEXTIMAGE_ON \"default\";";
+            const string sql = "CREATE INDEX IX_T ON dbo.T (Id) WITH (FILLFACTOR = 90) ON [default] FILESTREAM_ON [PRIMARY]; CREATE TABLE dbo.U (Id INT, Payload NVARCHAR(MAX)) ON [PRIMARY] TEXTIMAGE_ON \"default\";";
             var options = new SqlFormattingOptions
             {
                 Statement = new SqlStatementFormattingOptions { TerminateWithSemicolon = termination }
