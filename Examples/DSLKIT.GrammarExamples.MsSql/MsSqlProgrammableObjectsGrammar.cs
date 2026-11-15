@@ -30,8 +30,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             var createProcForReplicationClause = gb.NT("CreateProcForReplicationClause");
             var createProcBody = gb.NT("CreateProcBody");
             var createProcBodyBlock = gb.NT("CreateProcBodyBlock");
-            var createProcBodyLeadingSeparatorsOpt = gb.NT("CreateProcBodyLeadingSeparatorsOpt");
-            var createProcBodyTrailingSeparatorsOpt = gb.NT("CreateProcBodyTrailingSeparatorsOpt");
             var createProcNativeWithClause = gb.NT("CreateProcNativeWithClause");
             var createProcNativeAtomicOptionList = gb.NT("CreateProcNativeAtomicOptionList");
             var createProcNativeAtomicOption = gb.NT("CreateProcNativeAtomicOption");
@@ -164,10 +162,10 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod(createProcExternalName).Is(qualifiedName);
 
-            gb.Opt(createProcBodyLeadingSeparatorsOpt, statementSeparatorList);
-            gb.Opt(createProcBodyTrailingSeparatorsOpt, statementSeparatorList);
-            gb.Prod(createProcBodyBlock).Is(
-                createProcBodyLeadingSeparatorsOpt, statementList, createProcBodyTrailingSeparatorsOpt);
+            gb.Prod(createProcBodyBlock).Is(statementList);
+            gb.Prod(createProcBodyBlock).Is(statementList, statementSeparatorList);
+            gb.Prod(createProcBodyBlock).Is(statementSeparatorList, statementList);
+            gb.Prod(createProcBodyBlock).Is(statementSeparatorList, statementList, statementSeparatorList);
             gb.Prod(createProcBodyBlock).Is("BEGIN", statementList, "END");
             gb.Prod(createProcBodyBlock).Is("BEGIN", statementList, statementSeparatorList, "END");
             gb.Prod(createProcBodyBlock).Is("BEGIN", "ATOMIC", "WITH", "(", createProcNativeAtomicOptionList, ")", statementList, "END");
