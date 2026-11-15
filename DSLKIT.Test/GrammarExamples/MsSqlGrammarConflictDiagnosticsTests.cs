@@ -147,6 +147,16 @@ namespace DSLKIT.Test.GrammarExamples
             }
 
             report.ToString().Should().Contain("# SQL grammar conflict diagnostic");
+
+            stage4Target.Should().BeEmpty(
+                "the redundant IndexStorageTarget → DEFAULT production was removed");
+            stage4OtherFingerprint.Should().Be(
+                "39FF4FA4ED0977FF611ED5DECDB21C6571607EB9F40908545F163B03912484A1",
+                "every non-target conflict must retain its exact kind, lookahead, production pair, resolution and multiplicity");
+            conflicts.Should().HaveCount(888);
+            unresolved.Count(conflict => conflict.Kind == ParserConflictKind.ShiftReduce).Should().Be(382);
+            unresolved.Count(conflict => conflict.Kind == ParserConflictKind.ReduceReduce).Should().Be(505);
+            conflicts.Count(conflict => conflict.Resolution != null).Should().Be(1);
         }
 
         [Fact]
