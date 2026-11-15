@@ -50,6 +50,28 @@ namespace DSLKIT.Test.GrammarExamples
             report.AppendLine($"- Distinct conflict families (kind, lookahead, resolution, production pair): {families.Length}");
             report.AppendLine();
 
+            report.AppendLine("## Conflict causes aggregated across lookaheads");
+            report.AppendLine();
+            report.AppendLine("| Kind | Existing reduction | Incoming reduction | Occurrences | LR states | Lookaheads |");
+            report.AppendLine("| --- | --- | --- | ---: | ---: | ---: |");
+            foreach (var group in unresolved
+                .GroupBy(conflict => new
+                {
+                    conflict.Kind,
+                    Existing = conflict.Kind == ParserConflictKind.ShiftReduce
+                        ? "(shift)"
+                        : ReducedNonTerminal(conflict.ExistingProduction),
+                    Incoming = ReducedNonTerminal(conflict.IncomingProduction)
+                })
+                .OrderByDescending(group => group.Count())
+                .ThenBy(group => group.Key.Kind)
+                .ThenBy(group => group.Key.Existing, StringComparer.Ordinal)
+                .ThenBy(group => group.Key.Incoming, StringComparer.Ordinal))
+            {
+                report.AppendLine($"| {group.Key.Kind} | {Cell(group.Key.Existing)} | {Cell(group.Key.Incoming)} | {group.Count()} | {group.Select(conflict => conflict.StateNumber).Distinct().Count()} | {group.Select(conflict => conflict.TerminalName).Distinct().Count()} |");
+            }
+            report.AppendLine();
+
             report.AppendLine("## Most frequent unresolved lookaheads and reductions");
             report.AppendLine();
             report.AppendLine("| Kind | Lookahead | Existing action | Incoming action | Occurrences | States |");
@@ -108,6 +130,17 @@ namespace DSLKIT.Test.GrammarExamples
             }
 
             report.ToString().Should().Contain("# SQL grammar conflict diagnostic");
+        }
+
+        private static string ReducedNonTerminal(string? production)
+        {
+            if (string.IsNullOrEmpty(production))
+            {
+                return "(unknown)";
+            }
+
+            var arrowIndex = production.IndexOf(" →", StringComparison.Ordinal);
+            return arrowIndex < 0 ? production : production[..arrowIndex];
         }
 
         private static string Cell(string value) => value.Replace("|", "\\|").Replace("\r", " ").Replace("\n", " ");
