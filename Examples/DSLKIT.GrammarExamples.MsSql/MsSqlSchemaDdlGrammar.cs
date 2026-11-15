@@ -431,7 +431,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(alterIndexReorganizeSpec).Is("PARTITION", "=", alterIndexPartitionSelector, "WITH", "(", indexOptionList, ")");
             gb.Prod(alterIndexResumeSpec).Is("WITH", "(", indexOptionList, ")");
             gb.Prod(alterIndexPartitionSelector).Is(expression);
-            gb.Prod(alterIndexPartitionSelector).Is("ALL");
         }
 
         public static void BuildDatabaseGrammar(
