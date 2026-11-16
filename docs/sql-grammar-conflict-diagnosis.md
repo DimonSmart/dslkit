@@ -1232,3 +1232,49 @@ Exactly two entries were removed:
 | Stage 17 target R/R | 2 | 0 | -2 |
 
 The **397-conflict** inventory is the next baseline. A tentative Stage 18 candidate is `IndexPartitionItem → ALL` versus `ContextualIdentifierTerm → ALL` (two R/R on `)` and `,`); it requires an independent test-first compatibility assessment.
+
+## Stage 18: redundant index-option PARTITIONS ALL (2026-11-16)
+
+**Status: fixed.** Two unresolved reduce/reduce conflicts were removed through one grammar-production deletion; no new conflicts appeared, and all 395 remaining entries retain the exact same keys and occurrence multiplicities. Parser/lexer/formatter logic and conflict-priority rules are unchanged.
+
+### Cause and single-production fix
+
+In `MsSqlSchemaDdlGrammar.Build` the index-option `ON PARTITIONS (...)` item had two equivalent paths for the keyword `ALL`:
+
+```text
+IndexPartitionItem → ALL
+IndexPartitionItem → Expression → ... → ContextualIdentifierTerm → ALL
+```
+
+`IndexPartitionItem` already supports `Expression` and `Expression TO Expression`. The direct `IndexPartitionItem → ALL` production therefore duplicates the expression-derived interpretation. The baseline diagnostic shows two R/R occurrences, both in one LR state: `IndexPartitionItem → ALL` competing against `ContextualIdentifierTerm → ALL` on lookaheads `)` and `,` (one occurrence each). This family is **separate** from Stage 9's `AlterIndexPartitionSelector → ALL`.
+
+The only grammar change removes the line `gb.Prod(indexPartitionItem).Is("ALL");`. Expression-derived `ALL`, numeric values, bracketed identifiers, ranges (`1 TO 3`), comma-separated lists and other existing forms remain recognized. The `IndexPartitionItem` node is still present; its `ALL` path now goes through `Expression`, so consumers that inspect intermediate parse-tree nodes should not assume the former direct-terminal alternative.
+
+### Test-first evidence
+
+`MsSqlIndexPartitionItemConflictRegressionTests.cs` was added and committed **before** the grammar edit. Its [baseline CI](https://github.com/DimonSmart/dslkit/actions/runs/43940102842) passed **1,051/1,051 executed tests** (1,053 total, two not executed), retaining all **397** original conflict occurrences including the two targeted ones.
+
+New tests cover `CREATE INDEX`, `ALTER INDEX ... REBUILD` and `REORGANIZE`, `XML_COMPRESSION`, `DATA_COMPRESSION`, standalone and multi-item partition lists, neighboring index options, malformed/empty lists, parse-tree statement/option boundaries, and `Parse → Format → Parse → Format` idempotence under `Always`, `Never` and `ExistingOnly` semicolon modes.
+
+CI generates `sql-index-partition-item-matrix.md` covering **126 cases** (six contexts × 21 list forms), with **96 accepted** and **30 rejected**. The baseline and after-fix files are **byte-identical**, SHA-256 `fd130b77acc3617f7d307ffde4d795bd78dbf89fbb6685efb66036ce90c478fb`. This preserves recorded acceptance *and rejection*, including permissive SQL forms whose SQL Server validity is outside the scope of the grammar conflict change.
+
+### Complete conflict multiset comparison
+
+The [post-fix CI](https://github.com/DimonSmart/dslkit/actions/runs/43940499961) passed **1,051/1,051 executed tests**. Complete `sql-grammar-conflicts.md` reports were compared as multisets keyed by `(Kind, Lookahead, Resolution, ExistingProduction, IncomingProduction)` with occurrence counts; LR state identifiers and shift destinations were excluded.
+
+The exact two removed keys were `ReduceReduce`, unresolved, pairing `IndexPartitionItem → ALL` with `ContextualIdentifierTerm → ALL` on `)` and `,`, one occurrence each. **No conflicts were added. All 395 other conflict entries were unchanged** in signature and multiplicity. All **13** CI SQL acceptance matrices were also compared byte-for-byte and were unchanged.
+
+A permanent orientation-independent diagnostic asserts the targeted production pair is absent, without tying the guard to a global conflict count.
+
+| Metric | Before | After | Delta |
+| --- | ---: | ---: | ---: |
+| Productions | 2,182 | 2,181 | -1 |
+| LR states | 3,943 | 3,942 | -1 |
+| Conflict occurrences | 397 | 395 | -2 |
+| Unresolved R/R | 14 | 12 | -2 |
+| Unresolved S/R | 382 | 382 | 0 |
+| Explicitly resolved S/R (dangling ELSE) | 1 | 1 | 0 |
+| Distinct affected LR states | 61 | 60 | -1 |
+| Stage 18 target R/R | 2 | 0 | -2 |
+
+The next stage must use the **395-conflict** inventory as its baseline. Among the remaining small R/R families is `TypeArgument → MAX` versus `ContextualIdentifierTerm → MAX` (two lookaheads `)` and `,`); it merits independent review of data-type MAX arguments and new test-first compatibility coverage before any change.
