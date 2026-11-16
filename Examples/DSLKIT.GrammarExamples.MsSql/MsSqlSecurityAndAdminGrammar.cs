@@ -150,7 +150,6 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .Keywords("NO_INFOMSGS", "ALL_ERRORMSGS", "MAXDOP", "TABLERESULTS");
             gb.Rule(dbccOptionValue)
                 .CanBe(expression)
-                .Or(strictIdentifierTerm)
                 .OrKeywords("ON", "OFF");
 
             gb.Rule(dropProcStatement)
