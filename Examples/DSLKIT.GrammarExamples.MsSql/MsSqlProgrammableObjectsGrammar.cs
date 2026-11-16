@@ -242,7 +242,6 @@ namespace DSLKIT.GrammarExamples.MsSql
                 createFunctionBodyTrailingSeparatorsOpt,
                 "END");
             gb.Prod(createFunctionInlineTableBody).Is("AS", "RETURN", queryExpression);
-            gb.Prod(createFunctionInlineTableBody).Is("AS", "RETURN", "(", queryExpression, ")");
             gb.Prod(createFunctionInlineTableBody).Is("AS", "RETURN", "(", withClause, queryExpression, ")");
             gb.Prod(createFunctionTableVariableBody).Is(
                 "AS",
