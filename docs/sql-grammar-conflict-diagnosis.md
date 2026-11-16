@@ -1094,3 +1094,50 @@ The complete baseline and after-change `sql-grammar-conflicts.md` files were par
 A permanent, orientation-independent conflict diagnostic now asserts both target pairs are absent. Subsequent stages should use the **406-conflict** report as their baseline, not the preceding counts.
 
 CI artifacts from the linked runs contain the full conflict inventories, the 70-case acceptance matrix, TRX and coverage data.
+
+## Stage 15: DELETE query hint self-reduction (2026-11-16)
+
+**Status: fixed.** Four unresolved reduce/reduce occurrences were eliminated by deleting one unproductive self-reduction in the DELETE-specific query hint grammar. No parser algorithm, lexer, formatter, or conflict-priority rules were changed.
+
+### Cause and local grammar change
+
+In `MsSqlDmlGrammar.Build`, both variables resolved to the **same** nonterminal:
+
+```csharp
+var queryHint = gb.NT("DeleteQueryHint");
+var queryHintName = gb.NT("DeleteQueryHint");
+gb.Prod(queryHint).Is(queryHintName);
+```
+
+The last line therefore registered `DeleteQueryHint → DeleteQueryHint`, a redundant direct recursion. It competed with the two list reductions on lookaheads `)` and `,`:
+
+```text
+DeleteQueryHintList → DeleteQueryHint
+DeleteQueryHintList → DeleteQueryHintList , DeleteQueryHint
+DeleteQueryHint → DeleteQueryHint
+```
+
+Each list alternative collided with the self-reduction on both lookaheads, producing exactly **four** unresolved R/R occurrences in two LR states. The fix removes only the self-reduction and the `queryHintName` alias declaration. The keyword alternatives formerly registered through `gb.Rule(queryHintName).Keywords(...)` are now registered explicitly through `gb.Rule(queryHint).Keywords(...)` (the same underlying nonterminal). All substantive query-hint productions remain intact, including `RECOMPILE`, `IGNORE_NONCLUSTERED_COLUMNSTORE_INDEX`, `MAXDOP`, `MAXRECURSION`, `USE HINT` and composite hints.
+
+### Regression tests before grammar change
+
+`MsSqlDeleteQueryHintConflictRegressionTests.cs` was committed first, while the grammar was unchanged. The [baseline GitHub Actions run](https://github.com/DimonSmart/dslkit/actions/runs/43898235043) passed **992/992 executed tests** (994 total, two not executed), retaining 406 conflicts with all four target R/R collisions. The tests cover single and comma-separated hint lists in DELETE statements, TOP and WHERE forms, parsing boundaries and tree nodes, malformed and empty lists, and `Parse → Format → Parse → Format` stability for `Always`, `Never`, and `ExistingOnly` semicolon modes.
+
+The CI-generated `sql-delete-query-hint-matrix.md` covers **114 SQL combinations** (six DELETE contexts × nineteen hint forms), with **72 accepted** and **42 rejected**. The [post-fix run](https://github.com/DimonSmart/dslkit/actions/runs/43898852242) passed **992/992 executed tests** and produced a byte-for-byte identical matrix. Both matrices have SHA-256 `335e21da02a4bddbeba336d138086d592d114c0b94f21e91c72dfe8f79b38cfc`.
+
+### Exact full-report comparison
+
+The baseline and post-fix `sql-grammar-conflicts.md` CI artifacts were compared as **multisets** of `(Kind, Lookahead, Resolution, ExistingProduction, IncomingProduction)` including multiplicity. Unstable LR state numbers and shift destinations were excluded from the keys. The comparison found exactly four removed records: the two list reductions above, each paired with `DeleteQueryHint → DeleteQueryHint` on `)` and `,`, each once. There were **zero new records**, and the other **402 entries retained identical keys and multiplicities**. A permanent orientation-independent diagnostic checks both target production pairs without assuming a global conflict total.
+
+| Metric | Before | After | Delta |
+| --- | ---: | ---: | ---: |
+| Productions | 2,185 | 2,184 | -1 |
+| LR states | 3,945 | 3,945 | 0 |
+| All conflict occurrences | 406 | 402 | -4 |
+| Unresolved reduce/reduce | 23 | 19 | -4 |
+| Unresolved shift/reduce | 382 | 382 | 0 |
+| Explicitly resolved shift/reduce (ELSE) | 1 | 1 | 0 |
+| Distinct affected LR states | 65 | 63 | -2 |
+| Stage 15 target R/R | 4 | 0 | -4 |
+
+The next stage should use the **402-conflict** report as its baseline. A promising small candidate is the `DropMoveToTarget / ContextualIdentifierTerm` family (three unresolved R/R), subject to a new independent investigation and test-first compatibility check.

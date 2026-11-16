@@ -38,7 +38,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             var queryOptionClause = gb.NT("DeleteOptionClause");
             var queryHintList = gb.NT("DeleteQueryHintList");
             var queryHint = gb.NT("DeleteQueryHint");
-            var queryHintName = gb.NT("DeleteQueryHint");
             var optionClause = gb.NT("OptionClause");
             var executeStatement = gb.NT("ExecuteStatement");
             var expression = gb.NT("Expression");
@@ -203,7 +202,6 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod(queryOptionClause).Is("OPTION", "(", queryHintList, ")");
             gb.Rule(queryHintList).SeparatedBy(",", queryHint);
-            gb.Prod(queryHint).Is(queryHintName);
             gb.Prod(queryHint).Is("MAXDOP", expression);
             gb.Prod(queryHint).Is("MAXDOP", "=", expression);
             gb.Prod(queryHint).Is("MAXRECURSION", expression);
@@ -225,7 +223,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(queryHint).Is("KEEP", "PLAN");
             gb.Prod(queryHint).Is("KEEPFIXED", "PLAN");
             gb.Prod(queryHint).Is("ROBUST", "PLAN");
-            gb.Rule(queryHintName)
+            gb.Rule(queryHint)
                 .Keywords("RECOMPILE", "IGNORE_NONCLUSTERED_COLUMNSTORE_INDEX");
 
             gb.Prod(optionClause).Is("OPTION", "(", queryHintList, ")");

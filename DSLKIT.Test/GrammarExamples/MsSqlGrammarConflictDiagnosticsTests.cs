@@ -57,6 +57,13 @@ namespace DSLKIT.Test.GrammarExamples
                 conflict, "IndexOptionValue → PAGE", "ContextualIdentifierTerm → PAGE")).ToArray();
             var stage14ColumnstoreTarget = conflicts.Where(conflict => IsUnresolvedReduceReducePair(
                 conflict, "IndexOptionValue → COLUMNSTORE", "ContextualIdentifierTerm → COLUMNSTORE")).ToArray();
+            var stage15Target = conflicts.Where(conflict =>
+                IsUnresolvedReduceReducePair(conflict,
+                    "DeleteQueryHintList → DeleteQueryHint",
+                    "DeleteQueryHint → DeleteQueryHint") ||
+                IsUnresolvedReduceReducePair(conflict,
+                    "DeleteQueryHintList → DeleteQueryHintList , DeleteQueryHint",
+                    "DeleteQueryHint → DeleteQueryHint")).ToArray();
 
             var report = new StringBuilder();
             report.AppendLine("# SQL grammar conflict diagnostic");
@@ -85,6 +92,7 @@ namespace DSLKIT.Test.GrammarExamples
             report.AppendLine($"- Stage 13 target IfStatement / StatementNoLeadingWith R/R occurrences: {stage13Target.Length}");
             report.AppendLine($"- Stage 14 target IndexOptionValue PAGE / ContextualIdentifierTerm PAGE R/R occurrences: {stage14PageTarget.Length}");
             report.AppendLine($"- Stage 14 target IndexOptionValue COLUMNSTORE / ContextualIdentifierTerm COLUMNSTORE R/R occurrences: {stage14ColumnstoreTarget.Length}");
+            report.AppendLine($"- Stage 15 target DeleteQueryHintList / DeleteQueryHint self-reduction R/R occurrences: {stage15Target.Length}");
             report.AppendLine();
 
             report.AppendLine("## Conflict causes aggregated across lookaheads");
@@ -194,6 +202,8 @@ namespace DSLKIT.Test.GrammarExamples
                 "index option PAGE is already accepted through Expression and ContextualIdentifierTerm");
             stage14ColumnstoreTarget.Should().BeEmpty(
                 "index option COLUMNSTORE is already accepted through Expression and ContextualIdentifierTerm");
+            stage15Target.Should().BeEmpty(
+                "DELETE query hints must not compete with an unproductive DeleteQueryHint self-reduction");
             conflicts.Where(conflict => conflict.Resolution != null)
                 .Should().ContainSingle(conflict =>
                     conflict.Kind == ParserConflictKind.ShiftReduce &&
