@@ -50,6 +50,9 @@ namespace DSLKIT.Test.GrammarExamples
             var stage12Target = conflicts.Where(conflict => IsUnresolvedReduceReducePair(
                 conflict, "CreateViewBody → AS CreateViewQuery",
                 "CreateViewCheckOptionOpt → Empty")).ToArray();
+            var stage13Target = conflicts.Where(conflict => IsUnresolvedReduceReducePair(
+                conflict, "IfStatement → IF SearchCondition IfBranchStatement ELSE IfStatement",
+                "StatementNoLeadingWith → IfStatement")).ToArray();
 
             var report = new StringBuilder();
             report.AppendLine("# SQL grammar conflict diagnostic");
@@ -75,6 +78,7 @@ namespace DSLKIT.Test.GrammarExamples
             report.AppendLine($"- Stage 10 target DbccOptionValue / ContextualIdentifierTerm R/R occurrences: {stage10Target.Length}");
             report.AppendLine($"- Stage 11 target CreateFunctionInlineTableBody / QueryPrimary R/R occurrences: {stage11Target.Length}");
             report.AppendLine($"- Stage 12 target CreateViewBody / CreateViewCheckOptionOpt R/R occurrences: {stage12Target.Length}");
+            report.AppendLine($"- Stage 13 target IfStatement / StatementNoLeadingWith R/R occurrences: {stage13Target.Length}");
             report.AppendLine();
 
             report.AppendLine("## Conflict causes aggregated across lookaheads");
@@ -178,6 +182,8 @@ namespace DSLKIT.Test.GrammarExamples
                 "inline table-valued functions already accept parenthesized queries through QueryPrimary");
             stage12Target.Should().BeEmpty(
                 "CREATE VIEW already accepts the form without WITH CHECK OPTION through optional CreateViewCheckOptionOpt");
+            stage13Target.Should().BeEmpty(
+                "ELSE IF is already handled through IfBranchStatement and StatementNoLeadingWith");
             conflicts.Where(conflict => conflict.Resolution != null)
                 .Should().ContainSingle(conflict =>
                     conflict.Kind == ParserConflictKind.ShiftReduce &&
