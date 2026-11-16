@@ -66,7 +66,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(ifBranchStatement).Is(statement, ";");
             gb.Prod(ifStatement).Is("IF", searchCondition, ifBranchStatement);
             gb.Prod(ifStatement).Is("IF", searchCondition, ifBranchStatement, "ELSE", ifBranchStatement);
-            gb.Prod(ifStatement).Is("IF", searchCondition, ifBranchStatement, "ELSE", ifStatement);
             gb.Prod(beginEndStatement).Is("BEGIN", statementListOpt, "END");
             gb.Prod(whileStatement).Is("WHILE", searchCondition, statement);
 
