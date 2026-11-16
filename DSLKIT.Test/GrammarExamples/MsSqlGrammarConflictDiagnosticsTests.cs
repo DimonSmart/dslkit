@@ -64,6 +64,8 @@ namespace DSLKIT.Test.GrammarExamples
                 IsUnresolvedReduceReducePair(conflict,
                     "DeleteQueryHintList → DeleteQueryHintList , DeleteQueryHint",
                     "DeleteQueryHint → DeleteQueryHint")).ToArray();
+            var stage16Target = conflicts.Where(conflict => IsUnresolvedReduceReducePair(
+                conflict, "DropMoveToTarget → DEFAULT", "ContextualIdentifierTerm → DEFAULT")).ToArray();
 
             var report = new StringBuilder();
             report.AppendLine("# SQL grammar conflict diagnostic");
@@ -93,6 +95,7 @@ namespace DSLKIT.Test.GrammarExamples
             report.AppendLine($"- Stage 14 target IndexOptionValue PAGE / ContextualIdentifierTerm PAGE R/R occurrences: {stage14PageTarget.Length}");
             report.AppendLine($"- Stage 14 target IndexOptionValue COLUMNSTORE / ContextualIdentifierTerm COLUMNSTORE R/R occurrences: {stage14ColumnstoreTarget.Length}");
             report.AppendLine($"- Stage 15 target DeleteQueryHintList / DeleteQueryHint self-reduction R/R occurrences: {stage15Target.Length}");
+            report.AppendLine($"- Stage 16 target DropMoveToTarget / ContextualIdentifierTerm DEFAULT R/R occurrences: {stage16Target.Length}");
             report.AppendLine();
 
             report.AppendLine("## Conflict causes aggregated across lookaheads");
@@ -204,6 +207,8 @@ namespace DSLKIT.Test.GrammarExamples
                 "index option COLUMNSTORE is already accepted through Expression and ContextualIdentifierTerm");
             stage15Target.Should().BeEmpty(
                 "DELETE query hints must not compete with an unproductive DeleteQueryHint self-reduction");
+            stage16Target.Should().BeEmpty(
+                "DROP INDEX MOVE TO DEFAULT is already recognized through QualifiedName and ContextualIdentifierTerm");
             conflicts.Where(conflict => conflict.Resolution != null)
                 .Should().ContainSingle(conflict =>
                     conflict.Kind == ParserConflictKind.ShiftReduce &&

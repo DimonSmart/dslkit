@@ -185,7 +185,6 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .Or("FILESTREAM_ON", dropFileStreamTarget);
             gb.Rule(dropMoveToTarget)
                 .CanBe(qualifiedName)
-                .OrKeywords("DEFAULT")
                 .Or(qualifiedName, "(", adminIdentifierTerm, ")");
             gb.Rule(dropFileStreamTarget)
                 .CanBe(qualifiedName)
