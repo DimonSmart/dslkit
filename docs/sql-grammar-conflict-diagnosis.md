@@ -1324,3 +1324,49 @@ A permanent orientation-independent diagnostic asserts the target production pai
 | Stage 19 target R/R | 2 | 0 | -2 |
 
 **Next baseline: 393 conflicts.** One potential Stage 20 candidate is `TableHintLimited → TableHintLimitedName` versus `DmlTableHintQualifiedName → TableHintLimitedName` (two unresolved R/R on `)` and `,`), subject to a separate baseline-first compatibility investigation. `DbccParam → StrictIdentifierTerm` also contributes overlapping R/R families and should not be changed by analogy alone.
+
+## Stage 20: redundant single-name DML table hint reduction (2026-11-16)
+
+**Status: fixed.** Exactly two unresolved reduce/reduce conflicts removed with one grammar-production deletion, while the other 391 conflict occurrences preserve their complete keys and multiplicities. No change to lexer, parser implementation, conflict-resolution policy, or formatter.
+
+### Root cause and minimal grammar change
+
+In `MsSqlDmlGrammar.Build`, `DmlTableHintQualifiedName` permits a one-component name through `gb.Rule(dmlTableHintQualifiedName).SeparatedBy(".", tableHintLimitedName)`. Consequently two paths parse a standalone table hint like `NOLOCK`:
+
+```text
+TableHintLimited → TableHintLimitedName
+TableHintLimited → DmlTableHintQualifiedName → TableHintLimitedName
+```
+
+The original parser conflict inventory has one R/R in the same LR state on each of the lookaheads `)` and `,`, pairing `TableHintLimited → TableHintLimitedName` with `DmlTableHintQualifiedName → TableHintLimitedName`. The other forms `TableHintLimitedName = Expression`, `TableHintLimitedName ( ExpressionList )`, qualified names and their argument variants remain independent and are unchanged.
+
+Only `.CanBe(tableHintLimitedName)` was deleted from `gb.Rule(tableHintLimited)`; the following `.Or(tableHintLimitedName, "=", expression)` was changed to `.CanBe(tableHintLimitedName, "=", expression)` solely to preserve builder chaining. This removes exactly **one** production, without dropping syntactic support for standalone hints. The parse tree for a standalone hint now includes an intermediary `DmlTableHintQualifiedName`, but the original hint terminal and `TableHintLimited` nodes are retained. Consumers should recognize hints using terminal tokens instead of assuming the former direct reduction.
+
+### Baseline-first compatibility tests
+
+`MsSqlTableHintLimitedConflictRegressionTests.cs` was committed before the grammar change. [Baseline CI](https://github.com/DimonSmart/dslkit/actions/runs/43948859773) passed **1,090/1,090 executed tests** (1,092 total, two not executed), while preserving the original **393 conflict occurrences** and both targeted R/R collisions.
+
+New regression tests cover `SELECT`, `DELETE`, `INSERT`, `UPDATE`, standalone and multiple hints, index-hint arguments, malformed/unknown names, per-statement parse-tree boundaries, and formatter `Parse → Format → Parse → Format` idempotence under `Always`, `Never` and `ExistingOnly` semicolon modes.
+
+The CI-generated `sql-table-hint-limited-matrix.md` comprises **156 cases** (six DML contexts × 26 table-hint forms), with **90 accepted** and **66 rejected**. Its before/after bytes and SHA-256 match exactly: `8c88809b2255f3a63a24fc383e21c1b7cbfa646535dd2ae60e93578757037be5`. These tests document the existing grammar's syntactic behavior; the matrix does not claim all accepted forms satisfy SQL Server's separate semantic restrictions.
+
+### Exact full conflict report comparison
+
+[After-change CI](https://github.com/DimonSmart/dslkit/actions/runs/43949379048) passed **1,090/1,090 executed tests**. Full `sql-grammar-conflicts.md` reports were compared as multisets keyed by `(Kind, Lookahead, Resolution, ExistingProduction, IncomingProduction)` and occurrence multiplicity, ignoring LR state numbering and shift destinations.
+
+Exactly two entries were removed, each once: unresolved `ReduceReduce` on `)` and on `,`, pairing `TableHintLimited → TableHintLimitedName` with `DmlTableHintQualifiedName → TableHintLimitedName`. **Zero new entries appeared.** All **391** remaining entries are unchanged in exact key and multiplicity; notably the two existing shift/reduce lookaheads `(` and `=` involving `DmlTableHintQualifiedName` remain unchanged. All **15** historical SQL acceptance/rejection matrices are byte-for-byte identical before and after the change.
+
+A permanent orientation-independent regression assertion checks that the R/R production pair never returns, without requiring a fixed total number of conflicts.
+
+| Metric | Before | After | Delta |
+| --- | ---: | ---: | ---: |
+| Productions | 2,180 | 2,179 | -1 |
+| LR states | 3,941 | 3,941 | 0 |
+| Conflict occurrences | 393 | 391 | -2 |
+| Unresolved R/R | 10 | 8 | -2 |
+| Unresolved S/R | 382 | 382 | 0 |
+| Explicitly resolved S/R (ELSE) | 1 | 1 | 0 |
+| Distinct affected LR states | 59 | 59 | 0 |
+| Stage 20 target R/R | 2 | 0 | -2 |
+
+The new baseline for future stages is **391** conflict occurrences. Potential follow-up: `DbccParam → StrictIdentifierTerm` competes with both `ContextualIdentifierTerm → StrictIdentifierTerm` and `StrictQualifiedName → StrictIdentifierTerm` (two lookaheads each). Those two related R/R families require dedicated testing of DBCC parameter forms before altering the grammar.
