@@ -53,6 +53,10 @@ namespace DSLKIT.Test.GrammarExamples
             var stage13Target = conflicts.Where(conflict => IsUnresolvedReduceReducePair(
                 conflict, "IfStatement → IF SearchCondition IfBranchStatement ELSE IfStatement",
                 "StatementNoLeadingWith → IfStatement")).ToArray();
+            var stage14PageTarget = conflicts.Where(conflict => IsUnresolvedReduceReducePair(
+                conflict, "IndexOptionValue → PAGE", "ContextualIdentifierTerm → PAGE")).ToArray();
+            var stage14ColumnstoreTarget = conflicts.Where(conflict => IsUnresolvedReduceReducePair(
+                conflict, "IndexOptionValue → COLUMNSTORE", "ContextualIdentifierTerm → COLUMNSTORE")).ToArray();
 
             var report = new StringBuilder();
             report.AppendLine("# SQL grammar conflict diagnostic");
@@ -79,6 +83,8 @@ namespace DSLKIT.Test.GrammarExamples
             report.AppendLine($"- Stage 11 target CreateFunctionInlineTableBody / QueryPrimary R/R occurrences: {stage11Target.Length}");
             report.AppendLine($"- Stage 12 target CreateViewBody / CreateViewCheckOptionOpt R/R occurrences: {stage12Target.Length}");
             report.AppendLine($"- Stage 13 target IfStatement / StatementNoLeadingWith R/R occurrences: {stage13Target.Length}");
+            report.AppendLine($"- Stage 14 target IndexOptionValue PAGE / ContextualIdentifierTerm PAGE R/R occurrences: {stage14PageTarget.Length}");
+            report.AppendLine($"- Stage 14 target IndexOptionValue COLUMNSTORE / ContextualIdentifierTerm COLUMNSTORE R/R occurrences: {stage14ColumnstoreTarget.Length}");
             report.AppendLine();
 
             report.AppendLine("## Conflict causes aggregated across lookaheads");
@@ -184,6 +190,10 @@ namespace DSLKIT.Test.GrammarExamples
                 "CREATE VIEW already accepts the form without WITH CHECK OPTION through optional CreateViewCheckOptionOpt");
             stage13Target.Should().BeEmpty(
                 "ELSE IF is already handled through IfBranchStatement and StatementNoLeadingWith");
+            stage14PageTarget.Should().BeEmpty(
+                "index option PAGE is already accepted through Expression and ContextualIdentifierTerm");
+            stage14ColumnstoreTarget.Should().BeEmpty(
+                "index option COLUMNSTORE is already accepted through Expression and ContextualIdentifierTerm");
             conflicts.Where(conflict => conflict.Resolution != null)
                 .Should().ContainSingle(conflict =>
                     conflict.Kind == ParserConflictKind.ShiftReduce &&
