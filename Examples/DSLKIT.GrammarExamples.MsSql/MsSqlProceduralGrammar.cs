@@ -183,8 +183,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(tableTypeDefinition).Is("TABLE", "(", createTableElementList, ")");
             gb.Prod(tableTypeDefinition).Is("TABLE", "(", createTableElementList, ")", createTableOptions);
             gb.Rule(typeArgument)
-                .CanBe(expression)
-                .OrKeywords("MAX");
+                .CanBe(expression);
             gb.Prod(typeSpec).Is(qualifiedName);
             gb.Prod(typeSpec).Is(qualifiedName, "(", typeArgument, ")");
             gb.Prod(typeSpec).Is(qualifiedName, "(", typeArgument, ",", typeArgument, ")");
