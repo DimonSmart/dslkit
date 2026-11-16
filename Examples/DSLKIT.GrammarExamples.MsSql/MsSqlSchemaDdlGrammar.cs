@@ -404,7 +404,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Rule(indexPartitionList).SeparatedBy(",", indexPartitionItem);
             gb.Prod(indexPartitionItem).Is(expression);
             gb.Prod(indexPartitionItem).Is(expression, "TO", expression);
-            gb.Prod(indexPartitionItem).Is("ALL");
 
             gb.Prod(alterIndexStatement).Is("ALTER", "INDEX", alterIndexTarget, "ON", qualifiedName, alterIndexAction);
             gb.Rule(alterIndexTarget)
