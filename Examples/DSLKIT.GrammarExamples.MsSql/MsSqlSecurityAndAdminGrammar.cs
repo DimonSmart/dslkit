@@ -187,8 +187,7 @@ namespace DSLKIT.GrammarExamples.MsSql
                 .CanBe(qualifiedName)
                 .Or(qualifiedName, "(", adminIdentifierTerm, ")");
             gb.Rule(dropFileStreamTarget)
-                .CanBe(qualifiedName)
-                .OrKeywords("DEFAULT");
+                .CanBe(qualifiedName);
 
             gb.Prod(dropStatisticsStatement).Is("DROP", "STATISTICS", dropStatisticsTargetList);
             gb.Rule(dropStatisticsTargetList).SeparatedBy(",", dropStatisticsTarget);

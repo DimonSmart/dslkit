@@ -1183,3 +1183,52 @@ The baseline and post-fix `sql-grammar-conflicts.md` artifacts were compared as 
 | Stage 16 target R/R | 3 | 0 | -3 |
 
 Use the **399-conflict** report as the next baseline. Stage 17 could examine `DropFileStreamTarget → DEFAULT` against `ContextualIdentifierTerm → DEFAULT` (two R/R on `)` and `,`), with its own baseline-first tests and independent acceptance-matrix comparison.
+
+## Stage 17: redundant DROP INDEX FILESTREAM_ON DEFAULT (2026-11-16)
+
+**Status: fixed.** Exactly two unresolved reduce/reduce conflicts were removed; all 397 remaining conflict entries retained their exact signatures and multiplicities. No parser algorithm, lexer, formatter, or conflict-priority changes.
+
+### Root cause and single-production fix
+
+`MsSqlSecurityAndAdminGrammar.Build` registered two overlapping ways to parse unquoted `DEFAULT` in a DROP INDEX FILESTREAM_ON target:
+
+```text
+DropFileStreamTarget → DEFAULT
+DropFileStreamTarget → QualifiedName → ContextualIdentifierTerm → DEFAULT
+```
+
+The full baseline report has two unresolved R/R occurrences pairing `DropFileStreamTarget → DEFAULT` with `ContextualIdentifierTerm → DEFAULT`, on `)` and `,`, once each (one LR state). The direct production is redundant because the qualified-name path already recognizes DEFAULT as a contextual identifier.
+
+The only grammar change removes `.OrKeywords("DEFAULT")` from `gb.Rule(dropFileStreamTarget)` and retains `.CanBe(qualifiedName)`. `DropMoveToTarget`, other DROP INDEX options, `QualifiedName`, lexer, parser and formatter rules remain unchanged. `FILESTREAM_ON DEFAULT` still parses, but its parse tree includes the qualified-name intermediary rather than the removed direct reduction; semantic consumers should inspect the unchanged terminal tokens.
+
+### Baseline-first regression evidence
+
+`MsSqlDropFileStreamTargetConflictRegressionTests.cs` was committed **before** any grammar changes. The [baseline CI](https://github.com/DimonSmart/dslkit/actions/runs/43935811305) passed **1,031/1,031 executed tests** (1,033 total, two not executed), with all **399** baseline conflict occurrences and both target R/R collisions.
+
+Tests cover standalone FILESTREAM_ON, MOVE TO ... FILESTREAM_ON, DEFAULT and named target variants, IF EXISTS, adjacent MAXDOP options, malformed and empty targets, parse-tree ownership and boundaries, and formatter `Parse → Format → Parse → Format` idempotence in `Always`, `Never`, and `ExistingOnly` modes.
+
+The generated `sql-drop-filestream-target-matrix.md` covers **108 SQL cases** (six contexts × eighteen values), of which **54 are accepted** and **54 rejected**. Baseline and changed artifacts are byte-identical, with SHA-256 `a050687d5a9ac0fd8298e2903acc96718e64bd16c09d42ba3ee5351e49c7180a`. All **12** historical SQL acceptance matrices in the artifacts also match byte-for-byte.
+
+### Full conflict multiset comparison
+
+The [post-change CI](https://github.com/DimonSmart/dslkit/actions/runs/43936221107) passed **1,031/1,031 executed tests**. The full `sql-grammar-conflicts.md` inventories were compared as multisets keyed by `(Kind, Lookahead, Resolution, ExistingProduction, IncomingProduction)` and occurrence multiplicity. LR state numbers and shift destination numbers were excluded.
+
+Exactly two entries were removed:
+
+- `ReduceReduce` on `)` between `DropFileStreamTarget → DEFAULT` and `ContextualIdentifierTerm → DEFAULT`, unresolved, one occurrence.
+- `ReduceReduce` on `,` between the same productions, unresolved, one occurrence.
+
+**Zero entries were added**, and all **397** remaining conflict signatures and multiplicities are unchanged. A permanent diagnostic prevents this production pair from conflicting again in either orientation without assuming a global count.
+
+| Metric | Before | After | Delta |
+| --- | ---: | ---: | ---: |
+| Productions | 2,183 | 2,182 | -1 |
+| LR states | 3,944 | 3,943 | -1 |
+| Total conflict occurrences | 399 | 397 | -2 |
+| Unresolved R/R | 16 | 14 | -2 |
+| Unresolved S/R | 382 | 382 | 0 |
+| Explicitly resolved S/R (ELSE) | 1 | 1 | 0 |
+| Distinct affected LR states | 62 | 61 | -1 |
+| Stage 17 target R/R | 2 | 0 | -2 |
+
+The **397-conflict** inventory is the next baseline. A tentative Stage 18 candidate is `IndexPartitionItem → ALL` versus `ContextualIdentifierTerm → ALL` (two R/R on `)` and `,`); it requires an independent test-first compatibility assessment.
