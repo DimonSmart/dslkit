@@ -1141,3 +1141,45 @@ The baseline and post-fix `sql-grammar-conflicts.md` CI artifacts were compared 
 | Stage 15 target R/R | 4 | 0 | -4 |
 
 The next stage should use the **402-conflict** report as its baseline. A promising small candidate is the `DropMoveToTarget / ContextualIdentifierTerm` family (three unresolved R/R), subject to a new independent investigation and test-first compatibility check.
+
+## Stage 16: redundant DROP INDEX MOVE TO DEFAULT reduction (2026-11-16)
+
+**Status: fixed.** Three unresolved reduce/reduce occurrences were removed through one local production deletion. All remaining 399 conflict entries have unchanged signatures and multiplicities. No parser/lexer/formatter implementation or conflict-priority change was needed.
+
+### Cause and targeted fix
+
+The SQL `DROP INDEX ... WITH (MOVE TO ...)` option defines:
+
+```text
+DropMoveToTarget → QualifiedName
+DropMoveToTarget → DEFAULT
+DropMoveToTarget → QualifiedName ( AdminIdentifierTerm )
+QualifiedName → ContextualIdentifierTerm → DEFAULT
+```
+
+The direct `DropMoveToTarget → DEFAULT` duplicates the existing qualified-name route for the `DEFAULT` token. The full stage-15 master report identifies exactly three unresolved R/R conflicts with `ContextualIdentifierTerm → DEFAULT`, on lookaheads `)`, `,` and `FILESTREAM_ON` (one occurrence each in one LR state).
+
+The only change in `MsSqlSecurityAndAdminGrammar.Build` is removing the `.OrKeywords("DEFAULT")` alternative **from `gb.Rule(dropMoveToTarget)`**. The `DropMoveToTarget → QualifiedName` and partition scheme `QualifiedName ( AdminIdentifierTerm )` paths remain. Crucially, the separate `DropFileStreamTarget → DEFAULT` rule is **unchanged** and its own two R/R conflicts are out of scope for this stage. Thus `MOVE TO DEFAULT`, bracketed/quoted names, named filegroups, partition schemes, and `MOVE TO ... FILESTREAM_ON ...` remain recognized as demonstrated by the regression matrix.
+
+### Test-first validation
+
+`MsSqlDropMoveTargetConflictRegressionTests.cs` was committed **before** editing the grammar. Its [baseline Build and Test](https://github.com/DimonSmart/dslkit/actions/runs/43903993409) passed **1,011/1,011 executed tests** (1,013 total, two not executed) with the unchanged grammar and **402 conflicts**. New cases exercise valid and malformed `DROP INDEX` MOVE targets, comma-separated options, optional FILESTREAM target, explicit `IF EXISTS`, target/statement parse-tree boundaries, and formatter parse–format–parse–format idempotence under `Always`, `Never`, and `ExistingOnly` semicolon modes.
+
+The generated `sql-drop-move-target-matrix.md` contains **108 cases** (six contexts × eighteen target values), including both accepted and rejected examples. The [post-change CI](https://github.com/DimonSmart/dslkit/actions/runs/43904479008) passed the same **1,011/1,011 executed tests**. The before/after matrices are **byte-for-byte identical** with SHA-256 `a8aeed935ea4134b6306ac2d4e5d2f51110e395c80744da349b48673e225e5d5`.
+
+### Complete multiset comparison
+
+The baseline and post-fix `sql-grammar-conflicts.md` artifacts were compared as multisets keyed by `(Kind, Lookahead, Resolution, ExistingProduction, IncomingProduction)` including occurrence counts, excluding LR state identifiers. Exactly the three `DropMoveToTarget → DEFAULT` against `ContextualIdentifierTerm → DEFAULT` records on `)`, `,`, and `FILESTREAM_ON` disappeared. **Zero new entries appeared; the other 399 entries are unchanged.** A permanent diagnostic checks this precise conflict pair in either production orientation without tying the guard to global totals.
+
+| Metric | Before | After | Delta |
+| --- | ---: | ---: | ---: |
+| Productions | 2,184 | 2,183 | -1 |
+| LR states | 3,945 | 3,944 | -1 |
+| Total conflicts | 402 | 399 | -3 |
+| Unresolved R/R | 19 | 16 | -3 |
+| Unresolved S/R | 382 | 382 | 0 |
+| Explicitly resolved S/R (ELSE) | 1 | 1 | 0 |
+| Distinct affected LR states | 63 | 62 | -1 |
+| Stage 16 target R/R | 3 | 0 | -3 |
+
+Use the **399-conflict** report as the next baseline. Stage 17 could examine `DropFileStreamTarget → DEFAULT` against `ContextualIdentifierTerm → DEFAULT` (two R/R on `)` and `,`), with its own baseline-first tests and independent acceptance-matrix comparison.
