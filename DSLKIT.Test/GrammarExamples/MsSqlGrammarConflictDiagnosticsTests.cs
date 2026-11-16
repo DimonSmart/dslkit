@@ -68,6 +68,8 @@ namespace DSLKIT.Test.GrammarExamples
                 conflict, "DropMoveToTarget → DEFAULT", "ContextualIdentifierTerm → DEFAULT")).ToArray();
             var stage17Target = conflicts.Where(conflict => IsUnresolvedReduceReducePair(
                 conflict, "DropFileStreamTarget → DEFAULT", "ContextualIdentifierTerm → DEFAULT")).ToArray();
+            var stage18Target = conflicts.Where(conflict => IsUnresolvedReduceReducePair(
+                conflict, "IndexPartitionItem → ALL", "ContextualIdentifierTerm → ALL")).ToArray();
 
             var report = new StringBuilder();
             report.AppendLine("# SQL grammar conflict diagnostic");
@@ -99,6 +101,7 @@ namespace DSLKIT.Test.GrammarExamples
             report.AppendLine($"- Stage 15 target DeleteQueryHintList / DeleteQueryHint self-reduction R/R occurrences: {stage15Target.Length}");
             report.AppendLine($"- Stage 16 target DropMoveToTarget / ContextualIdentifierTerm DEFAULT R/R occurrences: {stage16Target.Length}");
             report.AppendLine($"- Stage 17 target DropFileStreamTarget / ContextualIdentifierTerm DEFAULT R/R occurrences: {stage17Target.Length}");
+            report.AppendLine($"- Stage 18 target IndexPartitionItem / ContextualIdentifierTerm ALL R/R occurrences: {stage18Target.Length}");
             report.AppendLine();
 
             report.AppendLine("## Conflict causes aggregated across lookaheads");
@@ -214,6 +217,8 @@ namespace DSLKIT.Test.GrammarExamples
                 "DROP INDEX MOVE TO DEFAULT is already recognized through QualifiedName and ContextualIdentifierTerm");
             stage17Target.Should().BeEmpty(
                 "DROP INDEX FILESTREAM_ON DEFAULT is already recognized through QualifiedName and ContextualIdentifierTerm");
+            stage18Target.Should().BeEmpty(
+                "index-option ON PARTITIONS ALL is already recognized through Expression and ContextualIdentifierTerm");
             conflicts.Where(conflict => conflict.Resolution != null)
                 .Should().ContainSingle(conflict =>
                     conflict.Kind == ParserConflictKind.ShiftReduce &&
