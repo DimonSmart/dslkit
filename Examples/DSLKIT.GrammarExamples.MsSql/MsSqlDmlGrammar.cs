@@ -149,8 +149,7 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Rule(tableHintLimitedList).SeparatedBy(",", tableHintLimited);
             gb.Rule(tableHintLimited)
-                .CanBe(tableHintLimitedName)
-                .Or(tableHintLimitedName, "=", expression)
+                .CanBe(tableHintLimitedName, "=", expression)
                 .Or(tableHintLimitedName, "(", expressionList, ")")
                 .Or(dmlTableHintQualifiedName)
                 .Or(dmlTableHintQualifiedName, "=", expression)
