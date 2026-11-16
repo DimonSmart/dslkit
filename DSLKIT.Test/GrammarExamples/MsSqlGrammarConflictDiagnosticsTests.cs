@@ -72,6 +72,9 @@ namespace DSLKIT.Test.GrammarExamples
                 conflict, "IndexPartitionItem → ALL", "ContextualIdentifierTerm → ALL")).ToArray();
             var stage19Target = conflicts.Where(conflict => IsUnresolvedReduceReducePair(
                 conflict, "TypeArgument → MAX", "ContextualIdentifierTerm → MAX")).ToArray();
+            var stage20Target = conflicts.Where(conflict => IsUnresolvedReduceReducePair(
+                conflict, "TableHintLimited → TableHintLimitedName",
+                "DmlTableHintQualifiedName → TableHintLimitedName")).ToArray();
 
             var report = new StringBuilder();
             report.AppendLine("# SQL grammar conflict diagnostic");
@@ -105,6 +108,7 @@ namespace DSLKIT.Test.GrammarExamples
             report.AppendLine($"- Stage 17 target DropFileStreamTarget / ContextualIdentifierTerm DEFAULT R/R occurrences: {stage17Target.Length}");
             report.AppendLine($"- Stage 18 target IndexPartitionItem / ContextualIdentifierTerm ALL R/R occurrences: {stage18Target.Length}");
             report.AppendLine($"- Stage 19 target TypeArgument / ContextualIdentifierTerm MAX R/R occurrences: {stage19Target.Length}");
+            report.AppendLine($"- Stage 20 target TableHintLimited / DmlTableHintQualifiedName single-name R/R occurrences: {stage20Target.Length}");
             report.AppendLine();
 
             report.AppendLine("## Conflict causes aggregated across lookaheads");
@@ -224,6 +228,8 @@ namespace DSLKIT.Test.GrammarExamples
                 "index-option ON PARTITIONS ALL is already recognized through Expression and ContextualIdentifierTerm");
             stage19Target.Should().BeEmpty(
                 "MAX type arguments already use the Expression and ContextualIdentifierTerm path");
+            stage20Target.Should().BeEmpty(
+                "single-name DML table hints are already recognized through DmlTableHintQualifiedName");
             conflicts.Where(conflict => conflict.Resolution != null)
                 .Should().ContainSingle(conflict =>
                     conflict.Kind == ParserConflictKind.ShiftReduce &&
