@@ -383,7 +383,7 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod(indexOptionValue).Is(expression);
             gb.Prod(indexOptionValue).Is(indexOnOffValue);
-            gb.Rule(indexOptionValue).Keywords("NONE", "SELF", "BLOCKERS", "ROW", "PAGE", "COLUMNSTORE", "COLUMNSTORE_ARCHIVE");
+            gb.Rule(indexOptionValue).Keywords("NONE", "SELF", "BLOCKERS", "ROW", "COLUMNSTORE_ARCHIVE");
             gb.Prod(indexOptionValue).Is(expression, "MINUTES");
             gb.Prod(indexOptionValue).Is(indexOnOffValue, "(", indexOptionList, ")");
             gb.Prod(indexOptionValue).Is("(", indexOptionList, ")");
