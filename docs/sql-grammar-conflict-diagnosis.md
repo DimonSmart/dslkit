@@ -1278,3 +1278,49 @@ A permanent orientation-independent diagnostic asserts the targeted production p
 | Stage 18 target R/R | 2 | 0 | -2 |
 
 The next stage must use the **395-conflict** inventory as its baseline. Among the remaining small R/R families is `TypeArgument → MAX` versus `ContextualIdentifierTerm → MAX` (two lookaheads `)` and `,`); it merits independent review of data-type MAX arguments and new test-first compatibility coverage before any change.
+
+## Stage 19: redundant TypeArgument MAX reduction (2026-11-16)
+
+**Status: fixed.** Exactly two unresolved reduce/reduce occurrences were removed. All other 393 conflicts remain unchanged in their exact signatures and occurrence multiplicities; no parser, lexer, formatter or priority rule was altered.
+
+### Root cause and minimal grammar change
+
+`MsSqlProceduralGrammar.Build` accepted an unquoted `MAX` in a type argument through two independent derivations:
+
+```text
+TypeArgument → MAX
+TypeArgument → Expression → ... → ContextualIdentifierTerm → MAX
+```
+
+`gb.Rule(typeArgument).CanBe(expression).OrKeywords("MAX")` generated the redundant direct production. The full Stage 18 baseline conflict report identifies exactly two unresolved R/R collisions between `TypeArgument → MAX` and `ContextualIdentifierTerm → MAX`, in one LR state, on lookaheads `)` and `,` (once each).
+
+The single grammar change is the removal of the `.OrKeywords("MAX")` alternative from `TypeArgument`; `TypeArgument → Expression`, `TypeSpec → QualifiedName ( TypeArgument )`, and the two-argument form `TypeSpec → QualifiedName ( TypeArgument , TypeArgument )` remain. This retains parsing of `NVARCHAR(MAX)`, `VARCHAR(MAX)`, `VARBINARY(MAX)`, numeric lengths, and `DECIMAL(18, 4)` in the tested contexts.
+
+**Important semantic distinction:** `MAX` has a special SQL Server meaning for variable-length data types. DSLKIT's grammar remains syntactic; this change does **not** claim `MAX` is interchangeable with an arbitrary identifier in SQL Server's semantic validation. The terminal `MAX` remains unchanged, but the parse-tree path now includes `Expression` instead of the removed direct `TypeArgument → MAX` production. Consumers requiring the special MAX semantics should inspect the preserved terminal or explicitly handle the expression-derived case, not assume the former parse-tree shape.
+
+### Baseline-first regression evidence
+
+`MsSqlTypeArgumentMaxConflictRegressionTests.cs` was committed **before** grammar editing. The [baseline GitHub Actions run](https://github.com/DimonSmart/dslkit/actions/runs/43944356440) passed **1,071/1,071 executed tests** (1,073 total, two not executed), retaining all **395** conflict occurrences including the two target R/R collisions.
+
+New tests exercise `DECLARE` with `NVARCHAR(MAX)`, `VARCHAR(MAX)`, `VARBINARY(MAX)`, numeric and decimal type arguments, `CREATE TABLE` and function parameter/return types, malformed arguments, statement/type-argument parse-tree boundaries, and `Parse → Format → Parse → Format` stability in `Always`, `Never`, and `ExistingOnly` semicolon modes.
+
+The generated `sql-type-argument-max-matrix.md` covers **126 combinations** (six type contexts × 21 argument forms), with **96 accepted** and **30 rejected**. Baseline and post-fix matrices are **byte-for-byte identical** (SHA-256 `04998463ce88bc0e48b79c4e12c133189d00824545715139876ffe5bd5b05b97`). This preserves all recorded acceptance and rejection outcomes, including permissive cases that might be invalid under SQL Server's semantic type restrictions.
+
+### Exact complete conflict inventory comparison
+
+The [post-fix CI](https://github.com/DimonSmart/dslkit/actions/runs/43944817219) passed **1,071/1,071 executed tests**. Full `sql-grammar-conflicts.md` reports were compared as multisets keyed by `(Kind, Lookahead, Resolution, ExistingProduction, IncomingProduction)` with occurrence multiplicity, ignoring unstable LR state numbers and shift destinations. Exactly two records were removed: unresolved `ReduceReduce` pairing `TypeArgument → MAX` with `ContextualIdentifierTerm → MAX`, once on `)` and once on `,`. **Zero records were added. The other 393 records retained identical keys and multiplicities.** All **14** generated historical SQL acceptance/rejection matrices also match byte-for-byte.
+
+A permanent orientation-independent diagnostic asserts the target production pair is absent, without hard-coding global conflict counts.
+
+| Metric | Before | After | Delta |
+| --- | ---: | ---: | ---: |
+| Productions | 2,181 | 2,180 | -1 |
+| LR states | 3,942 | 3,941 | -1 |
+| Conflict occurrences | 395 | 393 | -2 |
+| Unresolved R/R | 12 | 10 | -2 |
+| Unresolved S/R | 382 | 382 | 0 |
+| Explicitly resolved S/R (ELSE) | 1 | 1 | 0 |
+| Distinct affected LR states | 60 | 59 | -1 |
+| Stage 19 target R/R | 2 | 0 | -2 |
+
+**Next baseline: 393 conflicts.** One potential Stage 20 candidate is `TableHintLimited → TableHintLimitedName` versus `DmlTableHintQualifiedName → TableHintLimitedName` (two unresolved R/R on `)` and `,`), subject to a separate baseline-first compatibility investigation. `DbccParam → StrictIdentifierTerm` also contributes overlapping R/R families and should not be changed by analogy alone.
