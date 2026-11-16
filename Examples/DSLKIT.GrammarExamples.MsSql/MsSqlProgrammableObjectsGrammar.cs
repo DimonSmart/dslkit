@@ -308,7 +308,6 @@ namespace DSLKIT.GrammarExamples.MsSql
 
             gb.Prod(createViewQuery).Is(queryExpression);
             gb.Prod(createViewQuery).Is(withClause, queryExpression);
-            gb.Prod(createViewBody).Is("AS", createViewQuery);
             gb.Prod(createViewBody).Is("AS", createViewQuery, createViewCheckOptionOpt);
             gb.Opt(createViewCheckOptionOpt, withCheckOptionStart, "CHECK", "OPTION");
             gb.Prod(createViewStatement).Is(createViewHead, qualifiedName, createViewBody);
