@@ -31,6 +31,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var queryExpressionTail = gb.NT("QueryExpressionTail");
             var queryIntersectExpression = gb.NT("QueryIntersectExpression");
             var queryPrimary = gb.NT("QueryPrimary");
+            var parenthesizedQuery = gb.NT("ParenthesizedQuery");
             var querySpecification = gb.NT("QuerySpecification");
             var querySpecificationGroupByClause = gb.NT("QuerySpecificationGroupByClause");
             var querySpecificationGroupByExpressionList = gb.NT("QuerySpecificationGroupByExpressionList");
@@ -82,7 +83,8 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Opt(queryExpressionForOpt, forClause);
             gb.Opt(queryExpressionOptionOpt, optionClause);
             gb.Prod(queryPrimary).Is(querySpecification);
-            gb.Prod(queryPrimary).Is("(", queryExpression, ")");
+            gb.Prod(queryPrimary).Is(parenthesizedQuery);
+            gb.Prod(parenthesizedQuery).Is("(", queryExpression, ")");
 
             gb.Rule(forClause)
                 .CanBe("FOR", "BROWSE")
