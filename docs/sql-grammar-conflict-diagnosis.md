@@ -1374,7 +1374,7 @@ The new baseline for future stages is **391** conflict occurrences. Potential fo
 
 ## Stage 21: documented DBCC statement arguments (2026-11-17)
 
-**Status: validated by CI, pending merge.** Baseline is Stage 20 merge
+**Status: implemented and validated by CI.** Baseline is Stage 20 merge
 `b155ee0f78bca0f38718f02a95eb9403b77f94d9` (391 conflicts, 1,090 passed tests).
 The Stage 21 test run is [Build and Test #44075756599](https://github.com/DimonSmart/dslkit/actions/runs/44075756599).
 
