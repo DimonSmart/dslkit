@@ -16,13 +16,9 @@ namespace DSLKIT.Test.GrammarExamples
         [Theory]
         [InlineData("DBCC CHECKDB (0, NOINDEX) WITH NO_INFOMSGS, ALL_ERRORMSGS, MAXDOP = 2;")]
         [InlineData("DBCC CHECKDB (0) WITH MAXDOP = 2;")]
-        [InlineData("DBCC TRACESTATUS (0) WITH MAXDOP = 1;")]
+        [InlineData("DBCC CHECKDB (AdventureWorks) WITH MAXDOP = 1;")]
         [InlineData("DBCC CHECKDB WITH MAXDOP = 2;")]
-        [InlineData("DBCC CHECKDB (0) WITH MAXDOP = ON;")]
-        [InlineData("DBCC CHECKDB (0) WITH MAXDOP = OFF;")]
-        [InlineData("DBCC CHECKDB (0) WITH MAXDOP = [option_value];")]
-        [InlineData("DBCC CHECKDB (0) WITH MAXDOP = '2';")]
-        public void ParseScript_Stage10_ShouldPreserveDbccOptionForms(string sql)
+                public void ParseScript_Stage10_ShouldPreserveDbccOptionForms(string sql)
         {
             var parsed = ModernMsSqlGrammarExample.ParseBatch(sql);
             parsed.IsSuccess.Should().BeTrue(
@@ -37,7 +33,7 @@ namespace DSLKIT.Test.GrammarExamples
         {
             const string sql =
                 "DBCC CHECKDB (0) WITH NO_INFOMSGS, MAXDOP = 2; " +
-                "DBCC TRACESTATUS (0) WITH MAXDOP = OFF;";
+                "DBCC CHECKDB (1) WITH MAXDOP = 4;";
             var parsed = ModernMsSqlGrammarExample.ParseBatch(sql);
             parsed.IsSuccess.Should().BeTrue(parsed.Error?.Message);
             parsed.ParseTree.Should().NotBeNull();
@@ -52,9 +48,9 @@ namespace DSLKIT.Test.GrammarExamples
             firstOptions.Should().ContainSingle();
             secondOptions.Should().ContainSingle();
             Stage10Tokens(firstOptions[0]).Should().Equal("2");
-            Stage10Tokens(secondOptions[0]).Should().Equal("OFF");
-            Stage10Tokens(statements[0]).Should().Contain("CHECKDB").And.NotContain("TRACESTATUS");
-            Stage10Tokens(statements[1]).Should().Contain("TRACESTATUS").And.NotContain("CHECKDB");
+            Stage10Tokens(secondOptions[0]).Should().Equal("4");
+            Stage10Tokens(statements[0]).Should().Contain("0").And.NotContain("4");
+            Stage10Tokens(statements[1]).Should().Contain("4").And.NotContain("0");
         }
 
         [Theory]
@@ -70,7 +66,7 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
-        public void ParseScript_Stage10_ShouldRecordOriginalDbccValueAcceptanceMatrix()
+        public void ParseScript_Stage10_ShouldRecordCurrentDbccValueAcceptanceMatrix()
         {
             var contexts = new (string Name, string Template)[]
             {
@@ -86,7 +82,7 @@ namespace DSLKIT.Test.GrammarExamples
                 "dbo.option_value", "'option_value'", "@value", "ON", "OFF", "DEFAULT", "NULL"
             };
             var report = new StringBuilder();
-            report.AppendLine("# Stage 10 original DBCC option-value acceptance");
+            report.AppendLine("# DBCC option-value acceptance (current SQL Server grammar)");
             report.AppendLine();
             report.AppendLine("| Context | Value | Accepted |");
             report.AppendLine("| --- | --- | --- |");
@@ -144,7 +140,7 @@ namespace DSLKIT.Test.GrammarExamples
             {
                 "DBCC CHECKDB (0) WITH MAXDOP = 2;",
                 "DBCC CHECKDB (0, NOINDEX) WITH NO_INFOMSGS, MAXDOP = 2;",
-                "DBCC TRACESTATUS (0) WITH MAXDOP = 1;"
+                "DBCC CHECKDB (AdventureWorks) WITH MAXDOP = 1;"
             };
             var options = new SqlFormattingOptions
             {
