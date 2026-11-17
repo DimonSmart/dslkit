@@ -408,7 +408,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(alterIndexStatement).Is("ALTER", "INDEX", alterIndexTarget, "ON", qualifiedName, alterIndexAction);
             gb.Rule(alterIndexTarget)
                 .CanBe(schemaDdlIdentifierTerm)
-                .Or(strictQualifiedName)
                 .OrKeywords("ALL");
             gb.Rule(alterIndexAction)
                 .CanBe("REBUILD")
