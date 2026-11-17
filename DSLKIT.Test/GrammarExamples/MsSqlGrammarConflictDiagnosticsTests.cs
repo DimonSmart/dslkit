@@ -263,7 +263,7 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
-        public void BuildGrammar_ShouldOnlyHaveKnownParenthesizedQueryReduceReduceConflict()
+        public void BuildGrammar_ShouldNotHaveParenthesizedQueryReduceReduceConflict()
         {
             var grammar = ModernMsSqlGrammarExample.BuildGrammar(MsSqlDialectFeatures.All);
             var unresolvedReduceReduce = grammar.ActionAndGotoTable.Conflicts
@@ -271,13 +271,8 @@ namespace DSLKIT.Test.GrammarExamples
                                    conflict.Resolution == null)
                 .ToArray();
 
-            unresolvedReduceReduce.Should().ContainSingle(
-                conflict => conflict.TerminalName == ")" &&
-                            IsUnresolvedReduceReducePair(
-                                conflict,
-                                "ParenthesizedQuery → ( QueryExpression )",
-                                "ScalarSubquery → ( QueryExpression )"),
-                "Stage 24 must not introduce new reduce/reduce conflicts while query contexts are separated");
+            unresolvedReduceReduce.Should().BeEmpty(
+                "parenthesized queries now share a single syntax production in expression and set-query contexts");
         }
 
         [Fact]
