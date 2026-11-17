@@ -99,7 +99,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(grantOnClause).Is("ON", grantClassType, "::", grantSecurable);
             gb.Rule(grantClassType).Keywords("LOGIN", "DATABASE", "OBJECT", "ROLE", "SCHEMA", "USER");
             gb.Prod(grantSecurable).Is(strictQualifiedName);
-            gb.Prod(grantSecurable).Is(strictIdentifierTerm);
 
             gb.Rule(grantPrincipalList).SeparatedBy(",", grantPrincipal);
             gb.Prod(grantPrincipal).Is(strictQualifiedName);

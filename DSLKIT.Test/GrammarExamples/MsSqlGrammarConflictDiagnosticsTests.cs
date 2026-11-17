@@ -81,6 +81,9 @@ namespace DSLKIT.Test.GrammarExamples
             var stage21QualifiedTarget = conflicts.Where(conflict => IsUnresolvedReduceReducePair(
                 conflict, "DbccParam → StrictIdentifierTerm",
                 "StrictQualifiedName → StrictIdentifierTerm")).ToArray();
+            var stage22Target = conflicts.Where(conflict => IsUnresolvedReduceReducePair(
+                conflict, "GrantSecurable → StrictIdentifierTerm",
+                "StrictQualifiedName → StrictIdentifierTerm")).ToArray();
 
             var report = new StringBuilder();
             report.AppendLine("# SQL grammar conflict diagnostic");
@@ -117,6 +120,7 @@ namespace DSLKIT.Test.GrammarExamples
             report.AppendLine($"- Stage 20 target TableHintLimited / DmlTableHintQualifiedName single-name R/R occurrences: {stage20Target.Length}");
             report.AppendLine($"- Stage 21 target DbccParam / ContextualIdentifierTerm R/R occurrences: {stage21ContextualTarget.Length}");
             report.AppendLine($"- Stage 21 target DbccParam / StrictQualifiedName R/R occurrences: {stage21QualifiedTarget.Length}");
+            report.AppendLine($"- Stage 22 target GrantSecurable / StrictQualifiedName R/R occurrences: {stage22Target.Length}");
             report.AppendLine();
 
             report.AppendLine("## Conflict causes aggregated across lookaheads");
@@ -242,6 +246,8 @@ namespace DSLKIT.Test.GrammarExamples
                 "DBCC arguments must not compete between direct identifiers and expressions");
             stage21QualifiedTarget.Should().BeEmpty(
                 "DBCC arguments must not duplicate single-component qualified names");
+            stage22Target.Should().BeEmpty(
+                "single-part GRANT securables are already recognized by StrictQualifiedName");
             conflicts.Where(conflict => conflict.Resolution != null)
                 .Should().ContainSingle(conflict =>
                     conflict.Kind == ParserConflictKind.ShiftReduce &&
