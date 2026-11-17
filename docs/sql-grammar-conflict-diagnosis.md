@@ -1370,3 +1370,99 @@ A permanent orientation-independent regression assertion checks that the R/R pro
 | Stage 20 target R/R | 2 | 0 | -2 |
 
 The new baseline for future stages is **391** conflict occurrences. Potential follow-up: `DbccParam → StrictIdentifierTerm` competes with both `ContextualIdentifierTerm → StrictIdentifierTerm` and `StrictQualifiedName → StrictIdentifierTerm` (two lookaheads each). Those two related R/R families require dedicated testing of DBCC parameter forms before altering the grammar.
+
+
+## Stage 21: documented DBCC statement arguments (2026-11-17)
+
+**Status: implemented and validated by CI.** Baseline is Stage 20 merge
+`b155ee0f78bca0f38718f02a95eb9403b77f94d9` (391 conflicts, 1,090 passed tests).
+The Stage 21 test run is [Build and Test #44075756599](https://github.com/DimonSmart/dslkit/actions/runs/44075756599).
+
+### SQL Server documentation takes precedence
+
+The original `DbccParam` had three overlapping productions:
+`DbccParam → Expression`, `DbccParam → StrictIdentifierTerm`, and
+`DbccParam → StrictQualifiedName`. Because expressions already recognize
+identifiers, the direct alternatives created two R/R collisions each on `)`
+and `,`. More importantly, a single generic argument list accepted syntax
+that the individual DBCC commands do not support.
+
+Microsoft defines command-specific argument forms:
+
+- [CHECKDB](https://learn.microsoft.com/en-us/sql/t-sql/database-console-commands/dbcc-checkdb-transact-sql?view=sql-server-ver17):
+  database name/ID, optional `NOINDEX` or `REPAIR_*`, and named `WITH` options;
+  `MAXDOP` requires a numeric value.
+- [TRACESTATUS](https://learn.microsoft.com/en-us/sql/t-sql/database-console-commands/dbcc-tracestatus-transact-sql?view=sql-server-ver17):
+  empty parentheses or trace-flag numbers and optional `-1`;
+  optional `WITH NO_INFOMSGS`.
+- [TRACEON](https://learn.microsoft.com/en-us/sql/t-sql/database-console-commands/dbcc-traceon-transact-sql?view=sql-server-ver17):
+  one or more trace-flag numbers and optional trailing `-1`;
+  optional `WITH NO_INFOMSGS`.
+- [DROPCLEANBUFFERS](https://learn.microsoft.com/en-us/sql/t-sql/database-console-commands/dbcc-dropcleanbuffers-transact-sql?view=sql-server-ver17):
+  no parenthesized arguments on SQL Server.
+- [FREEPROCCACHE](https://learn.microsoft.com/en-us/sql/t-sql/database-console-commands/dbcc-freeproccache-transact-sql?view=sql-server-ver17):
+  optional single handle/resource-pool argument.
+- [SHRINKFILE](https://learn.microsoft.com/en-us/sql/t-sql/database-console-commands/dbcc-shrinkfile-transact-sql?view=sql-server-ver17):
+  required file target, constrained optional size/command arguments;
+  `WAIT_AT_LOW_PRIORITY` is documented for SQL Server 2022+.
+
+The implementation now has separate productions for those six documented commands.
+`DbccParam` retains only `Expression` for the independent legacy/internal
+`LOGINFO`, `PAGE`, `WRITEPAGE` group and the Synapse-specific
+`PDW_SHOWSPACEUSED` extension. **Those commands remain outside the verified
+public SQL Server syntax scope and do not establish SQL Server compatibility.**
+
+### Intentional changes in acceptance
+
+New positive and negative regression tests verify documented forms, reject
+arbitrary arithmetic/qualified names where a scalar identifier or trace flag
+is required, reject arguments to `DROPCLEANBUFFERS`, and reject `MAXDOP = OFF`
+and `MAXDOP` on `TRACESTATUS`. The earlier Stage 10 regression assertions
+that treated these as supported forms were updated, rather than preserving
+incorrect behavior. `sql-dbcc-option-matrix.md` intentionally differs from
+Stage 20. All other **14** previously generated SQL matrices are byte-identical.
+
+These are syntax assertions, not execution or validation of object existence.
+Value-range checks, valid trace-flag IDs, or the existence of databases/files
+are semantic or operational checks and are not enforced in the LR grammar.
+
+### Exact full conflict inventory comparison
+
+Complete `sql-grammar-conflicts.md` files from Stage 20 and Stage 21 were
+compared as occurrence multisets using
+`(kind, lookahead, resolution, unordered reduction pair)`,
+ignoring unstable LR-state numbers. **Exactly 5 R/R occurrences disappeared:
+0 appeared. The other 386 occurrences are identical.**
+
+- `DbccParam → StrictIdentifierTerm` vs
+  `ContextualIdentifierTerm → StrictIdentifierTerm`: two removed (`)`, `,`).
+- `DbccParam → StrictIdentifierTerm` vs
+  `StrictQualifiedName → StrictIdentifierTerm`: two removed (`)`, `,`).
+- `ContextualIdentifierTerm → StrictIdentifierTerm` vs
+  `StrictQualifiedName → StrictIdentifierTerm`: one related removed (`.`).
+
+A permanent orientation-independent diagnostic checks both targeted pairs.
+
+| Metric | Stage 20 | Stage 21 | Delta |
+| --- | ---: | ---: | ---: |
+| Productions | 2,179 | 2,233 | +54 |
+| LR states | 3,941 | 4,037 | +96 |
+| Conflicts | 391 | 386 | -5 |
+| Unresolved R/R | 8 | 3 | -5 |
+| Unresolved S/R | 382 | 382 | 0 |
+| Explicitly resolved S/R | 1 | 1 | 0 |
+| States with conflicts | 59 | 58 | -1 |
+| Passed tests | 1,090 | 1,119 | +29 |
+
+### Known boundaries / next decisions
+
+- The code has `SqlDialect.SqlServer` and `SqlDialect.Snowflake`, plus
+  feature flags including `SynapseExtensions`; it does not currently express
+  individual SQL Server engine-version gates. Thus, the SQL Server 2022+
+  `SHRINKFILE WAIT_AT_LOW_PRIORITY` form is not yet version-gated.
+- `SqlServerDialectGrammarModule.DefaultFeatures` is currently `All`, which
+  includes the optional `SynapseExtensions` flag. Review that default
+  separately so Synapse syntax is not silently assumed to be standard SQL Server.
+- The remaining 3 R/R and 382 unresolved S/R are outside this change.
+- No real SQL Server instance was connected for a server-side conformance run.
+  Microsoft Learn syntax and CI parser tests are the evidence for this stage.

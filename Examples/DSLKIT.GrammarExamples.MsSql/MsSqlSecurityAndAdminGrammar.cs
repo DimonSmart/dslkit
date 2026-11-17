@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace DSLKIT.GrammarExamples.MsSql
 {
     internal static class MsSqlSecurityAndAdminGrammar
@@ -19,7 +17,6 @@ namespace DSLKIT.GrammarExamples.MsSql
             var grantPrincipalList = gb.NT("GrantPrincipalList");
             var grantPrincipal = gb.NT("GrantPrincipal");
             var grantStatement = gb.NT("GrantStatement");
-            var dbccCommand = gb.NT("DbccCommand");
             var dbccParamList = gb.NT("DbccParamList");
             var dbccParam = gb.NT("DbccParam");
             var dbccOptionList = gb.NT("DbccOptionList");
@@ -117,40 +114,108 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(grantStatement).Is("GRANT", grantPermissionSet, "TO", grantPrincipalList, "WITH", "GRANT", "OPTION", "AS", grantPrincipal);
             gb.Prod(grantStatement).Is("GRANT", grantPermissionSet, grantOnClause, "TO", grantPrincipalList, "WITH", "GRANT", "OPTION", "AS", grantPrincipal);
 
-            var dbccCommandNames = new List<string>
-            {
-                "CHECKDB",
-                "DROPCLEANBUFFERS",
-                "TRACESTATUS",
-                "FREEPROCCACHE",
-                "SHRINKFILE",
-                "LOGINFO",
-                "TRACEON",
-                "PAGE",
-                "WRITEPAGE"
-            };
+            var dbccDatabaseTarget = gb.NT("DbccDatabaseTarget");
+            var dbccCheckdbArguments = gb.NT("DbccCheckdbArguments");
+            var dbccCheckdbOption = gb.NT("DbccCheckdbOption");
+            var dbccCheckdbOptionList = gb.NT("DbccCheckdbOptionList");
+            var dbccTraceNumbers = gb.NT("DbccTraceNumbers");
+            var dbccTraceStatusArguments = gb.NT("DbccTraceStatusArguments");
+            var dbccFreeProcCacheTarget = gb.NT("DbccFreeProcCacheTarget");
+            var dbccShrinkFileTarget = gb.NT("DbccShrinkFileTarget");
+            var dbccShrinkFileArguments = gb.NT("DbccShrinkFileArguments");
+            var dbccShrinkWaitOption = gb.NT("DbccShrinkWaitOption");
+            var dbccLegacyCommand = gb.NT("DbccLegacyCommand");
+            var number = context.NumberTerminal;
+            var stringLiteral = context.StringLiteralTerminal;
+            var unicodeStringLiteral = gb.NT("UnicodeStringLiteral");
+
+            gb.Prod(dbccDatabaseTarget).Is(strictIdentifierTerm);
+            gb.Prod(dbccDatabaseTarget).Is(stringLiteral);
+            gb.Prod(dbccDatabaseTarget).Is(unicodeStringLiteral);
+            gb.Prod(dbccDatabaseTarget).Is(number);
+            gb.Prod(dbccCheckdbArguments).Is(dbccDatabaseTarget);
+            gb.Prod(dbccCheckdbArguments).Is(dbccDatabaseTarget, ",", "NOINDEX");
+            gb.Prod(dbccCheckdbArguments).Is(dbccDatabaseTarget, ",", "REPAIR_ALLOW_DATA_LOSS");
+            gb.Prod(dbccCheckdbArguments).Is(dbccDatabaseTarget, ",", "REPAIR_FAST");
+            gb.Prod(dbccCheckdbArguments).Is(dbccDatabaseTarget, ",", "REPAIR_REBUILD");
+
+            gb.Rule(dbccCheckdbOption)
+                .Keywords("ALL_ERRORMSGS", "EXTENDED_LOGICAL_CHECKS", "NO_INFOMSGS",
+                    "TABLOCK", "ESTIMATEONLY", "PHYSICAL_ONLY", "DATA_PURITY");
+            gb.Prod(dbccOptionValue).Is(number);
+            gb.Prod(dbccCheckdbOption).Is("MAXDOP", "=", dbccOptionValue);
+            gb.Rule(dbccCheckdbOptionList).SeparatedBy(",", dbccCheckdbOption);
+
+            gb.Prod(dbccStatement).Is("DBCC", "CHECKDB");
+            gb.Prod(dbccStatement).Is("DBCC", "CHECKDB", "(", dbccCheckdbArguments, ")");
+            gb.Prod(dbccStatement).Is("DBCC", "CHECKDB", "WITH", dbccCheckdbOptionList);
+            gb.Prod(dbccStatement).Is("DBCC", "CHECKDB", "(", dbccCheckdbArguments, ")", "WITH", dbccCheckdbOptionList);
+
+            gb.Prod(dbccStatement).Is("DBCC", "DROPCLEANBUFFERS");
+            gb.Prod(dbccStatement).Is("DBCC", "DROPCLEANBUFFERS", "WITH", "NO_INFOMSGS");
+
+            gb.Rule(dbccTraceNumbers).SeparatedBy(",", number);
+            gb.Prod(dbccTraceStatusArguments).Is("(", ")");
+            gb.Prod(dbccTraceStatusArguments).Is("(", dbccTraceNumbers, ")");
+            gb.Prod(dbccTraceStatusArguments).Is("(", "-", number, ")");
+            gb.Prod(dbccTraceStatusArguments).Is("(", dbccTraceNumbers, ",", "-", number, ")");
+            gb.Prod(dbccStatement).Is("DBCC", "TRACESTATUS", dbccTraceStatusArguments);
+            gb.Prod(dbccStatement).Is("DBCC", "TRACESTATUS", dbccTraceStatusArguments, "WITH", "NO_INFOMSGS");
+
+            gb.Prod(dbccStatement).Is("DBCC", "TRACEON", "(", dbccTraceNumbers, ")");
+            gb.Prod(dbccStatement).Is("DBCC", "TRACEON", "(", dbccTraceNumbers, ",", "-", number, ")");
+            gb.Prod(dbccStatement).Is("DBCC", "TRACEON", "(", dbccTraceNumbers, ")", "WITH", "NO_INFOMSGS");
+            gb.Prod(dbccStatement).Is("DBCC", "TRACEON", "(", dbccTraceNumbers, ",", "-", number, ")", "WITH", "NO_INFOMSGS");
+
+            gb.Prod(dbccFreeProcCacheTarget).Is(strictIdentifierTerm);
+            gb.Prod(dbccFreeProcCacheTarget).Is(stringLiteral);
+            gb.Prod(dbccFreeProcCacheTarget).Is(unicodeStringLiteral);
+            gb.Prod(dbccFreeProcCacheTarget).Is(number);
+            gb.Prod(dbccFreeProcCacheTarget).Is(gb.NT("VariableReference"));
+            gb.Prod(dbccStatement).Is("DBCC", "FREEPROCCACHE");
+            gb.Prod(dbccStatement).Is("DBCC", "FREEPROCCACHE", "(", dbccFreeProcCacheTarget, ")");
+            gb.Prod(dbccStatement).Is("DBCC", "FREEPROCCACHE", "WITH", "NO_INFOMSGS");
+            gb.Prod(dbccStatement).Is("DBCC", "FREEPROCCACHE", "(", dbccFreeProcCacheTarget, ")", "WITH", "NO_INFOMSGS");
+
+            gb.Prod(dbccShrinkFileTarget).Is(strictIdentifierTerm);
+            gb.Prod(dbccShrinkFileTarget).Is(stringLiteral);
+            gb.Prod(dbccShrinkFileTarget).Is(unicodeStringLiteral);
+            gb.Prod(dbccShrinkFileTarget).Is(number);
+            gb.Prod(dbccShrinkFileArguments).Is(dbccShrinkFileTarget);
+            gb.Prod(dbccShrinkFileArguments).Is(dbccShrinkFileTarget, ",", number);
+            gb.Prod(dbccShrinkFileArguments).Is(dbccShrinkFileTarget, ",", "EMPTYFILE");
+            gb.Prod(dbccShrinkFileArguments).Is(dbccShrinkFileTarget, ",", "NOTRUNCATE");
+            gb.Prod(dbccShrinkFileArguments).Is(dbccShrinkFileTarget, ",", "TRUNCATEONLY");
+            gb.Prod(dbccShrinkFileArguments).Is(dbccShrinkFileTarget, ",", number, ",", "NOTRUNCATE");
+            gb.Prod(dbccShrinkFileArguments).Is(dbccShrinkFileTarget, ",", number, ",", "TRUNCATEONLY");
+            gb.Prod(dbccShrinkWaitOption).Is("WAIT_AT_LOW_PRIORITY");
+            gb.Prod(dbccShrinkWaitOption).Is("WAIT_AT_LOW_PRIORITY", "(",
+                "ABORT_AFTER_WAIT", "=", "SELF", ")");
+            gb.Prod(dbccShrinkWaitOption).Is("WAIT_AT_LOW_PRIORITY", "(",
+                "ABORT_AFTER_WAIT", "=", "BLOCKERS", ")");
+            gb.Prod(dbccStatement).Is("DBCC", "SHRINKFILE", "(", dbccShrinkFileArguments, ")");
+            gb.Prod(dbccStatement).Is("DBCC", "SHRINKFILE", "(", dbccShrinkFileArguments, ")", "WITH", "NO_INFOMSGS");
+            gb.Prod(dbccStatement).Is("DBCC", "SHRINKFILE", "(", dbccShrinkFileArguments, ")", "WITH", dbccShrinkWaitOption);
+            gb.Prod(dbccStatement).Is("DBCC", "SHRINKFILE", "(", dbccShrinkFileArguments, ")", "WITH", dbccShrinkWaitOption, ",", "NO_INFOMSGS");
+
+            // These internal/undocumented commands are intentionally not treated as documented SQL Server syntax.
+            gb.Rule(dbccLegacyCommand).Keywords("LOGINFO", "PAGE", "WRITEPAGE");
             if (context.HasFeature(MsSqlDialectFeatures.SynapseExtensions))
             {
-                dbccCommandNames.Add("PDW_SHOWSPACEUSED");
+                gb.Prod(dbccLegacyCommand).Is("PDW_SHOWSPACEUSED");
             }
 
-            gb.Rule(dbccCommand).Keywords([.. dbccCommandNames]);
-            gb.Prod(dbccStatement).Is("DBCC", dbccCommand);
-            gb.Prod(dbccStatement).Is("DBCC", dbccCommand, "(", dbccParamList, ")");
-            gb.Prod(dbccStatement).Is("DBCC", dbccCommand, "WITH", dbccOptionList);
-            gb.Prod(dbccStatement).Is("DBCC", dbccCommand, "(", dbccParamList, ")", "WITH", dbccOptionList);
+            gb.Prod(dbccStatement).Is("DBCC", dbccLegacyCommand);
+            gb.Prod(dbccStatement).Is("DBCC", dbccLegacyCommand, "(", dbccParamList, ")");
+            gb.Prod(dbccStatement).Is("DBCC", dbccLegacyCommand, "WITH", dbccOptionList);
+            gb.Prod(dbccStatement).Is("DBCC", dbccLegacyCommand, "(", dbccParamList, ")", "WITH", dbccOptionList);
             gb.Rule(dbccParamList).SeparatedBy(",", dbccParam);
             gb.Prod(dbccParam).Is(expression);
-            gb.Prod(dbccParam).Is(strictIdentifierTerm);
-            gb.Prod(dbccParam).Is(strictQualifiedName);
             gb.Rule(dbccOptionList).SeparatedBy(",", dbccOption);
             gb.Prod(dbccOption).Is(dbccOptionName);
             gb.Prod(dbccOption).Is(dbccOptionName, "=", dbccOptionValue);
             gb.Rule(dbccOptionName)
                 .Keywords("NO_INFOMSGS", "ALL_ERRORMSGS", "MAXDOP", "TABLERESULTS");
-            gb.Rule(dbccOptionValue)
-                .CanBe(expression)
-                .OrKeywords("ON", "OFF");
 
             gb.Rule(dropProcStatement)
                 .CanBe("DROP", "PROC", qualifiedName)
