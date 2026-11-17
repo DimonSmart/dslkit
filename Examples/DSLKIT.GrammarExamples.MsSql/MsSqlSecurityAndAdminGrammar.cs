@@ -136,10 +136,10 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(dbccDatabaseTarget).Is(unicodeStringLiteral);
             gb.Prod(dbccDatabaseTarget).Is(number);
             gb.Prod(dbccCheckdbArguments).Is(dbccDatabaseTarget);
-            gb.Rule(dbccCheckdbArguments).Or(dbccDatabaseTarget, ",", "NOINDEX")
-                .Or(dbccDatabaseTarget, ",", "REPAIR_ALLOW_DATA_LOSS")
-                .Or(dbccDatabaseTarget, ",", "REPAIR_FAST")
-                .Or(dbccDatabaseTarget, ",", "REPAIR_REBUILD");
+            gb.Prod(dbccCheckdbArguments).Is(dbccDatabaseTarget, ",", "NOINDEX");
+            gb.Prod(dbccCheckdbArguments).Is(dbccDatabaseTarget, ",", "REPAIR_ALLOW_DATA_LOSS");
+            gb.Prod(dbccCheckdbArguments).Is(dbccDatabaseTarget, ",", "REPAIR_FAST");
+            gb.Prod(dbccCheckdbArguments).Is(dbccDatabaseTarget, ",", "REPAIR_REBUILD");
 
             gb.Rule(dbccCheckdbOption)
                 .Keywords("ALL_ERRORMSGS", "EXTENDED_LOGICAL_CHECKS", "NO_INFOMSGS",
