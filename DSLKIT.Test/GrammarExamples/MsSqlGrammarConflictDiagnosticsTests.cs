@@ -263,6 +263,24 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void BuildGrammar_ShouldOnlyHaveKnownParenthesizedQueryReduceReduceConflict()
+        {
+            var grammar = ModernMsSqlGrammarExample.BuildGrammar(MsSqlDialectFeatures.All);
+            var unresolvedReduceReduce = grammar.ActionAndGotoTable.Conflicts
+                .Where(conflict => conflict.Kind == ParserConflictKind.ReduceReduce &&
+                                   conflict.Resolution == null)
+                .ToArray();
+
+            unresolvedReduceReduce.Should().ContainSingle(
+                conflict => conflict.TerminalName == ")" &&
+                            IsUnresolvedReduceReducePair(
+                                conflict,
+                                "ParenthesizedQuery → ( QueryExpression )",
+                                "ScalarSubquery → ( QueryExpression )"),
+                "Stage 24 must not introduce new reduce/reduce conflicts while query contexts are separated");
+        }
+
+        [Fact]
         public void BuildGrammar_ShouldNotHaveSqlcmdPrimaryExpressionIdentifierReduceReduceConflict()
         {
             var grammar = ModernMsSqlGrammarExample.BuildGrammar(MsSqlDialectFeatures.All);
