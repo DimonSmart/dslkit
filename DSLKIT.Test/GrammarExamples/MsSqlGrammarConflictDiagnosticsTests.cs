@@ -263,6 +263,19 @@ namespace DSLKIT.Test.GrammarExamples
         }
 
         [Fact]
+        public void BuildGrammar_ShouldNotHaveParenthesizedQueryReduceReduceConflict()
+        {
+            var grammar = ModernMsSqlGrammarExample.BuildGrammar(MsSqlDialectFeatures.All);
+            var unresolvedReduceReduce = grammar.ActionAndGotoTable.Conflicts
+                .Where(conflict => conflict.Kind == ParserConflictKind.ReduceReduce &&
+                                   conflict.Resolution == null)
+                .ToArray();
+
+            unresolvedReduceReduce.Should().BeEmpty(
+                "parenthesized queries now share a single syntax production in expression and set-query contexts");
+        }
+
+        [Fact]
         public void BuildGrammar_ShouldNotHaveSqlcmdPrimaryExpressionIdentifierReduceReduceConflict()
         {
             var grammar = ModernMsSqlGrammarExample.BuildGrammar(MsSqlDialectFeatures.All);

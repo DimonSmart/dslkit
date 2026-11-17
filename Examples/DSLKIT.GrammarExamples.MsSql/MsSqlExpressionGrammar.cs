@@ -47,6 +47,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             var overPartitionClause = gb.NT("OverPartitionClause");
             var overSpec = gb.NT("OverSpec");
             var primaryExpression = gb.NT("PrimaryExpression");
+            var parenthesizedQuery = gb.NT("ParenthesizedQuery");
             var qualifiedName = gb.NT("QualifiedName");
             var queryExpression = gb.NT("QueryExpression");
             var searchCondition = gb.NT("SearchCondition");
@@ -160,7 +161,7 @@ namespace DSLKIT.GrammarExamples.MsSql
             gb.Prod(primaryExpression).Is(functionCall, graphWithinGroupClause);
             gb.Prod(primaryExpression).Is("CAST", "(", expression, "AS", typeSpec, ")");
             gb.Prod(primaryExpression).Is("(", expression, ")");
-            gb.Prod(primaryExpression).Is("(", queryExpression, ")");
+            gb.Prod(primaryExpression).Is(parenthesizedQuery);
             gb.Prod(primaryExpression).Is(caseExpression);
             gb.Prod(primaryExpression).Is("LANGUAGE", primaryExpression);
 
