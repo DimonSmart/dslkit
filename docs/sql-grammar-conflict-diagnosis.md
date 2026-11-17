@@ -1466,3 +1466,52 @@ A permanent orientation-independent diagnostic checks both targeted pairs.
 - The remaining 3 R/R and 382 unresolved S/R are outside this change.
 - No real SQL Server instance was connected for a server-side conformance run.
   Microsoft Learn syntax and CI parser tests are the evidence for this stage.
+
+
+## Stage 22: GRANT securable single-name reduction (2026-11-17)
+
+**Status: pending final CI verification.** Stage 21 baseline: 2,233 productions,
+4,037 LR states, 386 conflict occurrences (3 unresolved R/R, 382 unresolved S/R,
+1 explicitly resolved S/R), 1,119 passing tests.
+
+### Conflict inventory and root cause
+
+The three unresolved R/R pairs in the baseline report are:
+
+1. `QueryPrimary → ( QueryExpression )` versus
+   `PrimaryExpression → ( QueryExpression )`, lookahead `)`.
+2. `SchemaDdlIdentifierTerm → StrictIdentifierTerm` versus
+   `StrictQualifiedName → StrictIdentifierTerm`, lookahead `ON`.
+3. `GrantSecurable → StrictIdentifierTerm` versus
+   `StrictQualifiedName → StrictIdentifierTerm`, lookahead `TO`.
+
+This stage targets only the third pair. `StrictQualifiedName` is defined
+by a separated list of one or more `StrictIdentifierTerm` components,
+including one-part names. Therefore `GrantSecurable` already accepts
+both `T` and `dbo.T` through `StrictQualifiedName`. The direct
+`GrantSecurable → StrictIdentifierTerm` production creates a second
+reduction for the same one-part securable, but adds no SQL Server syntax.
+
+[Microsoft's GRANT syntax](https://learn.microsoft.com/en-us/sql/t-sql/statements/grant-transact-sql?view=sql-server-ver17)
+allows a securable after optional `class ::` and before `TO principal`.
+Securable-specific rules vary by class; this change does not broaden the
+set of allowed classes or impose unrelated semantic restrictions.
+
+### Change and verification strategy
+
+Remove only `GrantSecurable → StrictIdentifierTerm`. Keep
+`GrantSecurable → StrictQualifiedName` unchanged. New regression cases
+exercise single-part and qualified securables, quoted and bracketed
+identifiers, class-qualified targets, recipient lists and malformed names.
+The diagnostic test permanently guards against the R/R pair in either
+production ordering. No parser precedence or lexer behavior is changed.
+
+Compare the complete before/after conflict reports as multisets of
+`(kind, lookahead, resolution, unordered production pair)` and compare
+SQL acceptance/rejection matrices before merging. Do not infer absence
+of new conflicts solely from the total count.
+
+The other two R/R conflicts remain explicitly out of scope:
+`QueryPrimary` / `PrimaryExpression` needs an expression-vs-subquery
+investigation, and `SchemaDdlIdentifierTerm` / `StrictQualifiedName`
+requires checking `ON`-clause boundaries across schema/index DDL.
